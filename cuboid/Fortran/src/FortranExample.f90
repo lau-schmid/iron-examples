@@ -65,6 +65,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 #include "mpif.h"
 #endif
 
+
   !--------------------------------------------------------------------------------------------------------------------------------
   !Test program parameters
 !  real etime          ! Declare the type of etime()
@@ -72,17 +73,17 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   REAL(CMISSRP), PARAMETER :: tol=1.0E-8_CMISSRP
 
-!  REAL(CMISSRP), PARAMETER :: Vmax=1.0_CMISSRP !TODO ????? TODO TODO TODO TODO TODO 
+!  REAL(CMISSRP), PARAMETER :: Vmax=1.0_CMISSRP !TODO ????? TODO TODO TODO TODO TODO
   REAL(CMISSRP), PARAMETER :: Vmax=-0.2_CMISSRP!-0.02_CMISSRP
-  
+
   LOGICAL :: independent_field_auto_create=.FALSE.
   !all lengths in [cm]
   REAL(CMISSRP), PARAMETER :: LENGTH=6.0_CMISSRP ! X-direction
   REAL(CMISSRP), PARAMETER :: WIDTH= 3.0_CMISSRP ! Y-direction
   REAL(CMISSRP), PARAMETER :: HEIGHT=1.5_CMISSRP ! Z-direction
-  
+
   !all times in [ms]
-  REAL(CMISSRP) :: time !=10.00_CMISSRP 
+  REAL(CMISSRP) :: time !=10.00_CMISSRP
   REAL(CMISSRP), PARAMETER :: PERIODD=1.00_CMISSRP
   REAL(CMISSRP)            :: TIME_STOP=1000.0_CMISSRP
 
@@ -94,7 +95,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   REAL(CMISSRP), PARAMETER :: STIM_STOP=0.1_CMISSRP!ELASTICITY_TIME_STEP
 
   INTEGER(CMISSIntg), PARAMETER :: OUTPUT_FREQUENCY=10
-  
+
   !--------------------------------------------------------------------------------------------------------------------------------
   !--------------------------------------------------------------------------------------------------------------------------------
 
@@ -111,15 +112,15 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   REAL(CMISSRP), PARAMETER :: Am=1.0_CMISSRP
 
   !membrane capacitance in [uF/cm^2]
-  REAL(CMISSRP), PARAMETER :: Cm_fast=1.0_CMISSRP 
+  REAL(CMISSRP), PARAMETER :: Cm_fast=1.0_CMISSRP
 !  REAL(CMISSRP), PARAMETER :: Cm_slow=0.58_CMISSRP
   REAL(CMISSRP), PARAMETER :: Cm_slow=1.0_CMISSRP
-  
+
   !Material-Parameters C=[mu_1, mu_2, mu_3, alpha_1, alpha_2, alpha_3, mu_0, XB_stiffness]
   REAL(CMISSRP), PARAMETER, DIMENSION(8) :: C = &
     & [0.0085_CMISSRP*5.0_CMISSRP,0.0_CMISSRP,0.0_CMISSRP, & ! [N/cm^2 = 10^4 J/m^3]
     &  11.0_CMISSRP,1.0_CMISSRP,6.0_CMISSRP, &
-    &  1.0_CMISSRP,2.2e-9_CMISSRP]      
+    &  1.0_CMISSRP,2.2e-9_CMISSRP]
 
   !Inital Conditions
   REAL(CMISSRP), PARAMETER :: INITIAL_STRETCH=1.2_CMISSRP
@@ -143,11 +144,11 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   INTEGER(CMISSIntg) :: NumberGlobalXElements,NumberGlobalYElements,NumberGlobalZElements
   INTEGER(CMISSIntg) :: mu_nr,Ftype,fibre_nr,NearestGP,InElement
-  
+
   logical :: less_info,fast_twitch
 
   INTEGER(CMISSIntg) :: val
-  REAL(CMISSRP) :: total 
+  REAL(CMISSRP) :: total
   REAL(CMISSRP) :: TimeStart, TimeInitFinshed, TimeStretchSimFinished, TimeMainSimulationStart, TimeMainSimulationFinished
 
   INTEGER(CMISSIntg), DIMENSION(10000,100) :: FIRING_TIMES
@@ -231,16 +232,16 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   INTEGER(CMISSIntg), PARAMETER :: ControlLoopMonodomainNumber=1
   INTEGER(CMISSIntg), PARAMETER :: ControlLoopElasticityNumber=2
-  
+
   !Program types
-  
+
   !Program variables
 
   INTEGER(CMISSIntg) :: EquationsSetIndexM,EquationsSetIndexFE
   INTEGER(CMISSIntg) :: CellMLIndex
   INTEGER(CMISSIntg) :: MPI_IERROR
   INTEGER(CMISSIntg) :: NumberOfComputationalNodes,NumberOfDomains,ComputationalNodeNumber
-  
+
   INTEGER(CMISSIntg) :: NodeNumber,NodeDomain,node_idx,ComponentNumber,domain_idx,ElementDomain
   INTEGER(CMISSIntg) :: NumberOfNodesInXi1,NumberOfNodesInXi2,NumberOfNodesInXi3
   INTEGER(CMISSIntg) :: i,j,k,m,my_node_idx,elem_idx,node1,node2,elem_idx2,NumberOfElementsPerElasticityElement
@@ -300,7 +301,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   LOGICAL :: QUICKWIN_STATUS=.FALSE.
   TYPE(WINDOWCONFIG) :: QUICKWIN_WINDOW_CONFIG
 #endif
-  
+
   !Generic CMISS variables
 
 #ifdef WIN32
@@ -318,15 +319,17 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 !##################################################################################################################################
 !##################################################################################################################################
 
+
+
   CALL CPU_Time(TimeStart)
   CALL SetParameters()
-  
+
   !================================================================================================================================
   !  G E N E R A L   F E A T U R E S
   !================================================================================================================================
   CALL CreateRegionMesh()
   CALL CreateDecomposition()
-  
+
   print*, ComputationalNodeNumber, ": 634"
 
   !================================================================================================================================
@@ -334,29 +337,29 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !================================================================================================================================
   CALL CreateFieldFiniteElasticity()
   print*, ComputationalNodeNumber, ": 776"
-  
+
   !================================================================================================================================
   !  M O N O D O M A I N
   !================================================================================================================================
-  
+
   CALL CreateFieldMonodomain()
   print*, ComputationalNodeNumber, ": 918"
-  
+
   !================================================================================================================================
   !  EQUATIONS SET
   CALL CreateEquationsSet()
   print*, ComputationalNodeNumber, ": 969"
-  
+
   !UPDATE THE INDEPENDENT FIELD IndependentFieldM
   CALL InitializeFieldMonodomain()
 
   !UPDATE THE INDEPENDENT FIELD IndependentFieldFE
   CALL InitializeFieldFiniteElasticity()
-  
+
   CALL CreateEquations()
   print*, ComputationalNodeNumber, ": 1085"
   CALL InitializeCellML()
-    
+
   !--------------------------------------------------------------------------------------------------------------------------------
   !Define the problem
   CALL cmfe_Problem_Initialise(Problem,Err)
@@ -372,7 +375,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !boundary conditions
   CALL SetBoundaryConditions()
   !--------------------------------------------------------------------------------------------------------------------------------
-  !Calculate the bioelectrics geometric field 
+  !Calculate the bioelectrics geometric field
   CALL CalculateBioelectrics()
   CALL ExportEMG()
 
@@ -382,12 +385,12 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !Solve the problem -- bring to new length before applying the stimulus
   WRITE(*,'(A)') "1.) Start solve before stimulation"
   CALL CPU_Time(TimeInitFinshed)
-  
+
   CALL cmfe_Problem_Solve(Problem,Err)
-  
+
   CALL CPU_Time(TimeStretchSimFinished)
   print*, "2.) after solve before stimulation"
-  
+
   !reset the relative contraction velocity to 0
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3, &
    & 0.0_CMISSRP,Err)
@@ -405,46 +408,46 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !Read in the MU firing times
-  
+
   print*, "3.) Read in the MU firing times"
-  
+
   open(unit=5,file="input/MU_firing_times_10s.txt",action="read",iostat=stat)
   do i=1,10000
     read(5,*,iostat=stat) FIRING_TIMES(i,:)
   enddo
   close(unit=5)
   write(*,*) "Finished reading file: input/MU_firing_times_10s.txt"
-  
-  
+
+
   print*, "Read in numbers of gaussian distribution"
-  
+
   ! Gaussian distribution with mean 0 and std 2 (MATLAB: k = 2*randn(len,1), kk = int64(k);)
   ALLOCATE(IZ_offset(NumberOfFibres))
   print*, "Allocate done size=",NumberOfFibres
-  
+
   !open(unit=6,file="input/innervation_zone_18.txt",action="read",iostat=stat)
   !if(stat /= 0) print*, "Error reading file input/innervation_zone_*.txt"
   !read(6,*,iostat=stat) IZ_offset(:)
-  !close(unit=6)                     
+  !close(unit=6)
   !write(*,*) "Finished reading file: input/innervation_zone_*.txt"
 
   DO I=1,NumberOfFibres
      IZ_offset(I) = 0
   ENDDO
-  
-  
+
+
   print*, "done reading gaussian distribution"
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !--------------------------------------------------------------------------------------------------------------------------------
   PRINT*, "4.) simulate with stimulation"
-  
+
   CALL CPU_Time(TimeMainSimulationStart)
-  
-  time = 0.0_CMISSRP 
-  VALUE = 0.0_CMISSRP 
+
+  time = 0.0_CMISSRP
+  VALUE = 0.0_CMISSRP
   k=1       ! row in firing_times input (time)
-  m=1 
+  m=1
   DO WHILE(time <= TIME_STOP)
 
     print *,"time = ",time,", k=",k,", m=",m
@@ -470,12 +473,12 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
     NodeNumber=(NumberOfNodesPerFibre+1)/2
     !loop over all neuromuscular junctions (middle point of the fibres)
     DO WHILE(NodeNumber<NumberOfNodesM)
-    
+
       CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber+IZ_offset(m),1,NodeDomain,Err)
       IF(NodeDomain==ComputationalNodeNumber) THEN
         CALL cmfe_Field_ParameterSetGetNode(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1, &
         & NodeNumber+IZ_offset(m),1,mu_nr,Err)
-        
+
         if((mu_nr.LE.0).OR.(mu_nr.GE.101)) then
           mu_nr=101
         else
@@ -506,7 +509,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
     NodeNumber=(NumberOfNodesPerFibre+1)/2
     DO WHILE(NodeNumber<NumberOfNodesM)
       CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber+IZ_offset(m),1,NodeDomain,Err)
-      IF(NodeDomain==ComputationalNodeNumber) CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, & 
+      IF(NodeDomain==ComputationalNodeNumber) CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
       & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,NodeNumber+IZ_offset(m),stimcomponent,0.0_CMISSRP,Err)
       NodeNumber = NodeNumber+NumberOfNodesPerFibre
       m=m+1
@@ -524,7 +527,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
     k=k+1
 
   ENDDO
-  
+
   CALL CPU_Time(TimeMainSimulationFinished)
   !--------------------------------------------------------------------------------------------------------------------------------
   !--------------------------------------------------------------------------------------------------------------------------------
@@ -532,17 +535,17 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   !--------------------------------------------------------------------------------------------------------------------------------
   CALL ExportEMG()
-  
+
   !--------------------------------------------------------------------------------------------------------------------------------
   !Finialise CMISS
   CALL cmfe_Finalise(Err)
 
   CALL WriteTimingFile()
-  
+
   WRITE(*,'(A)') "Program successfully completed."
   STOP
 CONTAINS
-  
+
 SUBROUTINE SetParameters()
 
   INTEGER(CMISSLINTg) :: factor
@@ -551,13 +554,13 @@ SUBROUTINE SetParameters()
   NumberGlobalXElements=6 !6
   NumberGlobalYElements=4 !3
   NumberGlobalZElements=1 !1
-  
+
   NumberArguments = iargc()
-  
+
   IF (NumberArguments == 1) THEN
     CALL getarg(1, arg)
     read(arg,*,iostat=stat)  scale
-    factor = 2 ** scale 
+    factor = 2 ** scale
     NumberGlobalXElements = NumberGlobalXElements * factor
     NumberGlobalYElements = NumberGlobalYElements * factor
     NumberGlobalZElements = NumberGlobalZElements * factor
@@ -571,9 +574,9 @@ SUBROUTINE SetParameters()
   ELSE
     PRINT*, "Wrong number of arguments";
   ENDIF
-  
+
   NumberOfElementsFE=NumberGlobalXElements*NumberGlobalYElements*NumberGlobalZElements
-  
+
   PRINT "(AI6AI6AI6AI12)", "Elements: (", NumberGlobalXElements, ", ", NumberGlobalYElements, ", ", NumberGlobalZElements, "): ",&
   & NumberOfElementsFE
 
@@ -587,7 +590,7 @@ SUBROUTINE SetParameters()
     TIME_STOP = 10
     PRINT*, "RUN_SCENARIO = 2: TIME_STOP=10"
   END SELECT
-  
+
   !                          type           level list,  output file  routine list
   !CALL cmfe_DiagnosticsSetOn(cmfe_ALL_DIAG_TYPE, [1,2,3,4,5], "", ["cmfe_Problem_Solve", "PROBLEM_SOLVE     "],&
   !& Err)
@@ -648,30 +651,30 @@ SUBROUTINE SetParameters()
 !    STIM_VALUE=2000.0_CMISSRP
 !  endif
 !##################################################################################################################################
-    
+
 
 
 END SUBROUTINE SetParameters
 
 SUBROUTINE CreateRegionMesh()
-  
+
   !--------------------------------------------------------------------------------------------------------------------------------
   !Intialise OpenCMISS
   CALL cmfe_Initialise(WorldCoordinateSystem,WorldRegion,Err)
 
   !Trap errors
   CALL cmfe_ErrorHandlingModeSet(CMFE_ERRORS_TRAP_ERROR,Err)
-  
+
 !  CALL cmfe_DiagnosticsSetOn(CMFE_FROM_DIAG_TYPE,[1,2,3,4,5],"dignostics",["FIELD_MAPPINGS_CALCULATE"],err)
-  
+
   !Get the computational nodes information
   CALL cmfe_ComputationalNumberOfNodesGet(NumberOfComputationalNodes,Err)
   CALL cmfe_ComputationalNodeNumberGet(ComputationalNodeNumber,Err)
 
   CALL cmfe_OutputSetOn("EMG",Err)
-  
+
   NumberOfDomains=NumberOfComputationalNodes
-  
+
   !Broadcast the number of elements in the X & Y directions and the number of partitions to the other computational nodes
   CALL MPI_BCAST(NumberGlobalXElements,1,MPI_INTEGER,0,MPI_COMM_WORLD,MPI_IERROR)
   CALL MPI_BCAST(NumberGlobalYElements,1,MPI_INTEGER,0,MPI_COMM_WORLD,MPI_IERROR)
@@ -680,19 +683,19 @@ SUBROUTINE CreateRegionMesh()
 
   CALL MPI_Comm_rank(MPI_COMM_WORLD, MPI_Rank, MPI_IERROR)
   CALL MPI_COMM_SIZE(MPI_COMM_WORLD, numberOfProcesses, MPI_IERROR)
-  
-  
-  IF (MPI_Rank == 0) THEN 
+
+
+  IF (MPI_Rank == 0) THEN
     print*, "Running with ",numberOfProcesses," processes"
   ENDIF
-  
+
   print*, "NumberOfComputationalNodes=",NumberOfComputationalNodes,", ComputationalNodeNumber=",ComputationalNodeNumber
-  
+
   print*, "p ",MPI_Rank,": n global elements: ", NumberGlobalXElements, NumberGlobalYElements, NumberGlobalZElements, &
   &", n domains:", NumberOfDomains
 
   print*, ComputationalNodeNumber, ": 441"
-  
+
   !--------------------------------------------------------------------------------------------------------------------------------
   !Start the creation of a new RC coordinate system
   CALL cmfe_CoordinateSystem_Initialise(CoordinateSystemFE,Err)
@@ -729,7 +732,7 @@ SUBROUTINE CreateRegionMesh()
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !Create the bases
-  !Define basis functions - tri-Quadratic Lagrange 
+  !Define basis functions - tri-Quadratic Lagrange
   CALL cmfe_Basis_Initialise(QuadraticBasis,Err)
   CALL cmfe_Basis_CreateStart(QuadraticBasisUserNumber,QuadraticBasis,Err)
   CALL cmfe_Basis_TypeSet(QuadraticBasis,CMFE_BASIS_LAGRANGE_HERMITE_TP_TYPE,Err)
@@ -779,7 +782,7 @@ SUBROUTINE CreateRegionMesh()
   !Finish the creation of a generated mesh in the region
   CALL cmfe_Mesh_Initialise(MeshFE,Err)
   CALL cmfe_GeneratedMesh_CreateFinish(GeneratedMesh,MeshUserNumberFE,MeshFE,Err)
-  
+
 
   print*, ComputationalNodeNumber, ": 531"
 
@@ -804,16 +807,16 @@ SUBROUTINE CreateRegionMesh()
     elem_idx=elem_idx+1
     CALL cmfe_MeshElements_NodesSet(ElementsM,elem_idx,[node1,node1+1],Err)
 !    WRITE(*,*) elem_idx,node1,node1+1
-  ENDDO    
+  ENDDO
   write(*,*) "Finished setting up 1D elements"
 
 
   CALL cmfe_MeshElements_CreateFinish(ElementsM,Err)
-  CALL cmfe_Mesh_CreateFinish(MeshM,Err) 
+  CALL cmfe_Mesh_CreateFinish(MeshM,Err)
 
 
 END SUBROUTINE CreateRegionMesh
-  
+
 SUBROUTINE CreateDecomposition()
   !--------------------------------------------------------------------------------------------------------------------------------
   !Create a decomposition
@@ -853,8 +856,8 @@ SUBROUTINE CreateDecomposition()
   print*, "NumberGlobalYElements=",NumberGlobalYElements
   print*, "NumberGlobalZElements=",NumberGlobalZElements
   print*, "NumberOfInSeriesFibres=",NumberOfInSeriesFibres
-  
-  
+
+
   ! CREATE A SECOND DECOMPOSITION (for monodomain)
   CALL cmfe_Decomposition_Initialise(DecompositionM,Err)
   CALL cmfe_Decomposition_CreateStart(DecompositionUserNumberM,MeshM,DecompositionM,Err)
@@ -862,7 +865,7 @@ SUBROUTINE CreateDecomposition()
     CALL cmfe_Decomposition_TypeSet(DecompositionM,CMFE_DECOMPOSITION_USER_DEFINED_TYPE,Err)
     elem_idx2=0
     DO domain_idx=0,NumberOfDomains-1   ! loop over domains
-      DO elem_idx=1,NumberOfElementsFE/NumberOfDomains/NumberGlobalXElements   ! loop over elements 
+      DO elem_idx=1,NumberOfElementsFE/NumberOfDomains/NumberGlobalXElements   ! loop over elements
       !                                                            (elem_idx=local element number, elem_idx2=global element number)
         DO i=1,NumberOfNodesInXi3
           DO j=1,NumberOfNodesInXi2
@@ -899,7 +902,7 @@ SUBROUTINE CreateFieldFiniteElasticity()
   CALL cmfe_Field_TypeSet(GeometricFieldFE,CMFE_FIELD_GEOMETRIC_TYPE,Err)
   CALL cmfe_Field_MeshDecompositionSet(GeometricFieldFE,DecompositionFE,Err)
   CALL cmfe_Field_NumberOfVariablesSet(GeometricFieldFE,FieldGeometryNumberOfVariables,Err)
-  CALL cmfe_Field_NumberOfComponentsSet(GeometricFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,FieldGeometryNumberOfComponents,Err)  
+  CALL cmfe_Field_NumberOfComponentsSet(GeometricFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,FieldGeometryNumberOfComponents,Err)
   CALL cmfe_Field_ComponentMeshComponentSet(GeometricFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1,QuadraticMeshComponentNumber,Err)
   CALL cmfe_Field_ComponentMeshComponentSet(GeometricFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,2,QuadraticMeshComponentNumber,Err)
   CALL cmfe_Field_ComponentMeshComponentSet(GeometricFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,3,QuadraticMeshComponentNumber,Err)
@@ -918,8 +921,8 @@ SUBROUTINE CreateFieldFiniteElasticity()
   CALL cmfe_Field_MeshDecompositionSet(FibreField,DecompositionFE,Err)
   CALL cmfe_Field_GeometricFieldSet(FibreField,GeometricFieldFE,Err)
   CALL cmfe_Field_NumberOfVariablesSet(FibreField,FieldFibreNumberOfVariables,Err)
-  CALL cmfe_Field_NumberOfComponentsSet(FibreField,CMFE_FIELD_U_VARIABLE_TYPE,FieldFibreNumberOfComponents,Err)  
-  CALL cmfe_Field_ComponentMeshComponentSet(FibreField,CMFE_FIELD_U_VARIABLE_TYPE,1,QuadraticMeshComponentNumber,Err) 
+  CALL cmfe_Field_NumberOfComponentsSet(FibreField,CMFE_FIELD_U_VARIABLE_TYPE,FieldFibreNumberOfComponents,Err)
+  CALL cmfe_Field_ComponentMeshComponentSet(FibreField,CMFE_FIELD_U_VARIABLE_TYPE,1,QuadraticMeshComponentNumber,Err)
   CALL cmfe_Field_ComponentMeshComponentSet(FibreField,CMFE_FIELD_U_VARIABLE_TYPE,2,QuadraticMeshComponentNumber,Err)
   CALL cmfe_Field_ComponentMeshComponentSet(FibreField,CMFE_FIELD_U_VARIABLE_TYPE,3,QuadraticMeshComponentNumber,Err)
   CALL cmfe_Field_VariableLabelSet(FibreField,CMFE_FIELD_U_VARIABLE_TYPE,"Fibre",Err)
@@ -961,7 +964,7 @@ SUBROUTINE CreateFieldFiniteElasticity()
 !  CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,0.0_CMISSRP,Err)
 
 
-  !Create the dependent field for FE with 2 variables and * components 
+  !Create the dependent field for FE with 2 variables and * components
   !  3-d: 3 displacement (quad interpol), 1 pressure (lin interpol) --> * = 4
   !  2-d: 2 displacement (quad interpol), 1 pressure (lin interpol) --> * = 3
   !  1-d: 1 displacement (quad interpol), 1 pressure (lin interpol) --> * = 2
@@ -1029,7 +1032,7 @@ SUBROUTINE CreateFieldFiniteElasticity()
   ENDIF
 
 END SUBROUTINE CreateFieldFiniteElasticity
-  
+
 SUBROUTINE CreateFieldMonodomain()
   !--------------------------------------------------------------------------------------------------------------------------------
   !Create a geometric field for monodomain - quadratic interpolation
@@ -1106,7 +1109,7 @@ SUBROUTINE CreateFieldMonodomain()
     CALL cmfe_Field_NumberOfVariablesSet(IndependentFieldM,4,Err)
     CALL cmfe_Field_VariableTypesSet(IndependentFieldM,[CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_V_VARIABLE_TYPE, &
      & CMFE_FIELD_U1_VARIABLE_TYPE,CMFE_FIELD_U2_VARIABLE_TYPE],Err)
-    
+
     !first variable:   CMFE_FIELD_U_VARIABLE_TYPE
     CALL cmfe_Field_DataTypeSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_DP_TYPE,Err)
     CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,4,Err)
@@ -1165,17 +1168,17 @@ SUBROUTINE CreateFieldMonodomain()
 
     CALL cmfe_Field_CreateFinish(IndependentFieldM,Err)
   ENDIF
-  
+
 
 END SUBROUTINE CreateFieldMonodomain
-  
+
 SUBROUTINE CreateEquationsSet()
   !--------------------------------------------------------------------------------------------------------------------------------
   !Create the equations_set for Finite Elasticity
   CALL cmfe_Field_Initialise(EquationsSetFieldFE,Err)
   CALL cmfe_EquationsSet_Initialise(EquationsSetFE,Err)
-  CALL cmfe_EquationsSet_CreateStart(EquationsSetsUserNumberFE,RegionFE,FibreField,[CMFE_EQUATIONS_SET_ELASTICITY_CLASS, & 
-   & CMFE_EQUATIONS_SET_FINITE_ELASTICITY_TYPE,CMFE_EQUATIONS_SET_1D3D_MONODOMAIN_ACTIVE_STRAIN_SUBTYPE], & 
+  CALL cmfe_EquationsSet_CreateStart(EquationsSetsUserNumberFE,RegionFE,FibreField,[CMFE_EQUATIONS_SET_ELASTICITY_CLASS, &
+   & CMFE_EQUATIONS_SET_FINITE_ELASTICITY_TYPE,CMFE_EQUATIONS_SET_1D3D_MONODOMAIN_ACTIVE_STRAIN_SUBTYPE], &
    & EquationsSetFieldUserNumberFE,EquationsSetFieldFE,EquationsSetFE,Err)
   CALL cmfe_EquationsSet_CreateFinish(EquationsSetFE,Err)
 
@@ -1188,7 +1191,7 @@ SUBROUTINE CreateEquationsSet()
   CALL cmfe_EquationsSet_IndependentCreateFinish(EquationsSetFE,Err)
 
   !Create the equations set materials field variables for Finite Elasticity
-  CALL cmfe_EquationsSet_MaterialsCreateStart(EquationsSetFE,FieldMaterialUserNumberFE,MaterialFieldFE,Err)  
+  CALL cmfe_EquationsSet_MaterialsCreateStart(EquationsSetFE,FieldMaterialUserNumberFE,MaterialFieldFE,Err)
   CALL cmfe_EquationsSet_MaterialsCreateFinish(EquationsSetFE,Err)
 
   !--------------------------------------------------------------------------------------------------------------------------------
@@ -1215,18 +1218,18 @@ SUBROUTINE CreateEquationsSet()
   CALL cmfe_EquationsSet_MaterialsCreateFinish(EquationsSetM,Err)
 
 END SUBROUTINE CreateEquationsSet
-  
+
 SUBROUTINE InitializeFieldMonodomain()
   !UPDATE THE INDEPENDENT FIELD IndependentFieldM
   !first variable (U)
-  !  components: 
+  !  components:
   !    1) A_1
   !    2) A_2
   !    3) x_1
   !    4) x_2
   !
   !second variable (V)
-  !  components: 
+  !  components:
   !    1) motor unit number
   !    2) fibre type
   !    3) fibre number
@@ -1234,7 +1237,7 @@ SUBROUTINE InitializeFieldMonodomain()
   !    5) in element number (LOCAL NODE NUMBERING!!!)
   !
   !init the motor unit number to 101
-  CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,101,Err) !  
+  CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,101,Err) !
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !Read in the MU fibre distribution
@@ -1246,22 +1249,22 @@ SUBROUTINE InitializeFieldMonodomain()
   write(*,*) "Finished reading file: input/MU_fibre_distribution_4050.txt"
 
   CALL MPI_BARRIER(MPI_COMM_WORLD, Err)
-  
+
   k = 0
   do i = 1,NumberOfNodesInXi2*NumberOfNodesInXi3*NumberGlobalYElements*NumberGlobalZElements  ! number of fibres per cut in yz-plane
     mu_nr = mu_distri(i)
     do j = 1,NumberOfNodesPerFibre
       k = k+1
       NodeNumber = k
-      
+
       !CALL MPI_BARRIER(MPI_COMM_WORLD, Err)
       !print*, ComputationalNodeNumber, ": mu_nr=",mu_nr,", k=",k
-      
+
       CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber,1,NodeDomain,Err)
       IF(NodeDomain==ComputationalNodeNumber) THEN
-          
+
     !  TYPE(FIELD_TYPE), POINTER :: FIELD !<A pointer to the field to update
-    !  INTEGER(INTG), INTENT(IN) :: VARIABLE_TYPE !<The field variable type to update \see FIELD_ROUTINES_VariableTypes,FIELD_ROUTINES 
+    !  INTEGER(INTG), INTENT(IN) :: VARIABLE_TYPE !<The field variable type to update \see FIELD_ROUTINES_VariableTypes,FIELD_ROUTINES
     !  INTEGER(INTG), INTENT(IN) :: FIELD_SET_TYPE !<The field parameter set identifier to finish the update for \see FIELD_ROUTINES_ParameterSetTypes,FIELD_ROUTINES
     !  INTEGER(INTG), INTENT(IN) :: VERSION_NUMBER !<The node derivative version number to add
     !  INTEGER(INTG), INTENT(IN) :: DERIVATIVE_NUMBER !<The node derivative number to update
@@ -1272,11 +1275,11 @@ SUBROUTINE InitializeFieldMonodomain()
         CALL cmfe_Field_ParameterSetUpdateNode(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1, &
     !      USER_NODE_NUMBER, COMPONENT_NUMBER, VALUE
         & k,                1,                mu_nr, Err)
-        
+
       ENDIF
     enddo
   enddo
-  
+
   print*, ComputationalNodeNumber, ": 1007"
 
   !init the fibre type to 1
@@ -1307,7 +1310,7 @@ SUBROUTINE InitializeFieldMonodomain()
    & 0.0_CMISSRP,Err)    !velocity in the cell model is in /micro/meters/per/millisecond!!!
 
 END SUBROUTINE InitializeFieldMonodomain
-  
+
 SUBROUTINE InitializeFieldFiniteElasticity()
   !UPDATE THE INDEPENDENT FIELD IndependentFieldFE
   !second variable of IndependentFieldFE
@@ -1334,7 +1337,7 @@ SUBROUTINE InitializeFieldFiniteElasticity()
     IF(ElementDomain==ComputationalNodeNumber) THEN
       !fibres begin in this element
       CALL cmfe_Field_ParameterSetUpdateElement(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
-       & elem_idx,4,1,Err) 
+       & elem_idx,4,1,Err)
       CALL cmfe_Field_ParameterSetUpdateElement(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
        & elem_idx,1,NumberOfNodesInXi1,Err)
     ENDIF
@@ -1342,7 +1345,7 @@ SUBROUTINE InitializeFieldFiniteElasticity()
   print*, ComputationalNodeNumber, ": 1066"
 
 END SUBROUTINE InitializeFieldFiniteElasticity
-  
+
 SUBROUTINE CreateEquations()
   !--------------------------------------------------------------------------------------------------------------------------------
   !Create the equations set equations for monodomain
@@ -1363,7 +1366,7 @@ SUBROUTINE CreateEquations()
   CALL cmfe_EquationsSet_EquationsCreateFinish(EquationsSetFE,Err)
 
 END SUBROUTINE CreateEquations
-  
+
 SUBROUTINE InitializeCellML()
 
   !--------------------------------------------------------------------------------------------------------------------------------
@@ -1389,7 +1392,7 @@ SUBROUTINE InitializeCellML()
   !
   !NOTE: If an INTERMEDIATE (or ALGEBRAIC) variable should be used in a mapping, it has to be set as known or wanted first!
   !,  --> set "razumova/stress" as wanted!
-  !,  --> no need to set "wal_environment/vS" since all STATE variables are automatically set as wanted! 
+  !,  --> no need to set "wal_environment/vS" since all STATE variables are automatically set as wanted!
 !  CALL cmfe_CellML_VariableSetAsWanted(CellML,shortenModelIndex,"razumova/stress",Err)
 !  CALL cmfe_CellML_VariableSetAsWanted(CellML,shortenModelIndex2,"razumova/stress",Err)
   !,- and override constant parameters without needing to set up fields
@@ -1442,16 +1445,16 @@ SUBROUTINE InitializeCellML()
   !> \todo - get V_m initialial value.
   CALL cmfe_Field_ComponentValuesInitialise(DependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1, &
    & 0.0_CMISSRP,Err)
-  
+
   !Initialise dependent field for Finite Elasticity from undeformed geometry and set hydrostatic pressure
   CALL cmfe_Field_ParametersToFieldParametersComponentCopy(GeometricFieldFE,CMFE_FIELD_U_VARIABLE_TYPE, &
    & CMFE_FIELD_VALUES_SET_TYPE,1,DependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,Err)
-  CALL cmfe_Field_ParametersToFieldParametersComponentCopy(GeometricFieldFE,CMFE_FIELD_U_VARIABLE_TYPE, & 
+  CALL cmfe_Field_ParametersToFieldParametersComponentCopy(GeometricFieldFE,CMFE_FIELD_U_VARIABLE_TYPE, &
    & CMFE_FIELD_VALUES_SET_TYPE,2,DependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2,Err)
   CALL cmfe_Field_ParametersToFieldParametersComponentCopy(GeometricFieldFE,CMFE_FIELD_U_VARIABLE_TYPE, &
    & CMFE_FIELD_VALUES_SET_TYPE,3,DependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3,Err)
 !  INIT_PRESSURE=-2.0_CMISSRP*MAT_FE(2)-MAT_FE(1)
-  CALL cmfe_Field_ComponentValuesInitialise(DependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,4, & 
+  CALL cmfe_Field_ComponentValuesInitialise(DependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,4, &
 !   & INIT_PRESSURE,Err)
    & 0.0_CMISSRP,Err)
 
@@ -1478,7 +1481,7 @@ SUBROUTINE InitializeCellML()
 
 
   print*, ComputationalNodeNumber, ": 1197"
-  
+
   !Create the CellML state field
   CALL cmfe_Field_Initialise(CellMLStateField,Err)
   CALL cmfe_CellML_StateFieldCreateStart(CellML,CellMLStateFieldUserNumber,CellMLStateField,Err)
@@ -1488,14 +1491,14 @@ SUBROUTINE InitializeCellML()
 !  CALL cmfe_Field_Initialise(CellMLIntermediateField,Err)
 !  CALL cmfe_CellML_IntermediateFieldCreateStart(CellML,CellMLIntermediateFieldUserNumber,CellMLIntermediateField,Err)
 !  CALL cmfe_CellML_IntermediateFieldCreateFinish(CellML,Err)
-  
+
   !Create the CellML parameters field
   CALL cmfe_Field_Initialise(CellMLParametersField,Err)
   CALL cmfe_CellML_ParametersFieldCreateStart(CellML,CellMLParametersFieldUserNumber,CellMLParametersField,Err)
   CALL cmfe_CellML_ParametersFieldCreateFinish(CellML,Err)
-  
+
 END SUBROUTINE InitializeCellML
-  
+
 SUBROUTINE CreateControlLoops()
 
   !--------------------------------------------------------------------------------------------------------------------------------
@@ -1530,7 +1533,7 @@ SUBROUTINE CreateControlLoops()
 END SUBROUTINE CreateControlLoops
 
 SUBROUTINE CreateSolvers()
-  
+
   !--------------------------------------------------------------------------------------------------------------------------------
   !Create the problem solvers
   CALL cmfe_Problem_SolversCreateStart(Problem,Err)
@@ -1541,20 +1544,20 @@ SUBROUTINE CreateSolvers()
    & SolverDAEIndex,SolverDAE,Err)
   CALL cmfe_Solver_DAETimeStepSet(SolverDAE,ODE_TIME_STEP,Err)
   !> \todo - solve the CellML equations on the GPU for efficiency (later)
-  !CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_EXTERNAL,Err) 
-  CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_NO_OUTPUT,Err)
-  !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
+  !CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_EXTERNAL,Err)
+  !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_NO_OUTPUT,Err)
+  CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_TIMING_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_SOLVER_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_MATRIX_OUTPUT,Err)
-  
+
   !Create the parabolic solver
   CALL cmfe_Solver_Initialise(SolverParabolic,Err)
   CALL cmfe_Problem_SolverGet(Problem,[ControlLoopMonodomainNumber,CMFE_CONTROL_LOOP_NODE], &
    & SolverParabolicIndex,SolverParabolic,Err)
   CALL cmfe_Solver_DynamicSchemeSet(SolverParabolic,CMFE_SOLVER_DYNAMIC_BACKWARD_EULER_SCHEME,Err)
-  CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_NO_OUTPUT,Err)
-  !CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
+  !CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_NO_OUTPUT,Err)
+  CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_TIMING_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_SOLVER_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_MATRIX_OUTPUT,Err)
@@ -1564,8 +1567,8 @@ SUBROUTINE CreateSolvers()
   CALL cmfe_Solver_Initialise(LinearSolverFE,Err)
   CALL cmfe_Problem_SolverGet(Problem,[ControlLoopElasticityNumber,CMFE_CONTROL_LOOP_NODE], &
    & SolverFEIndex,SolverFE,Err)
-  CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_NO_OUTPUT,Err)
-  !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
+  !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_NO_OUTPUT,Err)
+  CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_TIMING_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_SOLVER_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_MATRIX_OUTPUT,Err)
@@ -1604,7 +1607,7 @@ SUBROUTINE CreateSolvers()
    & SolverParabolicIndex,SolverParabolic,Err)
   CALL cmfe_Solver_SolverEquationsGet(SolverParabolic,SolverEquationsM,Err)
   CALL cmfe_SolverEquations_SparsityTypeSet(SolverEquationsM,CMFE_SOLVER_SPARSE_MATRICES,Err)
-  !CALL cmfe_SolverEquations_SparsityTypeSet(SolverEquationsM,CMFE_SOLVER_FULL_MATRICES,Err)  
+  !CALL cmfe_SolverEquations_SparsityTypeSet(SolverEquationsM,CMFE_SOLVER_FULL_MATRICES,Err)
   CALL cmfe_SolverEquations_EquationsSetAdd(SolverEquationsM,EquationsSetM,EquationsSetIndexM,Err)
 
   !Create the problem solver Finite Elasticity equations
@@ -1613,7 +1616,7 @@ SUBROUTINE CreateSolvers()
   CALL cmfe_Problem_SolverGet(Problem,[ControlLoopElasticityNumber,CMFE_CONTROL_LOOP_NODE],SolverFEIndex,SolverFE,Err)
   CALL cmfe_Solver_SolverEquationsGet(SolverFE,SolverEquationsFE,Err)
   CALL cmfe_SolverEquations_SparsityTypeSet(SolverEquationsFE,CMFE_SOLVER_SPARSE_MATRICES,Err)
-  !CALL cmfe_SolverEquations_SparsityTypeSet(SolverEquationsFE,CMFE_SOLVER_FULL_MATRICES,Err)  
+  !CALL cmfe_SolverEquations_SparsityTypeSet(SolverEquationsFE,CMFE_SOLVER_FULL_MATRICES,Err)
   CALL cmfe_SolverEquations_EquationsSetAdd(SolverEquationsFE,EquationsSetFE,EquationsSetIndexFE,Err)
 
   CALL cmfe_Problem_SolverEquationsCreateFinish(Problem,Err)
@@ -1681,7 +1684,7 @@ SUBROUTINE SetBoundaryConditions()
 END SUBROUTINE SetBoundaryConditions
 
 SUBROUTINE CalculateBioelectrics()
-  !Calculate the bioelectrics geometric field 
+  !Calculate the bioelectrics geometric field
   CALL cmfe_ControlLoop_Initialise(ControlLoopM,Err)
   CALL cmfe_Problem_ControlLoopGet(Problem,[ControlLoopMonodomainNumber,CMFE_CONTROL_LOOP_NODE],ControlLoopM,Err)
   CALL cmfe_BioelectricsFiniteElasticity_UpdateGeometricField(ControlLoopM,.TRUE.,Err)
@@ -1707,20 +1710,20 @@ SUBROUTINE ExportEMG()
     CALL cmfe_Fields_ElementsExport(Fields,"EMGExample_FE","FORTRAN",Err)
     CALL cmfe_Fields_Finalise(Fields,Err)
   ENDIF
-  
+
 END SUBROUTINE ExportEMG
 
 FUNCTION GetTimeStamp()
   INTEGER(CMISSIntg), DIMENSION(3) :: Today, Now
   CHARACTER(LEN=100) :: TimeString
   CHARACTER(LEN=100) :: GetTimeStamp
-  
+
   CALL IDATE(Today)  ! day, month, year
   CALL ITIME(Now)    ! h, min, s
 
   WRITE (TimeString, '(I2.2, A, I2.2, A, I4.4, A, I2.2, A, I2.2, A, I2.2)') &
   & Today(1), '.', Today(2), '.', Today(3), ' ', Now(1), ':', Now(2), ':', Now(3)
-  
+
   GetTimeStamp = TimeString
 END FUNCTION GetTimeStamp
 
@@ -1733,13 +1736,13 @@ SUBROUTINE WriteTimingFile()
   REAL(CMISSSP) :: DurationTotal
   REAL(CMISSRP) :: DurationInit, DurationStretchSim, DurationIntInit, DurationMainSim
   CHARACTER(LEN=100) :: TimeStampStr
-  
+
   ! create filename
   WRITE(ComputationalNodeNumberStr, '(I0.5)') ComputationalNodeNumber     ! convert ComputationalNodeNumber to string
   Filename = TRIM(Filename) // TRIM(ComputationalNodeNumberStr) // ".csv"
-  
+
   ! Check if file exists
-  INQUIRE(file=Filename, exist=FileExists) 
+  INQUIRE(file=Filename, exist=FileExists)
 
   ! Write Comment in first line if file does not yet exist
   IF(.NOT. FileExists) THEN
@@ -1749,21 +1752,21 @@ SUBROUTINE WriteTimingFile()
       & 'Dur. Init; Stretch Sim; Int. Init; Main Sim; Total; Total (User); Total (System);" '
     CLOSE(unit=123)
   ENDIF
-  
+
   ! Write line in file
   OPEN(unit=123, file=Filename, iostat=stat, access='append')
   IF (stat /= 0 ) PRINT*, 'Failed to open File \"'// TRIM(Filename) // '\" for writing!.'
-  
+
   DurationInit = TimeInitFinshed - TimeStart
   DurationStretchSim = TimeStretchSimFinished - TimeInitFinshed
   DurationIntInit = TimeMainSimulationStart - TimeStretchSimFinished
   DurationMainSim = TimeMainSimulationFinished - TimeMainSimulationStart
-  
+
   CALL ETIME(Elapsed, DurationTotal)
   TimeStampStr = GetTimeStamp()
-    
+
   WRITE(123,"(A,A,7(I11,A),7(F0.8,A))") &
-  & TRIM(TimeStampStr), ';', & 
+  & TRIM(TimeStampStr), ';', &
   & NumberOfComputationalNodes, ';', &
   & NumberGlobalXElements, ';', &
   & NumberGlobalYElements, ';', &
@@ -1778,10 +1781,10 @@ SUBROUTINE WriteTimingFile()
   & DurationTotal, ';', &
   & Elapsed(1), ';', &
   & Elapsed(2), ';'
-  
+
   CLOSE(unit=123)
 END SUBROUTINE WriteTimingFile
-  
+
 END PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
 

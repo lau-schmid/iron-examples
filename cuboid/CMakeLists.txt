@@ -29,7 +29,7 @@ find_package(OpenCMISS 1.1 REQUIRED COMPONENTS Iron CONFIG)
 
 # CMake application code
 # ----------------------
-add_subdirectory(C)
+#add_subdirectory(C)
 if (CMAKE_Fortran_COMPILER)
     add_subdirectory(Fortran)
 endif()

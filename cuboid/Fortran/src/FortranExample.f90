@@ -332,26 +332,20 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   CALL CreateRegionMesh()
   CALL CreateDecomposition()
 
-  print*, ComputationalNodeNumber, ": 634"
-
   !================================================================================================================================
   !  F I N I T E   E L A S T C I T Y
   !================================================================================================================================
   CALL CreateFieldFiniteElasticity()
-  print*, ComputationalNodeNumber, ": 776"
 
   !================================================================================================================================
   !  M O N O D O M A I N
   !================================================================================================================================
 
   CALL CreateFieldMonodomain()
-  print*, ComputationalNodeNumber, ": 918"
 
   !================================================================================================================================
   !  EQUATIONS SET
   CALL CreateEquationsSet()
-  print*, ComputationalNodeNumber, ": 969"
-
   !UPDATE THE INDEPENDENT FIELD IndependentFieldM
   CALL InitializeFieldMonodomain()
 
@@ -359,7 +353,6 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   CALL InitializeFieldFiniteElasticity()
 
   CALL CreateEquations()
-  print*, ComputationalNodeNumber, ": 1085"
   CALL InitializeCellML()
 
   !--------------------------------------------------------------------------------------------------------------------------------
@@ -677,6 +670,7 @@ SUBROUTINE SetParameters()
 
 
   ! output time step information
+  PRINT *, ""
   PRINT *, "---------- Timing parameters -------------"
   PRINT "(A,F5.2,A,F5.2,A,F5.2)", "  Main loop, Δt = ", TIME_STOP, ", dt = ", ELASTICITY_TIME_STEP
   PRINT "(A,F5.2)", "  - stimulation enabled:  Δt = ", STIM_STOP
@@ -698,7 +692,8 @@ SUBROUTINE SetParameters()
   ! It should be ELASTICITY_TIME_STEP = STIM_STOP
 
   ! Output problem size information
-  PRINT *, "---------- Problem size parameters -------------"
+  PRINT *, ""
+  PRINT *, "---------- Problem size parameters ------------------------------------------"
 
   PRINT "(A,3(I6,A),I12)", "# global FE-elements:      ", NumberGlobalXElements, ", ", NumberGlobalYElements, ", ", &
     & NumberGlobalZElements, &
@@ -712,6 +707,8 @@ SUBROUTINE SetParameters()
   PRINT "(A,I6)", "NumberOfElementsM:      ", NumberOfElementsM
   PRINT *,""
   PRINT "(A,I6)", "NumberOfDomains:        ", NumberOfDomains
+  PRINT *, "------------------------------------------------------------------------------"
+  PRINT *, ""
 
 
 
@@ -1545,6 +1542,8 @@ SUBROUTINE CreateControlLoops()
 
   IF (DEBUGGING_OUTPUT) THEN
     CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopFE,CMFE_CONTROL_LOOP_TIMING_OUTPUT,Err)
+  ELSE
+    CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopFE,CMFE_CONTROL_LOOP_NO_OUTPUT,Err)
   ENDIF
 
   CALL cmfe_Problem_ControlLoopCreateFinish(Problem,Err)

@@ -77,6 +77,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   REAL(CMISSRP), PARAMETER :: Vmax=-0.2_CMISSRP!-0.02_CMISSRP
 
   LOGICAL :: independent_field_auto_create=.FALSE.
+  LOGICAL, PARAMETER :: DEBUGGING_OUTPUT = .FALSE.
   !all lengths in [cm]
   REAL(CMISSRP), PARAMETER :: LENGTH=6.0_CMISSRP ! X-direction
   REAL(CMISSRP), PARAMETER :: WIDTH= 3.0_CMISSRP ! Y-direction
@@ -125,8 +126,9 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !Inital Conditions
   REAL(CMISSRP), PARAMETER :: INITIAL_STRETCH=1.2_CMISSRP
   REAL(CMISSRP), PARAMETER :: CONTRACTION_VELOCITY=-6.0e-1_CMISSRP ![cm/s]
-  INTEGER(CMISSIntg), PARAMETER :: TIMESTEPS=1000 !Number of Timesteps
   INTEGER(CMISSIntg), PARAMETER :: ElasticityLoopMaximumNumberOfIterations = 20
+  INTEGER(CMISSIntg), PARAMETER :: NewtonMaximumNumberOfIterations = 500
+  REAL(CMISSRP), PARAMETER :: NewtonTolerance = 1.E-8_CMISSRP
 
 !  REAL(CMISSRP) :: INIT_PRESSURE
 
@@ -542,7 +544,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   CALL WriteTimingFile()
 
-  WRITE(*,'(A)') "Program successfully completed."
+  WRITE(*,'(A,A)') GetTimeStamp(), "Program successfully completed."
   STOP
 CONTAINS
 
@@ -584,21 +586,15 @@ SUBROUTINE SetParameters()
 
   NumberOfElementsFE=NumberGlobalXElements*NumberGlobalYElements*NumberGlobalZElements
 
-  PRINT "(A,4(I6,A),I12)", "# Elements: ", NumberGlobalXElements, ", ", NumberGlobalYElements, ", ", NumberGlobalZElements, ", ", &
-    & NumberOfInSeriesFibres, ", Total: ",&
-    & NumberOfElementsFE
 
 !##################################################################################################################################
 
   SELECT CASE (RUN_SCENARIO)
   CASE(1)
     TIME_STOP = 1
-    PRINT*, "RUN_SCENARIO = 1: TIME_STOP=1"
   CASE(2)
     TIME_STOP = 10
-    PRINT*, "RUN_SCENARIO = 2: TIME_STOP=10"
   END SELECT
-
 
   less_info = .false.!.true.!
   if(less_info) then
@@ -675,7 +671,47 @@ SUBROUTINE SetParameters()
   CALL cmfe_ComputationalNumberOfNodesGet(NumberOfComputationalNodes,Err)
   CALL cmfe_ComputationalNodeNumberGet(ComputationalNodeNumber,Err)
 
+  NumberOfDomains=NumberOfComputationalNodes
+
   CALL cmfe_OutputSetOn("EMG",Err)
+
+
+  ! output time step information
+  PRINT *, "---------- Timing parameters -------------"
+  PRINT "(A,F5.2,A,F5.2,A,F5.2)", "  Main loop, Δt = ", TIME_STOP, ", dt = ", ELASTICITY_TIME_STEP
+  PRINT "(A,F5.2)", "  - stimulation enabled:  Δt = ", STIM_STOP
+  PRINT "(A,F5.2)", "  - stimulation disabled: Δt = ", (PERIODD - STIM_STOP)
+  PRINT *, ""
+  PRINT "(A,F0.2,A,F0.5,A,I5)", "- MAIN_TIME_LOOP,         Δt = ", TIME_STOP, ", dt = ", ELASTICITY_TIME_STEP, &
+    & ", # Iter: ", CEILING(TIME_STOP/ELASTICITY_TIME_STEP)
+  PRINT "(A,F0.4,A,F0.5,A,I5)", "  - MONODOMAIN_TIME_LOOP, Δt = ", ELASTICITY_TIME_STEP, ", dt = ", PDE_TIME_STEP,&
+    & ", # Iter: ", CEILING(ELASTICITY_TIME_STEP/PDE_TIME_STEP)
+  PRINT "(A,F0.5,A,I5)", "    - SolverDAE,                      dt = ", ODE_TIME_STEP, &
+    & ", # Iter: ", CEILING(PDE_TIME_STEP/ODE_TIME_STEP)
+  PRINT "(A,F0.4)", "    - SolverParabolic, (dynamic backward euler)"
+  PRINT "(A,I5)",               "  - ELASTICITY_LOOP,                               # Iter: ",&
+    & ElasticityLoopMaximumNumberOfIterations
+  PRINT "(A,I4,A,E10.4)", "    - SolverFE,                 # Iter (max): ", NewtonMaximumNumberOfIterations, &
+    & ", Tol.: ",NewtonTolerance
+  PRINT "(A,I4)", "      - LinearSolverFE, (direct solver)"
+
+  ! It should be ELASTICITY_TIME_STEP = STIM_STOP
+
+  ! Output problem size information
+  PRINT *, "---------- Problem size parameters -------------"
+
+  PRINT "(A,3(I6,A),I12)", "# global FE-elements:      ", NumberGlobalXElements, ", ", NumberGlobalYElements, ", ", &
+    & NumberGlobalZElements, &
+    & ", Total: ", NumberOfElementsFE
+  PRINT "(A,3(I6,A),I12)", "# local nodes per element: ", NumberOfNodesInXi1, ", ", NumberOfNodesInXi2, ", ", NumberOfNodesInXi3, &
+    & ", Total: ", NumberOfNodesInXi1*NumberOfNodesInXi2*NumberOfNodesInXi3
+  PRINT "(A,I6)", "NumberOfNodesPerFibre:  ", NumberOfNodesPerFibre
+  PRINT "(A,I6)", "NumberOfInSeriesFibres: ", NumberOfInSeriesFibres
+  PRINT "(A,I6)", "NumberOfFibres:         ", NumberOfFibres
+  PRINT "(A,I6)", "NumberOfNodesM:         ", NumberOfNodesM
+  PRINT "(A,I6)", "NumberOfElementsM:      ", NumberOfElementsM
+  PRINT *,""
+  PRINT "(A,I6)", "NumberOfDomains:        ", NumberOfDomains
 
 
 
@@ -683,9 +719,7 @@ END SUBROUTINE SetParameters
 
 SUBROUTINE CreateRegionMesh()
 
-  !--------------------------------------------------------------------------------------------------------------------------------
-
-  NumberOfDomains=NumberOfComputationalNodes
+  !-------------------------------------------------------------------------------------------------------------------------------
 
   !Broadcast the number of elements in the X & Y directions and the number of partitions to the other computational nodes
   CALL MPI_BCAST(NumberGlobalXElements,1,MPI_INTEGER,0,MPI_COMM_WORLD,MPI_IERROR)
@@ -693,20 +727,9 @@ SUBROUTINE CreateRegionMesh()
   CALL MPI_BCAST(NumberGlobalZElements,1,MPI_INTEGER,0,MPI_COMM_WORLD,MPI_IERROR)
   CALL MPI_BCAST(NumberOfDomains,1,MPI_INTEGER,0,MPI_COMM_WORLD,MPI_IERROR)
 
-  CALL MPI_Comm_rank(MPI_COMM_WORLD, MPI_Rank, MPI_IERROR)
-  CALL MPI_COMM_SIZE(MPI_COMM_WORLD, numberOfProcesses, MPI_IERROR)
-
-
   IF (MPI_Rank == 0) THEN
-    print*, "Running with ",numberOfProcesses," processes"
+    print*, "Running with ",NumberOfComputationalNodes," processes."
   ENDIF
-
-  print*, "NumberOfComputationalNodes=",NumberOfComputationalNodes,", ComputationalNodeNumber=",ComputationalNodeNumber
-
-  print*, "p ",MPI_Rank,": n global elements: ", NumberGlobalXElements, NumberGlobalYElements, NumberGlobalZElements, &
-  &", n domains:", NumberOfDomains
-
-  print*, ComputationalNodeNumber, ": 441"
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !Start the creation of a new RC coordinate system
@@ -766,8 +789,6 @@ SUBROUTINE CreateRegionMesh()
    & [NumberOfGaussPoints,NumberOfGaussPoints,NumberOfGaussPoints],Err)
   CALL cmfe_Basis_CreateFinish(LinearBasis,Err)
 
-  print*, ComputationalNodeNumber, ": 501u"
-
   ! CREATE A SECOND LINEAR BASIS FOR THE 1D GRID
   !Define basis functions - tri-Linear Lagrange
   CALL cmfe_Basis_Initialise(LinearBasisM,Err)
@@ -794,9 +815,6 @@ SUBROUTINE CreateRegionMesh()
   !Finish the creation of a generated mesh in the region
   CALL cmfe_Mesh_Initialise(MeshFE,Err)
   CALL cmfe_GeneratedMesh_CreateFinish(GeneratedMesh,MeshUserNumberFE,MeshFE,Err)
-
-
-  print*, ComputationalNodeNumber, ": 531"
 
   ! CREATE A SECOND MESH
   !Create a mesh in the region
@@ -852,23 +870,6 @@ SUBROUTINE CreateDecomposition()
   ENDIF
   CALL cmfe_Decomposition_CalculateFacesSet(DecompositionFE,.TRUE.,Err)
   CALL cmfe_Decomposition_CreateFinish(DecompositionFE,Err)
-
-  print*, "NumberOfElementsFE=   ",NumberOfElementsFE
-  print*, "NumberOfDomains=      ",NumberOfDomains
-  print*, "NumberGlobalXElements=",NumberGlobalXElements
-  print*, "NumberOfNodesInXi3=   ",NumberOfNodesInXi3
-  print*, "NumberOfNodesInXi2=   ",NumberOfNodesInXi2
-  print*, "NumberOfNodesInXi1=   ",NumberOfNodesInXi1
-  print*, "NumberOfFibres=       ",NumberOfFibres
-  print*, "NumberOfNodesPerFibre=",NumberOfNodesPerFibre
-  print*, "NumberOfNodesM=       ",NumberOfNodesM
-  print*, "NumberOfElementsM=    ",NumberOfElementsM
-  print*, ""
-  print*, "NumberGlobalXElements=",NumberGlobalXElements
-  print*, "NumberGlobalYElements=",NumberGlobalYElements
-  print*, "NumberGlobalZElements=",NumberGlobalZElements
-  print*, "NumberOfInSeriesFibres=",NumberOfInSeriesFibres
-
 
   ! CREATE A SECOND DECOMPOSITION (for monodomain)
   CALL cmfe_Decomposition_Initialise(DecompositionM,Err)
@@ -1491,9 +1492,6 @@ SUBROUTINE InitializeCellML()
 !  CALL cmfe_Field_ParameterSetUpdateStart(CellMLModelsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,Err)
 !  CALL cmfe_Field_ParameterSetUpdateFinish(CellMLModelsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,Err)
 
-
-  print*, ComputationalNodeNumber, ": 1197"
-
   !Create the CellML state field
   CALL cmfe_Field_Initialise(CellMLStateField,Err)
   CALL cmfe_CellML_StateFieldCreateStart(CellML,CellMLStateFieldUserNumber,CellMLStateField,Err)
@@ -1531,8 +1529,12 @@ SUBROUTINE CreateControlLoops()
   CALL cmfe_Problem_ControlLoopGet(Problem,[ControlLoopMonodomainNumber,CMFE_CONTROL_LOOP_NODE],ControlLoopM,Err)
   CALL cmfe_ControlLoop_LabelSet(ControlLoopM,'MONODOMAIN_TIME_LOOP',Err)
   CALL cmfe_ControlLoop_TimesSet(ControlLoopM,0.0_CMISSRP,ELASTICITY_TIME_STEP,PDE_TIME_STEP,Err)
-  CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopM,CMFE_CONTROL_LOOP_TIMING_OUTPUT,Err)
-  !CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopM,CMFE_CONTROL_LOOP_NO_OUTPUT,Err)
+
+  IF (DEBUGGING_OUTPUT) THEN
+    CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopM,CMFE_CONTROL_LOOP_TIMING_OUTPUT,Err)
+  ELSE
+    CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopM,CMFE_CONTROL_LOOP_NO_OUTPUT,Err)
+  ENDIF
 
   !set the finite elasticity loop (simple type)
   CALL cmfe_ControlLoop_Initialise(ControlLoopFE,Err)
@@ -1540,7 +1542,10 @@ SUBROUTINE CreateControlLoops()
   CALL cmfe_ControlLoop_TypeSet(ControlLoopFE,CMFE_PROBLEM_CONTROL_LOAD_INCREMENT_LOOP_TYPE,Err)
   CALL cmfe_ControlLoop_MaximumIterationsSet(ControlLoopFE,ElasticityLoopMaximumNumberOfIterations,Err)
   CALL cmfe_ControlLoop_LabelSet(ControlLoopFE,'ELASTICITY_LOOP',Err)
-  CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopFE,CMFE_CONTROL_LOOP_TIMING_OUTPUT,Err)
+
+  IF (DEBUGGING_OUTPUT) THEN
+    CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopFE,CMFE_CONTROL_LOOP_TIMING_OUTPUT,Err)
+  ENDIF
 
   CALL cmfe_Problem_ControlLoopCreateFinish(Problem,Err)
 
@@ -1557,24 +1562,33 @@ SUBROUTINE CreateSolvers()
   CALL cmfe_Problem_SolverGet(Problem,[ControlLoopMonodomainNumber,CMFE_CONTROL_LOOP_NODE], &
    & SolverDAEIndex,SolverDAE,Err)
   CALL cmfe_Solver_DAETimeStepSet(SolverDAE,ODE_TIME_STEP,Err)
+
   !> \todo - solve the CellML equations on the GPU for efficiency (later)
   !CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_EXTERNAL,Err)
-  CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_NO_OUTPUT,Err)
-  !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
-  !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_TIMING_OUTPUT,Err)
-  !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_SOLVER_OUTPUT,Err)
-  !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_MATRIX_OUTPUT,Err)
+
+  IF (DEBUGGING_OUTPUT) THEN
+    CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
+    !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_TIMING_OUTPUT,Err)
+    !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_SOLVER_OUTPUT,Err)
+    !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_MATRIX_OUTPUT,Err)
+  ELSE
+    CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_NO_OUTPUT,Err)
+  ENDIF
 
   !Create the parabolic solver
   CALL cmfe_Solver_Initialise(SolverParabolic,Err)
   CALL cmfe_Problem_SolverGet(Problem,[ControlLoopMonodomainNumber,CMFE_CONTROL_LOOP_NODE], &
    & SolverParabolicIndex,SolverParabolic,Err)
   CALL cmfe_Solver_DynamicSchemeSet(SolverParabolic,CMFE_SOLVER_DYNAMIC_BACKWARD_EULER_SCHEME,Err)
-  CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_NO_OUTPUT,Err)
-  !CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
-  !CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_TIMING_OUTPUT,Err)
-  !CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_SOLVER_OUTPUT,Err)
-  !CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_MATRIX_OUTPUT,Err)
+
+  IF (DEBUGGING_OUTPUT) THEN
+    CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
+    !CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_TIMING_OUTPUT,Err)
+    !CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_SOLVER_OUTPUT,Err)
+    !CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_MATRIX_OUTPUT,Err)
+  ELSE
+    CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_NO_OUTPUT,Err)
+  ENDIF
 
   !Create the Finte Elasticity solver
   CALL cmfe_Solver_Initialise(SolverFE,Err)
@@ -1594,10 +1608,10 @@ SUBROUTINE CreateSolvers()
   ENDIF
   CALL cmfe_Solver_NewtonJacobianCalculationTypeSet(SolverFE,CMFE_SOLVER_NEWTON_JACOBIAN_FD_CALCULATED,Err)
 !  CALL cmfe_Solver_NewtonJacobianCalculationTypeSet(SolverFE,CMFE_SOLVER_NEWTON_JACOBIAN_EQUATIONS_CALCULATED,Err) ! 721 steps
-  CALL cmfe_Solver_NewtonMaximumIterationsSet(SolverFE,500,Err)
-  CALL cmfe_Solver_NewtonAbsoluteToleranceSet(SolverFE,1.E-8_CMISSRP,Err)
-  CALL cmfe_Solver_NewtonSolutionToleranceSet(SolverFE,1.E-8_CMISSRP,Err)
-  CALL cmfe_Solver_NewtonRelativeToleranceSet(SolverFE,1.E-8_CMISSRP,Err)
+  CALL cmfe_Solver_NewtonMaximumIterationsSet(SolverFE,NewtonMaximumNumberOfIterations,Err)
+  CALL cmfe_Solver_NewtonAbsoluteToleranceSet(SolverFE,NewtonTolerance,Err)
+  CALL cmfe_Solver_NewtonSolutionToleranceSet(SolverFE,NewtonTolerance,Err)
+  CALL cmfe_Solver_NewtonRelativeToleranceSet(SolverFE,NewtonTolerance,Err)
   CALL cmfe_Solver_NewtonLinearSolverGet(SolverFE,LinearSolverFE,Err)
   CALL cmfe_Solver_LinearTypeSet(LinearSolverFE,CMFE_SOLVER_LINEAR_DIRECT_SOLVE_TYPE,Err)
 !  CALL cmfe_Solver_LinearTypeSet(LinearSolverFE,CMFE_SOLVER_LINEAR_ITERATIVE_SOLVE_TYPE,Err)

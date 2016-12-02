@@ -537,7 +537,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   CALL WriteTimingFile()
 
-  WRITE(*,'(A,A)') GetTimeStamp(), "Program successfully completed."
+  WRITE(*,'(A,A)') TRIM(GetTimeStamp()), " Program successfully completed."
   STOP
 CONTAINS
 
@@ -1518,8 +1518,14 @@ SUBROUTINE CreateControlLoops()
   CALL cmfe_ControlLoop_LabelSet(ControlLoopMain,'MAIN_TIME_LOOP',Err)
   !Loop in time for STIM_STOP with the Stimulus applied.
   CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,0.0_CMISSRP,ELASTICITY_TIME_STEP,ELASTICITY_TIME_STEP,Err)
+
   CALL cmfe_ControlLoop_TimeOutputSet(ControlLoopMain,OUTPUT_FREQUENCY,Err)
-  CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,CMFE_CONTROL_LOOP_TIMING_OUTPUT,Err) !DO NOT CHANGE!!!
+  IF (DEBUGGING_OUTPUT) THEN
+    CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,CMFE_CONTROL_LOOP_TIMING_OUTPUT,Err) !DO NOT CHANGE!!!
+  ELSE
+    CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,CMFE_CONTROL_LOOP_NO_OUTPUT,Err)
+  ENDIF
+
 
   !set the monodomain loop (time loop type)
   CALL cmfe_ControlLoop_Initialise(ControlLoopM,Err)

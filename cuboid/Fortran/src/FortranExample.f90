@@ -126,7 +126,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   REAL(CMISSRP), PARAMETER :: INITIAL_STRETCH=1.2_CMISSRP
   REAL(CMISSRP), PARAMETER :: CONTRACTION_VELOCITY=-6.0e-1_CMISSRP ![cm/s]
   INTEGER(CMISSIntg), PARAMETER :: TIMESTEPS=1000 !Number of Timesteps
-  INTEGER(CMISSIntg), PARAMETER :: ElasticityLoopMaximumNumberOfIterations = 5
+  INTEGER(CMISSIntg), PARAMETER :: ElasticityLoopMaximumNumberOfIterations = 20
 
 !  REAL(CMISSRP) :: INIT_PRESSURE
 
@@ -136,7 +136,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   INTEGER(CMISSIntg) :: NumberOfElementsM
   INTEGER(CMISSIntg) :: NumberOfNodesM
   INTEGER(CMISSIntg) :: NumberOfNodesPerFibre,NumberOfFibres
-  INTEGER(CMISSIntg), PARAMETER :: NumberOfInSeriesFibres=1
+  INTEGER(CMISSIntg) :: NumberOfInSeriesFibres=1
 
   integer(CMISSIntg) :: stat
   character(len=256) :: filename,filename2,pathname,arg
@@ -554,6 +554,7 @@ SUBROUTINE SetParameters()
   NumberGlobalXElements=6 !6
   NumberGlobalYElements=4 !3
   NumberGlobalZElements=1 !1
+  NumberOfInSeriesFibres=1 !1
 
   NumberArguments = iargc()
 
@@ -564,21 +565,28 @@ SUBROUTINE SetParameters()
     NumberGlobalXElements = NumberGlobalXElements * factor
     NumberGlobalYElements = NumberGlobalYElements * factor
     NumberGlobalZElements = NumberGlobalZElements * factor
-  ELSEIF (NumberArguments == 3) THEN
+  ELSEIF (NumberArguments >= 3) THEN
     CALL getarg(1, arg)
     read(arg,*,iostat=stat)  NumberGlobalXElements
     CALL getarg(2, arg)
     read(arg,*,iostat=stat)  NumberGlobalYElements
     CALL getarg(3, arg)
     read(arg,*,iostat=stat)  NumberGlobalZElements
+
+    IF (NumberArguments == 4) THEN
+      CALL getarg(4, arg)
+      read(arg,*,iostat=stat)  NumberOfInSeriesFibres
+    ENDIF
+
   ELSE
     PRINT*, "Wrong number of arguments";
   ENDIF
 
   NumberOfElementsFE=NumberGlobalXElements*NumberGlobalYElements*NumberGlobalZElements
 
-  PRINT "(AI6AI6AI6AI12)", "Elements: (", NumberGlobalXElements, ", ", NumberGlobalYElements, ", ", NumberGlobalZElements, "): ",&
-  & NumberOfElementsFE
+  PRINT "(A,4(I6,A),I12)", "# Elements: ", NumberGlobalXElements, ", ", NumberGlobalYElements, ", ", NumberGlobalZElements, ", ", &
+    & NumberOfInSeriesFibres, ", Total: ",&
+    & NumberOfElementsFE
 
 !##################################################################################################################################
 
@@ -591,13 +599,6 @@ SUBROUTINE SetParameters()
     PRINT*, "RUN_SCENARIO = 2: TIME_STOP=10"
   END SELECT
 
-  !                          type           level list,  output file  routine list
-  !CALL cmfe_DiagnosticsSetOn(cmfe_ALL_DIAG_TYPE, [1,2,3,4,5], "", ["cmfe_Problem_Solve", "PROBLEM_SOLVE     "],&
-  !& Err)
-  !CALL cmfe_OutputSetOn("output.txt", Err)
-  !                     type                  not output directly, filename
-  !CALL cmfe_TimingSetOn(cmfe_ALL_TIMING_TYPE, .FALSE.,             "", ["cmfe_Problem_Solve", "PROBLEM_SOLVE     "],&
-  !& Err)
 
   less_info = .false.!.true.!
   if(less_info) then
@@ -652,14 +653,7 @@ SUBROUTINE SetParameters()
 !  endif
 !##################################################################################################################################
 
-
-
-END SUBROUTINE SetParameters
-
-SUBROUTINE CreateRegionMesh()
-
-  !--------------------------------------------------------------------------------------------------------------------------------
-  !Intialise OpenCMISS
+ !Intialise OpenCMISS
   CALL cmfe_Initialise(WorldCoordinateSystem,WorldRegion,Err)
 
   !Trap errors
@@ -667,11 +661,29 @@ SUBROUTINE CreateRegionMesh()
 
 !  CALL cmfe_DiagnosticsSetOn(CMFE_FROM_DIAG_TYPE,[1,2,3,4,5],"dignostics",["FIELD_MAPPINGS_CALCULATE"],err)
 
+  !                          type                level list,  output file  routine list
+  !CALL cmfe_DiagnosticsSetOn(cmfe_ALL_DIAG_TYPE, [1,2,3,4,5], "", ["cmfe_Problem_Solve", "PROBLEM_SOLVE     "],&
+
+  !CALL cmfe_DiagnosticsSetOn(cmfe_CALL_STACK_DIAG_TYPE, [5], "diagnostics", ["FIELD_MAPPINGS_CALCULATE"], Err)
+
+  !CALL cmfe_OutputSetOn("output.txt", Err)
+  !                     type                  not output directly, filename
+  !CALL cmfe_TimingSetOn(cmfe_ALL_TIMING_TYPE, .FALSE.,             "", ["cmfe_Problem_Solve", "PROBLEM_SOLVE     "],&
+  !& Err)
+
   !Get the computational nodes information
   CALL cmfe_ComputationalNumberOfNodesGet(NumberOfComputationalNodes,Err)
   CALL cmfe_ComputationalNodeNumberGet(ComputationalNodeNumber,Err)
 
   CALL cmfe_OutputSetOn("EMG",Err)
+
+
+
+END SUBROUTINE SetParameters
+
+SUBROUTINE CreateRegionMesh()
+
+  !--------------------------------------------------------------------------------------------------------------------------------
 
   NumberOfDomains=NumberOfComputationalNodes
 
@@ -1545,8 +1557,8 @@ SUBROUTINE CreateSolvers()
   CALL cmfe_Solver_DAETimeStepSet(SolverDAE,ODE_TIME_STEP,Err)
   !> \todo - solve the CellML equations on the GPU for efficiency (later)
   !CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_EXTERNAL,Err)
-  !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_NO_OUTPUT,Err)
-  CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
+  CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_NO_OUTPUT,Err)
+  !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_TIMING_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_SOLVER_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_MATRIX_OUTPUT,Err)
@@ -1556,8 +1568,8 @@ SUBROUTINE CreateSolvers()
   CALL cmfe_Problem_SolverGet(Problem,[ControlLoopMonodomainNumber,CMFE_CONTROL_LOOP_NODE], &
    & SolverParabolicIndex,SolverParabolic,Err)
   CALL cmfe_Solver_DynamicSchemeSet(SolverParabolic,CMFE_SOLVER_DYNAMIC_BACKWARD_EULER_SCHEME,Err)
-  !CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_NO_OUTPUT,Err)
-  CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
+  CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_NO_OUTPUT,Err)
+  !CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_TIMING_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_SOLVER_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_MATRIX_OUTPUT,Err)
@@ -1567,11 +1579,17 @@ SUBROUTINE CreateSolvers()
   CALL cmfe_Solver_Initialise(LinearSolverFE,Err)
   CALL cmfe_Problem_SolverGet(Problem,[ControlLoopElasticityNumber,CMFE_CONTROL_LOOP_NODE], &
    & SolverFEIndex,SolverFE,Err)
-  !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_NO_OUTPUT,Err)
-  CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
-  !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_TIMING_OUTPUT,Err)
-  !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_SOLVER_OUTPUT,Err)
-  !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_MATRIX_OUTPUT,Err)
+
+  ! only enable output for specified ComputeNode
+  IF (ComputationalNodeNumber == 1) THEN
+    CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_NO_OUTPUT,Err)
+  ELSE
+    CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_NO_OUTPUT,Err)
+    !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
+    !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_TIMING_OUTPUT,Err)
+    !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_SOLVER_OUTPUT,Err)
+    !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_MATRIX_OUTPUT,Err)
+  ENDIF
   CALL cmfe_Solver_NewtonJacobianCalculationTypeSet(SolverFE,CMFE_SOLVER_NEWTON_JACOBIAN_FD_CALCULATED,Err)
 !  CALL cmfe_Solver_NewtonJacobianCalculationTypeSet(SolverFE,CMFE_SOLVER_NEWTON_JACOBIAN_EQUATIONS_CALCULATED,Err) ! 721 steps
   CALL cmfe_Solver_NewtonMaximumIterationsSet(SolverFE,500,Err)
@@ -1731,6 +1749,7 @@ SUBROUTINE WriteTimingFile()
 
   CHARACTER(len=256) :: Filename = "duration."
   CHARACTER(len=20)  :: ComputationalNodeNumberStr
+  CHARACTER(len=100) :: Hostname
   LOGICAL :: FileExists
   REAL(CMISSSP), DIMENSION(2) :: Elapsed     ! For receiving user and system time
   REAL(CMISSSP) :: DurationTotal
@@ -1748,7 +1767,7 @@ SUBROUTINE WriteTimingFile()
   IF(.NOT. FileExists) THEN
     OPEN(unit=123, file=Filename, iostat=stat)
     IF (stat /= 0 ) PRINT*, 'Failed to open File \"'// TRIM(Filename) // '\" for writing!.'
-    WRITE(123,'(A)') '# Stamp; NProc; X; Y; Z; F; Total FE; Total M; ' // &
+    WRITE(123,'(A)') '# Stamp; Host; NProc; X; Y; Z; F; Total FE; Total M; ' // &
       & 'Dur. Init; Stretch Sim; Int. Init; Main Sim; Total; Total (User); Total (System);" '
     CLOSE(unit=123)
   ENDIF
@@ -1763,24 +1782,28 @@ SUBROUTINE WriteTimingFile()
   DurationMainSim = TimeMainSimulationFinished - TimeMainSimulationStart
 
   CALL ETIME(Elapsed, DurationTotal)
+  CALL HOSTNM(Hostname)
+
   TimeStampStr = GetTimeStamp()
 
-  WRITE(123,"(A,A,7(I11,A),7(F0.8,A))") &
-  & TRIM(TimeStampStr), ';', &
-  & NumberOfComputationalNodes, ';', &
-  & NumberGlobalXElements, ';', &
-  & NumberGlobalYElements, ';', &
-  & NumberGlobalZElements, ';', &
-  & NumberOfInSeriesFibres, ';', &
-  & NumberOfElementsFE, ';', &
-  & NumberOfElementsM, ';', &
-  & DurationInit, ';', &
-  & DurationStretchSim, ';', &
-  & DurationIntInit, ';', &
-  & DurationMainSim,';',  &
-  & DurationTotal, ';', &
-  & Elapsed(1), ';', &
-  & Elapsed(2), ';'
+  WRITE(123,"(4A,7(I11,A),(F5.3,A),7(F0.8,A))") &
+    & TRIM(TimeStampStr), ';', &
+    & TRIM(Hostname(1:22)), ';', &
+    & NumberOfComputationalNodes, ';', &
+    & NumberGlobalXElements, ';', &
+    & NumberGlobalYElements, ';', &
+    & NumberGlobalZElements, ';', &
+    & NumberOfInSeriesFibres, ';', &
+    & NumberOfElementsFE, ';', &
+    & NumberOfElementsM, ';', &
+    & TIME_STOP, ';', &
+    & DurationInit, ';', &
+    & DurationStretchSim, ';', &
+    & DurationIntInit, ';', &
+    & DurationMainSim,';',  &
+    & DurationTotal, ';', &
+    & Elapsed(1), ';', &
+    & Elapsed(2), ';'
 
   CLOSE(unit=123)
 END SUBROUTINE WriteTimingFile

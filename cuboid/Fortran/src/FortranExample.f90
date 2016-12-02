@@ -69,7 +69,8 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !--------------------------------------------------------------------------------------------------------------------------------
   !Test program parameters
 !  real etime          ! Declare the type of etime()
-  INTEGER(CMISSINTg) :: RUN_SCENARIO = 2  !0 = default, 1 = short for testing, 2 = medium for testing
+  INTEGER(CMISSINTg) :: RUN_SCENARIO = 1  !0 = default, 1 = short for testing, 2 = medium for testing, 3 = very short
+  LOGICAL, PARAMETER :: DEBUGGING_OUTPUT = .FALSE.    ! enable information from solvers
 
   REAL(CMISSRP), PARAMETER :: tol=1.0E-8_CMISSRP
 
@@ -77,7 +78,6 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   REAL(CMISSRP), PARAMETER :: Vmax=-0.2_CMISSRP!-0.02_CMISSRP
 
   LOGICAL :: independent_field_auto_create=.FALSE.
-  LOGICAL, PARAMETER :: DEBUGGING_OUTPUT = .FALSE.
   !all lengths in [cm]
   REAL(CMISSRP), PARAMETER :: LENGTH=6.0_CMISSRP ! X-direction
   REAL(CMISSRP), PARAMETER :: WIDTH= 3.0_CMISSRP ! Y-direction
@@ -88,10 +88,10 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   REAL(CMISSRP), PARAMETER :: PERIODD=1.00_CMISSRP
   REAL(CMISSRP)            :: TIME_STOP=1000.0_CMISSRP
 
-  REAL(CMISSRP), PARAMETER :: ODE_TIME_STEP=0.00001_CMISSRP
-!  REAL(CMISSRP), PARAMETER :: ODE_TIME_STEP=0.0001_CMISSRP
-  REAL(CMISSRP), PARAMETER :: PDE_TIME_STEP=0.0005_CMISSRP
-  REAL(CMISSRP), PARAMETER :: ELASTICITY_TIME_STEP=0.10000000001_CMISSRP!0.5_CMISSRP!0.05_CMISSRP!0.8_CMISSRP
+  REAL(CMISSRP) :: ODE_TIME_STEP = 0.00001_CMISSRP            !0.0001_CMISSRP
+  REAL(CMISSRP) :: PDE_TIME_STEP = 0.0005_CMISSRP
+  REAL(CMISSRP) :: ELASTICITY_TIME_STEP = 0.10000000001_CMISSRP !0.5_CMISSRP!0.05_CMISSRP!0.8_CMISSRP
+
 !tomo keep ELASTICITY_TIME_STEP and STIM_STOP at the same values
   REAL(CMISSRP), PARAMETER :: STIM_STOP=0.1_CMISSRP!ELASTICITY_TIME_STEP
 
@@ -157,6 +157,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   INTEGER(CMISSIntg), ALLOCATABLE :: IZ_offset(:)
 
   INTEGER(CMISSIntg), ALLOCATABLE :: mu_distri(:)
+  REAL(CMISSRP) :: CustomTimingOdeSolver, CustomTimingParabolicSolver, CustomTimingFESolver, CustomTimingFESolverBeforeMainSim
 
   !--------------------------------------------------------------------------------------------------------------------------------
   INTEGER(CMISSIntg), PARAMETER :: CoordinateSystemUserNumberFE=1
@@ -322,6 +323,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 !##################################################################################################################################
 
 
+  WRITE(*,'(A,A)') TRIM(GetTimeStamp()), " Program started."
 
   CALL CPU_Time(TimeStart)
   CALL SetParameters()
@@ -378,13 +380,13 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !Solve the problem
 
   !Solve the problem -- bring to new length before applying the stimulus
-  WRITE(*,'(A)') "1.) Start solve before stimulation"
+  PRINT*, "1.) Start solve before stimulation"
   CALL CPU_Time(TimeInitFinshed)
 
   CALL cmfe_Problem_Solve(Problem,Err)
 
   CALL CPU_Time(TimeStretchSimFinished)
-  print*, "2.) after solve before stimulation"
+  print*, "2.) After solve before stimulation"
 
   !reset the relative contraction velocity to 0
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3, &
@@ -404,21 +406,16 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !--------------------------------------------------------------------------------------------------------------------------------
   !Read in the MU firing times
 
-  print*, "3.) Read in the MU firing times"
+  print*, "3.) Read in MU firing times"
 
   open(unit=5,file="input/MU_firing_times_10s.txt",action="read",iostat=stat)
   do i=1,10000
     read(5,*,iostat=stat) FIRING_TIMES(i,:)
   enddo
   close(unit=5)
-  write(*,*) "Finished reading file: input/MU_firing_times_10s.txt"
-
-
-  print*, "Read in numbers of gaussian distribution"
 
   ! Gaussian distribution with mean 0 and std 2 (MATLAB: k = 2*randn(len,1), kk = int64(k);)
   ALLOCATE(IZ_offset(NumberOfFibres))
-  print*, "Allocate done size=",NumberOfFibres
 
   !open(unit=6,file="input/innervation_zone_18.txt",action="read",iostat=stat)
   !if(stat /= 0) print*, "Error reading file input/innervation_zone_*.txt"
@@ -430,13 +427,14 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
      IZ_offset(I) = 0
   ENDDO
 
-
-  print*, "done reading gaussian distribution"
-
   !--------------------------------------------------------------------------------------------------------------------------------
   !--------------------------------------------------------------------------------------------------------------------------------
-  PRINT*, "4.) simulate with stimulation"
+  PRINT*, "4.) Simulate with stimulation"
 
+
+  CALL cmfe_CustomTimingGet(CustomTimingOdeSolver, CustomTimingParabolicSolver, CustomTimingFESolverBeforeMainSim, Err)
+  PRINT*, "    Nonliner Solver duration: ", CustomTimingFESolverBeforeMainSim, " s"
+  CALL cmfe_CustomTimingReset(Err)
   CALL CPU_Time(TimeMainSimulationStart)
 
   time = 0.0_CMISSRP
@@ -445,7 +443,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   m=1
   DO WHILE(time <= TIME_STOP)
 
-    print *,"time = ",time,", k=",k,", m=",m
+    PRINT "(A,F0.5,A)","t = ",time," s"
     !-------------------------------------------------------------------------------------------------------------------------------
     !Set the Stimulus for monodomain at the middle of the fibres
     CALL cmfe_CellML_FieldComponentGet(CellML,shortenModelIndex,CMFE_CELLML_PARAMETERS_FIELD, &
@@ -493,10 +491,9 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
     !-------------------------------------------------------------------------------------------------------------------------------
     !Solve the problem for the stimulation time
-    print*, "Solve problem with stimulation, time span: ", time, " to ",time+STIM_STOP, ", time step ",ELASTICITY_TIME_STEP
+    print*, "  Solve with stimulation,    time span: ", time, " to ",time+STIM_STOP
     CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time,time+STIM_STOP,ELASTICITY_TIME_STEP,Err)
     CALL cmfe_Problem_Solve(Problem,Err)
-    print*, "Solve problem with stimulation - done"
 
 
     !-------------------------------------------------------------------------------------------------------------------------------
@@ -513,10 +510,9 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
     !-------------------------------------------------------------------------------------------------------------------------------
     !Solve the problem for the rest of the period
-    print*, "turn off stimulus and solve, time span: ", time+STIM_STOP, " to ",time+PERIODD, ", time step ",ELASTICITY_TIME_STEP
+    print*, "  Solve without stimulation, time span: ", time+STIM_STOP, " to ",time+PERIODD
     CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time+STIM_STOP,time+PERIODD,ELASTICITY_TIME_STEP,Err)
     CALL cmfe_Problem_Solve(Problem,Err)
-    print*, "turn off stimulus and solve - done"
     !-------------------------------------------------------------------------------------------------------------------------------
     time = time + PERIODD
     k=k+1
@@ -530,12 +526,25 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   !--------------------------------------------------------------------------------------------------------------------------------
   CALL ExportEMG()
+  CALL cmfe_TimingSummaryOutput(Err)
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !Finialise CMISS
   CALL cmfe_Finalise(Err)
 
+  CALL cmfe_CustomTimingGet(CustomTimingOdeSolver, CustomTimingParabolicSolver, CustomTimingFESolver, Err)
+
   CALL WriteTimingFile()
+
+  PRINT*, ""
+  PRINT*, "--------------------------------------------------"
+  PRINT*, "Timing:"
+  PRINT*, "   Ode Solver:          ", CustomTimingOdeSolver, " s"
+  PRINT*, "   Parabolic Solver:    ", CustomTimingParabolicSolver, " s"
+  PRINT*, "   Nonlinear FE Solver  "
+  PRINT*, "     before Simulation: ", CustomTimingFESolverBeforeMainSim, " s"
+  PRINT*, "   Nonlinear FE Solver: ", CustomTimingFESolver, " s"
+  PRINT*, ""
 
   WRITE(*,'(A,A)') TRIM(GetTimeStamp()), " Program successfully completed."
   STOP
@@ -574,7 +583,7 @@ SUBROUTINE SetParameters()
     ENDIF
 
   ELSE
-    PRINT*, "Wrong number of arguments";
+    PRINT*, NumberArguments, " unrecognized arguments. Using default values. Usage: program [X Y Z [F]]";
   ENDIF
 
   NumberOfElementsFE=NumberGlobalXElements*NumberGlobalYElements*NumberGlobalZElements
@@ -583,10 +592,16 @@ SUBROUTINE SetParameters()
 !##################################################################################################################################
 
   SELECT CASE (RUN_SCENARIO)
-  CASE(1)
+  CASE(1)     ! short
     TIME_STOP = 1
-  CASE(2)
+  CASE(2)     ! medium
     TIME_STOP = 10
+  CASE(3)     ! very short
+    TIME_STOP = 0.1
+
+    ODE_TIME_STEP = 0.0001_CMISSRP
+    PDE_TIME_STEP = 0.005_CMISSRP
+    ELASTICITY_TIME_STEP = 0.10000000001_CMISSRP
   END SELECT
 
   less_info = .false.!.true.!
@@ -648,17 +663,18 @@ SUBROUTINE SetParameters()
   !Trap errors
   CALL cmfe_ErrorHandlingModeSet(CMFE_ERRORS_TRAP_ERROR,Err)
 
+  ! set diagnostics
 !  CALL cmfe_DiagnosticsSetOn(CMFE_FROM_DIAG_TYPE,[1,2,3,4,5],"dignostics",["FIELD_MAPPINGS_CALCULATE"],err)
 
   !                          type                level list,  output file  routine list
-  !CALL cmfe_DiagnosticsSetOn(cmfe_ALL_DIAG_TYPE, [1,2,3,4,5], "", ["cmfe_Problem_Solve", "PROBLEM_SOLVE     "],&
+  !CALL cmfe_DiagnosticsSetOn(cmfe_FROM_DIAG_TYPE, [3], "", ["cmfe_Problem_Solve", "PROBLEM_SOLVE     "], Err)
 
   !CALL cmfe_DiagnosticsSetOn(cmfe_CALL_STACK_DIAG_TYPE, [5], "diagnostics", ["FIELD_MAPPINGS_CALCULATE"], Err)
 
   !CALL cmfe_OutputSetOn("output.txt", Err)
   !                     type                  not output directly, filename
-  !CALL cmfe_TimingSetOn(cmfe_ALL_TIMING_TYPE, .FALSE.,             "", ["cmfe_Problem_Solve", "PROBLEM_SOLVE     "],&
-  !& Err)
+  ! cmfe_IN_TIMING_TYPE, cmfe_FROM_TIMING_TYPE, cmfe_ALL_TIMING_TYPE
+  !CALL cmfe_TimingSetOn(cmfe_ALL_TIMING_TYPE, .TRUE.,             "", ["cmfe_Problem_Solve", "PROBLEM_SOLVE     "], Err)
 
   !Get the computational nodes information
   CALL cmfe_ComputationalNumberOfNodesGet(NumberOfComputationalNodes,Err)
@@ -1290,8 +1306,6 @@ SUBROUTINE InitializeFieldMonodomain()
     enddo
   enddo
 
-  print*, ComputationalNodeNumber, ": 1007"
-
   !init the fibre type to 1
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2,1,Err) !Ftype=1
   !init the fibre number, the nearest Gauss point info and the inElem info to 0
@@ -1340,7 +1354,6 @@ SUBROUTINE InitializeFieldFiniteElasticity()
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,4, &
    & 0,Err)
 
-  print*, ComputationalNodeNumber, ": 1055"
   !fibres are starting in elements 1,4,7,10,...
   DO elem_idx=1,NumberOfElementsFE,NumberGlobalXElements/NumberOfInSeriesFibres
     CALL cmfe_Decomposition_ElementDomainGet(DecompositionFE,elem_idx,ElementDomain,Err)
@@ -1352,7 +1365,6 @@ SUBROUTINE InitializeFieldFiniteElasticity()
        & elem_idx,1,NumberOfNodesInXi1,Err)
     ENDIF
   ENDDO
-  print*, ComputationalNodeNumber, ": 1066"
 
 END SUBROUTINE InitializeFieldFiniteElasticity
 
@@ -1573,7 +1585,7 @@ SUBROUTINE CreateSolvers()
 
   IF (DEBUGGING_OUTPUT) THEN
     CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
-    !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_TIMING_OUTPUT,Err)
+    CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_TIMING_OUTPUT,Err)
     !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_SOLVER_OUTPUT,Err)
     !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_MATRIX_OUTPUT,Err)
   ELSE
@@ -1735,6 +1747,7 @@ END SUBROUTINE CalculateBioelectrics
 
 SUBROUTINE ExportEMG()
 
+  WRITE(*,'(A)',advance='no') "Export EMG ..."
   EXPORT_FIELD=.TRUE.
   IF(EXPORT_FIELD) THEN
     CALL cmfe_Fields_Initialise(Fields,Err)
@@ -1749,6 +1762,7 @@ SUBROUTINE ExportEMG()
     CALL cmfe_Fields_ElementsExport(Fields,"EMGExample_FE","FORTRAN",Err)
     CALL cmfe_Fields_Finalise(Fields,Err)
   ENDIF
+  PRINT*, " done"
 
 END SUBROUTINE ExportEMG
 
@@ -1789,7 +1803,7 @@ SUBROUTINE WriteTimingFile()
     OPEN(unit=123, file=Filename, iostat=stat)
     IF (stat /= 0 ) PRINT*, 'Failed to open File \"'// TRIM(Filename) // '\" for writing!.'
     WRITE(123,'(A)') '# Stamp; Host; NProc; X; Y; Z; F; Total FE; Total M; ' // &
-      & 'Dur. Init; Stretch Sim; Int. Init; Main Sim; Total; Total (User); Total (System);" '
+      & 'Dur. Init; Stretch Sim; Int. Init; Main Sim; Total; Total (User); Total (System); ODE; Parabolic; FE; FE before Main Sim" '
     CLOSE(unit=123)
   ENDIF
 
@@ -1807,7 +1821,7 @@ SUBROUTINE WriteTimingFile()
 
   TimeStampStr = GetTimeStamp()
 
-  WRITE(123,"(4A,7(I11,A),(F5.3,A),7(F0.8,A))") &
+  WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A))") &
     & TRIM(TimeStampStr), ';', &
     & TRIM(Hostname(1:22)), ';', &
     & NumberOfComputationalNodes, ';', &
@@ -1824,7 +1838,11 @@ SUBROUTINE WriteTimingFile()
     & DurationMainSim,';',  &
     & DurationTotal, ';', &
     & Elapsed(1), ';', &
-    & Elapsed(2), ';'
+    & Elapsed(2), ';', &
+    & CustomTimingOdeSolver, ';', &
+    & CustomTimingParabolicSolver, ';', &
+    & CustomTimingFESolver, ';', &
+    & CustomTimingFESolverBeforeMainSim, ';'
 
   CLOSE(unit=123)
 END SUBROUTINE WriteTimingFile

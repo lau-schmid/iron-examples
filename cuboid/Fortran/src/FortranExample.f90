@@ -1802,7 +1802,7 @@ SUBROUTINE WriteTimingFile()
   IF(.NOT. FileExists) THEN
     OPEN(unit=123, file=Filename, iostat=stat)
     IF (stat /= 0 ) PRINT*, 'Failed to open File \"'// TRIM(Filename) // '\" for writing!.'
-    WRITE(123,'(A)') '# Stamp; Host; NProc; X; Y; Z; F; Total FE; Total M; ' // &
+    WRITE(123,'(A)') '# Stamp; Host; NProc; X; Y; Z; F; Total FE; Total M; End Time; ' // &
       & 'Dur. Init; Stretch Sim; Int. Init; Main Sim; Total; Total (User); Total (System); ODE; Parabolic; FE; FE before Main Sim" '
     CLOSE(unit=123)
   ENDIF

@@ -142,6 +142,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   integer(CMISSIntg) :: stat
   character(len=256) :: filename,filename2,pathname,arg
+  CHARACTER(len=1024) :: inputDirectory = "input/"
   integer(CMISSIntg) :: MPI_Rank, numberOfProcesses
 
   INTEGER(CMISSIntg) :: NumberGlobalXElements,NumberGlobalYElements,NumberGlobalZElements
@@ -554,6 +555,7 @@ SUBROUTINE SetParameters()
 
   INTEGER(CMISSLINTg) :: factor
   INTEGER(CMISSLINTg) :: scale, NumberArguments
+  INTEGER(CMISSINTg) :: length
 
   NumberGlobalXElements=6 !6
   NumberGlobalYElements=4 !3
@@ -562,29 +564,44 @@ SUBROUTINE SetParameters()
 
   NumberArguments = iargc()
 
-  IF (NumberArguments == 1) THEN
-    CALL getarg(1, arg)
+
+
+  IF (NumberArguments >= 1) THEN
+    CALL GETARG(1, inputDirectory)
+    ! Append slash to input directory if necessary
+    length = LEN_TRIM(inputDirectory)
+
+    IF (.NOT. inputDirectory(length:length) == "/") THEN
+      inputDirectory(length+1:length+1) = "/"
+    ENDIF
+  ENDIF
+  IF (NumberArguments == 2) THEN
+    CALL getarg(2, arg)
     read(arg,*,iostat=stat)  scale
     factor = 2 ** scale
     NumberGlobalXElements = NumberGlobalXElements * factor
     NumberGlobalYElements = NumberGlobalYElements * factor
     NumberGlobalZElements = NumberGlobalZElements * factor
-  ELSEIF (NumberArguments >= 3) THEN
-    CALL getarg(1, arg)
-    read(arg,*,iostat=stat)  NumberGlobalXElements
+  ELSEIF (NumberArguments >= 4) THEN
     CALL getarg(2, arg)
-    read(arg,*,iostat=stat)  NumberGlobalYElements
+    read(arg,*,iostat=stat)  NumberGlobalXElements
     CALL getarg(3, arg)
+    read(arg,*,iostat=stat)  NumberGlobalYElements
+    CALL getarg(4, arg)
     read(arg,*,iostat=stat)  NumberGlobalZElements
 
-    IF (NumberArguments == 4) THEN
-      CALL getarg(4, arg)
+    IF (NumberArguments == 5) THEN
+      CALL getarg(5, arg)
       read(arg,*,iostat=stat)  NumberOfInSeriesFibres
     ENDIF
 
   ELSE
     PRINT*, NumberArguments, " unrecognized arguments. Using default values. Usage: program [X Y Z [F]]";
   ENDIF
+
+
+
+  PRINT*, "Input directory: [",TRIM(inputDirectory),"]"
 
   NumberOfElementsFE=NumberGlobalXElements*NumberGlobalYElements*NumberGlobalZElements
 
@@ -639,11 +656,11 @@ SUBROUTINE SetParameters()
 !##################################################################################################################################
 !  fast_twitch=.true.
 !  if(fast_twitch) then
-    pathname= &
-      & "input/"
+    pathname= inputDirectory
+!      & "input/"
 !     & "/home/heidlauf/OpenCMISS/OpenCMISS/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles/"
 !     & "/home/heidlauf/OpenCMISS/OpenCMISS/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles/"
-    filename=trim(pathname)//"Aliev_Panfilov_Razumova_2016_08_22.cellml"
+    filename=trim(inputDirectory)//"Aliev_Panfilov_Razumova_2016_08_22.cellml"
 !    filename=trim(pathname)//"shorten_mod_2011_07_04.xml"
 !    filename=trim(pathname)//"Aliev_Panfilov_Razumova_slow_2016_08_01.cellml"
 !   &"/home/heidlauf/OpenCMISS/opencmiss/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles/shorten_mod_2011_07_04.xml"

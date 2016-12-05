@@ -1,0 +1,3 @@
+SCENARIO=serial_size
+qsub -q fast.q $OPENCMISS_EVALUATION_DIR/$SCENARIO/run.sh -j eo -o $OPENCMISS_EVALUATION_DIR/$SCENARIO
+ 

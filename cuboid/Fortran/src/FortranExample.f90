@@ -633,9 +633,6 @@ SUBROUTINE SetParameters()
 
   NumberOfElementsFE=NumberGlobalXElements*NumberGlobalYElements*NumberGlobalZElements
 
-  PRINT "(AI6AI6AI6AI12)", "Elements: (", NumberGlobalXElements, ", ", NumberGlobalYElements, ", ", NumberGlobalZElements, "): ",&
-  & NumberOfElementsFE
-
 !##################################################################################################################################
 
   SELECT CASE (RUN_SCENARIO)
@@ -787,6 +784,12 @@ SUBROUTINE SetParameters()
   PRINT "(A,I6)", "NumberOfDomains:        ", NumberOfDomains
   PRINT *, "------------------------------------------------------------------------------"
   PRINT *, ""
+
+  IF (OLD_TOMO_MECHANICS) then
+    PRINT*, "Old mechanics formulation that works in parallel."
+  ELSE
+    PRINT*, "Old mechanics formulation that does not work in parallel."
+  ENDIF
 
 END SUBROUTINE SetParameters
 

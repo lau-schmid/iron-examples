@@ -607,10 +607,9 @@ SUBROUTINE SetParameters()
   IF (NumberArguments == 2) THEN
     CALL getarg(2, arg)
     read(arg,*,iostat=stat)  scale
-    factor = 2 ** scale
-    NumberGlobalXElements = NumberGlobalXElements * factor
-    NumberGlobalYElements = NumberGlobalYElements * factor
-    NumberGlobalZElements = NumberGlobalZElements * factor
+    NumberGlobalXElements = NumberGlobalXElements * scale
+    NumberGlobalYElements = NumberGlobalYElements * scale
+    NumberGlobalZElements = NumberGlobalZElements * scale
   ELSEIF (NumberArguments >= 4) THEN
     CALL getarg(2, arg)
     read(arg,*,iostat=stat)  NumberGlobalXElements

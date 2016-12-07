@@ -569,6 +569,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   PRINT*, ""
   PRINT*, "--------------------------------------------------"
+  PRINT*, "Process ", ComputationalNodeNumber
   PRINT*, "Timing:"
   PRINT*, "   Ode Solver:          ", CustomTimingOdeSolver, " s"
   PRINT*, "   Parabolic Solver:    ", CustomTimingParabolicSolver, " s"
@@ -745,50 +746,52 @@ SUBROUTINE SetParameters()
 
 
   ! output time step information
-  PRINT *, ""
-  PRINT *, "---------- Timing parameters -------------"
-  PRINT "(A,F5.2,A,F5.2,A,F5.2)", "  Main loop, Δt = ", TIME_STOP, ", dt = ", ELASTICITY_TIME_STEP
-  PRINT "(A,F5.2)", "  - stimulation enabled:  Δt = ", STIM_STOP
-  PRINT "(A,F5.2)", "  - stimulation disabled: Δt = ", (PERIODD - STIM_STOP)
-  PRINT *, ""
-  PRINT "(A,F0.2,A,F0.5,A,I5)", "- MAIN_TIME_LOOP,         Δt = ", TIME_STOP, ", dt = ", ELASTICITY_TIME_STEP, &
-    & ", # Iter: ", CEILING(TIME_STOP/ELASTICITY_TIME_STEP)
-  PRINT "(A,F0.4,A,F0.5,A,I5)", "  - MONODOMAIN_TIME_LOOP, Δt = ", ELASTICITY_TIME_STEP, ", dt = ", PDE_TIME_STEP,&
-    & ", # Iter: ", CEILING(ELASTICITY_TIME_STEP/PDE_TIME_STEP)
-  PRINT "(A,F0.5,A,I5)", "    - SolverDAE,                      dt = ", ODE_TIME_STEP, &
-    & ", # Iter: ", CEILING(PDE_TIME_STEP/ODE_TIME_STEP)
-  PRINT "(A,F0.4)", "    - SolverParabolic, (dynamic backward euler)"
-  PRINT "(A,I5)",               "  - ELASTICITY_LOOP,                               # Iter: ",&
-    & ElasticityLoopMaximumNumberOfIterations
-  PRINT "(A,I4,A,E10.4)", "    - SolverFE,                 # Iter (max): ", NewtonMaximumNumberOfIterations, &
-    & ", Tol.: ",NewtonTolerance
-  PRINT "(A,I4)", "      - LinearSolverFE, (direct solver)"
+  IF (ComputationalNodeNumber == 0) THEN
+    PRINT *, ""
+    PRINT *, "---------- Timing parameters -------------"
+    PRINT "(A,F5.2,A,F5.2,A,F5.2)", "  Main loop, Δt = ", TIME_STOP, ", dt = ", ELASTICITY_TIME_STEP
+    PRINT "(A,F5.2)", "  - stimulation enabled:  Δt = ", STIM_STOP
+    PRINT "(A,F5.2)", "  - stimulation disabled: Δt = ", (PERIODD - STIM_STOP)
+    PRINT *, ""
+    PRINT "(A,F0.2,A,F0.5,A,I5)", "- MAIN_TIME_LOOP,         Δt = ", TIME_STOP, ", dt = ", ELASTICITY_TIME_STEP, &
+      & ", # Iter: ", CEILING(TIME_STOP/ELASTICITY_TIME_STEP)
+    PRINT "(A,F0.4,A,F0.5,A,I5)", "  - MONODOMAIN_TIME_LOOP, Δt = ", ELASTICITY_TIME_STEP, ", dt = ", PDE_TIME_STEP,&
+      & ", # Iter: ", CEILING(ELASTICITY_TIME_STEP/PDE_TIME_STEP)
+    PRINT "(A,F0.5,A,I5)", "    - SolverDAE,                      dt = ", ODE_TIME_STEP, &
+      & ", # Iter: ", CEILING(PDE_TIME_STEP/ODE_TIME_STEP)
+    PRINT "(A,F0.4)", "    - SolverParabolic, (dynamic backward euler)"
+    PRINT "(A,I5)",               "  - ELASTICITY_LOOP,                               # Iter: ",&
+      & ElasticityLoopMaximumNumberOfIterations
+    PRINT "(A,I4,A,E10.4)", "    - SolverFE,                 # Iter (max): ", NewtonMaximumNumberOfIterations, &
+      & ", Tol.: ",NewtonTolerance
+    PRINT "(A,I4)", "      - LinearSolverFE, (direct solver)"
 
-  ! It should be ELASTICITY_TIME_STEP = STIM_STOP
+    ! It should be ELASTICITY_TIME_STEP = STIM_STOP
 
-  ! Output problem size information
-  PRINT *, ""
-  PRINT *, "---------- Problem size parameters ------------------------------------------"
+    ! Output problem size information
+    PRINT *, ""
+    PRINT *, "---------- Problem size parameters ------------------------------------------"
 
-  PRINT "(A,3(I6,A),I12)", "# global FE-elements:      ", NumberGlobalXElements, ", ", NumberGlobalYElements, ", ", &
-    & NumberGlobalZElements, &
-    & ", Total: ", NumberOfElementsFE
-  PRINT "(A,3(I6,A),I12)", "# local nodes per element: ", NumberOfNodesInXi1, ", ", NumberOfNodesInXi2, ", ", NumberOfNodesInXi3, &
-    & ", Total: ", NumberOfNodesInXi1*NumberOfNodesInXi2*NumberOfNodesInXi3
-  PRINT "(A,I6)", "NumberOfNodesPerFibre:  ", NumberOfNodesPerFibre
-  PRINT "(A,I6)", "NumberOfInSeriesFibres: ", NumberOfInSeriesFibres
-  PRINT "(A,I6)", "NumberOfFibres:         ", NumberOfFibres
-  PRINT "(A,I6)", "NumberOfNodesM:         ", NumberOfNodesM
-  PRINT "(A,I6)", "NumberOfElementsM:      ", NumberOfElementsM
-  PRINT *,""
-  PRINT "(A,I6)", "NumberOfDomains:        ", NumberOfDomains
-  PRINT *, "------------------------------------------------------------------------------"
-  PRINT *, ""
+    PRINT "(A,3(I6,A),I12)", "# global FE-elements:      ", NumberGlobalXElements, ", ", NumberGlobalYElements, ", ", &
+      & NumberGlobalZElements, &
+      & ", Total: ", NumberOfElementsFE
+    PRINT "(A,3(I6,A),I12)", "# local nodes per element: ", NumberOfNodesInXi1, ", ", NumberOfNodesInXi2, ", ", NumberOfNodesInXi3,&
+      & ", Total: ", NumberOfNodesInXi1*NumberOfNodesInXi2*NumberOfNodesInXi3
+    PRINT "(A,I6)", "NumberOfNodesPerFibre:  ", NumberOfNodesPerFibre
+    PRINT "(A,I6)", "NumberOfInSeriesFibres: ", NumberOfInSeriesFibres
+    PRINT "(A,I6)", "NumberOfFibres:         ", NumberOfFibres
+    PRINT "(A,I6)", "NumberOfNodesM:         ", NumberOfNodesM
+    PRINT "(A,I6)", "NumberOfElementsM:      ", NumberOfElementsM
+    PRINT *,""
+    PRINT "(A,I6)", "NumberOfDomains:        ", NumberOfDomains
+    PRINT *, "------------------------------------------------------------------------------"
+    PRINT *, ""
 
-  IF (OLD_TOMO_MECHANICS) then
-    PRINT*, "Old mechanics formulation that works in parallel."
-  ELSE
-    PRINT*, "Old mechanics formulation that does not work in parallel."
+    IF (OLD_TOMO_MECHANICS) then
+      PRINT*, "Old mechanics formulation that works in parallel."
+    ELSE
+      PRINT*, "Old mechanics formulation that does not work in parallel."
+    ENDIF
   ENDIF
 
 END SUBROUTINE SetParameters

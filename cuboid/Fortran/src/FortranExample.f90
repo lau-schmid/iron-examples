@@ -945,7 +945,7 @@ SUBROUTINE CreateDecomposition()
     DO domain_idx = 0, NumberOfDomains-1           ! loop over domains
       DO elem_idx = 1, NumberOfElementsInDomain   ! loop over elements of domain
         elem_idx2 = elem_idx2 + 1
-        PRINT "(I3.3,A,I5.5,A,I2)", ComputationalNodeNumber, ": 3D el. no. ", elem_idx2, " to domain no. ", domain_idx
+        !PRINT "(I3.3,A,I5.5,A,I2)", ComputationalNodeNumber, ": 3D el. no. ", elem_idx2, " to domain no. ", domain_idx
         CALL cmfe_Decomposition_ElementDomainSet(DecompositionFE,elem_idx2,domain_idx,Err)
       ENDDO
     ENDDO
@@ -979,7 +979,7 @@ SUBROUTINE CreateDecomposition()
           DO j = 1, NumberOfNodesInXi2
             DO k = 1, NumberOfNodesPerFibre-1
               elem_idx2 = elem_idx2+1
-              PRINT "(I3.3,A,I5.5,A,I2)", ComputationalNodeNumber, ": 1D el. no. ", elem_idx2, " to domain no. ", domain_idx
+              !PRINT "(I3.3,A,I5.5,A,I2)", ComputationalNodeNumber, ": 1D el. no. ", elem_idx2, " to domain no. ", domain_idx
               !                                        DECOMPOSITION,  GLOBAL_ELEMENT_NUMBER, DOMAIN_NUMBER
               CALL cmfe_Decomposition_ElementDomainSet(DecompositionM, elem_idx2,             domain_idx, Err)
             ENDDO

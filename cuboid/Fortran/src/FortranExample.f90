@@ -71,17 +71,15 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 !  real etime          ! Declare the type of etime()
   INTEGER(CMISSINTg) :: RUN_SCENARIO = 1  !0 = default, 1 = short for testing, 2 = medium for testing, 3 = very short
   LOGICAL, PARAMETER :: DEBUGGING_OUTPUT = .FALSE.    ! enable information from solvers
+  LOGICAL, PARAMETER :: OLD_TOMO_MECHANICS = .TRUE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
 
   REAL(CMISSRP), PARAMETER :: tol=1.0E-8_CMISSRP
 
-!  REAL(CMISSRP), PARAMETER :: Vmax=1.0_CMISSRP !TODO ????? TODO TODO TODO TODO TODO
-  REAL(CMISSRP), PARAMETER :: Vmax=-0.2_CMISSRP!-0.02_CMISSRP
-
   LOGICAL :: independent_field_auto_create=.FALSE.
   !all lengths in [cm]
-  REAL(CMISSRP), PARAMETER :: LENGTH=6.0_CMISSRP ! X-direction
-  REAL(CMISSRP), PARAMETER :: WIDTH= 3.0_CMISSRP ! Y-direction
-  REAL(CMISSRP), PARAMETER :: HEIGHT=1.5_CMISSRP ! Z-direction
+  REAL(CMISSRP), PARAMETER :: LENGTH=3.0_CMISSRP ! (6)     X-direction
+  REAL(CMISSRP), PARAMETER :: WIDTH= 3.0_CMISSRP ! (3)     Y-direction
+  REAL(CMISSRP), PARAMETER :: HEIGHT=1.5_CMISSRP ! (1.5)   Z-direction
 
   !all times in [ms]
   REAL(CMISSRP) :: time !=10.00_CMISSRP
@@ -103,6 +101,8 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !stimulation current in [uA/cm^2]
   REAL(CMISSRP) :: STIM_VALUE
 
+  REAL(CMISSRP), PARAMETER :: P_max=7.5_CMISSRP ! N/cm^2
+
   !condctivity in [mS/cm]
 !  REAL(CMISSRP), PARAMETER :: CONDUCTIVITY=3.828_CMISSRP
 !  REAL(CMISSRP), PARAMETER :: CONDUCTIVITY=1.0_CMISSRP
@@ -123,10 +123,18 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
     &  11.0_CMISSRP,1.0_CMISSRP,6.0_CMISSRP, &
     &  1.0_CMISSRP,2.2e-9_CMISSRP]
 
+  !maximum contraction velocity in [cm/ms]
+  REAL(CMISSRP), PARAMETER :: Vmax=-0.02_CMISSRP ! =0.2 m/s, rat GM
+  ! value for new mechanics: -0.2_CMISSRP
+
+  !CAUTION - what are the units???
+  REAL(CMISSRP), PARAMETER, DIMENSION(4) :: MAT_FE= &
+    &[0.0000000000635201_CMISSRP,0.3626712895523322_CMISSRP,0.0000027562837093_CMISSRP,43.372873938671383_CMISSRP]  ![N/cm^2]
+
   !Inital Conditions
-  REAL(CMISSRP), PARAMETER :: INITIAL_STRETCH=1.2_CMISSRP
+  REAL(CMISSRP), PARAMETER :: INITIAL_STRETCH=1.0_CMISSRP   ! previous value in new mechanical description: 1.2_CMISSRP
   REAL(CMISSRP), PARAMETER :: CONTRACTION_VELOCITY=-6.0e-1_CMISSRP ![cm/s]
-  INTEGER(CMISSIntg), PARAMETER :: ElasticityLoopMaximumNumberOfIterations = 20
+  INTEGER(CMISSIntg), PARAMETER :: ElasticityLoopMaximumNumberOfIterations = 5
   INTEGER(CMISSIntg), PARAMETER :: NewtonMaximumNumberOfIterations = 500
   REAL(CMISSRP), PARAMETER :: NewtonTolerance = 1.E-8_CMISSRP
 
@@ -361,10 +369,18 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !--------------------------------------------------------------------------------------------------------------------------------
   !Define the problem
   CALL cmfe_Problem_Initialise(Problem,Err)
-  CALL cmfe_Problem_CreateStart(ProblemUserNumber,[CMFE_PROBLEM_MULTI_PHYSICS_CLASS, &
-   & CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE,CMFE_PROBLEM_MONODOMAIN_1D3D_ACTIVE_STRAIN_SUBTYPE],Problem,Err)
-!  CALL cmfe_Problem_SpecificationSet(Problem,CMFE_PROBLEM_MULTI_PHYSICS_CLASS,CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE, &
-!   & CMFE_PROBLEM_MONODOMAIN_1D3D_ACTIVE_STRAIN_SUBTYPE,Err)
+
+  IF (OLD_TOMO_MECHANICS) THEN
+    CALL cmfe_Problem_CreateStart(ProblemUserNumber,[CMFE_PROBLEM_MULTI_PHYSICS_CLASS, &
+      & CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE,CMFE_PROBLEM_GUDUNOV_MONODOMAIN_1D3D_ELASTICITY_SUBTYPE],Problem,Err)
+  ELSE
+    CALL cmfe_Problem_CreateStart(ProblemUserNumber,[CMFE_PROBLEM_MULTI_PHYSICS_CLASS, &
+      & CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE,CMFE_PROBLEM_MONODOMAIN_1D3D_ACTIVE_STRAIN_SUBTYPE],Problem,Err)
+  !  CALL cmfe_Problem_SpecificationSet(Problem,CMFE_PROBLEM_MULTI_PHYSICS_CLASS,CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE, &
+  !   & CMFE_PROBLEM_MONODOMAIN_1D3D_ACTIVE_STRAIN_SUBTYPE,Err)
+  ENDIF
+
+
   CALL cmfe_Problem_CreateFinish(Problem,Err)
 
   CALL CreateControlLoops()
@@ -381,17 +397,22 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !Solve the problem
 
   !Solve the problem -- bring to new length before applying the stimulus
-  PRINT*, "1.) Start solve before stimulation"
+  IF (ComputationalNodeNumber == 0) PRINT*, "1.) Start solve before stimulation"
   CALL CPU_Time(TimeInitFinshed)
 
   CALL cmfe_Problem_Solve(Problem,Err)
 
   CALL CPU_Time(TimeStretchSimFinished)
-  print*, "2.) After solve before stimulation"
+  IF (ComputationalNodeNumber == 0) print*, "2.) After solve before stimulation"
 
   !reset the relative contraction velocity to 0
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3, &
    & 0.0_CMISSRP,Err)
+
+  IF (OLD_TOMO_MECHANICS) THEN
+    CALL cmfe_Field_ParameterSetUpdateConstant(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,5,P_max, Err)
+  ENDIF
+
 
   CALL cmfe_ControlLoop_Initialise(ControlLoopFE,Err)
   CALL cmfe_Problem_ControlLoopGet(Problem,[ControlLoopElasticityNumber,CMFE_CONTROL_LOOP_NODE],ControlLoopFE,Err)
@@ -400,14 +421,18 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 ! no change for BCs -- fix at this length!!!
 
   !Set the Stimulus for monodomain at the middle of the fibres
-!  CALL cmfe_CellML_FieldComponentGet(CellML,shortenModelIndex,CMFE_CELLML_PARAMETERS_FIELD, &
-!   & "Aliev_Panfilov/I_HH",stimcomponent,Err)
-
+!  IF (OLD_TOMO_MECHANICS) THEN
+!    CALL cmfe_CellML_FieldComponentGet(CellML,shortenModelIndex,CMFE_CELLML_PARAMETERS_FIELD, &
+!      & "wal_environment/I_HH",stimcomponent,Err)
+!  ELSE
+!    CALL cmfe_CellML_FieldComponentGet(CellML,shortenModelIndex,CMFE_CELLML_PARAMETERS_FIELD, &
+!      & "Aliev_Panfilov/I_HH",stimcomponent,Err)
+!  ENDIF
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !Read in the MU firing times
 
-  print*, "3.) Read in MU firing times"
+  IF (ComputationalNodeNumber == 0) print*, "3.) Read in MU firing times"
 
   open(unit=5,file="input/MU_firing_times_10s.txt",action="read",iostat=stat)
   do i=1,10000
@@ -430,7 +455,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !--------------------------------------------------------------------------------------------------------------------------------
-  PRINT*, "4.) Simulate with stimulation"
+  IF (ComputationalNodeNumber == 0) PRINT*, "4.) Simulate with stimulation"
 
 
   CALL cmfe_CustomTimingGet(CustomTimingOdeSolver, CustomTimingParabolicSolver, CustomTimingFESolverBeforeMainSim, Err)
@@ -444,11 +469,16 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   m=1
   DO WHILE(time <= TIME_STOP)
 
-    PRINT "(A,F0.5,A)","t = ",time," s"
+    IF (ComputationalNodeNumber == 0) PRINT "(A,F0.5,A)","t = ",time," s"
     !-------------------------------------------------------------------------------------------------------------------------------
     !Set the Stimulus for monodomain at the middle of the fibres
-    CALL cmfe_CellML_FieldComponentGet(CellML,shortenModelIndex,CMFE_CELLML_PARAMETERS_FIELD, &
-    & "Aliev_Panfilov/I_HH",stimcomponent,Err)
+    IF (OLD_TOMO_MECHANICS) THEN
+      CALL cmfe_CellML_FieldComponentGet(CellML,shortenModelIndex,CMFE_CELLML_PARAMETERS_FIELD, &
+        & "wal_environment/I_HH",stimcomponent,Err)
+    ELSE
+      CALL cmfe_CellML_FieldComponentGet(CellML,shortenModelIndex,CMFE_CELLML_PARAMETERS_FIELD, &
+        & "Aliev_Panfilov/I_HH",stimcomponent,Err)
+    ENDIF
 
 
   !  VALUE = VALUE-ABS(Vmax)/20.0_CMISSRP*STIM_STOP
@@ -492,7 +522,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
     !-------------------------------------------------------------------------------------------------------------------------------
     !Solve the problem for the stimulation time
-    print*, "  Solve with stimulation,    time span: ", time, " to ",time+STIM_STOP
+    IF (ComputationalNodeNumber == 0) print*, "  Solve with stimulation,    time span: ", time, " to ",time+STIM_STOP
     CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time,time+STIM_STOP,ELASTICITY_TIME_STEP,Err)
     CALL cmfe_Problem_Solve(Problem,Err)
 
@@ -511,7 +541,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
     !-------------------------------------------------------------------------------------------------------------------------------
     !Solve the problem for the rest of the period
-    print*, "  Solve without stimulation, time span: ", time+STIM_STOP, " to ",time+PERIODD
+    IF (ComputationalNodeNumber == 0) PRINT*, "  Solve without stimulation, time span: ", time+STIM_STOP, " to ",time+PERIODD
     CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time+STIM_STOP,time+PERIODD,ELASTICITY_TIME_STEP,Err)
     CALL cmfe_Problem_Solve(Problem,Err)
     !-------------------------------------------------------------------------------------------------------------------------------
@@ -557,14 +587,12 @@ SUBROUTINE SetParameters()
   INTEGER(CMISSLINTg) :: scale, NumberArguments
   INTEGER(CMISSINTg) :: length
 
-  NumberGlobalXElements=6 !6
-  NumberGlobalYElements=4 !3
+  NumberGlobalXElements=3 !6
+  NumberGlobalYElements=4 !4
   NumberGlobalZElements=1 !1
   NumberOfInSeriesFibres=1 !1
 
   NumberArguments = iargc()
-
-
 
   IF (NumberArguments >= 1) THEN
     CALL GETARG(1, inputDirectory)
@@ -605,6 +633,8 @@ SUBROUTINE SetParameters()
 
   NumberOfElementsFE=NumberGlobalXElements*NumberGlobalYElements*NumberGlobalZElements
 
+  PRINT "(AI6AI6AI6AI12)", "Elements: (", NumberGlobalXElements, ", ", NumberGlobalYElements, ", ", NumberGlobalZElements, "): ",&
+  & NumberOfElementsFE
 
 !##################################################################################################################################
 
@@ -620,6 +650,15 @@ SUBROUTINE SetParameters()
     PDE_TIME_STEP = 0.005_CMISSRP
     ELASTICITY_TIME_STEP = 0.10000000001_CMISSRP
   END SELECT
+
+
+  !                          type           level list,  output file  routine list
+  !CALL cmfe_DiagnosticsSetOn(cmfe_ALL_DIAG_TYPE, [1,2,3,4,5], "", ["cmfe_Problem_Solve", "PROBLEM_SOLVE     "],&
+  !& Err)
+  !CALL cmfe_OutputSetOn("output.txt", Err)
+  !                     type                  not output directly, filename
+  !CALL cmfe_TimingSetOn(cmfe_ALL_TIMING_TYPE, .FALSE.,             "", ["cmfe_Problem_Solve", "PROBLEM_SOLVE     "],&
+  !& Err)
 
   less_info = .false.!.true.!
   if(less_info) then
@@ -656,15 +695,21 @@ SUBROUTINE SetParameters()
 !##################################################################################################################################
 !  fast_twitch=.true.
 !  if(fast_twitch) then
-    pathname= inputDirectory
-!      & "input/"
-!     & "/home/heidlauf/OpenCMISS/OpenCMISS/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles/"
-!     & "/home/heidlauf/OpenCMISS/OpenCMISS/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles/"
+!  pathname="/home/heidlauf/OpenCMISS/OpenCMISS/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles/"
+  pathname=inputDirectory
+!  filename=trim(pathname)//"fast_2014_03_25_no_Fl_no_Fv.xml" !FAST
+  IF (OLD_TOMO_MECHANICS) THEN
+    filename=trim(inputDirectory)//"slow_TK_2014_12_08.xml"
+    STIM_VALUE=2000.0_CMISSRP !700.0_CMISSRP!700.0_CMISSRP
+  ELSE
     filename=trim(inputDirectory)//"Aliev_Panfilov_Razumova_2016_08_22.cellml"
-!    filename=trim(pathname)//"shorten_mod_2011_07_04.xml"
-!    filename=trim(pathname)//"Aliev_Panfilov_Razumova_slow_2016_08_01.cellml"
-!   &"/home/heidlauf/OpenCMISS/opencmiss/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles/shorten_mod_2011_07_04.xml"
     STIM_VALUE=90.0_CMISSRP !90.0_CMISSRP
+  ENDIF
+
+!   &"/home/heidlauf/OpenCMISS/opencmiss/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles/shorten_mod_2011_07_04.xml"
+!    pathname="/home/heidlauf/OpenCMISS/opencmiss/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles"
+!    filename=trim(pathname)//"/fast_shortening_0.1vmax.xml"
+!    STIM_VALUE=700.0_CMISSRP!2000.0_CMISSRP!700.0_CMISSRP
 !  else !slow twitch
 !    filename2= &
 !  &"/home/heidlauf/OpenCMISS/opencmiss/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles/fast_stim_2012_07_23.xml"
@@ -742,8 +787,6 @@ SUBROUTINE SetParameters()
   PRINT "(A,I6)", "NumberOfDomains:        ", NumberOfDomains
   PRINT *, "------------------------------------------------------------------------------"
   PRINT *, ""
-
-
 
 END SUBROUTINE SetParameters
 
@@ -878,6 +921,9 @@ SUBROUTINE CreateRegionMesh()
 END SUBROUTINE CreateRegionMesh
 
 SUBROUTINE CreateDecomposition()
+
+  INTEGER(CMISSIntg) :: NumberOfElementsInDomain
+
   !--------------------------------------------------------------------------------------------------------------------------------
   !Create a decomposition
   CALL cmfe_Decomposition_Initialise(DecompositionFE,Err)
@@ -885,35 +931,50 @@ SUBROUTINE CreateDecomposition()
 
   IF(NumberOfDomains>1) THEN
     CALL cmfe_Decomposition_TypeSet(DecompositionFE,CMFE_DECOMPOSITION_USER_DEFINED_TYPE,Err)
-    elem_idx2=0
+
+    ! compute number of elements per domain
+    NumberOfElementsInDomain = NumberOfElementsFE/NumberOfDomains
+
+    elem_idx2 = 0
     ! assign element numbers to domain
-    DO domain_idx=0,NumberOfDomains-1
-      DO elem_idx=1,NumberOfElementsFE/NumberOfDomains
-        elem_idx2=elem_idx2+1
+    DO domain_idx = 0, NumberOfDomains-1           ! loop over domains
+      DO elem_idx = 1, NumberOfElementsInDomain   ! loop over elements of domain
+        elem_idx2 = elem_idx2 + 1
+        PRINT "(I3.3,A,I5.5,A,I2)", ComputationalNodeNumber, ": 3D el. no. ", elem_idx2, " to domain no. ", domain_idx
         CALL cmfe_Decomposition_ElementDomainSet(DecompositionFE,elem_idx2,domain_idx,Err)
       ENDDO
     ENDDO
     CALL cmfe_Decomposition_NumberOfDomainsSet(DecompositionFE,NumberOfDomains,Err)
+
   ELSE
+    ! single process
     CALL cmfe_Decomposition_TypeSet(DecompositionFE,CMFE_DECOMPOSITION_CALCULATED_TYPE,Err)
     CALL cmfe_Decomposition_NumberOfDomainsSet(DecompositionFE,NumberOfDomains,Err)
   ENDIF
+
   CALL cmfe_Decomposition_CalculateFacesSet(DecompositionFE,.TRUE.,Err)
   CALL cmfe_Decomposition_CreateFinish(DecompositionFE,Err)
+
+  CALL MPI_Barrier(MPI_COMM_WORLD, Err)
 
   ! CREATE A SECOND DECOMPOSITION (for monodomain)
   CALL cmfe_Decomposition_Initialise(DecompositionM,Err)
   CALL cmfe_Decomposition_CreateStart(DecompositionUserNumberM,MeshM,DecompositionM,Err)
   IF(NumberOfDomains>1) THEN
     CALL cmfe_Decomposition_TypeSet(DecompositionM,CMFE_DECOMPOSITION_USER_DEFINED_TYPE,Err)
-    elem_idx2=0
-    DO domain_idx=0,NumberOfDomains-1   ! loop over domains
-      DO elem_idx=1,NumberOfElementsFE/NumberOfDomains/NumberGlobalXElements   ! loop over elements
+
+    ! compute number of elements per domain
+    NumberOfElementsInDomain = NumberOfElementsFE/NumberOfDomains
+
+    elem_idx2 = 0
+    DO domain_idx = 0, NumberOfDomains-1   ! loop over domains
+      DO elem_idx = 1, NumberOfElementsInDomain/NumberGlobalXElements   ! loop over elements
       !                                                            (elem_idx=local element number, elem_idx2=global element number)
-        DO i=1,NumberOfNodesInXi3
-          DO j=1,NumberOfNodesInXi2
-            DO k=1,NumberOfNodesPerFibre-1
-              elem_idx2=elem_idx2+1
+        DO i = 1, NumberOfNodesInXi3
+          DO j = 1, NumberOfNodesInXi2
+            DO k = 1, NumberOfNodesPerFibre-1
+              elem_idx2 = elem_idx2+1
+              PRINT "(I3.3,A,I5.5,A,I2)", ComputationalNodeNumber, ": 1D el. no. ", elem_idx2, " to domain no. ", domain_idx
               !                                        DECOMPOSITION,  GLOBAL_ELEMENT_NUMBER, DOMAIN_NUMBER
               CALL cmfe_Decomposition_ElementDomainSet(DecompositionM, elem_idx2,             domain_idx, Err)
             ENDDO
@@ -980,31 +1041,53 @@ SUBROUTINE CreateFieldFiniteElasticity()
   CALL cmfe_Field_GeometricFieldSet(MaterialFieldFE,GeometricFieldFE,Err)
   CALL cmfe_Field_NumberOfVariablesSet(MaterialFieldFE,FieldMaterialNumberOfVariablesFE,Err)
   CALL cmfe_Field_VariableTypesSet(MaterialFieldFE,[CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_V_VARIABLE_TYPE],Err)
-  CALL cmfe_Field_NumberOfComponentsSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,8,Err)
+
+  IF (OLD_TOMO_MECHANICS) THEN
+    CALL cmfe_Field_NumberOfComponentsSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,5,Err)
+  ELSE
+    CALL cmfe_Field_NumberOfComponentsSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,8,Err)
+  ENDIF
+
   CALL cmfe_Field_NumberOfComponentsSet(MaterialFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,1,Err)
   CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
   CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,2,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
   CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,3,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
   CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,4,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
   CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,5,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
-  CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,6,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
-  CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,7,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
-  CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,8,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
+
+  IF (.NOT. OLD_TOMO_MECHANICS) THEN
+    CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,6,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
+    CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,7,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
+    CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,8,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
+  ENDIF
+
   CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,1,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
   CALL cmfe_Field_VariableLabelSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,"MaterialFE",Err)
   CALL cmfe_Field_VariableLabelSet(MaterialFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,"Gravity",Err)
   CALL cmfe_Field_CreateFinish(MaterialFieldFE,Err)
 
-  !Set Material-Parameters [mu(1) mu(2) mu(3) alpha(1) alpha(2) alpha(3) mu_0]
-  CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,C(1),Err)
-  CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2,C(2),Err)
-  CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3,C(3),Err)
-  CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,4,C(4),Err)
-  CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,5,C(5),Err)
-  CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,6,C(6),Err)
-  CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,7,C(7),Err)
-  CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,8,C(8),Err)
-!  CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,0.0_CMISSRP,Err)
+  IF (OLD_TOMO_MECHANICS) THEN
+    !Set Mooney-Rivlin constants c10 and c01.
+    CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,MAT_FE(1),Err)
+    CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2,MAT_FE(2),Err)
+    CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3,MAT_FE(3),Err)
+    CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,4,MAT_FE(4),Err)
+    CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,5,0.0_CMISSRP, &
+     & Err)
+  ELSE
+
+    !Set Material-Parameters [mu(1) mu(2) mu(3) alpha(1) alpha(2) alpha(3) mu_0]
+    CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,C(1),Err)
+    CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2,C(2),Err)
+    CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3,C(3),Err)
+    CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,4,C(4),Err)
+    CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,5,C(5),Err)
+    CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,6,C(6),Err)
+    CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,7,C(7),Err)
+    CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,8,C(8),Err)
+  !  CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,0.0_CMISSRP,Err)
+  ENDIF
+
 
 
   !Create the dependent field for FE with 2 variables and * components
@@ -1018,6 +1101,7 @@ SUBROUTINE CreateFieldFiniteElasticity()
   CALL cmfe_Field_GeometricFieldSet(DependentFieldFE,GeometricFieldFE,Err)
   CALL cmfe_Field_DependentTypeSet(DependentFieldFE,CMFE_FIELD_DEPENDENT_TYPE,Err)
   CALL cmfe_Field_NumberOfVariablesSet(DependentFieldFE,FieldDependentNumberOfVariablesFE,Err)
+
   CALL cmfe_Field_VariableTypesSet(DependentFieldFE,[CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_DELUDELN_VARIABLE_TYPE],Err)
   CALL cmfe_Field_NumberOfComponentsSet(DependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,FieldDependentNumberOfComponentsFE,Err)
   CALL cmfe_Field_NumberOfComponentsSet(DependentFieldFE,CMFE_FIELD_DELUDELN_VARIABLE_TYPE,FieldDependentNumberOfComponentsFE,Err)
@@ -1046,33 +1130,53 @@ SUBROUTINE CreateFieldFiniteElasticity()
     CALL cmfe_Field_DependentTypeSet(IndependentFieldFE,CMFE_FIELD_INDEPENDENT_TYPE,Err)
     CALL cmfe_Field_NumberOfVariablesSet(IndependentFieldFE,2,Err)
     CALL cmfe_Field_VariableTypesSet(IndependentFieldFE,[CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_V_VARIABLE_TYPE],Err)
-    CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,5,Err)
+
+    IF (OLD_TOMO_MECHANICS) THEN
+      CALL cmfe_Field_DimensionSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_SCALAR_DIMENSION_TYPE,Err)
+      CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1,Err)
+    ELSE
+      CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,5,Err)
+    ENDIF
+
     CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,4,Err)
-    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1, &
-     & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) !A_1
-    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,2, &
-     & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) !A_2
-    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,3, &
-     & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) !x_1
-    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,4, &
-     & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) !x_2
-    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,5, &
-     & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) !lambda_a
-    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,1, &
-     & CMFE_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
-    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,2, &
-     & CMFE_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
-    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,3, &
-     & CMFE_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
-    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,4, &
-     & CMFE_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
-    CALL cmfe_Field_ComponentMeshComponentSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1,QuadraticMeshComponentNumber,Err)
-    CALL cmfe_Field_DataTypeSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_DP_TYPE,Err)
-    CALL cmfe_Field_DataTypeSet(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_INTG_TYPE,Err)
-    CALL cmfe_Field_VariableLabelSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,"XB_state_variables_FE",Err)
-    CALL cmfe_Field_VariableLabelSet(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,"subgrid_info",Err)
-    CALL cmfe_Field_CreateFinish(IndependentFieldFE,Err)
+
+    IF (OLD_TOMO_MECHANICS) THEN
+      CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1, &
+         & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err)
+    ELSE
+      CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1, &
+        & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) !A_1
+      CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,2, &
+        & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) !A_2
+      CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,3, &
+        & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) !x_1
+      CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,4, &
+        & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) !x_2
+      CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,5, &
+        & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) !lambda_a
+    ENDIF
   ENDIF
+
+  CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,1, &
+    & CMFE_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
+  CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,2, &
+    & CMFE_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
+  CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,3, &
+    & CMFE_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
+  CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,4, &
+    & CMFE_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
+  CALL cmfe_Field_ComponentMeshComponentSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1,QuadraticMeshComponentNumber,Err)
+  CALL cmfe_Field_DataTypeSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_DP_TYPE,Err)
+  CALL cmfe_Field_DataTypeSet(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_INTG_TYPE,Err)
+
+  IF (OLD_TOMO_MECHANICS) THEN
+    CALL cmfe_Field_VariableLabelSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,"Active_Stress_FE",Err)
+  ELSE
+    CALL cmfe_Field_VariableLabelSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,"XB_state_variables_FE",Err)
+  ENDIF
+
+  CALL cmfe_Field_VariableLabelSet(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,"subgrid_info",Err)
+  CALL cmfe_Field_CreateFinish(IndependentFieldFE,Err)
 
 END SUBROUTINE CreateFieldFiniteElasticity
 
@@ -1155,16 +1259,25 @@ SUBROUTINE CreateFieldMonodomain()
 
     !first variable:   CMFE_FIELD_U_VARIABLE_TYPE
     CALL cmfe_Field_DataTypeSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_DP_TYPE,Err)
-    CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,4,Err)
-    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1, &
-     & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err) !A_1
-    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,2, &
-     & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err) !A_2
-    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,3, &
-     & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err) !x_1
-    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,4, &
-     & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err) !x_2
-    CALL cmfe_Field_VariableLabelSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,"XB_state_variables_M",Err)
+    IF (OLD_TOMO_MECHANICS) THEN
+      !first variable:   CMFE_FIELD_U_VARIABLE_TYPE -- 1) active stress
+      CALL cmfe_Field_DimensionSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_SCALAR_DIMENSION_TYPE,Err)
+      CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1,Err)
+      CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1, &
+       & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
+      CALL cmfe_Field_VariableLabelSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,"Active_Stress_M",Err)
+    ELSE
+      CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,4,Err)
+      CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1, &
+       & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err) !A_1
+      CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,2, &
+       & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err) !A_2
+      CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,3, &
+       & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err) !x_1
+      CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,4, &
+       & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err) !x_2
+      CALL cmfe_Field_VariableLabelSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,"XB_state_variables_M",Err)
+    ENDIF
 
     !second variable:   CMFE_FIELD_V_VARIABLE_TYPE -- 1) motor unit number   2) fibre type   3) fibre number   4) nearest Gauss point   5) in element number (LOCAL NODE NUMBERING!!!)
     CALL cmfe_Field_DataTypeSet(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_INTG_TYPE,Err)
@@ -1220,9 +1333,16 @@ SUBROUTINE CreateEquationsSet()
   !Create the equations_set for Finite Elasticity
   CALL cmfe_Field_Initialise(EquationsSetFieldFE,Err)
   CALL cmfe_EquationsSet_Initialise(EquationsSetFE,Err)
-  CALL cmfe_EquationsSet_CreateStart(EquationsSetsUserNumberFE,RegionFE,FibreField,[CMFE_EQUATIONS_SET_ELASTICITY_CLASS, &
-   & CMFE_EQUATIONS_SET_FINITE_ELASTICITY_TYPE,CMFE_EQUATIONS_SET_1D3D_MONODOMAIN_ACTIVE_STRAIN_SUBTYPE], &
-   & EquationsSetFieldUserNumberFE,EquationsSetFieldFE,EquationsSetFE,Err)
+
+  IF (OLD_TOMO_MECHANICS) THEN
+    CALL cmfe_EquationsSet_CreateStart(EquationsSetsUserNumberFE,RegionFE,FibreField,[CMFE_EQUATIONS_SET_ELASTICITY_CLASS, &
+     & CMFE_EQUATIONS_SET_FINITE_ELASTICITY_TYPE,CMFE_EQUATIONS_SET_1D3D_MONODOMAIN_ELASTICITY_SUBTYPE], &
+     & EquationsSetFieldUserNumberFE,EquationsSetFieldFE,EquationsSetFE,Err)
+  ELSE
+    CALL cmfe_EquationsSet_CreateStart(EquationsSetsUserNumberFE,RegionFE,FibreField,[CMFE_EQUATIONS_SET_ELASTICITY_CLASS, &
+     & CMFE_EQUATIONS_SET_FINITE_ELASTICITY_TYPE,CMFE_EQUATIONS_SET_1D3D_MONODOMAIN_ACTIVE_STRAIN_SUBTYPE], &
+     & EquationsSetFieldUserNumberFE,EquationsSetFieldFE,EquationsSetFE,Err)
+  ENDIF
   CALL cmfe_EquationsSet_CreateFinish(EquationsSetFE,Err)
 
   !Create the equations set dependent field variables for Finite Elasticity
@@ -1243,9 +1363,16 @@ SUBROUTINE CreateEquationsSet()
   CALL cmfe_EquationsSet_Initialise(EquationsSetM,Err)
   !Set the equations set to be a Monodomain equations set
   !> \todo solve the monodomain problem on the fibre field rather than on the geometric field: GeometricField <--> FibreField
-  CALL cmfe_EquationsSet_CreateStart(EquationsSetsUserNumberM,RegionM,GeometricFieldM,[CMFE_EQUATIONS_SET_BIOELECTRICS_CLASS, &
-   & CMFE_EQUATIONS_SET_MONODOMAIN_EQUATION_TYPE,CMFE_EQUATIONS_SET_1D3D_MONODOMAIN_ACTIVE_STRAIN_SUBTYPE], &
-   & EquationsSetFieldUserNumberM,EquationsSetFieldM,EquationsSetM,Err)
+
+  IF (OLD_TOMO_MECHANICS) THEN
+    CALL cmfe_EquationsSet_CreateStart(EquationsSetsUserNumberM,RegionM,GeometricFieldM,[CMFE_EQUATIONS_SET_BIOELECTRICS_CLASS, &
+     & CMFE_EQUATIONS_SET_MONODOMAIN_EQUATION_TYPE,CMFE_EQUATIONS_SET_1D3D_MONODOMAIN_ELASTICITY_SUBTYPE], &
+     & EquationsSetFieldUserNumberM,EquationsSetFieldM,EquationsSetM,Err)
+  ELSE
+    CALL cmfe_EquationsSet_CreateStart(EquationsSetsUserNumberM,RegionM,GeometricFieldM,[CMFE_EQUATIONS_SET_BIOELECTRICS_CLASS, &
+     & CMFE_EQUATIONS_SET_MONODOMAIN_EQUATION_TYPE,CMFE_EQUATIONS_SET_1D3D_MONODOMAIN_ACTIVE_STRAIN_SUBTYPE], &
+     & EquationsSetFieldUserNumberM,EquationsSetFieldM,EquationsSetM,Err)
+  ENDIF
   CALL cmfe_EquationsSet_CreateFinish(EquationsSetM,Err)
 
   !Create the equations set dependent field variables for monodomain
@@ -1264,6 +1391,12 @@ END SUBROUTINE CreateEquationsSet
 
 SUBROUTINE InitializeFieldMonodomain()
   !UPDATE THE INDEPENDENT FIELD IndependentFieldM
+  ! OLD_TOMO_MECHANICS
+  !first variable (U)
+  !  components:
+  !    1) active stress
+  !
+  ! .NOT. OLD_TOMO_MECHANICS
   !first variable (U)
   !  components:
   !    1) A_1
@@ -1414,12 +1547,18 @@ SUBROUTINE InitializeCellML()
   CALL cmfe_CellML_CreateStart(CellMLUserNumber,RegionM,CellML,Err)
   !Import the Shorten et al. 2007 model from a file
   CALL cmfe_CellML_ModelImport(CellML,filename,shortenModelIndex,Err)
-!  CALL cmfe_CellML_ModelImport(CellML,filename2,shortenModelIndex2,Err)
   ! Now we have imported all the models we are able to specify which variables from the model we want:
   !,- to set from this side
-  CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex,"Aliev_Panfilov/I_HH",Err)
-  CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex,"Razumova/l_hs",Err)
-  CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex,"Razumova/velo",Err)
+
+  IF (OLD_TOMO_MECHANICS) THEN
+    CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex,"wal_environment/I_HH",Err)
+  ELSE
+    CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex,"Aliev_Panfilov/I_HH",Err)
+    CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex,"Razumova/l_hs",Err)
+    CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex,"Razumova/velo",Err)
+  ENDIF
+!  CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex,"razumova/L_S",Err)
+!  CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex,"razumova/rel_velo",Err)
 !
 !  CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex2,"wal_environment/I_HH",Err)
 !  CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex2,"razumova/L_S",Err)
@@ -1432,7 +1571,9 @@ SUBROUTINE InitializeCellML()
   !NOTE: If an INTERMEDIATE (or ALGEBRAIC) variable should be used in a mapping, it has to be set as known or wanted first!
   !,  --> set "razumova/stress" as wanted!
   !,  --> no need to set "wal_environment/vS" since all STATE variables are automatically set as wanted!
-!  CALL cmfe_CellML_VariableSetAsWanted(CellML,shortenModelIndex,"razumova/stress",Err)
+  IF (OLD_TOMO_MECHANICS) THEN
+    CALL cmfe_CellML_VariableSetAsWanted(CellML,shortenModelIndex,"razumova/stress",Err)
+  ENDIF
 !  CALL cmfe_CellML_VariableSetAsWanted(CellML,shortenModelIndex2,"razumova/stress",Err)
   !,- and override constant parameters without needing to set up fields
   !> \todo Need to allow parameter values to be overridden for the case when user has non-spatially varying parameter value.
@@ -1443,25 +1584,37 @@ SUBROUTINE InitializeCellML()
   !Create the CellML <--> OpenCMISS field maps
   CALL cmfe_CellML_FieldMapsCreateStart(CellML,Err)
   !Map the half-sarcomere length L_S
-  CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE, &
-   & shortenModelIndex,"Razumova/l_hs",CMFE_FIELD_VALUES_SET_TYPE,Err)
-  !Map the sarcomere relative contraction velocity
-  CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,3,CMFE_FIELD_VALUES_SET_TYPE, &
-   & shortenModelIndex,"Razumova/velo",CMFE_FIELD_VALUES_SET_TYPE,Err)
-  !Map the transmembrane voltage V_m
-  CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,DependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE, &
-   & shortenModelIndex,"Aliev_Panfilov/V_m",CMFE_FIELD_VALUES_SET_TYPE,Err)
-  CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,shortenModelIndex,"Aliev_Panfilov/V_m",CMFE_FIELD_VALUES_SET_TYPE, &
-   & DependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE,Err)
-  !Map the active stress
-  CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,shortenModelIndex,"Razumova/A_1",CMFE_FIELD_VALUES_SET_TYPE, &
-   & IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE,Err)
-  CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,shortenModelIndex,"Razumova/A_2",CMFE_FIELD_VALUES_SET_TYPE, &
-   & IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,2,CMFE_FIELD_VALUES_SET_TYPE,Err)
-  CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,shortenModelIndex,"Razumova/x_1",CMFE_FIELD_VALUES_SET_TYPE, &
-   & IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,3,CMFE_FIELD_VALUES_SET_TYPE,Err)
-  CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,shortenModelIndex,"Razumova/x_2",CMFE_FIELD_VALUES_SET_TYPE, &
-   & IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,4,CMFE_FIELD_VALUES_SET_TYPE,Err)
+  IF (OLD_TOMO_MECHANICS) THEN
+    !Map the transmembrane voltage V_m
+    CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,DependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE, &
+     & shortenModelIndex,"wal_environment/vS",CMFE_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,shortenModelIndex,"wal_environment/vS",CMFE_FIELD_VALUES_SET_TYPE, &
+     & DependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE,Err)
+    !Map the active stress
+    CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,shortenModelIndex,"razumova/stress",CMFE_FIELD_VALUES_SET_TYPE, &
+     & IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE,Err)
+  ELSE
+    CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE, &
+     & shortenModelIndex,"Razumova/l_hs",CMFE_FIELD_VALUES_SET_TYPE,Err)
+    !Map the sarcomere relative contraction velocity
+    CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,3,CMFE_FIELD_VALUES_SET_TYPE, &
+     & shortenModelIndex,"Razumova/velo",CMFE_FIELD_VALUES_SET_TYPE,Err)
+    !Map the transmembrane voltage V_m
+    CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,DependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE, &
+     & shortenModelIndex,"Aliev_Panfilov/V_m",CMFE_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,shortenModelIndex,"Aliev_Panfilov/V_m",CMFE_FIELD_VALUES_SET_TYPE, &
+     & DependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE,Err)
+    !Map the active stress
+    CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,shortenModelIndex,"Razumova/A_1",CMFE_FIELD_VALUES_SET_TYPE, &
+     & IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,shortenModelIndex,"Razumova/A_2",CMFE_FIELD_VALUES_SET_TYPE, &
+     & IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,2,CMFE_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,shortenModelIndex,"Razumova/x_1",CMFE_FIELD_VALUES_SET_TYPE, &
+     & IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,3,CMFE_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,shortenModelIndex,"Razumova/x_2",CMFE_FIELD_VALUES_SET_TYPE, &
+     & IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,4,CMFE_FIELD_VALUES_SET_TYPE,Err)
+
+  ENDIF
 
 !  CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE, &
 !   & shortenModelIndex2,"razumova/L_S",CMFE_FIELD_VALUES_SET_TYPE,Err)
@@ -1482,8 +1635,13 @@ SUBROUTINE InitializeCellML()
   !--------------------------------------------------------------------------------------------------------------------------------
   !Initialise dependent field for monodomain
   !> \todo - get V_m initialial value.
-  CALL cmfe_Field_ComponentValuesInitialise(DependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1, &
-   & 0.0_CMISSRP,Err)
+  IF (OLD_TOMO_MECHANICS) THEN
+    CALL cmfe_Field_ComponentValuesInitialise(DependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1, &
+      & -79.974_CMISSRP,Err)
+  ELSE
+    CALL cmfe_Field_ComponentValuesInitialise(DependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1, &
+      & 0.0_CMISSRP,Err)
+  ENDIF
 
   !Initialise dependent field for Finite Elasticity from undeformed geometry and set hydrostatic pressure
   CALL cmfe_Field_ParametersToFieldParametersComponentCopy(GeometricFieldFE,CMFE_FIELD_U_VARIABLE_TYPE, &
@@ -1518,15 +1676,20 @@ SUBROUTINE InitializeCellML()
 !  CALL cmfe_Field_ParameterSetUpdateStart(CellMLModelsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,Err)
 !  CALL cmfe_Field_ParameterSetUpdateFinish(CellMLModelsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,Err)
 
+
+  print*, ComputationalNodeNumber, ": 1197"
+
   !Create the CellML state field
   CALL cmfe_Field_Initialise(CellMLStateField,Err)
   CALL cmfe_CellML_StateFieldCreateStart(CellML,CellMLStateFieldUserNumber,CellMLStateField,Err)
   CALL cmfe_CellML_StateFieldCreateFinish(CellML,Err)
 
-!  !Create the CellML intermediate field
-!  CALL cmfe_Field_Initialise(CellMLIntermediateField,Err)
-!  CALL cmfe_CellML_IntermediateFieldCreateStart(CellML,CellMLIntermediateFieldUserNumber,CellMLIntermediateField,Err)
-!  CALL cmfe_CellML_IntermediateFieldCreateFinish(CellML,Err)
+  IF (OLD_TOMO_MECHANICS) THEN
+    !Create the CellML intermediate field
+    CALL cmfe_Field_Initialise(CellMLIntermediateField,Err)
+    CALL cmfe_CellML_IntermediateFieldCreateStart(CellML,CellMLIntermediateFieldUserNumber,CellMLIntermediateField,Err)
+    CALL cmfe_CellML_IntermediateFieldCreateFinish(CellML,Err)
+  ENDIF
 
   !Create the CellML parameters field
   CALL cmfe_Field_Initialise(CellMLParametersField,Err)

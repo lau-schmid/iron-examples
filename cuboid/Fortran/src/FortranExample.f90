@@ -151,6 +151,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   integer(CMISSIntg) :: stat
   character(len=256) :: filename,filename2,pathname,arg
   CHARACTER(len=1024) :: inputDirectory = "input/"
+  CHARACTER(LEN=256) :: MemoryConsumption1StTimeStep, MemoryConsumptionBeforeSim
   integer(CMISSIntg) :: MPI_Rank, numberOfProcesses
 
   INTEGER(CMISSIntg) :: NumberGlobalXElements,NumberGlobalYElements,NumberGlobalZElements
@@ -432,7 +433,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !--------------------------------------------------------------------------------------------------------------------------------
   !Read in the MU firing times
 
-  IF (ComputationalNodeNumber == 0) print*, "3.) Read in MU firing times"
+  IF (ComputationalNodeNumber == 0) PRINT*, "3.) Read in MU firing times"
 
   open(unit=5,file="input/MU_firing_times_10s.txt",action="read",iostat=stat)
   do i=1,10000
@@ -456,7 +457,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !--------------------------------------------------------------------------------------------------------------------------------
   !--------------------------------------------------------------------------------------------------------------------------------
   IF (ComputationalNodeNumber == 0) PRINT*, "4.) Simulate with stimulation"
-
+  IF (ComputationalNodeNumber == 0) MemoryConsumptionBeforeSim = GetMemoryConsumption()
 
   CALL cmfe_CustomTimingGet(CustomTimingOdeSolver, CustomTimingParabolicSolver, CustomTimingFESolverBeforeMainSim, Err)
   PRINT*, "    Nonliner Solver duration: ", CustomTimingFESolverBeforeMainSim, " s"
@@ -547,6 +548,10 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
     !-------------------------------------------------------------------------------------------------------------------------------
     time = time + PERIODD
     k=k+1
+
+    IF (k == 2) THEN
+      MemoryConsumption1StTimeStep = getMemoryConsumption()
+    ENDIF
 
   ENDDO
 
@@ -1681,9 +1686,6 @@ SUBROUTINE InitializeCellML()
 !  CALL cmfe_Field_ParameterSetUpdateStart(CellMLModelsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,Err)
 !  CALL cmfe_Field_ParameterSetUpdateFinish(CellMLModelsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,Err)
 
-
-  print*, ComputationalNodeNumber, ": 1197"
-
   !Create the CellML state field
   CALL cmfe_Field_Initialise(CellMLStateField,Err)
   CALL cmfe_CellML_StateFieldCreateStart(CellML,CellMLStateFieldUserNumber,CellMLStateField,Err)
@@ -1965,6 +1967,33 @@ FUNCTION GetTimeStamp()
   GetTimeStamp = TimeString
 END FUNCTION GetTimeStamp
 
+FUNCTION GetMemoryConsumption()
+  CHARACTER(LEN=100) :: GetMemoryConsumption
+  CHARACTER(LEN=100) ::  &
+   & pid, comm, state, ppid, pgrp, session, tty_nr, &
+   & tpgid, flags, minflt, cminflt, majflt, cmajflt, &
+   & utime, stime, cutime, cstime, priority, nice, &
+   & O, itrealvalue, starttime
+  INTEGER(CMISSLintg) :: MemoryConsumption, MemoryConsumptionEnd2
+
+  OPEN(UNIT=10, FILE="/proc/self/stat", ACTION="read", IOSTAT=stat)
+  IF (STAT /= 0) THEN
+    PRINT*, "Could not read memory consumption from /proc/self/stat."
+  ELSE
+    READ(10,*, IOSTAT=stat) pid, comm, state, ppid, pgrp, session, tty_nr, &
+       & tpgid, flags, minflt, cminflt, majflt, cmajflt, &
+       & utime, stime, cutime, cstime, priority, nice, &
+       & O, itrealvalue, starttime, MemoryConsumption, MemoryConsumptionEnd2
+    CLOSE(UNIT=10)
+
+    PRINT*, "MemoryConsumption: ", MemoryConsumption, " Bytes, ", MemoryConsumptionEnd2, " pages"
+
+    WRITE(GetMemoryConsumption, *) MemoryConsumption
+  ENDIF
+
+END FUNCTION GetMemoryConsumption
+
+
 SUBROUTINE WriteTimingFile()
 
   CHARACTER(len=256) :: Filename = "duration."
@@ -1974,7 +2003,7 @@ SUBROUTINE WriteTimingFile()
   REAL(CMISSSP), DIMENSION(2) :: Elapsed     ! For receiving user and system time
   REAL(CMISSSP) :: DurationTotal
   REAL(CMISSRP) :: DurationInit, DurationStretchSim, DurationIntInit, DurationMainSim
-  CHARACTER(LEN=100) :: TimeStampStr
+  CHARACTER(LEN=100) :: TimeStampStr, MemoryConsumptionEnd
 
   ! create filename
   WRITE(ComputationalNodeNumberStr, '(I0.5)') ComputationalNodeNumber     ! convert ComputationalNodeNumber to string
@@ -1988,7 +2017,8 @@ SUBROUTINE WriteTimingFile()
     OPEN(unit=123, file=Filename, iostat=stat)
     IF (stat /= 0 ) PRINT*, 'Failed to open File \"'// TRIM(Filename) // '\" for writing!.'
     WRITE(123,'(A)') '# Stamp; Host; NProc; X; Y; Z; F; Total FE; Total M; End Time; ' // &
-      & 'Dur. Init; Stretch Sim; Int. Init; Main Sim; Total; Total (User); Total (System); ODE; Parabolic; FE; FE before Main Sim" '
+      & 'Dur. Init; Stretch Sim; Int. Init; Main Sim; Total; Total (User); Total (System); ' // &
+      & 'ODE; Parabolic; FE; FE before Main Sim; Mem. Consumption after 1st timestep; Memory Consumption At End; '
     CLOSE(unit=123)
   ENDIF
 
@@ -2003,10 +2033,11 @@ SUBROUTINE WriteTimingFile()
 
   CALL ETIME(Elapsed, DurationTotal)
   CALL HOSTNM(Hostname)
+  MemoryConsumptionEnd = GetMemoryConsumption()
 
   TimeStampStr = GetTimeStamp()
 
-  WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A))") &
+  WRITE(123,"(4A,7(I11,A),(F8.3,A),13(F0.8,A))") &
     & TRIM(TimeStampStr), ';', &
     & TRIM(Hostname(1:22)), ';', &
     & NumberOfComputationalNodes, ';', &
@@ -2027,7 +2058,9 @@ SUBROUTINE WriteTimingFile()
     & CustomTimingOdeSolver, ';', &
     & CustomTimingParabolicSolver, ';', &
     & CustomTimingFESolver, ';', &
-    & CustomTimingFESolverBeforeMainSim, ';'
+    & CustomTimingFESolverBeforeMainSim, ';', &
+    & MemoryConsumption1StTimeStep, ';', &
+    & MemoryConsumptionEnd, ';'
 
   CLOSE(unit=123)
 END SUBROUTINE WriteTimingFile

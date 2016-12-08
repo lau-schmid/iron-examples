@@ -2037,7 +2037,7 @@ SUBROUTINE WriteTimingFile()
 
   TimeStampStr = GetTimeStamp()
 
-  WRITE(123,"(4A,7(I11,A),(F8.3,A),13(F0.8,A))") &
+  WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(L13,A))") &
     & TRIM(TimeStampStr), ';', &
     & TRIM(Hostname(1:22)), ';', &
     & NumberOfComputationalNodes, ';', &

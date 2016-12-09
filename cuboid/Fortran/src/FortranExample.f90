@@ -2037,7 +2037,7 @@ SUBROUTINE WriteTimingFile()
 
   TimeStampStr = GetTimeStamp()
 
-  WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(L13,A))") &
+  WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A))") &
     & TRIM(TimeStampStr), ';', &
     & TRIM(Hostname(1:22)), ';', &
     & NumberOfComputationalNodes, ';', &
@@ -2059,8 +2059,8 @@ SUBROUTINE WriteTimingFile()
     & CustomTimingParabolicSolver, ';', &
     & CustomTimingFESolver, ';', &
     & CustomTimingFESolverBeforeMainSim, ';', &
-    & MemoryConsumption1StTimeStep, ';', &
-    & MemoryConsumptionEnd, ';'
+    & TRIM(ADJUSTL(MemoryConsumption1StTimeStep)), ';', &
+    & TRIM(ADJUSTL(MemoryConsumptionEnd)), ';'
 
   CLOSE(unit=123)
 END SUBROUTINE WriteTimingFile

@@ -163,6 +163,16 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   REAL(CMISSRP) :: total
   REAL(CMISSRP) :: TimeStart, TimeInitFinshed, TimeStretchSimFinished, TimeMainSimulationStart, TimeMainSimulationFinished
 
+  INTEGER(CMISSIntg) :: CustomSolverConvergenceReasonParabolic = 0
+  INTEGER(CMISSIntg) :: CustomSolverConvergenceReasonNewton = 0
+  INTEGER(CMISSIntg) :: CustomSolverNumberIterationsParabolic = 0
+  INTEGER(CMISSIntg) :: CustomSolverNumberIterationsParabolicMin = 0
+  INTEGER(CMISSIntg) :: CustomSolverNumberIterationsParabolicMax = 0
+  INTEGER(CMISSIntg) :: CustomSolverNumberIterationsNewton = 0
+  INTEGER(CMISSIntg) :: CustomSolverNumberIterationsNewtonMin = 0
+  INTEGER(CMISSIntg) :: CustomSolverNumberIterationsNewtonMax = 0
+
+
   INTEGER(CMISSIntg), DIMENSION(10000,100) :: FIRING_TIMES
   INTEGER(CMISSIntg), ALLOCATABLE :: IZ_offset(:)
 
@@ -399,11 +409,13 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   !Solve the problem -- bring to new length before applying the stimulus
   IF (ComputationalNodeNumber == 0) PRINT*, "1.) Start solve before stimulation"
+  CALL cmfe_CustomSolverInfoReset(Err)
   CALL CPU_Time(TimeInitFinshed)
 
   CALL cmfe_Problem_Solve(Problem,Err)
 
   CALL CPU_Time(TimeStretchSimFinished)
+  CALL HandleSolverInfo(-1.0_CMISSRP)
   IF (ComputationalNodeNumber == 0) print*, "2.) After solve before stimulation"
 
   !reset the relative contraction velocity to 0
@@ -525,8 +537,10 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
     !Solve the problem for the stimulation time
     IF (ComputationalNodeNumber == 0) print*, "  Solve with stimulation,    time span: ", time, " to ",time+STIM_STOP
     CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time,time+STIM_STOP,ELASTICITY_TIME_STEP,Err)
-    CALL cmfe_Problem_Solve(Problem,Err)
 
+    CALL cmfe_CustomSolverInfoReset(Err)
+    CALL cmfe_Problem_Solve(Problem,Err)
+    CALL HandleSolverInfo(time)
 
     !-------------------------------------------------------------------------------------------------------------------------------
     !Now turn the stimulus off
@@ -544,7 +558,10 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
     !Solve the problem for the rest of the period
     IF (ComputationalNodeNumber == 0) PRINT*, "  Solve without stimulation, time span: ", time+STIM_STOP, " to ",time+PERIODD
     CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time+STIM_STOP,time+PERIODD,ELASTICITY_TIME_STEP,Err)
+
+    CALL cmfe_CustomSolverInfoReset(Err)
     CALL cmfe_Problem_Solve(Problem,Err)
+    CALL HandleSolverInfo(time+STIM_STOP)
     !-------------------------------------------------------------------------------------------------------------------------------
     time = time + PERIODD
     k=k+1
@@ -794,7 +811,7 @@ SUBROUTINE SetParameters()
     IF (OLD_TOMO_MECHANICS) then
       PRINT*, "Old mechanics formulation that works in parallel."
     ELSE
-      PRINT*, "Old mechanics formulation that does not work in parallel."
+      PRINT*, "New mechanics formulation that does not work in parallel."
     ENDIF
   ENDIF
 
@@ -1786,9 +1803,9 @@ SUBROUTINE CreateSolvers()
   CALL cmfe_Solver_DynamicSchemeSet(SolverParabolic,CMFE_SOLVER_DYNAMIC_BACKWARD_EULER_SCHEME,Err)
 
   IF (DEBUGGING_OUTPUT) THEN
-    CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
+    !CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
     !CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_TIMING_OUTPUT,Err)
-    !CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_SOLVER_OUTPUT,Err)
+    CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_SOLVER_OUTPUT,Err)
     !CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_MATRIX_OUTPUT,Err)
   ELSE
     CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_NO_OUTPUT,Err)
@@ -1801,15 +1818,20 @@ SUBROUTINE CreateSolvers()
    & SolverFEIndex,SolverFE,Err)
 
   ! only enable output for specified ComputeNode
-  IF (ComputationalNodeNumber == 1) THEN
-    CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_NO_OUTPUT,Err)
+  IF (DEBUGGING_OUTPUT) THEN
+    IF (ComputationalNodeNumber == 0) THEN
+      !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_NO_OUTPUT,Err)
+      !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
+      !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_TIMING_OUTPUT,Err)
+      CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_SOLVER_OUTPUT,Err)
+      !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_MATRIX_OUTPUT,Err)
+    ELSE
+      CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_NO_OUTPUT,Err)
+    ENDIF
   ELSE
     CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_NO_OUTPUT,Err)
-    !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
-    !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_TIMING_OUTPUT,Err)
-    !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_SOLVER_OUTPUT,Err)
-    !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_MATRIX_OUTPUT,Err)
   ENDIF
+
   CALL cmfe_Solver_NewtonJacobianCalculationTypeSet(SolverFE,CMFE_SOLVER_NEWTON_JACOBIAN_FD_CALCULATED,Err)
 !  CALL cmfe_Solver_NewtonJacobianCalculationTypeSet(SolverFE,CMFE_SOLVER_NEWTON_JACOBIAN_EQUATIONS_CALCULATED,Err) ! 721 steps
   CALL cmfe_Solver_NewtonMaximumIterationsSet(SolverFE,NewtonMaximumNumberOfIterations,Err)
@@ -1993,7 +2015,6 @@ FUNCTION GetMemoryConsumption()
 
 END FUNCTION GetMemoryConsumption
 
-
 SUBROUTINE WriteTimingFile()
 
   CHARACTER(len=256) :: Filename = "duration."
@@ -2018,7 +2039,8 @@ SUBROUTINE WriteTimingFile()
     IF (stat /= 0 ) PRINT*, 'Failed to open File \"'// TRIM(Filename) // '\" for writing!.'
     WRITE(123,'(A)') '# Stamp; Host; NProc; X; Y; Z; F; Total FE; Total M; End Time; ' // &
       & 'Dur. Init; Stretch Sim; Int. Init; Main Sim; Total; Total (User); Total (System); ' // &
-      & 'ODE; Parabolic; FE; FE before Main Sim; Mem. Consumption after 1st timestep; Memory Consumption At End; '
+      & 'ODE; Parabolic; FE; FE before Main Sim; Mem. Consumption after 1st timestep; Memory Consumption At End; ' // &
+      & 'Parabolic reason; Newton reason; parabolic n. iter; min; max; newton n. iter; min; max '
     CLOSE(unit=123)
   ENDIF
 
@@ -2037,7 +2059,7 @@ SUBROUTINE WriteTimingFile()
 
   TimeStampStr = GetTimeStamp()
 
-  WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A))") &
+  WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A))") &
     & TRIM(TimeStampStr), ';', &
     & TRIM(Hostname(1:22)), ';', &
     & NumberOfComputationalNodes, ';', &
@@ -2060,10 +2082,65 @@ SUBROUTINE WriteTimingFile()
     & CustomTimingFESolver, ';', &
     & CustomTimingFESolverBeforeMainSim, ';', &
     & TRIM(ADJUSTL(MemoryConsumption1StTimeStep)), ';', &
-    & TRIM(ADJUSTL(MemoryConsumptionEnd)), ';'
+    & TRIM(ADJUSTL(MemoryConsumptionEnd)), ';', &
+    & CustomSolverConvergenceReasonParabolic, ';', &
+    & CustomSolverConvergenceReasonNewton, ';', &
+    & CustomSolverNumberIterationsParabolic, ';', &
+    & CustomSolverNumberIterationsParabolicMin,';',  &
+    & CustomSolverNumberIterationsParabolicMax, ';', &
+    & CustomSolverNumberIterationsNewton, ';', &
+    & CustomSolverNumberIterationsNewtonMin, ';', &
+    & CustomSolverNumberIterationsNewtonMax, ';'
 
   CLOSE(unit=123)
 END SUBROUTINE WriteTimingFile
+
+SUBROUTINE HandleSolverInfo(TimeStep)
+  REAL(CMISSRP), INTENT(IN) :: TimeStep
+  CHARACTER(len=256) :: Filename = "iterations.csv"
+  LOGICAL :: FileExists
+
+  IF (ComputationalNodeNumber == 0) THEN
+
+    CALL cmfe_CustomSolverInfoGet(CustomSolverConvergenceReasonParabolic, CustomSolverConvergenceReasonNewton, &
+      & CustomSolverNumberIterationsParabolic, CustomSolverNumberIterationsParabolicMin, CustomSolverNumberIterationsParabolicMax, &
+      & CustomSolverNumberIterationsNewton, CustomSolverNumberIterationsNewtonMin, CustomSolverNumberIterationsNewtonMax, Err)
+
+    ! Check if file exists
+    INQUIRE(file=Filename, exist=FileExists)
+
+    ! Write Comment in first line if file does not yet exist
+    IF(.NOT. FileExists) THEN
+      OPEN(unit=123, file=Filename, iostat=stat)
+      IF (stat /= 0 ) PRINT*, 'Failed to open File \"'// TRIM(Filename) // '\" for writing!.'
+      WRITE(123,'(A)') '# Timestep; Parabolic reason; Newton reason; parabolic n. iter; min; max; newton n. iter; min; max '
+      WRITE(123,'(A)') '# Parabolic reason: 1=RTOL_NORMAL, 2=RTOL, 3=ATOL, 4=ITS, 5=CG_NEG_CURVE, 6=CG_CONSTRAINED, ' // &
+        & '7=STEP_LENGTH, 8=HAPPY_BREAKDOWN, 9=ATOL_NORMAL'
+      WRITE(123,'(A)') '# Newton reason: 2=FNORM_ABS ||F||<atol, 3=FNORM_RELATIVE ||F|| < rtol*||F_initial||, ' // &
+        & '4=SNORM_RELATIVE Newton computed step size small || delta x || < stol || x ||, ' // &
+        & '5=ITS, 7=TR_DELTA'
+      CLOSE(unit=123)
+    ENDIF
+
+    ! Write line in file
+    OPEN(unit=123, file=Filename, iostat=stat, access='append')
+    IF (stat /= 0 ) PRINT*, 'Failed to open File \"'// TRIM(Filename) // '\" for writing!.'
+
+    WRITE(123,"(F0.8,A,8(I7,A))") &
+      & TimeStep, ';', &
+      & CustomSolverConvergenceReasonParabolic, ';', &
+      & CustomSolverConvergenceReasonNewton, ';', &
+      & CustomSolverNumberIterationsParabolic, ';', &
+      & CustomSolverNumberIterationsParabolicMin,';',  &
+      & CustomSolverNumberIterationsParabolicMax, ';', &
+      & CustomSolverNumberIterationsNewton, ';', &
+      & CustomSolverNumberIterationsNewtonMin, ';', &
+      & CustomSolverNumberIterationsNewtonMax, ';'
+
+    CLOSE(unit=123)
+  ENDIF
+
+END SUBROUTINE HandleSolverInfo
 
 END PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 

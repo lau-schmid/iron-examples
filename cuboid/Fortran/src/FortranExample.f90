@@ -460,7 +460,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   IF (ComputationalNodeNumber == 0) MemoryConsumptionBeforeSim = GetMemoryConsumption()
 
   CALL cmfe_CustomTimingGet(CustomTimingOdeSolver, CustomTimingParabolicSolver, CustomTimingFESolverBeforeMainSim, Err)
-  PRINT*, "    Nonliner Solver duration: ", CustomTimingFESolverBeforeMainSim, " s"
+  IF (ComputationalNodeNumber == 0) PRINT*, "    Nonliner Solver duration: ", CustomTimingFESolverBeforeMainSim, " s"
   CALL cmfe_CustomTimingReset(Err)
   CALL CPU_Time(TimeMainSimulationStart)
 
@@ -634,7 +634,7 @@ SUBROUTINE SetParameters()
 
 
 
-  PRINT*, "Input directory: [",TRIM(inputDirectory),"]"
+  IF (ComputationalNodeNumber == 0) PRINT*, "Input directory: [",TRIM(inputDirectory),"]"
 
   NumberOfElementsFE=NumberGlobalXElements*NumberGlobalYElements*NumberGlobalZElements
 
@@ -1933,7 +1933,7 @@ SUBROUTINE CalculateBioelectrics()
 END SUBROUTINE CalculateBioelectrics
 
 SUBROUTINE ExportEMG()
-
+  RETURN
   WRITE(*,'(A)',advance='no') "Export EMG ..."
   EXPORT_FIELD=.TRUE.
   IF(EXPORT_FIELD) THEN
@@ -1986,7 +1986,7 @@ FUNCTION GetMemoryConsumption()
        & O, itrealvalue, starttime, MemoryConsumption, MemoryConsumptionEnd2
     CLOSE(UNIT=10)
 
-    PRINT*, "MemoryConsumption: ", MemoryConsumption, " Bytes, ", MemoryConsumptionEnd2, " pages"
+    IF (ComputationalNodeNumber == 0) PRINT*, "MemoryConsumption: ", MemoryConsumption, " Bytes, ", MemoryConsumptionEnd2, " pages"
 
     WRITE(GetMemoryConsumption, *) MemoryConsumption
   ENDIF

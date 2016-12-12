@@ -7,10 +7,10 @@ mpirun -n 4 $OPENCMISS_REL_DIR/laplace_fortran $OPENCMISS_INPUT_DIR 3 8 2 1
 mpirun -n 8 $OPENCMISS_REL_DIR/laplace_fortran $OPENCMISS_INPUT_DIR 6 8 2 1
 mpirun -n 12 $OPENCMISS_REL_DIR/laplace_fortran $OPENCMISS_INPUT_DIR 6 8 3 1
 mpirun -n 16 $OPENCMISS_REL_DIR/laplace_fortran $OPENCMISS_INPUT_DIR 6 8 4 1
-mpirun -n 24 $OPENCMISS_REL_DIR/laplace_fortran $OPENCMISS_INPUT_DIR 6 12 4 1
-mpirun -n 32 $OPENCMISS_REL_DIR/laplace_fortran $OPENCMISS_INPUT_DIR 6 16 4 1
-mpirun -n 64 $OPENCMISS_REL_DIR/laplace_fortran $OPENCMISS_INPUT_DIR 12 16 4 1
-mpirun -n 96 $OPENCMISS_REL_DIR/laplace_fortran $OPENCMISS_INPUT_DIR 12 16 6 1
+#mpirun -n 24 $OPENCMISS_REL_DIR/laplace_fortran $OPENCMISS_INPUT_DIR 6 12 4 1
+#mpirun -n 32 $OPENCMISS_REL_DIR/laplace_fortran $OPENCMISS_INPUT_DIR 6 16 4 1
+#mpirun -n 64 $OPENCMISS_REL_DIR/laplace_fortran $OPENCMISS_INPUT_DIR 12 16 4 1
+#mpirun -n 96 $OPENCMISS_REL_DIR/laplace_fortran $OPENCMISS_INPUT_DIR 12 16 6 1
 exit
 
 xstart=3

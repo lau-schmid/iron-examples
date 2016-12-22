@@ -26,6 +26,9 @@ outlier_bottom = 1
 report_filename = "duration.00000.csv"
 report_filename = "duration_strong_scaling.csv"
 report_filename = "duration_strong_scaling2.csv"
+report_filename = "duration_strong_scaling3.csv"
+#report_filename = "duration_strong_scaling_bwunicluster.csv"
+
 print "report file: {}".format(report_filename)
 data = []
 with open(report_filename) as csvfile:
@@ -80,9 +83,17 @@ def isint(value):
 # 20 FE before Main Sim
 # 21 memory consumption after simulation
 # 22 memory consumption at shutdown
+# 23 Parabolic reason
+# 24 Newton reason
+# 25 parabolic n. iter
+# 26 min
+# 27 max
+# 28 newton n. iter
+# 29 min
+# 30 max 
 
-max_index = 22
-int_indices = [2, 3, 4, 5, 6, 7, 8, 9, 21, 22]
+max_index = 30
+int_indices = [2, 3, 4, 5, 6, 7, 8, 9, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
 float_indices = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
 
 def extract_data(data):
@@ -180,8 +191,6 @@ for key in datasets:
   fo.str_format_seconds(datasets[key]["value"][12]), 
   fo.str_format_seconds(datasets[key]["value"][13]))
 print ""
-print ""
-  
 print "{:10}, {:6}, {:6}, {:10}, {:10}, {:10}, {:10}".\
 format("key", "F", "#M", "ODE", "Parabolic", "FE", "pre FE")
 for key in datasets:
@@ -194,15 +203,89 @@ for key in datasets:
   fo.str_format_seconds(datasets[key]["value"][20]))
 
 print ""
+print "------------- parallel scaling -------------------------------------------"
+print "{:10}, {:6},  {:6}, {:6}, {:10}, {:10}, {:10}".\
+format("key", "F", "#M", "nproc", "dur", "speedup", "efficency")
+t0 = float(datasets["001"]["value"][13])
+for key in datasets:
+  
+  print "{:10}, {:6}, {:6}, {:6}, {:10}, {:10}, {:10}".\
+  format(key, datasets[key]["value"][6], datasets[key]["value"][8], 
+  datasets[key]["value"][2], 
+  fo.str_format_seconds(datasets[key]["value"][13]), 
+  t0/datasets[key]["value"][13], 
+  (t0/datasets[key]["value"][13])/datasets[key]["value"][2])
+print ""
+print ""
+  
+print ""
 print "------------- memory consumption -------------------------------------------"
+print "{:10}, {:6}, {:6}, {:10}, {:10}, {:10.8}".\
+format("key", "F", "#M", "mem", "mem end", "factor")
+for key in datasets:
+  
+  print "{:10}, {:6}, {:6}, {:10}, {:10}, {:10.8}".\
+  format(key, datasets[key]["value"][6], datasets[key]["value"][8], 
+  fo.str_format_memory(datasets[key]["value"][21]),
+  fo.str_format_memory(datasets[key]["value"][22]),
+  (datasets[key]["value"][21]*datasets[key]["value"][2]) / datasets['001']["value"][21])
+  
+print ""
+size = {
+  '001' : 8*8,
+  '002' : 8*8/2+8,
+  '004' : 8*8/4+2*8,
+  '008' : 8+2*8,
+  '016' : 4+2*4+3,
+  '032' : 2+2*2+2*3,
+  '064' : 1+8,
+}
+gb = 1000000000
+ms = 1*gb
+
+m2 = datasets['002']["value"][21]
+m1 = datasets['001']["value"][21]
+
+print ""
+ms = float(m2 - m1) / (size['002'] - size['001'])
+print 'ms = ', fo.str_format_memory(ms)
+
+mc = float(m1) - size['001']*ms
+print 'mc = ', fo.str_format_memory(mc)
+print ""
+
+print "{:10}, {:6}, {:6}, {:10}, {:10}, {:10}, {:10}, {:20}, {:12}".\
+format("key", "F", "#M", "factor to 1", "#3D el", "factor", "nprc * #el", "mc estimate", "mc est./m")
+for key in datasets:
+  m = datasets[key]["value"][21]
+  p = datasets[key]["value"][2]
+  
+  print "{:10}, {:6}, {:6}, {:10.8}, {:10}, {:10.8}, {:10}, {:20}, {:10.8}".\
+  format(key, datasets[key]["value"][6], datasets[key]["value"][8],
+  float(m)/m1,
+  size[key],
+  float(size[key])/size['001'],
+  float(p)*size[key],
+  fo.str_format_memory(float(m) - size[key]*ms),
+  (float(m) - size[key]*ms) / m
+  )
+  
+print ""
+print "------------- n iterations -------------------------------------------"
 print "{:10}, {:6}, {:6}, {:10}, {:10}".\
 format("key", "F", "#M", "mem", "mem end")
 for key in datasets:
   
-  print "{:10}, {:6}, {:6}, {:10}, {:10}".\
+  print "{:10}, {:6}, {:6}, {:10}, {:10}, {:10}, {:10}, {:10}, {:10}, {:10}, {:10}".\
   format(key, datasets[key]["value"][6], datasets[key]["value"][8], 
-  fo.str_format_memory(datasets[key]["value"][21]),
-  fo.str_format_memory(datasets[key]["value"][22]))
+  datasets[key]["value"][23],
+  datasets[key]["value"][24],
+  datasets[key]["value"][25],
+  datasets[key]["value"][26],
+  datasets[key]["value"][27],
+  datasets[key]["value"][28],
+  datasets[key]["value"][29],
+  datasets[key]["value"][30])
 ###############################################################
 #######################################################
 # plot
@@ -305,7 +388,7 @@ plt.xlabel('Number of processes')
 plt.legend([p0, p2, p1], [labels[0], labels[1], labels[2]], loc='center right')
 plt.grid(which='both')
 plt.tight_layout()
-plt.savefig(output_path+SCENARIO+'_strong_scaling.png')
+plt.savefig(output_path+SCENARIO+'_strong_scaling_timing.png')
 
 ######################
 # plot memory scaling
@@ -384,7 +467,7 @@ plt.xlabel('Number of processes')
 plt.legend([p0, p1], [labels[0], labels[1]], loc='center right')
 plt.grid(which='both')
 plt.tight_layout()
-plt.savefig(output_path+SCENARIO+'_strong_scaling.png')
+plt.savefig(output_path+SCENARIO+'_strong_scaling_memory.png')
 
 if show_plots:
   plt.show()

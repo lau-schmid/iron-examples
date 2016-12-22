@@ -18,13 +18,24 @@ show_plots = True
 if len(sys.argv) >= 2:
   show_plots = False
   
-remove_outlier = False
+remove_outlier = True
 outlier_top = 1
 outlier_bottom = 1
   
 # read csv file
 report_filename = "duration.00000.csv"
 report_filename = "duration_weak_scaling.csv"
+report_filename = "duration_weak_scaling3.csv"
+report_filename = "duration.helium.csv"
+report_filename = "duration.helium2.csv"
+#report_filename = "duration_weak_scaling_bwunicluster.csv"
+
+report_filename = "duration_weak_scaling4.csv" # with added 64 proc of neon
+
+caption = u'Weak scaling, cuboid muscle, neon'
+#caption = u'Weak scaling, cuboid muscle, helium'
+#caption = u'Weak scaling, cuboid muscle, bwunicluster'
+
 print "report file: {}".format(report_filename)
 data = []
 with open(report_filename) as csvfile:
@@ -77,9 +88,19 @@ def isint(value):
 # 18 Parabolic
 # 19 FE
 # 20 FE before Main Sim
+# 21 memory consumption after simulation
+# 22 memory consumption at shutdown
+# 23 Parabolic reason
+# 24 Newton reason
+# 25 parabolic n. iter
+# 26 min
+# 27 max
+# 28 newton n. iter
+# 29 min
+# 30 max 
 
-max_index = 20
-int_indices = [2, 3, 4, 5, 6, 7, 8, 9]
+max_index = 31
+int_indices = [2, 3, 4, 5, 6, 7, 8, 9, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
 float_indices = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
 
 def extract_data(data):
@@ -97,8 +118,11 @@ def extract_data(data):
     # copy dataset to new_data
     new_data = dataset
     
+    # fill dataset to size of max_index
+    if len(dataset) < max_index+1:
+      new_data += (max_index+1-len(dataset)) * [0]
+      
     # extract some values
-    
     for index in int_indices:
       new_data[index] = int(new_data[index])     if isint(new_data[index])    else 0
     for index in float_indices:
@@ -106,10 +130,6 @@ def extract_data(data):
       
     # define sorting key
     key = "{:03d}".format(new_data[2])
-      
-    # fill dataset to size of max_index
-    if len(dataset) < max_index:
-      a += (len(dataset)-max_index) * [0]
       
     # store extracted values
     if key not in datasets:
@@ -180,15 +200,32 @@ print ""
 print ""
   
 print "{:10}, {:6}, {:6}, {:6}, {:6}, {:10}, {:10}, {:10}, {:10}".\
-format("key", "nproc", "F", "#M", "#FE", "init", "stretch", "init", "main")
+format("key", "nproc", "F", "#M", "#FE", "ODE", "Parabolic", "FE", "pre FE")
 for key in datasets:
   
   print "{:10}, {:6}, {:6}, {:6}, {:6}, {:10}, {:10}, {:10}, {:10}".\
   format(key, datasets[key]["value"][2], datasets[key]["value"][6], datasets[key]["value"][8],  datasets[key]["value"][7], 
-  fo.str_format_seconds(datasets[key]["value"][16]), 
   fo.str_format_seconds(datasets[key]["value"][17]), 
   fo.str_format_seconds(datasets[key]["value"][18]), 
-  fo.str_format_seconds(datasets[key]["value"][19]))
+  fo.str_format_seconds(datasets[key]["value"][19]), 
+  fo.str_format_seconds(datasets[key]["value"][20]))
+  
+print ""
+print "------------- n iterations -------------------------------------------"
+print "{:10}, {:6}, {:6}, {:10}, {:10}, {:10}, {:10}, {:10}, {:10}, {:10}, {:10}".\
+format("key", "F", "#M", "Parabolic", "Newton", "p. n. iter", "min", "max", "n. n. iter", "min", "max" )
+for key in datasets:
+  
+  print "{:10}, {:6}, {:6}, {:10}, {:10}, {:10}, {:10}, {:10}, {:10}, {:10}, {:10}".\
+  format(key, datasets[key]["value"][6], datasets[key]["value"][8], 
+  datasets[key]["value"][23],
+  datasets[key]["value"][24],
+  datasets[key]["value"][25],
+  datasets[key]["value"][26],
+  datasets[key]["value"][27],
+  datasets[key]["value"][28],
+  datasets[key]["value"][29],
+  datasets[key]["value"][30])
 ###############################################################
 #######################################################
 # plot
@@ -249,7 +286,7 @@ for key in datasets:
 xlist = list(xdata)
 
 ######################
-# plot strong scaling
+# plot weak scaling
 plt.figure(2, figsize=(10,8))
 
 # 17 ODE
@@ -291,12 +328,12 @@ plt.grid(which='both')
 ax2 = ax.twiny()
 ax2.set_xlim(ax.get_xlim())
 ax2.set_xticks(xlist)
-ax2.set_xticklabels([1,2,4,8,12,16,24,32])
+ax2.set_xticklabels([1,2,4,8,12,16,24,32,64])
 ax2.set_xlabel(r"Number of processes")
 
-plt.title(u'Weak scaling, cuboid muscle, neon', y=1.1)
+plt.title(caption, y=1.1)
 plt.tight_layout()
-plt.savefig(output_path+SCENARIO+'_strong_scaling.png')
+plt.savefig(output_path+SCENARIO+'_weak_scaling.png')
 
 if show_plots:
   plt.show()

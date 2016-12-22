@@ -1,0 +1,55 @@
+Determining if the pthread_create exist failed with the following output:
+Change Dir: /usr/local/home/kraemer/software/opencmiss_examples/ActiveStrain/build_debug/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_7c824/fast"
+/usr/bin/make -f CMakeFiles/cmTC_7c824.dir/build.make CMakeFiles/cmTC_7c824.dir/build
+make[1]: Entering directory '/usr/local/home/kraemer/software/opencmiss_examples/ActiveStrain/build_debug/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_7c824.dir/CheckSymbolExists.c.o
+/usr/bin/cc     -o CMakeFiles/cmTC_7c824.dir/CheckSymbolExists.c.o   -c /usr/local/home/kraemer/software/opencmiss_examples/ActiveStrain/build_debug/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTC_7c824
+/afs/.mathematik.uni-stuttgart.de/home/cmcs/share/environment-modules/Packages/cmake/3.5.0/bin/cmake -E cmake_link_script CMakeFiles/cmTC_7c824.dir/link.txt --verbose=1
+/usr/bin/cc       CMakeFiles/cmTC_7c824.dir/CheckSymbolExists.c.o  -o cmTC_7c824 -rdynamic 
+CMakeFiles/cmTC_7c824.dir/CheckSymbolExists.c.o: In function `main':
+CheckSymbolExists.c:(.text+0x16): undefined reference to `pthread_create'
+collect2: error: ld returned 1 exit status
+CMakeFiles/cmTC_7c824.dir/build.make:97: recipe for target 'cmTC_7c824' failed
+make[1]: *** [cmTC_7c824] Error 1
+make[1]: Leaving directory '/usr/local/home/kraemer/software/opencmiss_examples/ActiveStrain/build_debug/CMakeFiles/CMakeTmp'
+Makefile:126: recipe for target 'cmTC_7c824/fast' failed
+make: *** [cmTC_7c824/fast] Error 2
+
+File /usr/local/home/kraemer/software/opencmiss_examples/ActiveStrain/build_debug/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <pthread.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef pthread_create
+  return ((int*)(&pthread_create))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+
+Determining if the function pthread_create exists in the pthreads failed with the following output:
+Change Dir: /usr/local/home/kraemer/software/opencmiss_examples/ActiveStrain/build_debug/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_03be6/fast"
+/usr/bin/make -f CMakeFiles/cmTC_03be6.dir/build.make CMakeFiles/cmTC_03be6.dir/build
+make[1]: Entering directory '/usr/local/home/kraemer/software/opencmiss_examples/ActiveStrain/build_debug/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_03be6.dir/CheckFunctionExists.c.o
+/usr/bin/cc    -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_03be6.dir/CheckFunctionExists.c.o   -c /afs/.mathematik.uni-stuttgart.de/home/cmcs/share/environment-modules/Packages/cmake/3.5.0/share/cmake-3.5/Modules/CheckFunctionExists.c
+Linking C executable cmTC_03be6
+/afs/.mathematik.uni-stuttgart.de/home/cmcs/share/environment-modules/Packages/cmake/3.5.0/bin/cmake -E cmake_link_script CMakeFiles/cmTC_03be6.dir/link.txt --verbose=1
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=pthread_create    CMakeFiles/cmTC_03be6.dir/CheckFunctionExists.c.o  -o cmTC_03be6 -rdynamic -lpthreads 
+/usr/bin/ld: cannot find -lpthreads
+collect2: error: ld returned 1 exit status
+CMakeFiles/cmTC_03be6.dir/build.make:97: recipe for target 'cmTC_03be6' failed
+make[1]: *** [cmTC_03be6] Error 1
+make[1]: Leaving directory '/usr/local/home/kraemer/software/opencmiss_examples/ActiveStrain/build_debug/CMakeFiles/CMakeTmp'
+Makefile:126: recipe for target 'cmTC_03be6/fast' failed
+make: *** [cmTC_03be6/fast] Error 2
+
+

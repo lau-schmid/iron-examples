@@ -589,6 +589,12 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   CALL WriteTimingFile()
 
+  CALL WriteCustomProfilingFile()
+
+  IF (ComputationalNodeNumber == 0) THEN
+    PRINT*, cmfe_CustomProfilingGetInfo(Err)
+  ENDIF
+
   PRINT*, ""
   PRINT*, "--------------------------------------------------"
   PRINT*, "Process ", ComputationalNodeNumber
@@ -2095,6 +2101,23 @@ SUBROUTINE WriteTimingFile()
 
   CLOSE(unit=123)
 END SUBROUTINE WriteTimingFile
+
+SUBROUTINE WriteCustomProfilingFile()
+  CHARACTER(len=256) :: Filename = "profiling."
+  CHARACTER(len=20)  :: ComputationalNodeNumberStr
+
+  ! create filename
+  WRITE(ComputationalNodeNumberStr, '(I0.5)') ComputationalNodeNumber     ! convert ComputationalNodeNumber to string
+  Filename = TRIM(Filename) // TRIM(ComputationalNodeNumberStr) // ".txt"
+
+  ! Write Comment in first line if file does not yet exist
+  OPEN(unit=123, file=Filename, iostat=stat, access='append')
+  IF (stat /= 0 ) PRINT*, 'Failed to open File \"'// TRIM(Filename) // '\" for writing!.'
+  WRITE(123,'(2A)') '# CustomProfiling at ',GetTimeStamp()
+  WRITE(123,*) cmfe_CustomProfilingGetInfo(Err)
+
+  CLOSE(unit=123)
+END SUBROUTINE WriteCustomProfilingFile
 
 SUBROUTINE HandleSolverInfo(TimeStep)
   REAL(CMISSRP), INTENT(IN) :: TimeStep

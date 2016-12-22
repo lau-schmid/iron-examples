@@ -1,5 +1,5 @@
 # Add example executable
-add_executable(laplace_fortran src/FortranExample.f90)
+add_executable(cuboid src/FortranExample.f90)
 
 # Turn on Fortran preprocessing (#include directives)
 if (MSVC)
@@ -7,7 +7,7 @@ if (MSVC)
 else()
     set(PROC_OPT "-cpp")
 endif()
-target_compile_options(laplace_fortran PRIVATE ${PROC_OPT})
+target_compile_options(cuboid PRIVATE ${PROC_OPT})
 
 # Link to opencmiss
 # -----------------
@@ -24,11 +24,11 @@ target_compile_options(laplace_fortran PRIVATE ${PROC_OPT})
 #     target_link_libraries(${EXAMPLE_BINARY} PRIVATE petsc)
 #
 # All the OpenCMISS dependencies provide a target you can link against corresponding to the (lowercase) component name.
-target_link_libraries(laplace_fortran PRIVATE opencmiss)
+target_link_libraries(cuboid PRIVATE opencmiss)
 
 # Add a simple test that runs the executable
-add_test(NAME Laplace_Fortran COMMAND laplace_fortran)
-add_opencmiss_environment(Laplace_Fortran)
+add_test(NAME Cuboid COMMAND cuboid)
+add_opencmiss_environment(Cuboid)
 
 ###################
 # Developer notice!

@@ -569,7 +569,27 @@ deallocate(SurfaceNodes)
  end do
 
  end do 
+ 
+! Dear Andreas : Please vaerify is the following way of applying the pressure boundary condition looks alright 
+ 
+! Applying Pressure Neuman Boundary condition
 
+! DO NN=1,SIZE(SurfaceNodes,1)
+
+! NODE=SurfaceNodes(NN)
+
+! CALL cmfe_Decomposition_NodeDomainGet(all_Decomposition%Decomposition(j),NODE,1,NodeDomain,Err)
+
+! IF(NodeDomain==ComputationalNodeNumber) THEN
+
+! CALL !cmfe_BoundaryConditions_SetNode(all_BoundaryConditions%BoundaryConditions(j),DependentField,CMFE_FIELD_DELUDELN_VARIABLE_TYPE,1,1,NODE,&
+
+!ABS(NormalXi), CMFE_BOUNDARY_CONDITION_PRESSURE,2,Err)
+
+
+!ENDIF
+
+!ENDDO
 
 
 

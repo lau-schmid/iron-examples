@@ -1,1 +1,0 @@
-/data/home/mirzawd/software/opencmiss_examples/large_uniaxial_extension/build_debug/Fortran/CMakeFiles/large_uniaxial.dir

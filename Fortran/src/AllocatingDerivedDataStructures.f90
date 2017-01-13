@@ -15,6 +15,7 @@
   num_of_Region = 0 
   num_of_CoordinateSystem = 0
   num_of_FiberField       = 0 
+  num_of_PressureBasis    = 0
 
 
   open(12,file=fileplace//"input.iron",status="old")
@@ -37,12 +38,14 @@ do while (trim(rdline).NE."STOP_PARSING")
        call searching(rdline,"START_DEPENDENT_FIELD",num_of_DependentField)
        call searching(rdline,"START_SOLVER_SETTINGS",num_of_Solver)
        call searching(rdline,"START_CONTROL_LOOP",num_of_ControlLoop)
-       call searching(rdline,"START_FIBER_FIELD",num_of_FiberField)  
+       call searching(rdline,"START_FIBER_FIELD",num_of_FiberField) 
+       call searching(rdline,"START_PRESSURE_BASIS",num_of_PressureBasis) 
 enddo
 
   num_of_WorldCoordinateSystem = num_of_CoordinateSystem
-  num_of_Decomposition = 1
+  num_of_Decomposition = num_of_Mesh
   num_of_GeneratedMesh =  num_of_Mesh
+  
 
 
 !!!!!!!!!!!!!!!!!!!		ALLOCATE DATA STRUCTURES 		!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -53,7 +56,7 @@ enddo
   allocate(all_CoordinateSystem%CoordinateSystem(num_of_CoordinateSystem))
   allocate(all_WorldCoordinateSystem%WorldCoordinateSystem(num_of_CoordinateSystem))
   allocate(all_Mesh%Mesh(num_of_Mesh))
-  allocate(all_Decomposition%Decomposition(1))
+  allocate(all_Decomposition%Decomposition(num_of_decomposition))
   allocate(all_Equations%Equations(num_of_EquationsSet))
   allocate(all_EquationsSet%EquationsSet(num_of_EquationsSet))
   allocate(all_GeometricField%GeometricField(num_of_GeometricField))

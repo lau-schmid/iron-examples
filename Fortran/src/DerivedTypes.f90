@@ -88,6 +88,6 @@
   TYPE(control_loop_type)	      :: all_ControlLoop
   TYPE(generate_mesh_type)            :: all_GeneratedMesh
   TYPE(dependent_field_type) 	      :: all_DependentField
-  !TYPE(cmfe_FieldType) :: DependentField
+  TYPE(cmfe_FieldType) 		      :: SourceField
   
 

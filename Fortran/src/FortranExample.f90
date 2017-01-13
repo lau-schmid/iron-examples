@@ -73,16 +73,22 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 #include "mpif.h"
 #endif
 
-
+  REAL(CMISSRP), PARAMETER :: Gravity(3)=[0.0_CMISSRP,0.0_CMISSRP,-9.8_CMISSRP] !in m s^-2
+  REAL(CMISSRP), PARAMETER :: Density=   9.0E-4_CMISSRP
   REAL(CMISSRP) :: HEIGHT
   REAL(CMISSRP) :: WIDTH
   REAL(CMISSRP) :: LENGTH
+  INTEGER(CMISSIntg) :: NumberOfArguments,ArgumentLength,ArgStatus
+  CHARACTER(LEN=100) :: CommandArgument,inputFile
+
+  
 !  INTEGER(CMISSIntg), PARAMETER :: InterpolationType=CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION
   INTEGER(CMISSIntg) 		 :: InterpolationType
   INTEGER(CMISSIntg) 		 :: PressureInterpolationType
   LOGICAL			 :: UsePressureBasis 
+  INTEGER(CMISSIntg)             :: ScalingType
 !  LOGICAL, PARAMETER :: UsePressureBasis=.FALSE.
-  INTEGER(CMISSIntg), PARAMETER :: NumberOfGaussXi=3
+  INTEGER(CMISSIntg)             :: NumberOfGaussXi
 
 !!!!!!!!!!!!!!!!!!!!		COUTER SIZE		!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!! declare 
@@ -109,10 +115,10 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   INTEGER(CMISSIntg)    :: num_of_SolverEquations
   INTEGER(CMISSIntg)    :: num_of_ControlLoop
   INTEGER(CMISSIntg)    :: num_of_GeneratedMesh
-  INTEGER(CMISSIntg)    :: j ,component_idx
+  INTEGER(CMISSIntg)    :: j ,component_idx,num_of_dirichelet,num_of_traction_neumann,num_of_pressure_neumann
   character(len = 100)  :: constraint 
 
-
+ 
   
  
 !!!!!!!!!!!!!!!!!!!!!!  	END COUNTER SIZE 		!!!!!!!!!!!!!!!!!!!
@@ -131,7 +137,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   INTEGER(CMISSIntg), allocatable :: EquationSetUserNumber(:)
   INTEGER(CMISSIntg), allocatable :: EquationsSetFieldUserNumber(:)
   INTEGER(CMISSIntg), allocatable :: ProblemUserNumber(:)
-
+  INTEGER(CMISSIntg) ,parameter   :: FieldSourceUserNumber = 20
   !Program types
 
   !Program variables
@@ -140,11 +146,11 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   INTEGER(CMISSIntg) :: EquationsSetIndex
   INTEGER(CMISSIntg) :: NumberOfComputationalNodes,NumberOfDomains,ComputationalNodeNumber
   INTEGER(CMISSIntg) :: NodeNumber,NodeDomain,node_idx
-  INTEGER(CMISSIntg),ALLOCATABLE :: SurfaceNodes(:)
+  INTEGER(CMISSIntg),ALLOCATABLE :: SurfaceNodes(:),LeftSurfaceNodes(:),FrontSurfaceNodes(:)
 
-  INTEGER(CMISSIntg) :: BottomNormalXi,LeftNormalXi,RightNormalXi,BackNormalXi
+  INTEGER(CMISSIntg) :: BottomNormalXi,LeftNormalXi,RightNormalXi,FrontNormalXi
 
-!  INTEGER(CMISSIntg), PARAMETER :: NUMBER_OF_COMPONENTS = 3 !nearly incompressible
+! INTEGER(CMISSIntg), PARAMETER :: NUMBER_OF_COMPONENTS = 3 !nearly incompressible
   INTEGER(CMISSIntg), PARAMETER :: NUMBER_OF_COMPONENTS = 4 !fully incompressible
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!! 		          MY CONTRIBUTION 		!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -161,20 +167,30 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   !Generic CMISS variables
   INTEGER(CMISSIntg) :: Err
-
-
+  NumberOfArguments = COMMAND_ARGUMENT_COUNT()
+  
+  IF(NumberOfArguments .NE. 1) THEN
+    CALL HANDLE_ERROR("Please provide only the input file")
+  ELSE
+    CALL GET_COMMAND_ARGUMENT(1,CommandArgument,ArgumentLength,ArgStatus)
+    InputFile = trim(CommandArgument)
+  ENDIF
+ print *, InputFile
  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 		INITIALIZE THE DERIVED DATA STRUCTURES 			 !!!!!!!!!!!!!!!!!!!!!
  include "AllocatingDerivedDataStructures.f90"
-
+  print *, num_of_dirichelet
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!              ALLOCATE  "USERNUMBER"  DATA STRUCTURE SIZE 		 !!!!!!!!!!!!!!!!!!!!!!
  include "UserNumberDataStructures.f90"
 
-
+ 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!        INCLUDES I/0 STATEMENT THAT PARSE THROUGH THE INPUT FILE        !!!!!!!!!!!!!!!!!!!!!!
  include "parsing_algorithm.f90"
+
+
+
 
 
 #ifdef WIN32
@@ -187,29 +203,18 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !If attempt fails set with system estimated values
   IF(.NOT.QUICKWIN_STATUS) QUICKWIN_STATUS=SETWINDOWCONFIG(QUICKWIN_WINDOW_CONFIG)
 #endif
-
-
-
-DO  i = 1,num_of_CoordinateSystem 			!!!!!!!!!!!!! introducing a LOOP for assigning  coordinate systems to thier respective regions !!!!!!!!!!
   !Intialise cmiss
-
-  CALL cmfe_Initialise(all_WorldCoordinateSystem%WorldCoordinateSystem(i),all_WorldRegion%WorldRegion(i),Err)
-
+  CALL cmfe_Initialise(all_WorldCoordinateSystem%WorldCoordinateSystem(1),all_WorldRegion%WorldRegion(1),Err)
   CALL cmfe_ErrorHandlingModeSet(CMFE_ERRORS_TRAP_ERROR,Err)
-
+   !Get the number of computational nodes and this computational node number
+  CALL cmfe_ComputationalNumberOfNodesGet(NumberOfComputationalNodes,Err)
+  CALL cmfe_ComputationalNodeNumberGet(ComputationalNodeNumber,Err)
+  NumberOfDomains=NumberOfComputationalNodes
   !Set all diganostic levels on for testing
   !CALL cmfe_DiagnosticsSetOn(CMFE_FROM_DIAG_TYPE,[1,2,3,4,5],"Diagnostics",["PROBLEM_RESIDUAL_EVALUATE"],Err)
 
-  !Get the number of computational nodes and this computational node number
-  CALL cmfe_ComputationalNumberOfNodesGet(NumberOfComputationalNodes,Err)
-  CALL cmfe_ComputationalNodeNumberGet(ComputationalNodeNumber,Err)
-
-  NumberGlobalXElements=str2int(Mesh_arg4(1,i))
-  NumberGlobalYElements=str2int(Mesh_arg4(2,i))
-  NumberGlobalZElements=str2int(Mesh_arg4(3,i))
-  NumberOfDomains=NumberOfComputationalNodes
-  
-
+DO  i = 1,num_of_CoordinateSystem 			!!!!!!!!!!!!! introducing a LOOP for assigning  coordinate systems to thier respective regions !!!!!!!!!!
+ 
   !Create a 3D rectangular cartesian coordinate system
   CALL cmfe_CoordinateSystem_Initialise(all_CoordinateSystem%CoordinateSystem(i),Err)
   CALL cmfe_CoordinateSystem_CreateStart(CoordinateSystemUserNumber(i),all_CoordinateSystem%CoordinateSystem(i),Err)
@@ -230,11 +235,15 @@ DO  i = 1,num_of_CoordinateSystem 			!!!!!!!!!!!!! introducing a LOOP for assign
 END DO 
 
 
-DO i = 1, num_of_basis  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  Assigning basis to thier respective edges       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Basis: DO i = 1, num_of_basis  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  Assigning basis to thier respective edges       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   InterpolationType= match_basis(Basis_arguments(4,i))
   PressureInterpolationType= match_basis(Basis_arguments(3,i))      !!!!! DATA READ FROM THE INPUT FILE !!!!!!!
   UsePressureBasis  = (str2int(Basis_arguments(2,i)) == 4) 
+  NumberGlobalXElements=str2int(Mesh_arg4(1,i))
+  NumberGlobalYElements=str2int(Mesh_arg4(2,i))
+  NumberGlobalZElements=str2int(Mesh_arg4(3,i))
+  NumberOfGaussXi = str2int(Basis_arguments(5,i))
 
   !Define geometric basis
   CALL cmfe_Basis_Initialise(all_Basis%Basis(i),Err)
@@ -259,6 +268,7 @@ DO i = 1, num_of_basis  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  Assigning basis
     ENDIF
   ENDIF
   CALL cmfe_Basis_CreateFinish(all_Basis%Basis(i),Err)
+
 
 
 
@@ -290,7 +300,10 @@ DO i = 1, num_of_basis  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  Assigning basis
     ENDIF
     CALL cmfe_Basis_CreateFinish(all_PressureBasis%PressureBasis(i),Err)
   ENDIF
+end do Basis
 
+
+Mesh: do i = 1,num_of_Mesh
    HEIGHT=str2int(Mesh_arg3(1,i))
    WIDTH=str2int(Mesh_arg3(2,i))
    LENGTH=str2int(Mesh_arg3(3,i))
@@ -321,19 +334,18 @@ DO i = 1, num_of_basis  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  Assigning basis
   CALL cmfe_Mesh_Initialise(all_Mesh%Mesh(i),Err)
   CALL cmfe_GeneratedMesh_CreateFinish(all_GeneratedMesh%GeneratedMesh(i),MeshUserNumber(i),all_Mesh%Mesh(i),Err)
 
+END do Mesh
 
-END DO
-
+Decomposition: do i = 1,num_of_Decomposition
   !Create a decomposition
-  CALL cmfe_Decomposition_Initialise(all_Decomposition%Decomposition(1),Err)
-  CALL cmfe_Decomposition_CreateStart(DecompositionUserNumber(1),all_Mesh%Mesh(1),all_Decomposition%Decomposition(1),Err)
-  CALL cmfe_Decomposition_TypeSet(all_Decomposition%Decomposition(1),CMFE_DECOMPOSITION_CALCULATED_TYPE,Err)
-  CALL cmfe_Decomposition_NumberOfDomainsSet(all_Decomposition%Decomposition(1),NumberOfDomains,Err)
-  CALL cmfe_Decomposition_CreateFinish(all_Decomposition%Decomposition(1),Err)
+  CALL cmfe_Decomposition_Initialise(all_Decomposition%Decomposition(i),Err)
+  CALL cmfe_Decomposition_CreateStart(DecompositionUserNumber(i),all_Mesh%Mesh(i),all_Decomposition%Decomposition(i),Err)
+  CALL cmfe_Decomposition_TypeSet(all_Decomposition%Decomposition(i),CMFE_DECOMPOSITION_CALCULATED_TYPE,Err)
+  CALL cmfe_Decomposition_NumberOfDomainsSet(all_Decomposition%Decomposition(i),NumberOfDomains,Err)
+  CALL cmfe_Decomposition_CreateFinish(all_Decomposition%Decomposition(i),Err)
+end do Decomposition
 
-DO i = 1, num_of_GeometricField
-
-
+GeometricField: DO i = 1, num_of_GeometricField
 
   !Create a field to put the geometry (default is geometry)
   CALL cmfe_Field_Initialise(all_GeometricField%GeometricField(i),Err)
@@ -345,8 +357,9 @@ DO i = 1, num_of_GeometricField
 
   !Update the geometric field parameters
   CALL cmfe_GeneratedMesh_GeometricParametersCalculate(all_GeneratedMesh%GeneratedMesh(i),all_GeometricField%GeometricField(i),Err)
+end do GeometricField  !!!!! END LOOP FOR GEOMETRIC FIELD
 
-
+FiberField: DO i = 1, num_of_FiberField
   !Create a fibre field and attach it to the geometric field
   CALL cmfe_Field_Initialise(all_FibreField%FibreField(i),Err)
   CALL cmfe_Field_CreateStart(FieldFibreUserNumber(i),all_Region%Region(i),all_FibreField%FibreField(i),Err)
@@ -354,52 +367,111 @@ DO i = 1, num_of_GeometricField
   CALL cmfe_Field_MeshDecompositionSet(all_FibreField%FibreField(i),all_Decomposition%Decomposition(i),Err)
   CALL cmfe_Field_GeometricFieldSet(all_FibreField%FibreField(i),all_GeometricField%GeometricField(i),Err)
   CALL cmfe_Field_VariableLabelSet(all_FibreField%FibreField(i),CMFE_FIELD_U_VARIABLE_TYPE,"Fibre",Err)
+  CALL cmfe_Field_ScalingTypeSet(all_FibreField%FibreField(i),CMFE_FIELD_ARITHMETIC_MEAN_SCALING,Err)
   CALL cmfe_Field_CreateFinish(all_FibreField%FibreField(i),Err)
-end do  !!!!! END LOOP FOR GEOMETRIC FIELD
+    !Set the fibre field
+  CALL cmfe_Field_ComponentValuesInitialise(all_FibreField%FibreField(i),CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
+    					    & 1,str2real(FiberField_arg2(1,i)),Err)
+  CALL cmfe_Field_ComponentValuesInitialise(all_FibreField%FibreField(i),CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
+    					    & 2,str2real(FiberField_arg2(2,i)),Err)
+  CALL cmfe_Field_ComponentValuesInitialise(all_FibreField%FibreField(i),CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
+    					    & 3,str2real(FiberField_arg2(3,i)),Err)
+end do FiberField  !!!!! END LOOP FOR Fiber FIELD
 
   !Create the dependent field
-  CALL cmfe_Field_Initialise(all_DependentField%DependentField(1),Err)
-  CALL cmfe_Field_CreateStart(FieldDependentUserNumber(1),all_Region%Region(1),all_DependentField%DependentField(1),Err)
-  CALL cmfe_Field_TypeSet(all_DependentField%DependentField(1),CMFE_FIELD_GEOMETRIC_GENERAL_TYPE,Err)
-  CALL cmfe_Field_MeshDecompositionSet(all_DependentField%DependentField(1),all_Decomposition%Decomposition(1),Err)
-  CALL cmfe_Field_GeometricFieldSet(all_DependentField%DependentField(1),all_GeometricField%GeometricField(1),Err)
-  CALL cmfe_Field_DependentTypeSet(all_DependentField%DependentField(1),CMFE_FIELD_DEPENDENT_TYPE,Err)
-  CALL cmfe_Field_NumberOfVariablesSet(all_DependentField%DependentField(1),2,Err)
-  CALL cmfe_Field_VariableTypesSet(all_DependentField%DependentField(1), & 
+DependentField: DO i = 1, num_of_DependentField
+  CALL cmfe_Field_Initialise(all_DependentField%DependentField(i),Err)
+  CALL cmfe_Field_CreateStart(FieldDependentUserNumber(i),all_Region%Region(i),all_DependentField%DependentField(i),Err)
+
+!  DO component_idx=1,3
+!    CALL cmfe_Field_ComponentMeshComponentSet(all_DependentField%DependentField(i),CMFE_FIELD_U_VARIABLE_TYPE,component_idx,1,Err)
+!    CALL cmfe_Field_ComponentMeshComponentSet(all_DependentField%DependentField(i),CMFE_FIELD_DELUDELN_VARIABLE_TYPE,& 
+!                                              & component_idx,1,Err)
+!  ENDDO
+
+  CALL cmfe_Field_TypeSet(all_DependentField%DependentField(i),CMFE_FIELD_GEOMETRIC_GENERAL_TYPE,Err)
+  CALL cmfe_Field_MeshDecompositionSet(all_DependentField%DependentField(1),all_Decomposition%Decomposition(i),Err)
+  CALL cmfe_Field_GeometricFieldSet(all_DependentField%DependentField(i),all_GeometricField%GeometricField(i),Err)
+  CALL cmfe_Field_DependentTypeSet(all_DependentField%DependentField(i),CMFE_FIELD_DEPENDENT_TYPE,Err)
+  CALL cmfe_Field_NumberOfVariablesSet(all_DependentField%DependentField(i),2,Err)
+  CALL cmfe_Field_VariableTypesSet(all_DependentField%DependentField(i), & 
                                    & [CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_DELUDELN_VARIABLE_TYPE],Err)
-  CALL cmfe_Field_VariableLabelSet(all_DependentField%DependentField(1),CMFE_FIELD_U_VARIABLE_TYPE,"Dependent",Err)
-  CALL cmfe_Field_NumberOfComponentsSet(all_DependentField%DependentField(1),CMFE_FIELD_U_VARIABLE_TYPE,NUMBER_OF_COMPONENTS,Err)
-  CALL cmfe_Field_NumberOfComponentsSet(all_DependentField%DependentField(1), & 
+  CALL cmfe_Field_VariableLabelSet(all_DependentField%DependentField(i),CMFE_FIELD_U_VARIABLE_TYPE,"Dependent",Err)
+  CALL cmfe_Field_NumberOfComponentsSet(all_DependentField%DependentField(i),CMFE_FIELD_U_VARIABLE_TYPE,NUMBER_OF_COMPONENTS,Err)
+  CALL cmfe_Field_NumberOfComponentsSet(all_DependentField%DependentField(i), & 
        & CMFE_FIELD_DELUDELN_VARIABLE_TYPE,NUMBER_OF_COMPONENTS,Err)
   IF(UsePressureBasis) THEN
     !Set the pressure to be nodally based and use the second mesh component if required
-    CALL cmfe_Field_ComponentInterpolationSet(all_DependentField%DependentField(1),&
+    CALL cmfe_Field_ComponentInterpolationSet(all_DependentField%DependentField(i),&
     & CMFE_FIELD_U_VARIABLE_TYPE,4,CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
-    CALL cmfe_Field_ComponentInterpolationSet(all_DependentField%DependentField(1),CMFE_FIELD_DELUDELN_VARIABLE_TYPE,4, &
+    CALL cmfe_Field_ComponentInterpolationSet(all_DependentField%DependentField(i),CMFE_FIELD_DELUDELN_VARIABLE_TYPE,4, &
       & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
-    CALL cmfe_Field_ComponentMeshComponentSet(all_DependentField%DependentField(1),CMFE_FIELD_U_VARIABLE_TYPE,4,2,Err)
-    CALL cmfe_Field_ComponentMeshComponentSet(all_DependentField%DependentField(1),CMFE_FIELD_DELUDELN_VARIABLE_TYPE,4,2,Err)
+    CALL cmfe_Field_ComponentMeshComponentSet(all_DependentField%DependentField(i),CMFE_FIELD_U_VARIABLE_TYPE,4,2,Err)
+    CALL cmfe_Field_ComponentMeshComponentSet(all_DependentField%DependentField(i),CMFE_FIELD_DELUDELN_VARIABLE_TYPE,4,2,Err)
+  ELSE
+    CALL cmfe_Field_ComponentInterpolationSet(all_DependentField%DependentField(i),CMFE_FIELD_U_VARIABLE_TYPE,4, &
+                                            & CMFE_FIELD_ELEMENT_BASED_INTERPOLATION, &
+                                             & Err)
+    CALL cmfe_Field_ComponentInterpolationSet(all_DependentField%DependentField(i),CMFE_FIELD_DELUDELN_VARIABLE_TYPE,4, &
+                                              & CMFE_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
   END IF
-  CALL cmfe_Field_CreateFinish(all_DependentField%DependentField(1),Err)
+  CALL cmfe_Field_CreateFinish(all_DependentField%DependentField(i),Err)
 
- 
+
+ !Initialise dependent field from undeformed geometry and displacement bcs and set hydrostatic pressure
+  CALL cmfe_Field_ParametersToFieldParametersComponentCopy(all_GeometricField%GeometricField(i), & 
+                                        match_dependent_field(DependentField_arguments(2,i)),CMFE_FIELD_VALUES_SET_TYPE, &
+ & 1,all_DependentField%DependentField(i),CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,Err)
+
+  CALL cmfe_Field_ParametersToFieldParametersComponentCopy(all_GeometricField%GeometricField(i), & 
+                                        match_dependent_field(DependentField_arguments(2,i)),CMFE_FIELD_VALUES_SET_TYPE, &
+ & 2,all_DependentField%DependentField(i),CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2,Err)
+
+  CALL cmfe_Field_ParametersToFieldParametersComponentCopy(all_GeometricField%GeometricField(i)& 
+                                       ,match_dependent_field(DependentField_arguments(2,i)),CMFE_FIELD_VALUES_SET_TYPE, &
+ & 3,all_DependentField%DependentField(i),CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3,Err)
+
+  CALL cmfe_Field_ComponentValuesInitialise(all_DependentField%DependentField(i), & 
+                      &  CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,4, &
+                      & 0.0_CMISSRP,Err)
+  CALL cmfe_Field_ParameterSetUpdateStart(all_DependentField%DependentField(i),CMFE_FIELD_U_VARIABLE_TYPE & 
+                                          & ,CMFE_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_Field_ParameterSetUpdateFinish(all_DependentField%DependentField(i),CMFE_FIELD_U_VARIABLE_TYPE, & 
+                                          & CMFE_FIELD_VALUES_SET_TYPE,Err)
+
+end do DependentField
+
 
   !Create the material field
-  CALL cmfe_Field_Initialise(all_MaterialField%MaterialField(1),Err)
-  CALL cmfe_Field_CreateStart(FieldMaterialUserNumber(1),all_Region%Region(1),all_MaterialField%MaterialField(1),Err)
-  CALL cmfe_Field_TypeSet(all_MaterialField%MaterialField(1),CMFE_FIELD_MATERIAL_TYPE,Err)
-  CALL cmfe_Field_MeshDecompositionSet(all_MaterialField%MaterialField(1),all_Decomposition%Decomposition(1),Err)
-  CALL cmfe_Field_GeometricFieldSet(all_MaterialField%MaterialField(1),all_GeometricField%GeometricField(1),Err)
-  CALL cmfe_Field_NumberOfVariablesSet(all_MaterialField%MaterialField(1),1,Err)
-  CALL cmfe_Field_VariableLabelSet(all_MaterialField%MaterialField(1),CMFE_FIELD_U_VARIABLE_TYPE,"Material",Err)
-  CALL cmfe_Field_NumberOfComponentsSet(all_MaterialField%MaterialField(1),CMFE_FIELD_U_VARIABLE_TYPE,5,Err)
-  CALL cmfe_Field_CreateFinish(all_MaterialField%MaterialField(1),Err)
+MaterialField: do i = 1,num_of_MaterialField
+  CALL cmfe_Field_Initialise(all_MaterialField%MaterialField(i),Err)
+  CALL cmfe_Field_CreateStart(FieldMaterialUserNumber(i),all_Region%Region(i),all_MaterialField%MaterialField(i),Err)
+  CALL cmfe_Field_TypeSet(all_MaterialField%MaterialField(i),CMFE_FIELD_MATERIAL_TYPE,Err)
+  CALL cmfe_Field_MeshDecompositionSet(all_MaterialField%MaterialField(i),all_Decomposition%Decomposition(i),Err)
+  CALL cmfe_Field_GeometricFieldSet(all_MaterialField%MaterialField(i),all_GeometricField%GeometricField(i),Err)
+  CALL cmfe_Field_NumberOfVariablesSet(all_MaterialField%MaterialField(i),1,Err)
+  CALL cmfe_Field_VariableLabelSet(all_MaterialField%MaterialField(i),CMFE_FIELD_U_VARIABLE_TYPE,"Material",Err)
+!  CALL cmfe_Field_VariableLabelSet(all_MaterialField%MaterialField(i),CMFE_FIELD_V_VARIABLE_TYPE,"Density",Err)
+  CALL cmfe_Field_NumberOfComponentsSet(all_MaterialField%MaterialField(i),CMFE_FIELD_U_VARIABLE_TYPE, & 
+                                        & material_parameters(EquationsSet_arg4(1,i)),Err)
+  CALL cmfe_Field_CreateFinish(all_MaterialField%MaterialField(i),Err)
 
+  do j = 1,material_parameters(EquationsSet_arg4(1,i))
+
+   CALL  cmfe_Field_ComponentValuesInitialise(all_MaterialField%MaterialField(i), & 
+                                              &CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,& 
+                                              & j,str2real(MaterialField_arg2(j,i)),Err)
+  end do 
+!  CALL cmfe_Field_ComponentValuesInitialise(all_MaterialField%MaterialField(i),CMFE_FIELD_V_VARIABLE_TYPE, & 
+!                                            & CMFE_FIELD_VALUES_SET_TYPE,1,1,Err)
+
+
+end do MaterialField
 
   !Create the equations_set
 
 
-DO i = 1,Num_of_EquationsSet            !!!! loop for eqaution set
+EquationsSet: DO i = 1,Num_of_EquationsSet            !!!! loop for eqaution set
 
   CALL cmfe_Field_Initialise(all_EquationsSetField%EquationsSetField(i),Err)
   CALL cmfe_EquationsSet_CreateStart(EquationSetUserNumber(i),all_Region%Region(i),all_FibreField%FibreField(i),& 
@@ -408,78 +480,45 @@ DO i = 1,Num_of_EquationsSet            !!!! loop for eqaution set
        & EquationsSetFieldUserNumber(i),all_EquationsSetField%EquationsSetField(i),all_EquationsSet%EquationsSet(i),Err)
   CALL cmfe_EquationsSet_CreateFinish(all_EquationsSet%EquationsSet(i),Err)
 
-                            !!! end loop for equation set 
-
-
- 
   !Create the equations set dependent field
   CALL cmfe_EquationsSet_DependentCreateStart(all_EquationsSet%EquationsSet(i),FieldDependentUserNumber(i), & 
-                                              & all_DependentField%DependentField(1),Err)
+                                              & all_DependentField%DependentField(i),Err)
   CALL cmfe_EquationsSet_DependentCreateFinish(all_EquationsSet%EquationsSet(i),Err)
-
-
-if (NUMBER_OF_COMPONENTS > 1)  then 		!!!! SO  in case of the laplacian problem the following bit does not work 
-  !Create the equations set material field 
-
 
   CALL cmfe_EquationsSet_MaterialsCreateStart(all_EquationsSet%EquationsSet(i),FieldMaterialUserNumber(i) & 
                                               & ,all_MaterialField%MaterialField(i),Err)
   CALL cmfe_EquationsSet_MaterialsCreateFinish(all_EquationsSet%EquationsSet(i),Err)
 
-do j = 1,material_parameters(EquationsSet_arg4(1,i))
-
-   CALL cmfe_Field_ComponentValuesInitialise(all_MaterialField%MaterialField(i), & 
-       & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,j,str2real(MaterialField_arg2(j,i)),Err)
-  end do 
-
-end if 
-
-
-!Set the fibre field
-  CALL cmfe_Field_ComponentValuesInitialise(all_FibreField%FibreField(i),CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
-    & 1,str2real(FiberField_arg2(1,i)),Err)
-  CALL cmfe_Field_ComponentValuesInitialise(all_FibreField%FibreField(i),CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
-    & 2,str2real(FiberField_arg2(2,i)),Err)
-  CALL cmfe_Field_ComponentValuesInitialise(all_FibreField%FibreField(i),CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
-    & 3,str2real(FiberField_arg2(3,i)),Err)
-
 
   !Create the equations set equations
   CALL cmfe_Equations_Initialise(all_Equations%Equations(i),Err)
   CALL cmfe_EquationsSet_EquationsCreateStart(all_EquationsSet%EquationsSet(i),all_Equations%Equations(i),Err)
-  CALL cmfe_Equations_SparsityTypeSet(all_Equations%Equations(i),CMFE_EQUATIONS_SPARSE_MATRICES,Err)
-  CALL cmfe_Equations_OutputTypeSet(all_Equations%Equations(i),CMFE_EQUATIONS_NO_OUTPUT,Err)
+  CALL cmfe_Equations_SparsityTypeSet(all_Equations%Equations(i),output_type(Output_arguments(1,1)),Err)
+  CALL cmfe_Equations_OutputTypeSet(all_Equations%Equations(i),output_type(Output_arguments(2,1)),Err)
   CALL cmfe_EquationsSet_EquationsCreateFinish(all_EquationsSet%EquationsSet(i),Err)
 
-END DO  
+END DO EquationsSet 
 
 
+  !Create the source field with the gravity vector
+CALL cmfe_Field_Initialise(SourceField,Err)
+CALL cmfe_EquationsSet_SourceCreateStart(all_EquationsSet%EquationsSet(1),FieldSourceUserNumber,SourceField,Err)
+CALL cmfe_Field_ScalingTypeSet(SourceField,CMFE_FIELD_ARITHMETIC_MEAN_SCALING,Err)
+CALL cmfe_EquationsSet_SourceCreateFinish(all_EquationsSet%EquationsSet(1),Err)
+DO component_idx=1,3
+    CALL cmfe_Field_ComponentValuesInitialise(SourceField, & 
+                       & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
+                       & component_idx,Gravity(component_idx),Err)
 
-
-DO i = 1,num_of_DependentField
-  !Initialise dependent field from undeformed geometry and displacement bcs and set hydrostatic pressure
-  CALL cmfe_Field_ParametersToFieldParametersComponentCopy(all_GeometricField%GeometricField(1), & 
-                                        match_dependent_field(DependentField_arguments(2,i)),CMFE_FIELD_VALUES_SET_TYPE, &
- & 1,all_DependentField%DependentField(1),CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,Err)
-
-  CALL cmfe_Field_ParametersToFieldParametersComponentCopy(all_GeometricField%GeometricField(1), & 
-                                        match_dependent_field(DependentField_arguments(2,i)),CMFE_FIELD_VALUES_SET_TYPE, &
- & 2,all_DependentField%DependentField(1),CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2,Err)
-
-  CALL cmfe_Field_ParametersToFieldParametersComponentCopy(all_GeometricField%GeometricField(1)& 
-                                       ,match_dependent_field(DependentField_arguments(2,i)),CMFE_FIELD_VALUES_SET_TYPE, &
- & 3,all_DependentField%DependentField(1),CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3,Err)
-END DO
-
-
+ENDDO
 
 DO i = 1, num_of_Problem
 
   !Define the problem
-  CALL cmfe_Problem_Initialise(all_Problem%Problem(1),Err)
-  CALL cmfe_Problem_CreateStart(ProblemUserNumber(1),[match_problem(Problem_arg2(1,i)),match_problem(Problem_arg3(1,i)), &
-    & match_problem(Problem_arg4(1,i))],all_Problem%Problem(1),Err)
-  CALL cmfe_Problem_CreateFinish(all_Problem%Problem(1),Err)
+  CALL cmfe_Problem_Initialise(all_Problem%Problem(i),Err)
+  CALL cmfe_Problem_CreateStart(ProblemUserNumber(i),[match_problem(Problem_arg2(1,i)),match_problem(Problem_arg3(1,i)), &
+    & match_problem(Problem_arg4(1,i))],all_Problem%Problem(i),Err)
+  CALL cmfe_Problem_CreateFinish(all_Problem%Problem(i),Err)
 
 END DO
 
@@ -495,57 +534,53 @@ do i = 1,num_of_ControlLoop
 
 end do 
 
-
+Solver: do i = 1,num_of_solver
 
   !Create the problem solvers
-  CALL cmfe_Solver_Initialise(all_Solver%Solver(1),Err)
-  CALL cmfe_Solver_Initialise(all_LinearSolver%LinearSolver(1),Err)
-  CALL cmfe_Problem_SolversCreateStart(all_Problem%Problem(1),Err)
-  CALL cmfe_Problem_SolverGet(all_Problem%Problem(1),CMFE_CONTROL_LOOP_NODE,1,all_Solver%Solver(1),Err)
-  CALL cmfe_Solver_OutputTypeSet(all_Solver%Solver(1),CMFE_SOLVER_PROGRESS_OUTPUT,Err)
-  CALL cmfe_Solver_NewtonJacobianCalculationTypeSet(all_Solver%Solver(1),CMFE_SOLVER_NEWTON_JACOBIAN_FD_CALCULATED,Err)
-  CALL cmfe_Solver_NewtonLinearSolverGet(all_Solver%Solver(1),all_LinearSolver%LinearSolver(1),Err)
-  CALL cmfe_Solver_LinearTypeSet(all_LinearSolver%LinearSolver(1),solver_def(Solvers_arguments(2,1)),Err)
-  CALL cmfe_Solver_NewtonRelativeToleranceSet(all_Solver%Solver(1),str2real(Solvers_arguments(5,1)),Err)
-  CALL cmfe_Solver_NewtonAbsoluteToleranceSet(all_Solver%Solver(1),str2real(Solvers_arguments(7,1)),Err)
-  CALL cmfe_Solver_NewtonMaximumIterationsSet(all_Solver%Solver(1),str2int(Solvers_arguments(6,1)),Err)
-  CALL cmfe_Problem_SolversCreateFinish(all_Problem%Problem(1),Err)
+  CALL cmfe_Solver_Initialise(all_Solver%Solver(i),Err)
+  CALL cmfe_Solver_Initialise(all_LinearSolver%LinearSolver(i),Err)
+  CALL cmfe_Problem_SolversCreateStart(all_Problem%Problem(i),Err)
+  CALL cmfe_Problem_SolverGet(all_Problem%Problem(i),CMFE_CONTROL_LOOP_NODE,1,all_Solver%Solver(i),Err)
+  CALL cmfe_Solver_OutputTypeSet(all_Solver%Solver(i),CMFE_SOLVER_PROGRESS_OUTPUT,Err)
+  CALL cmfe_Solver_NewtonJacobianCalculationTypeSet(all_Solver%Solver(i),CMFE_SOLVER_NEWTON_JACOBIAN_FD_CALCULATED,Err)
+  CALL cmfe_Solver_NewtonLinearSolverGet(all_Solver%Solver(i),all_LinearSolver%LinearSolver(i),Err)
+  CALL cmfe_Solver_LinearTypeSet(all_LinearSolver%LinearSolver(i),solver_def(Solvers_arguments(2,i)),Err)
+  CALL cmfe_Solver_NewtonRelativeToleranceSet(all_Solver%Solver(i),str2real(Solvers_arguments(5,i)),Err)
+  CALL cmfe_Solver_NewtonAbsoluteToleranceSet(all_Solver%Solver(i),str2real(Solvers_arguments(7,i)),Err)
+  CALL cmfe_Solver_NewtonMaximumIterationsSet(all_Solver%Solver(i),str2int(Solvers_arguments(6,i)),Err)
+  CALL cmfe_Problem_SolversCreateFinish(all_Problem%Problem(i),Err)
 
   !Create the problem solver equations
-  CALL cmfe_Solver_Initialise(all_Solver%Solver(1),Err)
-  
-  CALL cmfe_SolverEquations_Initialise(all_SolverEquations%SolverEquations(1),Err)
-  CALL cmfe_Problem_SolverEquationsCreateStart(all_Problem%Problem(1),Err)
-  CALL cmfe_Problem_SolverGet(all_Problem%Problem(1),CMFE_CONTROL_LOOP_NODE,1,all_Solver%Solver(1),Err)
-  CALL cmfe_Solver_SolverEquationsGet(all_Solver%Solver(1),all_SolverEquations%SolverEquations(1),Err)
-  CALL cmfe_SolverEquations_EquationsSetAdd(all_SolverEquations%SolverEquations(1),all_EquationsSet%EquationsSet(1), & 
+  CALL cmfe_Solver_Initialise(all_Solver%Solver(i),Err)
+  CALL cmfe_SolverEquations_Initialise(all_SolverEquations%SolverEquations(i),Err)
+  CALL cmfe_Problem_SolverEquationsCreateStart(all_Problem%Problem(i),Err)
+  CALL cmfe_Problem_SolverGet(all_Problem%Problem(i),CMFE_CONTROL_LOOP_NODE,1,all_Solver%Solver(i),Err)
+  CALL cmfe_Solver_SolverEquationsGet(all_Solver%Solver(i),all_SolverEquations%SolverEquations(i),Err)
+  CALL cmfe_SolverEquations_EquationsSetAdd(all_SolverEquations%SolverEquations(i),all_EquationsSet%EquationsSet(i), & 
                                            & EquationsSetIndex,Err)
+  CALL cmfe_Problem_SolverEquationsCreateFinish(all_Problem%Problem(i),Err)
 
+end do Solver 
 
-!Create the problem solver equations
-  
  
-! CALL cmfe_SolverEquations_EquationsSetAdd(SolverEquations,EquationsSet,EquationsSetIndex,Err)
 
-  CALL cmfe_Problem_SolverEquationsCreateFinish(all_Problem%Problem(1),Err)
+ 
+do j = 1,num_of_BOundaryCondition
 
   !Prescribe boundary conditions (absolute nodal parameters)
-  CALL cmfe_BoundaryConditions_Initialise(all_BoundaryConditions%BoundaryConditions(1),Err)
-  CALL cmfe_SolverEquations_BoundaryConditionsCreateStart(all_SolverEquations%SolverEquations(1), & 
-       & all_BoundaryConditions%BoundaryConditions(1),Err)
+  CALL cmfe_BoundaryConditions_Initialise(all_BoundaryConditions%BoundaryConditions(j),Err)
+  CALL cmfe_SolverEquations_BoundaryConditionsCreateStart(all_SolverEquations%SolverEquations(j), & 
+       & all_BoundaryConditions%BoundaryConditions(j),Err)
 
-!!!!!! 				Generic  form of Assining dirichelet BCs 			!!!!!!!!!!!!
-do j = 1,num_of_Mesh
+  do i = 1,num_of_dirichelet
 
-  do i = 1,4
-
- CALL cmfe_GeneratedMesh_SurfaceGet(all_GeneratedMesh%GeneratedMesh(j),&
-      & bc_def(BC_arg2(2+4*(i-1),j)),SurfaceNodes,LeftNormalXi,Err)
+  	CALL cmfe_GeneratedMesh_SurfaceGet(all_GeneratedMesh%GeneratedMesh(j),&
+      					   & bc_def(BC_arg2(2+4*(i-1),j)),SurfaceNodes,LeftNormalXi,Err)
 
         DO node_idx=1,SIZE(SurfaceNodes,1)
                 NodeNumber=SurfaceNodes(node_idx)
 
-CALL cmfe_Decomposition_NodeDomainGet(all_Decomposition%Decomposition(j),NodeNumber,1,NodeDomain,Err)
+		CALL cmfe_Decomposition_NodeDomainGet(all_Decomposition%Decomposition(j),NodeNumber,1,NodeDomain,Err)
 
                 IF(NodeDomain==ComputationalNodeNumber) THEN
 
@@ -555,58 +590,69 @@ CALL cmfe_Decomposition_NodeDomainGet(all_Decomposition%Decomposition(j),NodeNum
                                 
                                 if (trim(constraint(component_idx:component_idx)) == "1") then 
 
- CALL cmfe_BoundaryConditions_SetNode(all_BoundaryConditions%BoundaryConditions(j),all_DependentField%DependentField(j), & 
- CMFE_FIELD_U_VARIABLE_TYPE,1,1,NodeNumber, component_idx,CMFE_BOUNDARY_CONDITION_FIXED_INCREMENTED, & 
- & str2real(BC_arg2(4+4*(i-1),j)),Err)
+ 					CALL cmfe_BoundaryConditions_SetNode(all_BoundaryConditions%BoundaryConditions(j),all_DependentField%DependentField(j), & 
+ 					CMFE_FIELD_U_VARIABLE_TYPE,1,1,NodeNumber, component_idx,CMFE_BOUNDARY_CONDITION_FIXED_INCREMENTED, & 
+ 				 	& str2real(BC_arg2(4+4*(i-1),j)),Err)
 
                                  end if 
                         ENDDO
                  ENDIF
         ENDDO
 
-deallocate(SurfaceNodes)
+ deallocate(SurfaceNodes)
 
  end do
 
- end do 
- 
+
+
 ! Dear Andreas : Please vaerify is the following way of applying the pressure boundary condition looks alright 
  
 ! Applying Pressure Neuman Boundary condition
 
-! DO NN=1,SIZE(SurfaceNodes,1)
+! CALL cmfe_GeneratedMesh_SurfaceGet(all_GeneratedMesh%GeneratedMesh(1),&
+ !                                  & CMFE_GENERATED_MESH_REGULAR_FRONT_SURFACE,SurfaceNodes,LeftNormalXi,Err)
 
-! NODE=SurfaceNodes(NN)
 
-! CALL cmfe_Decomposition_NodeDomainGet(all_Decomposition%Decomposition(j),NODE,1,NodeDomain,Err)
+!DO node_idx=1,SIZE(SurfaceNodes,1)
+
+! NodeNumber=SurfaceNodes(node_idx)
+
+! CALL cmfe_Decomposition_NodeDomainGet(all_Decomposition%Decomposition(1),NodeNumber,1,NodeDomain,Err)
+
 
 ! IF(NodeDomain==ComputationalNodeNumber) THEN
 
-! CALL !cmfe_BoundaryConditions_SetNode(all_BoundaryConditions%BoundaryConditions(j),DependentField,CMFE_FIELD_DELUDELN_VARIABLE_TYPE,1,1,NODE,&
-
-!ABS(NormalXi), CMFE_BOUNDARY_CONDITION_PRESSURE,2,Err)
-
-
-!ENDIF
-
-!ENDDO
+!CALL cmfe_BoundaryConditions_SetNode(all_BoundaryConditions%BoundaryConditions(1),all_DependentField%DependentField(1), & 
+! 		CMFE_FIELD_U_VARIABLE_TYPE,1,1,NodeNumber, abs(LeftNormalXi),CMFE_BOUNDARY_CONDITION_PRESSURE, & 
+! 		& 2.1_CMISSRP,Err)
 
 
 
+ ! ENDIF
+ CALL cmfe_SolverEquations_BoundaryConditionsCreateFinish(all_SolverEquations%SolverEquations(j),Err)
+ENDDO
 
 
-  CALL cmfe_SolverEquations_BoundaryConditionsCreateFinish(all_SolverEquations%SolverEquations(1),Err)
+!CMFE_BOUNDARY_CONDITION_PRESSURE
 
+
+Problems: do i = 1, num_of_problem
+  
   !Solve problem
   CALL cmfe_Problem_Solve(all_Problem%Problem(1),Err)
 
-  !Output solution
-  CALL cmfe_Fields_Initialise(all_Fields%Fields(1),Err)
-  CALL cmfe_Fields_Create(all_Region%Region(1),all_Fields%Fields(1),Err)
-  CALL cmfe_Fields_NodesExport(all_Fields%Fields(1),"LargeUniaxialExtension","FORTRAN",Err)
-  CALL cmfe_Fields_ElementsExport(all_Fields%Fields(1),"LargeUniaxialExtension","FORTRAN",Err)
-  CALL cmfe_Fields_Finalise(all_Fields%Fields(1),Err)
+end do Problems
 
+  !Output solution
+FiberFields: do i = 1,1
+
+  CALL cmfe_Fields_Initialise(all_Fields%Fields(i),Err)
+  CALL cmfe_Fields_Create(all_Region%Region(i),all_Fields%Fields(i),Err)
+  CALL cmfe_Fields_NodesExport(all_Fields%Fields(i),"LargeUniaxialExtension","FORTRAN",Err)
+  CALL cmfe_Fields_ElementsExport(all_Fields%Fields(i),"LargeUniaxialExtension","FORTRAN",Err)
+  CALL cmfe_Fields_Finalise(all_Fields%Fields(i),Err)
+
+end do FiberFields
   CALL cmfe_Finalise(Err)
 
   WRITE(*,'(A)') "Program successfully completed."

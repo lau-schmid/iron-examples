@@ -215,6 +215,39 @@ print *, "i am here"
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!! THE FOLLOWING FUNCTION !!!!!!!!!!!!!!!!!!!!!!!!1
+!!!!!!!!!!!!!!!!!!!!!!!.READS KEYWORDDS TO DEFINE the OUTPUT!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!OF THE ANALYSIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+   function output_type(type_string) result (type_number)
+
+    implicit none
+    character(*), intent(in) :: type_string
+    integer                  :: type_number
+    ! sparsity type
+    if (type_string == "EQUATIONS_SPARSE_MATRICES") then
+      type_number = CMFE_EQUATIONS_SPARSE_MATRICES
+    elseif (type_string == "EQUATIONS_FULL_MATRICES") then
+      type_number = CMFE_EQUATIONS_FULL_MATRICES
+    elseif (type_string == "SEPARATED") then
+      type_number = CMFE_FIELD_SEPARATED_COMPONENT_DOF_ORDER
+    ! output type
+    elseif (type_string == "EQUATIONS_NO_OUTPUT") then
+      type_number = CMFE_EQUATIONS_NO_OUTPUT
+    elseif (type_string == "EQUATIONS_TIMING_OUTPUT") then
+      type_number = CMFE_EQUATIONS_TIMING_OUTPUT
+    elseif (type_string == "EQUATIONS_MATRIX_OUTPUT") then
+      type_number = CMFE_EQUATIONS_MATRIX_OUTPUT
+    elseif (type_string == "EQUATIONS_ELEMENT_MATRIX_OUTPUT") then
+      type_number = CMFE_EQUATIONS_ELEMENT_MATRIX_OUTPUT
+    else
+      call handle_error("Invalid string "//type_string)
+    endif
+   end function 
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!! THE FOLLOWING FUNCTION !!!!!!!!!!!!!!!!!!!!!!!!1
 !!!!!!!!!!!!!!!!!!!!!!!.READS KEYWORDDS TO DEFINE the dependent field!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 

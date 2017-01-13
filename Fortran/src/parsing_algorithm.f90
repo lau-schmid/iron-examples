@@ -99,14 +99,27 @@ Solvers_parsing(5) =  "EQUATION_SOLVER_TOLERANCE"
 Solvers_parsing(6) =  "NEWTON_MAX_ITERATIONS"
 Solvers_parsing(7) =  "NEWTON_TOLERANCE"
 
-allocate(Basis_arguments(4,num_of_Basis))
-allocate(Basis_parsing(4))
+allocate(Basis_arguments(5,num_of_Basis))
+allocate(Basis_parsing(5))
 
 Basis_parsing(1) =  "BASIS_ID"
 Basis_parsing(2) =  "COMPONENTS"
 Basis_parsing(3) =  "PRESSURE_BASIS "
 Basis_parsing(4) =  "BASIS"
+Basis_parsing(5) =  "NumberOfGaussXi"
 
+
+allocate(PressureBasis_arguments(2,num_of_PressureBasis))
+allocate(PressureBasis_parsing(2))
+
+PressureBasis_parsing(1) =  "PRESSURE_BASIS_ID"
+PressureBasis_parsing(2) =  "TYPE"
+
+allocate(Output_arguments(2,1))
+allocate(Output_parsing(2))
+
+Output_parsing(1) =  "MATRIX_TYPE"
+Output_parsing(2) =  "OUTPUT_TYPE"
 
  close(12)
 
@@ -122,30 +135,34 @@ do while (trim(rdline).NE."STOP_PARSING")
  call Equations_Set_parsing(EquationsSet_parsing,EquationsSet_arg1,EquationsSet_arg2,EquationsSet_arg3,&
                                 & EquationsSet_arg4, rdline)
 
-
  call Problem_parsing_subroutine(Problem_parsing,Problem_arg1,Problem_arg2,Problem_arg3,Problem_arg4,rdline)
-
 
  call MaterialField_parsing_subroutine(MaterialField_parsing,MaterialField_arg1,MaterialField_arg2,rdline)
 
- call DependentField_parsing_subroutine(DependentField_parsing,DependentField_arguments,rdline)
+ call parsing_subroutine(DependentField_parsing,DependentField_arguments,rdline,2,"DEPENDENT_FIELD")
 
- call FieldField_parsing_subroutine(FiberField_parsing,FiberField_arg1,FiberField_arg2,rdline)
-                                              
- call Solver_parsing_subroutine(Solvers_parsing,Solvers_arguments,rdline)
+ call FiberField_parsing_subroutine(FiberField_parsing,FiberField_arg1,FiberField_arg2,rdline)
 
- call ControlLoop_parsing_subroutine(ControlLoop_parsing,ControlLoop_arguments,rdline)
+ call parsing_subroutine(Solvers_parsing,Solvers_arguments,rdline,8,"SOLVER_SETTINGS")
 
- call BC_parsing_subroutine(BC_parsing,BC_arg1,BC_arg2,BC_arg3,BC_arg4, rdline)
+ call parsing_subroutine(ControlLoop_parsing,ControlLoop_arguments,rdline,3,"CONTROL_LOOP")
+
+ call parsing_subroutine(Basis_parsing,Basis_arguments,rdline,5,"BASIS")
+
+ call parsing_subroutine(CoordinateSystem_parsing,CoordinateSystem_arguments,rdline,2,"COORDINATE_SYSTEM")
+
+ call parsing_subroutine(Region_parsing,Region_arguments,rdline,1,"REGION")
+
+ call BC_parsing_subroutine(BC_parsing,BC_arg1,BC_arg2,BC_arg3,BC_arg4, rdline,num_of_dirichelet)
 
  call Mesh_parsing_subroutine(Mesh_parsing,Mesh_arg1,Mesh_arg2,Mesh_arg3,Mesh_arg4,rdline)
 
- call CoordinateSystem_parsing_subroutine(CoordinateSystem_parsing,CoordinateSystem_arguments,rdline)
+ call parsing_subroutine(PressureBasis_parsing,PressureBasis_arguments,rdline,2,"PRESSURE_BASIS")
 
- call Basis_parsing_subroutine(Basis_parsing,Basis_arguments,rdline)
+ call parsing_subroutine(Output_parsing,Output_arguments,rdline,2,"OUTPUT")
 
 end do
 
- print *, BC_arg4(1,1),BC_arg4(2,1),BC_arg4(3,1)
 
+  print *, num_of_dirichelet
 

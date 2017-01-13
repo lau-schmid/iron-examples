@@ -18,7 +18,7 @@
   num_of_PressureBasis    = 0
 
 
-  open(12,file=fileplace//"input.iron",status="old")
+  open(12,file=fileplace,status="old")
   read(12,'(A)') rdline
 
 do while (trim(rdline).NE."STOP_PARSING")

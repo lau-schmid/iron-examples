@@ -79,7 +79,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   REAL(CMISSRP) :: WIDTH
   REAL(CMISSRP) :: LENGTH
   INTEGER(CMISSIntg) :: NumberOfArguments,ArgumentLength,ArgStatus
-  CHARACTER(LEN=100) :: CommandArgument,inputFile
+  CHARACTER(LEN=300) :: CommandArgument,inputFile
 
   
 !  INTEGER(CMISSIntg), PARAMETER :: InterpolationType=CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION
@@ -175,10 +175,12 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
     CALL GET_COMMAND_ARGUMENT(1,CommandArgument,ArgumentLength,ArgStatus)
     InputFile = trim(CommandArgument)
   ENDIF
- print *, InputFile
+ fileplace = InputFile
+ print *, fileplace
+
  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 		INITIALIZE THE DERIVED DATA STRUCTURES 			 !!!!!!!!!!!!!!!!!!!!!
  include "AllocatingDerivedDataStructures.f90"
-  print *, num_of_dirichelet
+
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!              ALLOCATE  "USERNUMBER"  DATA STRUCTURE SIZE 		 !!!!!!!!!!!!!!!!!!!!!!

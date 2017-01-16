@@ -68,6 +68,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !Test program parameters
+  LOGICAL, PARAMETER :: DEBUGGING_ONLY_RUN_SHORT_PART_OF_SIMULATION = .TRUE.    ! only run one timestep of MAIN_LOOP with stimulus
   INTEGER(CMISSINTg) :: RUN_SCENARIO = 1  !0 = default, 1 = short for testing, 2 = medium for testing, 3 = very short
   LOGICAL, PARAMETER :: DEBUGGING_OUTPUT = .FALSE.    ! enable information from solvers
   LOGICAL, PARAMETER :: OLD_TOMO_MECHANICS = .TRUE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
@@ -157,8 +158,11 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   INTEGER(CMISSIntg) :: NumberOfElementsMPerFibreLine
 
   INTEGER(CMISSIntg) :: Stat
-  character(len=256) :: CellMLModeFilename
+  CHARACTER(len=256) :: CellMLModelFilename
   CHARACTER(len=1024) :: inputDirectory = "input/"
+  CHARACTER(len=1024) :: FiringTimesFile = "MU_firing_times_10s.txt"
+  CHARACTER(len=1024) :: InnervationZoneFile = "innervation_zone_18.txt"
+  CHARACTER(len=1024) :: FibreDistributionFile = "MU_fibre_distribution_4050.txt"
   CHARACTER(len=256) :: MemoryConsumption1StTimeStep, MemoryConsumptionBeforeSim
 
   INTEGER(CMISSIntg) :: Ftype,fibre_nr,NearestGP,InElement
@@ -178,7 +182,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
 
   INTEGER(CMISSIntg), DIMENSION(10000,100) :: MotorUnitFiringTimes
-  INTEGER(CMISSIntg), ALLOCATABLE :: IZ_offset(:)
+  INTEGER(CMISSIntg), ALLOCATABLE :: InnervationZoneOffset(:)
   INTEGER(CMISSIntg) :: JunctionNodeNo
   INTEGER(CMISSIntg) :: MotorUnitFires, MotorUnitRank
 
@@ -422,7 +426,6 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   CALL CPU_Time(TimeStretchSimFinished)
   CALL HandleSolverInfo(-1.0_CMISSRP)
-  IF (ComputationalNodeNumber == 0) print*, "2.) After solve before stimulation"
 
   !reset the relative contraction velocity to 0
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3, &
@@ -448,33 +451,10 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 !      & "Aliev_Panfilov/I_HH",stimcomponent,Err)
 !  ENDIF
 
-  !--------------------------------------------------------------------------------------------------------------------------------
-  !Read in the MU firing times
-
-  IF (ComputationalNodeNumber == 0) PRINT*, "3.) Read in MU firing times"
-
-  open(unit=5,file="input/MU_firing_times_10s.txt",action="read",iostat=stat)
-  do i=1,10000
-    read(5,*,iostat=stat) MotorUnitFiringTimes(i,:)
-  enddo
-  close(unit=5)
-
-  ! Gaussian distribution with mean 0 and std 2 (MATLAB: k = 2*randn(len,1), kk = int64(k);)
-  ALLOCATE(IZ_offset(NumberOfFibres))
-
-  !open(unit=6,file="input/innervation_zone_18.txt",action="read",iostat=stat)
-  !if(stat /= 0) print*, "Error reading file input/innervation_zone_*.txt"
-  !read(6,*,iostat=stat) IZ_offset(:)
-  !close(unit=6)
-  !write(*,*) "Finished reading file: input/innervation_zone_*.txt"
-
-  DO I=1,NumberOfFibres
-     IZ_offset(I) = 0
-  ENDDO
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !--------------------------------------------------------------------------------------------------------------------------------
-  IF (ComputationalNodeNumber == 0) PRINT*, "4.) Simulate with stimulation"
+  IF (ComputationalNodeNumber == 0) PRINT*, "2.) Simulate with stimulation"
   IF (ComputationalNodeNumber == 0) MemoryConsumptionBeforeSim = GetMemoryConsumption()
 
   CALL cmfe_CustomTimingGet(CustomTimingOdeSolver, CustomTimingParabolicSolver, CustomTimingFESolverBeforeMainSim, Err)
@@ -518,15 +498,16 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
     !loop over all neuromuscular junctions (middle point of the fibres)
     DO WHILE(NodeNumber < NumberOfNodesM)
 
-      JunctionNodeNo = NodeNumber + IZ_offset(m)
+      JunctionNodeNo = NodeNumber + InnervationZoneOffset(m)
 
       CALL cmfe_Decomposition_NodeDomainGet(DecompositionM, JunctionNodeNo, 1, NodeDomain, Err)
       IF (NodeDomain == ComputationalNodeNumber) THEN
         CALL cmfe_Field_ParameterSetGetNode(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1, &
         & JunctionNodeNo,1,MotorUnitRank,Err)
 
-        IF ((MotorUnitRank < 0) .OR. (MotorUnitRank > 101)) THEN
-          MotorUnitRank=101
+        IF ((MotorUnitRank <= 0) .OR. (MotorUnitRank >= 101)) THEN
+	  PRINT*, "Warning! MotorUnitRank=",MotorUnitRank,", set to 100"
+          MotorUnitRank=100
         ELSE
           MotorUnitFires = MotorUnitFiringTimes(k, MotorUnitRank)   ! determine if mu fires
           IF (MotorUnitFires == 1) THEN
@@ -551,12 +532,14 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
     CALL cmfe_Problem_Solve(Problem,Err)
     CALL HandleSolverInfo(time)
 
+    IF (DEBUGGING_ONLY_RUN_SHORT_PART_OF_SIMULATION) EXIT
+    
     !-------------------------------------------------------------------------------------------------------------------------------
     !Now turn the stimulus off
     NodeNumber = (NumberOfNodesPerFibre+1)/2
     DO WHILE (NodeNumber < NumberOfNodesM)
 
-      JunctionNodeNo = NodeNumber + IZ_offset(m)
+      JunctionNodeNo = NodeNumber + InnervationZoneOffset(m)
 
       CALL cmfe_Decomposition_NodeDomainGet(DecompositionM, JunctionNodeNo ,1,NodeDomain,Err)
       IF(NodeDomain==ComputationalNodeNumber) THEN
@@ -674,13 +657,132 @@ FUNCTION CheckGeometry()
 
 END FUNCTION CheckGeometry
 
+SUBROUTINE ReadInputFiles()
+  LOGICAL :: FileExists
+  INTEGER :: Status
+  INTEGER :: I
+  CHARACTER(len=100000) :: Buffer
+  INTEGER :: NumberOfEntries
+  
+  ! Read in firing times file
+  FiringTimesFile = TRIM(InputDirectory) // TRIM(FiringTimesFile)
+  INQUIRE(file=FiringTimesFile, exist=FileExists)
+  
+  IF (.NOT. FileExists) THEN
+    PRINT*, "Error: File """ // TRIM(FiringTimesFile) // """ does not exist!"
+    STOP
+  ENDIF
+  
+  PRINT*,  "Open file """ // TRIM(FiringTimesFile) // """."
+  
+  OPEN(unit=5, file=FiringTimesFile, action="read", iostat=Status)
+  
+  ! loop over maximum 10000 lines
+  DO I = 1, 10000
+    READ(5,*,iostat=Status) MotorUnitFiringTimes(I,:)
+    IF (Status /= 0) THEN
+      EXIT 
+    ENDIF
+  ENDDO
+  CLOSE(unit=5)
+  
+
+  !--------------------------------------------------------------------------------------------------------------------------------
+  ! Read in InnervationZoneFile
+  ! Gaussian distribution with mean 0 and std 2 (MATLAB: k = 2*randn(len,1), kk = int64(k);)
+  InnervationZoneFile = TRIM(InputDirectory) // TRIM(InnervationZoneFile)
+  INQUIRE(file=InnervationZoneFile, exist=FileExists)
+  
+  IF (.NOT. FileExists) THEN
+    PRINT*, "Error: File """ // TRIM(InnervationZoneFile) // """ does not exist!"
+    STOP
+  ENDIF
+  
+  OPEN(unit=5, file=InnervationZoneFile, action="read", iostat=Status)
+  READ(unit=5, fmt='(A)') Buffer
+  
+  ! Determine the number of entries in the first line
+  NumberOfEntries = 1
+  DO I = 0, LEN_TRIM(Buffer)
+    IF (Buffer(I:I) == ',') THEN
+      NumberOfEntries = NumberOfEntries + 1
+    ENDIF
+  ENDDO
+  
+  REWIND(UNIT=5)
+  IF (ComputationalNodeNumber == 0) THEN
+    PRINT*, "File  """ // TRIM(InnervationZoneFile) // """ contains ", NumberOfEntries, " Entries, NumberOfFibres=", &
+      & NumberOfFibres, "."
+  ENDIF
+  
+  ALLOCATE(InnervationZoneOffset(NumberOfFibres))
+  
+  IF (NumberOfFibres <= NumberOfEntries) THEN
+    READ(unit=5, fmt=*, iostat=Status) InnervationZoneOffset(1:NumberOfFibres)
+  ELSE
+    READ(unit=5, fmt=*, iostat=Status) InnervationZoneOffset(1:NumberOfEntries)
+    
+    ! fill with already read data
+    DO I = NumberOfEntries,NumberOfFibres
+      InnervationZoneOffset(I) = InnervationZoneOffset(MOD(I, NumberOfEntries)+1)
+      !PRINT*, "fill I=",I," with entry ", InnervationZoneOffset(MOD(I, NumberOfEntries)+1), " from index ", &
+      !  & MOD(I, NumberOfEntries)+1
+    ENDDO
+  ENDIF
+  CLOSE(unit=5)
+  
+  !--------------------------------------------------------------------------------------------------------------------------------
+  !Read in motor unit fibre distribution
+  !the MU (=motor unit) number the fiber belongs to
+  FibreDistributionFile = TRIM(InputDirectory) // TRIM(FibreDistributionFile)
+  INQUIRE(file=FibreDistributionFile, exist=FileExists)
+  
+  IF (.NOT. FileExists) THEN
+    PRINT*, "Error: File """ // TRIM(FibreDistributionFile) // """ does not exist!"
+    STOP
+  ENDIF
+  
+  OPEN(unit=5, file=FibreDistributionFile, action="read", iostat=Status)
+  READ(unit=5, fmt='(A)') Buffer
+  
+  ! Determine the number of entries in the first line
+  NumberOfEntries = 1
+  DO I = 0, LEN_TRIM(Buffer)
+    IF (Buffer(I:I) == ',') THEN
+      NumberOfEntries = NumberOfEntries + 1
+    ENDIF
+  ENDDO
+  
+  REWIND(UNIT=5)
+  IF (ComputationalNodeNumber == 0) THEN
+    PRINT*, "File  """ // TRIM(FibreDistributionFile) // """ contains ", NumberOfEntries, " Entries, NumberOfFibres=", &
+      & NumberOfFibres, "."
+  ENDIF
+  
+  ALLOCATE(MUDistribution(NumberOfFibres))
+  
+  IF (NumberOfFibres <= NumberOfEntries) THEN
+    READ(unit=5, fmt=*, iostat=Status) MUDistribution(1:NumberOfFibres)
+  ELSE
+    READ(unit=5, fmt=*, iostat=Status) MUDistribution(1:NumberOfEntries)
+    
+    ! fill with already read data
+    DO I = NumberOfEntries,NumberOfFibres
+      MUDistribution(I) = MUDistribution(MOD(I, NumberOfEntries)+1)
+      !PRINT*, "fill I=",I," with entry ", MUDistribution(MOD(I, NumberOfEntries)+1), " from index ", &
+      !  & MOD(I, NumberOfEntries)+1
+    ENDDO
+  ENDIF
+  CLOSE(unit=5)
+END SUBROUTINE ReadInputFiles
+
 ! Parse command line parameters and set numbers of elements
 SUBROUTINE ParseParameters()
 
   INTEGER(CMISSLINTg) :: Factor, NumberArguments
   INTEGER(CMISSINTg) :: Length
   CHARACTER(LEN=256) :: Arg
-  LOGICAL :: GeometryIsValid
+  LOGICAL :: GeometryIsValid, FileExists
 
   NumberGlobalXElements = 3 !6
   NumberGlobalYElements = 4 !4
@@ -704,9 +806,10 @@ SUBROUTINE ParseParameters()
     ! Append slash to input directory if necessary
     Length = LEN_TRIM(InputDirectory)
 
-    IF (.NOT. inputDirectory(Length:Length) == "/") THEN
-      inputDirectory(Length+1:Length+1) = "/"
+    IF (.NOT. InputDirectory(Length:Length) == "/") THEN
+      InputDirectory(Length+1:Length+1) = "/"
     ENDIF
+    InputDirectory = TRIM(InputDirectory)
   ENDIF
   IF (NumberArguments == 2) THEN
     CALL GETARG(2, arg)
@@ -738,12 +841,8 @@ SUBROUTINE ParseParameters()
   ELSE
     PRINT*, "Using default values. " // NEW_LINE('A') &
     // "Usage: program [<input folder> [<X> <Y> <Z> [<F> [<NumberOfElementsInAtomicPortionPerDomain>]]]] " // &
-      & "or program <Scale>";
+      & "or program <f> where (X,Y,Z)=(3*f,4*f,1*f)";
   ENDIF
-
-
-
-  IF (ComputationalNodeNumber == 0) PRINT*, "Input directory: [",TRIM(inputDirectory),"]"
 
   NumberOfElementsFE = NumberGlobalXElements*NumberGlobalYElements*NumberGlobalZElements
 
@@ -816,18 +915,26 @@ SUBROUTINE ParseParameters()
 !  fast_twitch=.true.
 !  if(fast_twitch) then
 !  pathname="/home/heidlauf/OpenCMISS/OpenCMISS/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles/"
-!  CellMLModeFilename=trim(pathname)//"fast_2014_03_25_no_Fl_no_Fv.xml" !FAST
+!  CellMLModelFilename=trim(pathname)//"fast_2014_03_25_no_Fl_no_Fv.xml" !FAST
   IF (OLD_TOMO_MECHANICS) THEN
-    CellMLModeFilename = TRIM(inputDirectory) // "slow_TK_2014_12_08.xml"
+    CellMLModelFilename = TRIM(inputDirectory) // "slow_TK_2014_12_08.xml"
     STIM_VALUE = 2000.0_CMISSRP !700.0_CMISSRP!700.0_CMISSRP
   ELSE
-    CellMLModeFilename = TRIM(inputDirectory) // "Aliev_Panfilov_Razumova_2016_08_22.cellml"
+    CellMLModelFilename = TRIM(inputDirectory) // "Aliev_Panfilov_Razumova_2016_08_22.cellml"
     STIM_VALUE = 90.0_CMISSRP !90.0_CMISSRP
   ENDIF
 
+  ! check if file exists
+  INQUIRE(file=CellMLModelFilename, exist=FileExists)
+  IF (.NOT. FileExists) THEN
+    PRINT*, "Error: CellML file """ // TRIM(CellMLModelFilename) // """ does not exist!"
+    STOP
+  ENDIF
+    
+  
 !   &"/home/heidlauf/OpenCMISS/opencmiss/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles/shorten_mod_2011_07_04.xml"
 !    pathname="/home/heidlauf/OpenCMISS/opencmiss/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles"
-!    CellMLModeFilename=trim(pathname)//"/fast_shortening_0.1vmax.xml"
+!    CellMLModelFilename=trim(pathname)//"/fast_shortening_0.1vmax.xml"
 !    STIM_VALUE=700.0_CMISSRP!2000.0_CMISSRP!700.0_CMISSRP
 !  else !slow twitch
 !    filename2= &
@@ -867,6 +974,8 @@ SUBROUTINE ParseParameters()
 
   GeometryIsValid = CheckGeometry()
 
+  ! Read in input files, stops execution if files do not exist
+  CALL ReadInputFiles()
 
   ! output time step information
   IF (ComputationalNodeNumber == 0) THEN
@@ -1597,17 +1706,6 @@ SUBROUTINE InitializeFieldMonodomain()
   !init the motor unit number to 101
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,101,Err) !
 
-  !--------------------------------------------------------------------------------------------------------------------------------
-  !Read in the MU fibre distribution
-  ALLOCATE(MUDistribution(NumberOfFibres))
-  !the MU (=motor unit) number the fiber belongs to
-  OPEN(unit=7, file="input/MU_fibre_distribution_4050.txt", action="read", iostat=Stat)
-  READ(7, *, iostat=Stat) MUDistribution(:)
-  CLOSE(unit=7)
-  !PRINT*, "Finished reading file: input/MU_fibre_distribution_4050.txt"
-
-  CALL MPI_BARRIER(MPI_COMM_WORLD, Err)
-
   NodeNumber = 1
   FibreNo = 0
   ! loop over fibres
@@ -1615,7 +1713,7 @@ SUBROUTINE InitializeFieldMonodomain()
     DO FibreInLineNo = 1, NumberOfInSeriesFibres
 
       ! get rank of fibre
-      MotorUnitRank = MUDistribution(FibreNo)
+      MotorUnitRank = MUDistribution(MOD(FibreNo, 4050)+1)
       DO j = 1, NumberOfNodesPerFibre
 
         !CALL MPI_BARRIER(MPI_COMM_WORLD, Err)
@@ -1624,6 +1722,8 @@ SUBROUTINE InitializeFieldMonodomain()
         CALL cmfe_Decomposition_NodeDomainGet(DecompositionM, NodeNumber,       1,                     NodeDomain, Err)
 
         IF (NodeDomain == ComputationalNodeNumber) THEN
+	  !PRINT*, "Node ", NodeNumber, ", Fibre ", FibreNo, ", MotorUnitRank: ", MotorUnitRank 
+        
           !                                      FIELD,             VARIABLE_TYPE               FIELD_SET_TYPE
           CALL cmfe_Field_ParameterSetUpdateNode(IndependentFieldM, CMFE_FIELD_V_VARIABLE_TYPE, CMFE_FIELD_VALUES_SET_TYPE,&
       !     VERSION_NO, DERIVATIVE_NO,  USER_NODE_NUMBER, COMPONENT_NUMBER, VALUE
@@ -1730,7 +1830,7 @@ SUBROUTINE InitializeCellML()
   CALL cmfe_CellML_Initialise(CellML,Err)
   CALL cmfe_CellML_CreateStart(CellMLUserNumber,RegionM,CellML,Err)
   !Import the Shorten et al. 2007 model from a file
-  CALL cmfe_CellML_ModelImport(CellML,CellMLModeFilename,shortenModelIndex,Err)
+  CALL cmfe_CellML_ModelImport(CellML,CellMLModelFilename,shortenModelIndex,Err)
   ! Now we have imported all the models we are able to specify which variables from the model we want:
   !,- to set from this side
 

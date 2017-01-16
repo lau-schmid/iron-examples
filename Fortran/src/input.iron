@@ -1,5 +1,7 @@
 
 
+
+
 !!!!!!!!! Define governing equation!!!!!!!!!!!!!!!!!!!
 
 START_EQUATIONS_SET
@@ -56,24 +58,12 @@ MATERIAL_FIELD_ID
 SOLID
 
 MATERIAL_FIELD_PARAMETERS
-4,6         !! parameter values
+4,	6         !! parameter values
 
 
 END_MATERIAL_FIELD
 
 
-
-!!!!!!!!!!!!!!!!!! FIber Field !!!!!!!!!!!!!!!!!!!!!!!!!
-
-START_FIBER_FIELD
-
-FIBER_FIELD_ID
-SOLID
-
-FIBER_FIELD_PARAMETERS
-0.785398163,	0,	0
-
-END_FIBER_FIELD
 
 !!!!!!!!!!! Define Geometric Field !!!!!!!!!!!!!!!!!!!!!!
 
@@ -228,6 +218,16 @@ NEUMANN_PRESSURE  !!!! [ TYPE , LOCATION, VALUE ]
 
 END_BOUNDARY_CONDITIONS
 
+START_BODY_FORCE
+
+ID 
+SOLID
+
+VALUES
+0,0,9.8
+
+END_BODY_FORCE
+
 START_PRESSURE_BASIS
 
 PRESSURE_BASIS_ID
@@ -249,5 +249,8 @@ EQUATIONS_NO_OUTPUT
 
 END_OUTPUT
 
+	
+
 
 STOP_PARSING
+

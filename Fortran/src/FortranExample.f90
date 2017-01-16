@@ -24,7 +24,7 @@
 !> of Oxford are Copyright (C) 2007 by the University of Auckland and
 !> the University of Oxford. All Rights Reserved.
 !>
-!> Contributor(s): Adam Reeve, Thomas Heidlauf
+
 !>
 !> Alternatively, the contents of this file may be used under the terms of
 !> either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -423,21 +423,47 @@ DependentField: DO i = 1, num_of_DependentField
 
 
  !Initialise dependent field from undeformed geometry and displacement bcs and set hydrostatic pressure
-  CALL cmfe_Field_ParametersToFieldParametersComponentCopy(all_GeometricField%GeometricField(i), & 
-                                        match_dependent_field(DependentField_arguments(2,i)),CMFE_FIELD_VALUES_SET_TYPE, &
- & 1,all_DependentField%DependentField(i),CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,Err)
+  if  (trim(DependentField_arguments(4,i)) == "UNDEFORMED") then
+   
+  	CALL cmfe_Field_ParametersToFieldParametersComponentCopy(all_GeometricField%GeometricField(i), & 
+       	match_dependent_field(DependentField_arguments(2,i)),CMFE_FIELD_VALUES_SET_TYPE, &
+ 	& 1,all_DependentField%DependentField(i),CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,Err)
 
-  CALL cmfe_Field_ParametersToFieldParametersComponentCopy(all_GeometricField%GeometricField(i), & 
-                                        match_dependent_field(DependentField_arguments(2,i)),CMFE_FIELD_VALUES_SET_TYPE, &
- & 2,all_DependentField%DependentField(i),CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2,Err)
+  	CALL cmfe_Field_ParametersToFieldParametersComponentCopy(all_GeometricField%GeometricField(i), & 
+                                match_dependent_field(DependentField_arguments(2,i)),CMFE_FIELD_VALUES_SET_TYPE, &
+ 	& 2,all_DependentField%DependentField(i),CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2,Err)
 
-  CALL cmfe_Field_ParametersToFieldParametersComponentCopy(all_GeometricField%GeometricField(i)& 
-                                       ,match_dependent_field(DependentField_arguments(2,i)),CMFE_FIELD_VALUES_SET_TYPE, &
- & 3,all_DependentField%DependentField(i),CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3,Err)
+  	if (NumberGlobalZElements .NE. 0) then
+  	CALL cmfe_Field_ParametersToFieldParametersComponentCopy(all_GeometricField%GeometricField(i), & 
+                                match_dependent_field(DependentField_arguments(2,i)),CMFE_FIELD_VALUES_SET_TYPE, &
+ 	     & 3,all_DependentField%DependentField(i),CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3,Err)
+        end if
 
-  CALL cmfe_Field_ComponentValuesInitialise(all_DependentField%DependentField(i), & 
+
+
+  else 
+         CALL cmfe_Field_ComponentValuesInitialise(all_DependentField%DependentField(i), & 
+              &  CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1, &
+              & str2real(DependentField_arguments(5,i)),Err)
+
+         CALL cmfe_Field_ComponentValuesInitialise(all_DependentField%DependentField(i), & 
+              &  CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
+              & str2real(DependentField_arguments(5,i)),Err)
+
+  	if (NumberGlobalZElements .NE. 0) then
+         	CALL cmfe_Field_ComponentValuesInitialise(all_DependentField%DependentField(i), & 
+              		&  CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3, &
+              		& str2real(DependentField_arguments(5,i)),Err)
+        end if
+   
+  end if 
+ 
+  IF(UsePressureBasis) THEN
+  	CALL cmfe_Field_ComponentValuesInitialise(all_DependentField%DependentField(i), & 
                       &  CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,4, &
-                      & 0.0_CMISSRP,Err)
+                      & str2real(DependentField_arguments(5,i)),Err)
+  end if 
+
   CALL cmfe_Field_ParameterSetUpdateStart(all_DependentField%DependentField(i),CMFE_FIELD_U_VARIABLE_TYPE & 
                                           & ,CMFE_FIELD_VALUES_SET_TYPE,Err)
   CALL cmfe_Field_ParameterSetUpdateFinish(all_DependentField%DependentField(i),CMFE_FIELD_U_VARIABLE_TYPE, & 

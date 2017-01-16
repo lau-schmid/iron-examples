@@ -91,3 +91,6 @@
   TYPE(cmfe_FieldType) 		      :: SourceField
   
 
+
+  REAL(CMISSRP), PARAMETER :: Gravity(3)=[0.0_CMISSRP,0.0_CMISSRP,-9.8_CMISSRP] !in m s^-2
+  

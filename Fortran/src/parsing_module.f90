@@ -3,10 +3,10 @@ module parsing
   USE OpenCMISS
   USE OpenCMISS_Iron
 
-  CHARACTER(*), PARAMETER                      :: fileplace = "../Fortran/src/"
+  CHARACTER(len=300)                                 :: fileplace 
 
 
-
+ 
   integer                                      :: i,filestat,n,stat,pos1,pos2,dummy
 
   character(len=100)                           :: rdline
@@ -27,7 +27,7 @@ module parsing
   character(len=100),allocatable               :: BC_parsing(:),BC_arg1(:,:),BC_arg2(:,:),BC_arg3(:,:),BC_arg4(:,:),&
                                                 &BC_arg5(:,:)
 
-
+ integer,  parameter		               :: gravity_exist = 1
   character(len=100),allocatable               :: Solvers_arguments(:,:), Solvers_parsing(:)
 
   character(len=100),allocatable               :: Basis_arguments(:,:), Basis_parsing(:)
@@ -468,15 +468,7 @@ END SUBROUTINE  parsing_subroutine
  integer                                    :: counter
 
 rdline =  strip_space(rdline)
-
-!search_string = strip_space(search_string)
-!! print *, rdline
-! search_string
-!! print *, trim(rdline)==search_string
-if (trim(rdline)==search_string) then
-    counter = counter+1
-!    ! print *, "yes i did it , did it again , i palyed with your heart"
-end if
+if (trim(rdline)==search_string) counter = counter+1
 
 END SUBROUTINE  searching
 
@@ -618,5 +610,5 @@ end subroutine skip_blank_lines
 
   end subroutine split_inline_argument
 
-
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 end module parsing

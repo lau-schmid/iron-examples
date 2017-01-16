@@ -348,11 +348,12 @@ function material_parameters(type_string) result (type_number)
     integer                 :: type_number
     if (type_string == "EQUATIONS_SET_TRANSVERSE_ISOTROPIC_ACTIVE_SUBTYPE") then
       type_number = 5
-    else if (type_string == "EQUATIONS_SET_INCOMPRESSIBLE_MOONEY_RIVLIN_SUBTYPE") then
+    else if (type_string == "EQUATIONS_SET_MOONEY_RIVLIN_SUBTYPE") then
        type_number =2
     elseif (type_string == "EQUATIONS_SET_THREE_DIMENSIONAL_SUBTYPE")  then
       type_number = 2
     else
+      print *, " i am here "
       call handle_error("Invalid string "//type_string)
     endif
 

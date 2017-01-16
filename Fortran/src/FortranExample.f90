@@ -73,8 +73,8 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 #include "mpif.h"
 #endif
 
-  REAL(CMISSRP), PARAMETER :: Gravity(3)=[0.0_CMISSRP,0.0_CMISSRP,-9.8_CMISSRP] !in m s^-2
-  REAL(CMISSRP), PARAMETER :: Density=   9.0E-4_CMISSRP
+ ! REAL(CMISSRP), PARAMETER :: Gravity(3)=[0.0_CMISSRP,0.0_CMISSRP,-9.8_CMISSRP] !in m s^-2
+ ! REAL(CMISSRP), PARAMETER :: Density=   9.0E-4_CMISSRP
   REAL(CMISSRP) :: HEIGHT
   REAL(CMISSRP) :: WIDTH
   REAL(CMISSRP) :: LENGTH
@@ -140,6 +140,8 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   INTEGER(CMISSIntg) ,parameter   :: FieldSourceUserNumber = 20
   !Program types
 
+  !Generic CMISS variables
+  INTEGER(CMISSIntg) :: Err
   !Program variables
 
   INTEGER(CMISSIntg) :: NumberGlobalXElements,NumberGlobalYElements,NumberGlobalZElements
@@ -165,8 +167,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 #endif
 
 
-  !Generic CMISS variables
-  INTEGER(CMISSIntg) :: Err
+
   NumberOfArguments = COMMAND_ARGUMENT_COUNT()
   
   IF(NumberOfArguments .NE. 1) THEN
@@ -399,9 +400,10 @@ DependentField: DO i = 1, num_of_DependentField
   CALL cmfe_Field_VariableTypesSet(all_DependentField%DependentField(i), & 
                                    & [CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_DELUDELN_VARIABLE_TYPE],Err)
   CALL cmfe_Field_VariableLabelSet(all_DependentField%DependentField(i),CMFE_FIELD_U_VARIABLE_TYPE,"Dependent",Err)
-  CALL cmfe_Field_NumberOfComponentsSet(all_DependentField%DependentField(i),CMFE_FIELD_U_VARIABLE_TYPE,NUMBER_OF_COMPONENTS,Err)
+  CALL cmfe_Field_NumberOfComponentsSet(all_DependentField%DependentField(i),CMFE_FIELD_U_VARIABLE_TYPE, & 
+       & str2int(DependentField_arguments(3,1)),Err)
   CALL cmfe_Field_NumberOfComponentsSet(all_DependentField%DependentField(i), & 
-       & CMFE_FIELD_DELUDELN_VARIABLE_TYPE,NUMBER_OF_COMPONENTS,Err)
+       & CMFE_FIELD_DELUDELN_VARIABLE_TYPE,str2int(DependentField_arguments(3,1)),Err)
   IF(UsePressureBasis) THEN
     !Set the pressure to be nodally based and use the second mesh component if required
     CALL cmfe_Field_ComponentInterpolationSet(all_DependentField%DependentField(i),&
@@ -499,20 +501,22 @@ EquationsSet: DO i = 1,Num_of_EquationsSet            !!!! loop for eqaution set
   CALL cmfe_Equations_OutputTypeSet(all_Equations%Equations(i),output_type(Output_arguments(2,1)),Err)
   CALL cmfe_EquationsSet_EquationsCreateFinish(all_EquationsSet%EquationsSet(i),Err)
 
-END DO EquationsSet 
-
-
   !Create the source field with the gravity vector
-CALL cmfe_Field_Initialise(SourceField,Err)
-CALL cmfe_EquationsSet_SourceCreateStart(all_EquationsSet%EquationsSet(1),FieldSourceUserNumber,SourceField,Err)
-CALL cmfe_Field_ScalingTypeSet(SourceField,CMFE_FIELD_ARITHMETIC_MEAN_SCALING,Err)
-CALL cmfe_EquationsSet_SourceCreateFinish(all_EquationsSet%EquationsSet(1),Err)
-DO component_idx=1,3
-    CALL cmfe_Field_ComponentValuesInitialise(SourceField, & 
+  CALL cmfe_Field_Initialise(SourceField,Err)
+  CALL cmfe_EquationsSet_SourceCreateStart(all_EquationsSet%EquationsSet(i),FieldSourceUserNumber,SourceField,Err)
+  CALL cmfe_Field_ScalingTypeSet(SourceField,CMFE_FIELD_ARITHMETIC_MEAN_SCALING,Err)
+  CALL cmfe_EquationsSet_SourceCreateFinish(all_EquationsSet%EquationsSet(i),Err)
+  DO component_idx=1,3
+    	CALL cmfe_Field_ComponentValuesInitialise(SourceField, & 
                        & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
                        & component_idx,Gravity(component_idx),Err)
 
-ENDDO
+  ENDDO
+
+END DO EquationsSet 
+
+
+  
 
 DO i = 1, num_of_Problem
 

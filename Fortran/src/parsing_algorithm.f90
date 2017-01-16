@@ -16,11 +16,13 @@ ControlLoop_parsing(1) = "CONTROL_LOOP_ID"
 ControlLoop_parsing(2) = "TYPE"
 ControlLoop_parsing(3) = "INCREMENTS"
 
-allocate(DependentField_parsing(2))
-allocate(DependentField_arguments(2,num_of_DependentField))
+allocate(DependentField_parsing(5))
+allocate(DependentField_arguments(5,num_of_DependentField))
 DependentField_parsing(1) = "DEPENDENT_FIELD_ID"
 DependentField_parsing(2) = "TYPE"
-
+DependentField_parsing(3) = "NUM_OF_COMPONENTS"
+DependentField_parsing(4) = "INITIAL_VALUE_OF_STATE_VARIABLE"
+DependentField_parsing(5) = "INITIAL_VALUE_OF_PRESSURE_STATE_VARIABLE"
 
 allocate(EquationsSet_parsing(4))
 
@@ -123,7 +125,7 @@ Output_parsing(2) =  "OUTPUT_TYPE"
 
  close(12)
 
- open(12,file=fileplace//"input.iron",status="old")
+ open(12,file=fileplace,status="old")
  read(12,'(A)',iostat=filestat) rdline
 
 
@@ -139,7 +141,7 @@ do while (trim(rdline).NE."STOP_PARSING")
 
  call MaterialField_parsing_subroutine(MaterialField_parsing,MaterialField_arg1,MaterialField_arg2,rdline)
 
- call parsing_subroutine(DependentField_parsing,DependentField_arguments,rdline,2,"DEPENDENT_FIELD")
+ call parsing_subroutine(DependentField_parsing,DependentField_arguments,rdline,5,"DEPENDENT_FIELD")
 
  call FiberField_parsing_subroutine(FiberField_parsing,FiberField_arg1,FiberField_arg2,rdline)
 
@@ -163,6 +165,4 @@ do while (trim(rdline).NE."STOP_PARSING")
 
 end do
 
-
-  print *, num_of_dirichelet
 

@@ -68,7 +68,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !Test program parameters
-  LOGICAL, PARAMETER :: DEBUGGING_ONLY_RUN_SHORT_PART_OF_SIMULATION = .TRUE.    ! only run one timestep of MAIN_LOOP with stimulus
+  LOGICAL, PARAMETER :: DEBUGGING_ONLY_RUN_SHORT_PART_OF_SIMULATION = .FALSE.    ! only run one timestep of MAIN_LOOP with stimulus
   INTEGER(CMISSINTg) :: RUN_SCENARIO = 1  !0 = default, 1 = short for testing, 2 = medium for testing, 3 = very short
   LOGICAL, PARAMETER :: DEBUGGING_OUTPUT = .FALSE.    ! enable information from solvers
   LOGICAL, PARAMETER :: OLD_TOMO_MECHANICS = .TRUE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
@@ -1168,7 +1168,7 @@ SUBROUTINE CreateRegionMesh()
       NodeNo = NodeNo+1
     ENDIF
   ENDDO
-  write(*,*) "Finished setting up 1D elements"
+  !write(*,*) "Finished setting up 1D elements"
 
 
   CALL cmfe_MeshElements_CreateFinish(ElementsM,Err)
@@ -1190,6 +1190,8 @@ SUBROUTINE CreateDecomposition()
   REAL(CMISSDP) :: NumberOfAtomicElementPortions
   INTEGER(CMISSIntg) :: NumberOfAtomicPortionsPerDomain
   INTEGER(CMISSIntg) :: AtomicPortionNo, ElementInAtomicPortionNo, LastDomainNo
+  INTEGER(CMISSintg) :: NumberOfElementsAdditionallyForLastProcess
+  INTEGER(CMISSintg) :: NumberOfActualElementsInDomain
 
   !--------------------------------------------------------------------------------------------------------------------------------
   ! Create a decomposition for global FE elements
@@ -1205,7 +1207,22 @@ SUBROUTINE CreateDecomposition()
     NumberOfElementsInDomain = NumberOfElementsFE / NumberOfDomains
 
     NumberOfAtomicElementPortions = REAL(NumberOfElementsFE) / NumberOfElementsInAtomicPortionPerDomain
+
     NumberOfAtomicPortionsPerDomain = NumberOfAtomicElementPortions / NumberOfDomains
+    NumberOfActualElementsInDomain = NumberOfAtomicPortionsPerDomain * NumberOfElementsInAtomicPortionPerDomain
+
+    NumberOfElementsAdditionallyForLastProcess = &
+      & NumberOfElementsFE - NumberOfAtomicPortionsPerDomain * NumberOfElementsInAtomicPortionPerDomain * NumberOfComputationalNodes
+
+    IF (NumberOfElementsAdditionallyForLastProcess /= 0) THEN
+      IF (ComputationalNodeNumber == 0) THEN
+        PRINT*, "Notice: Due to discretization size and Atomic size, the last process gets ", &
+          & NumberOfElementsAdditionallyForLastProcess, " 3D elements more (", &
+          & (NumberOfActualElementsInDomain+NumberOfElementsAdditionallyForLastProcess), " instead of ", &
+          & NumberOfActualElementsInDomain, ")!"
+      END IF
+
+    END IF
 
     ! Assign domain numbers to elements
     ElementFENo = 1
@@ -1213,28 +1230,46 @@ SUBROUTINE CreateDecomposition()
     LastDomainNo = -1
     ElementInAtomicPortionNo = 1
     AtomicPortionNo = 1
+    !PRINT*, "NumberOfElementsFE (global): ",NumberOfElementsFE,", NumberOfElementsInDomain (local): ",NumberOfElementsInDomain
+    !PRINT*, &
+    !  & ", NumberOfAtomicElementPortions (total): ",NumberOfAtomicElementPortions, &
+    !  & ", NumberOfAtomicPortionsPerDomain (local): ", NumberOfAtomicPortionsPerDomain, &
+    !  & ", Size of Portion: ", NumberOfElementsInAtomicPortionPerDomain
+    !PRINT*, "NumberOfElementsAdditionallyForLastProcess: ", NumberOfElementsAdditionallyForLastProcess
     DO ElementFENo = 1, NumberOfElementsFE        ! loop over global ElementFE's
+
 
       !                                        DECOMPOSITION,  GLOBAL_ELEMENT_NUMBER, DOMAIN_NUMBER
       CALL cmfe_Decomposition_ElementDomainSet(DecompositionFE, ElementFENo,            DomainNo, Err)
       LastDomainNo = DomainNo
 
+      !PRINT*, "ElementFENo=",ElementFENo, ", ElementInAtomicPortionNo=", ElementInAtomicPortionNo,", DomainNo: ", DomainNo
+
       IF (ElementInAtomicPortionNo == NumberOfElementsInAtomicPortionPerDomain) THEN
         AtomicPortionNo = AtomicPortionNo + 1
+        ElementInAtomicPortionNo = 0
+        !PRINT*, "  next AtomicPortionNo (", AtomicPortionNo, ") in domain ", DomainNo
       ENDIF
 
       IF (AtomicPortionNo > NumberOfAtomicPortionsPerDomain) THEN
         AtomicPortionNo = 1
         ElementInAtomicPortionNo = 0
-        DomainNo = DomainNo + 1
+
+        IF ((ElementFENo >= NumberOfElementsFE - NumberOfElementsAdditionallyForLastProcess) &
+          & .AND. (DomainNo == NumberOfDomains-1)) THEN
+          !PRINT*, "  remainder, stay in domain ", DomainNo
+        ELSE
+          DomainNo = DomainNo + 1
+          !PRINT*, "  next domain ", DomainNo
+        ENDIF
       ENDIF
 
       ElementInAtomicPortionNo = ElementInAtomicPortionNo + 1
     ENDDO
 
-    IF (LastDomainNo /= NumberOfDomains) then
-      PRINT*, "Error in Domain decomposition of FE elements, used number of domains (", &
-        & LastDomainNo, ") /= number of processes (", NumberOfDomains ,")!"
+    IF (LastDomainNo+1 /= NumberOfDomains) then
+      PRINT*, "Error in Domain decomposition of FE elements, last domains no. ", &
+        & LastDomainNo, " /= number of processes (", NumberOfDomains ,")!"
       STOP
     ENDIF
   ELSE

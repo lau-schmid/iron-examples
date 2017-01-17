@@ -6,3 +6,4 @@ tmp*
 Makefile
 CMakeFiles/*
 CMakeCache.txt
+*.o

@@ -163,7 +163,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   CHARACTER(len=1024) :: FiringTimesFile = "MU_firing_times_10s.txt"
   CHARACTER(len=1024) :: InnervationZoneFile = "innervation_zone_18.txt"
   CHARACTER(len=1024) :: FibreDistributionFile = "MU_fibre_distribution_4050.txt"
-  CHARACTER(len=256) :: MemoryConsumption1StTimeStep, MemoryConsumptionBeforeSim
+  CHARACTER(len=256) :: MemoryConsumption1StTimeStep = "", MemoryConsumptionBeforeSim
 
   INTEGER(CMISSIntg) :: Ftype,fibre_nr,NearestGP,InElement
 
@@ -506,7 +506,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
         & JunctionNodeNo,1,MotorUnitRank,Err)
 
         IF ((MotorUnitRank <= 0) .OR. (MotorUnitRank >= 101)) THEN
-	  PRINT*, "Warning! MotorUnitRank=",MotorUnitRank,", set to 100"
+          PRINT*, "Warning! MotorUnitRank=",MotorUnitRank,", set to 100"
           MotorUnitRank=100
         ELSE
           MotorUnitFires = MotorUnitFiringTimes(k, MotorUnitRank)   ! determine if mu fires
@@ -533,7 +533,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
     CALL HandleSolverInfo(time)
 
     IF (DEBUGGING_ONLY_RUN_SHORT_PART_OF_SIMULATION) EXIT
-    
+
     !-------------------------------------------------------------------------------------------------------------------------------
     !Now turn the stimulus off
     NodeNumber = (NumberOfNodesPerFibre+1)/2
@@ -589,7 +589,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   CALL WriteCustomProfilingFile()
 
   IF (ComputationalNodeNumber == 0) THEN
-    PRINT*, cmfe_CustomProfilingGetInfo(Err)
+    PRINT*, TRIM(cmfe_CustomProfilingGetInfo(Err))
   ENDIF
 
   PRINT*, ""
@@ -663,44 +663,44 @@ SUBROUTINE ReadInputFiles()
   INTEGER :: I
   CHARACTER(len=100000) :: Buffer
   INTEGER :: NumberOfEntries
-  
+
   ! Read in firing times file
   FiringTimesFile = TRIM(InputDirectory) // TRIM(FiringTimesFile)
   INQUIRE(file=FiringTimesFile, exist=FileExists)
-  
+
   IF (.NOT. FileExists) THEN
     PRINT*, "Error: File """ // TRIM(FiringTimesFile) // """ does not exist!"
     STOP
   ENDIF
-  
+
   PRINT*,  "Open file """ // TRIM(FiringTimesFile) // """."
-  
+
   OPEN(unit=5, file=FiringTimesFile, action="read", iostat=Status)
-  
+
   ! loop over maximum 10000 lines
   DO I = 1, 10000
     READ(5,*,iostat=Status) MotorUnitFiringTimes(I,:)
     IF (Status /= 0) THEN
-      EXIT 
+      EXIT
     ENDIF
   ENDDO
   CLOSE(unit=5)
-  
+
 
   !--------------------------------------------------------------------------------------------------------------------------------
   ! Read in InnervationZoneFile
   ! Gaussian distribution with mean 0 and std 2 (MATLAB: k = 2*randn(len,1), kk = int64(k);)
   InnervationZoneFile = TRIM(InputDirectory) // TRIM(InnervationZoneFile)
   INQUIRE(file=InnervationZoneFile, exist=FileExists)
-  
+
   IF (.NOT. FileExists) THEN
     PRINT*, "Error: File """ // TRIM(InnervationZoneFile) // """ does not exist!"
     STOP
   ENDIF
-  
+
   OPEN(unit=5, file=InnervationZoneFile, action="read", iostat=Status)
   READ(unit=5, fmt='(A)') Buffer
-  
+
   ! Determine the number of entries in the first line
   NumberOfEntries = 1
   DO I = 0, LEN_TRIM(Buffer)
@@ -708,20 +708,20 @@ SUBROUTINE ReadInputFiles()
       NumberOfEntries = NumberOfEntries + 1
     ENDIF
   ENDDO
-  
+
   REWIND(UNIT=5)
   IF (ComputationalNodeNumber == 0) THEN
     PRINT*, "File  """ // TRIM(InnervationZoneFile) // """ contains ", NumberOfEntries, " Entries, NumberOfFibres=", &
       & NumberOfFibres, "."
   ENDIF
-  
+
   ALLOCATE(InnervationZoneOffset(NumberOfFibres))
-  
+
   IF (NumberOfFibres <= NumberOfEntries) THEN
     READ(unit=5, fmt=*, iostat=Status) InnervationZoneOffset(1:NumberOfFibres)
   ELSE
     READ(unit=5, fmt=*, iostat=Status) InnervationZoneOffset(1:NumberOfEntries)
-    
+
     ! fill with already read data
     DO I = NumberOfEntries,NumberOfFibres
       InnervationZoneOffset(I) = InnervationZoneOffset(MOD(I, NumberOfEntries)+1)
@@ -730,21 +730,21 @@ SUBROUTINE ReadInputFiles()
     ENDDO
   ENDIF
   CLOSE(unit=5)
-  
+
   !--------------------------------------------------------------------------------------------------------------------------------
   !Read in motor unit fibre distribution
   !the MU (=motor unit) number the fiber belongs to
   FibreDistributionFile = TRIM(InputDirectory) // TRIM(FibreDistributionFile)
   INQUIRE(file=FibreDistributionFile, exist=FileExists)
-  
+
   IF (.NOT. FileExists) THEN
     PRINT*, "Error: File """ // TRIM(FibreDistributionFile) // """ does not exist!"
     STOP
   ENDIF
-  
+
   OPEN(unit=5, file=FibreDistributionFile, action="read", iostat=Status)
   READ(unit=5, fmt='(A)') Buffer
-  
+
   ! Determine the number of entries in the first line
   NumberOfEntries = 1
   DO I = 0, LEN_TRIM(Buffer)
@@ -752,20 +752,20 @@ SUBROUTINE ReadInputFiles()
       NumberOfEntries = NumberOfEntries + 1
     ENDIF
   ENDDO
-  
+
   REWIND(UNIT=5)
   IF (ComputationalNodeNumber == 0) THEN
     PRINT*, "File  """ // TRIM(FibreDistributionFile) // """ contains ", NumberOfEntries, " Entries, NumberOfFibres=", &
       & NumberOfFibres, "."
   ENDIF
-  
+
   ALLOCATE(MUDistribution(NumberOfFibres))
-  
+
   IF (NumberOfFibres <= NumberOfEntries) THEN
     READ(unit=5, fmt=*, iostat=Status) MUDistribution(1:NumberOfFibres)
   ELSE
     READ(unit=5, fmt=*, iostat=Status) MUDistribution(1:NumberOfEntries)
-    
+
     ! fill with already read data
     DO I = NumberOfEntries,NumberOfFibres
       MUDistribution(I) = MUDistribution(MOD(I, NumberOfEntries)+1)
@@ -930,8 +930,8 @@ SUBROUTINE ParseParameters()
     PRINT*, "Error: CellML file """ // TRIM(CellMLModelFilename) // """ does not exist!"
     STOP
   ENDIF
-    
-  
+
+
 !   &"/home/heidlauf/OpenCMISS/opencmiss/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles/shorten_mod_2011_07_04.xml"
 !    pathname="/home/heidlauf/OpenCMISS/opencmiss/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles"
 !    CellMLModelFilename=trim(pathname)//"/fast_shortening_0.1vmax.xml"
@@ -1210,7 +1210,7 @@ SUBROUTINE CreateDecomposition()
     ! Assign domain numbers to elements
     ElementFENo = 1
     DomainNo = 0
-    LastDomainNo = 0
+    LastDomainNo = -1
     ElementInAtomicPortionNo = 1
     AtomicPortionNo = 1
     DO ElementFENo = 1, NumberOfElementsFE        ! loop over global ElementFE's
@@ -1722,8 +1722,8 @@ SUBROUTINE InitializeFieldMonodomain()
         CALL cmfe_Decomposition_NodeDomainGet(DecompositionM, NodeNumber,       1,                     NodeDomain, Err)
 
         IF (NodeDomain == ComputationalNodeNumber) THEN
-	  !PRINT*, "Node ", NodeNumber, ", Fibre ", FibreNo, ", MotorUnitRank: ", MotorUnitRank 
-        
+	  !PRINT*, "Node ", NodeNumber, ", Fibre ", FibreNo, ", MotorUnitRank: ", MotorUnitRank
+
           !                                      FIELD,             VARIABLE_TYPE               FIELD_SET_TYPE
           CALL cmfe_Field_ParameterSetUpdateNode(IndependentFieldM, CMFE_FIELD_V_VARIABLE_TYPE, CMFE_FIELD_VALUES_SET_TYPE,&
       !     VERSION_NO, DERIVATIVE_NO,  USER_NODE_NUMBER, COMPONENT_NUMBER, VALUE
@@ -2301,7 +2301,22 @@ SUBROUTINE WriteTimingFile()
     WRITE(123,'(A)') '# Stamp; Host; NProc; X; Y; Z; F; Total FE; Total M; End Time; ' // &
       & 'Dur. Init; Stretch Sim; Int. Init; Main Sim; Total; Total (User); Total (System); ' // &
       & 'ODE; Parabolic; FE; FE before Main Sim; Mem. Consumption after 1st timestep; Memory Consumption At End; ' // &
-      & 'Parabolic reason; Newton reason; parabolic n. iter; min; max; newton n. iter; min; max '
+      & 'Parabolic reason; Newton reason; parabolic n. iter; min; max; newton n. iter; min; max; '
+    WRITE(123,'(A)') '# 1. problem solve; 1.1/2 pre solve; problem_solver_pre_solve; 1.1. problem cellml solve; ' // &
+      & 'cellml solve (*); 1.1.1. cellml field2cellml update; 1.1.2. cellml field var get; 1.1.3. cellml data get; ' // &
+      & '1.1.4. cellml integrate; cellml call rhs; 1.1.5. cellml data restore; 1.1.6. cellml field update; ' // &
+      & 'problem_solver_post_solve; 1.2. dynamic linear solve (*); 1.2.1 assemble equations; 1.2.2 get loop time; ' // &
+      & '1.2.3 solve; 1.2.4 back-substitute; 1.1/2 post solve; 1.2.3.1 dynamic mean predicted calculate; ' // &
+      & '1.2.3.2 dynamic assemble; 1.2.3.3 solve linear system; 1.2.3.4 update dependent field; 1.3.1 pre solve; ' // &
+      & '1.3.2 apply incremented BC; 1.3.3 solve; 1.3.3.1 static nonlinear solve (*); 1.3.3.1.1 apply BC, assemble; ' // &
+      & '1.3.3.1.2 assemble interface conditions; 1.3.3.1.3 solve; 1.3.3.1.3.1 newton update solution vector; ' // &
+      & '1.3.3.1.3.2 newton Petsc solve; 1.3.3.1.3.3 newton diagnostics; 1.3.3.1.4 update residual; 1.3.4 post solve;  '
+    WRITE(123,'(A)') '# (memory consumption, size 1 el., n. objects): distributed vector cmiss DP;;; ' // &
+      & 'distributed vector cmiss INTG;;; distributed matrix petsc, compr. row storage diag;;; ' // &
+      & 'distributed matrix petsc, compr. row storage, offdiag;;; distributed matrix petsc, compr. row storage, row ind.;;; ' // &
+      & 'distributed matrix petsc, compr. row storage, col. ind.;;; ' // &
+      & 'distributed matrix petsc, compr. row storage (local to global mapping);;; ' // &
+      & 'distributed vector petsc'
     CLOSE(unit=123)
   ENDIF
 
@@ -2320,7 +2335,7 @@ SUBROUTINE WriteTimingFile()
 
   TimeStampStr = GetTimeStamp()
 
-  WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A))") &
+  WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),35(F25.13,A),8(I17,A,I5,A,I7,A))") &
     & TRIM(TimeStampStr), ';', &
     & TRIM(Hostname(1:22)), ';', &
     & NumberOfComputationalNodes, ';', &
@@ -2351,7 +2366,68 @@ SUBROUTINE WriteTimingFile()
     & CustomSolverNumberIterationsParabolicMax, ';', &
     & CustomSolverNumberIterationsNewton, ';', &
     & CustomSolverNumberIterationsNewtonMin, ';', &
-    & CustomSolverNumberIterationsNewtonMax, ';'
+    & CustomSolverNumberIterationsNewtonMax, ';', &
+    ! Custom Profiling durations
+    & cmfe_CustomProfilingGetDuration("1. problem solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.1/2 pre solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("problem_solver_pre_solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.1. problem cellml solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("cellml solve (*)", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.1.1. cellml field2cellml update", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.1.2. cellml field var get", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.1.3. cellml data get", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.1.4. cellml integrate", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("cellml call rhs", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.1.5. cellml data restore", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.1.6. cellml field update", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("problem_solver_post_solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.2. dynamic linear solve (*)", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.2.1 assemble equations", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.2.2 get loop time", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.2.3 solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.2.4 back-substitute", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.1/2 post solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.2.3.1 dynamic mean predicted calculate", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.2.3.2 dynamic assemble", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.2.3.3 solve linear system", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.2.3.4 update dependent field", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.1 pre solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.2 apply incremented BC", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.3 solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.3.1 static nonlinear solve (*)", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.3.1.1 apply BC, assemble", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.3.1.2 assemble interface conditions", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.3.1.3 solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.3.1.3.1 newton update solution vector", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.3.1.3.2 newton Petsc solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.3.1.3.3 newton diagnostics", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.3.1.4 update residual", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.4 post solve", Err), ';', &
+    ! custom profiling memory consumption
+    & cmfe_CustomProfilingGetMemory("distributed vector cmiss DP", Err), ';', &
+    & cmfe_CustomProfilingGetSizePerElement("distributed vector cmiss DP", Err), ';', &
+    & cmfe_CustomProfilingGetNumberObjects("distributed vector cmiss DP", Err), ';', &
+    & cmfe_CustomProfilingGetMemory("distributed vector cmiss INTG", Err), ';', &
+    & cmfe_CustomProfilingGetSizePerElement("distributed vector cmiss INTG", Err), ';', &
+    & cmfe_CustomProfilingGetNumberObjects("distributed vector cmiss INTG", Err), ';', &
+    & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage diag", Err), ';', &
+    & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage diag", Err), ';', &
+    & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage diag", Err), ';', &
+    & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage, offdiag", Err), ';', &
+    & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage, offdiag", Err), ';', &
+    & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage, offdiag", Err), ';', &
+    & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage, row ind.", Err), ';', &
+    & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage, row ind.", Err), ';', &
+    & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage, row ind.", Err), ';', &
+    & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage, col. ind.", Err), ';', &
+    & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage, col. ind.", Err), ';', &
+    & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage, col. ind.", Err), ';', &
+    & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage (local to global mapping)", Err), ';', &
+    & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage (local to global mapping)", Err), ';', &
+    & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage (local to global mapping)", Err), ';', &
+    & cmfe_CustomProfilingGetMemory("distributed vector petsc", Err), ';', &
+    & cmfe_CustomProfilingGetSizePerElement("distributed vector petsc", Err), ';', &
+    & cmfe_CustomProfilingGetNumberObjects("distributed vector petsc", Err), ';'
 
   CLOSE(unit=123)
 END SUBROUTINE WriteTimingFile

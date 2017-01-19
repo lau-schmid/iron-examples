@@ -69,7 +69,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !--------------------------------------------------------------------------------------------------------------------------------
   !Test program parameters
   LOGICAL, PARAMETER :: DEBUGGING_ONLY_RUN_SHORT_PART_OF_SIMULATION = .FALSE.    ! only run one timestep of MAIN_LOOP with stimulus
-  INTEGER(CMISSINTg) :: RUN_SCENARIO = 1  !0 = default, 1 = short for testing, 2 = medium for testing, 3 = very short
+  INTEGER(CMISSINTg) :: RUN_SCENARIO = 3  !0 = default, 1 = short for testing, 2 = medium for testing, 3 = very short
   LOGICAL, PARAMETER :: DEBUGGING_OUTPUT = .FALSE.    ! enable information from solvers
   LOGICAL, PARAMETER :: OLD_TOMO_MECHANICS = .TRUE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
 
@@ -163,7 +163,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   CHARACTER(len=1024) :: FiringTimesFile = "MU_firing_times_10s.txt"
   CHARACTER(len=1024) :: InnervationZoneFile = "innervation_zone_18.txt"
   CHARACTER(len=1024) :: FibreDistributionFile = "MU_fibre_distribution_4050.txt"
-  CHARACTER(len=256) :: MemoryConsumption1StTimeStep = "", MemoryConsumptionBeforeSim
+  CHARACTER(len=256) :: MemoryConsumption1StTimeStep = "", MemoryConsumptionBeforeSim, Temp
 
   INTEGER(CMISSIntg) :: Ftype,fibre_nr,NearestGP,InElement
 
@@ -419,6 +419,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   !Solve the problem -- bring to new length before applying the stimulus
   IF (ComputationalNodeNumber == 0) PRINT*, "1.) Start solve before stimulation"
+  Temp = GetMemoryConsumption()
   CALL cmfe_CustomSolverInfoReset(Err)
   CALL CPU_Time(TimeInitFinshed)
 
@@ -466,7 +467,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   VALUE = 0.0_CMISSRP
   k = 1       ! row in firing_times input (time)
   m = 1
-  DO WHILE(time <= TIME_STOP)
+  DO WHILE(time < TIME_STOP-1e-10)
 
     IF (ComputationalNodeNumber == 0) PRINT "(A,F0.5,A)","t = ",time," s"
     !-------------------------------------------------------------------------------------------------------------------------------
@@ -532,6 +533,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
     CALL cmfe_Problem_Solve(Problem,Err)
     CALL HandleSolverInfo(time)
 
+    Temp = GetMemoryConsumption()
     IF (DEBUGGING_ONLY_RUN_SHORT_PART_OF_SIMULATION) EXIT
 
     !-------------------------------------------------------------------------------------------------------------------------------
@@ -564,7 +566,9 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
     k = k+1
 
     IF (k == 2) THEN
-      MemoryConsumption1StTimeStep = getMemoryConsumption()
+      MemoryConsumption1StTimeStep = GetMemoryConsumption()
+    ELSE
+      Temp = GetMemoryConsumption()
     ENDIF
 
   ENDDO
@@ -610,6 +614,8 @@ CONTAINS
 ! Test whether parametrization and number of processes matches and is valid
 FUNCTION CheckGeometry()
   LOGICAL :: CheckGeometry
+  REAL(CMISSDP) :: NumberOfAtomicElementPortions
+  INTEGER(CMISSIntg) :: NumberOfAtomicPortionsPerDomain
   CheckGeometry = .TRUE.
 
   ! NumberOfElementsMPerFibre = NumberOfElementsMPerFibreLine / NumberOfInSeriesFibres
@@ -639,6 +645,26 @@ FUNCTION CheckGeometry()
     CheckGeometry = .FALSE.
   ENDIF
 
+  IF (NumberOfElementsInAtomicPortionPerDomain > NumberOfElementsFE) THEN
+    IF (ComputationalNodeNumber == 0) THEN
+      PRINT*, "Error: NumberOfElementsInAtomicPortionPerDomain=",NumberOfElementsInAtomicPortionPerDomain, &
+        & " is greater than NumberOfElementsFE=",NumberOfElementsFE,"!"
+    ENDIF
+    CheckGeometry = .FALSE.
+  ENDIF
+
+  NumberOfAtomicElementPortions = REAL(NumberOfElementsFE) / NumberOfElementsInAtomicPortionPerDomain
+  NumberOfAtomicPortionsPerDomain = NumberOfAtomicElementPortions / NumberOfDomains
+
+  IF (NumberOfAtomicPortionsPerDomain == 0) THEN
+    IF (ComputationalNodeNumber == 0) THEN
+      WRITE(*,"(A, I5, A, I11, A, I5, A)") &
+        & " Error: Too much processes (", NumberOfDomains, ") for problem with ", NumberOfElementsFE, " elements " // &
+        & "and atomic size of ", NumberOfElementsInAtomicPortionPerDomain, "!"
+    ENDIF
+    CheckGeometry = .FALSE.
+  ENDIF
+
   IF (NumberOfElementsInAtomicPortionPerDomain < NumberGlobalXElements) THEN
     IF (ComputationalNodeNumber == 0) THEN
       PRINT*, "Warning: NumberOfElementsInAtomicPortionPerDomain=",NumberOfElementsInAtomicPortionPerDomain, &
@@ -653,6 +679,9 @@ FUNCTION CheckGeometry()
       PRINT*, "Therefore fibres will be subdivided."
     ENDIF
   ENDIF
+
+
+
 
 
 END FUNCTION CheckGeometry
@@ -673,7 +702,7 @@ SUBROUTINE ReadInputFiles()
     STOP
   ENDIF
 
-  PRINT*,  "Open file """ // TRIM(FiringTimesFile) // """."
+  IF (ComputationalNodeNumber == 0) PRINT*,  "Open file """ // TRIM(FiringTimesFile) // """."
 
   OPEN(unit=5, file=FiringTimesFile, action="read", iostat=Status)
 
@@ -1162,6 +1191,9 @@ SUBROUTINE CreateRegionMesh()
   DO ElementNo = 1,NumberOfElementsM
     CALL cmfe_MeshElements_NodesSet(ElementsM, ElementNo, [NodeNo,NodeNo+1], Err)
 
+    !PRINT "(A,I3.3,A,I5.5,A,I7.7,A,I7.7)", &
+    !  & "a ", ComputationalNodeNumber, ": 1D el. no. ", ElementNo, " has nodes ", NodeNo, ", ", NodeNo+1
+
     NodeNo = NodeNo+1
     ! If at the end of a fibre line, increment node to starting node of next fibre line
     IF (MOD(ElementNo, NumberOfElementsMPerFibreLine) == 0) THEN
@@ -1243,6 +1275,8 @@ SUBROUTINE CreateDecomposition()
       CALL cmfe_Decomposition_ElementDomainSet(DecompositionFE, ElementFENo,            DomainNo, Err)
       LastDomainNo = DomainNo
 
+      !PRINT "(I3.3,A,I5.5,A,I2)", ComputationalNodeNumber, ": 3D el. no. ", ElementFENo, " to domain no. ", DomainNo
+
       !PRINT*, "ElementFENo=",ElementFENo, ", ElementInAtomicPortionNo=", ElementInAtomicPortionNo,", DomainNo: ", DomainNo
 
       IF (ElementInAtomicPortionNo == NumberOfElementsInAtomicPortionPerDomain) THEN
@@ -1305,6 +1339,7 @@ SUBROUTINE CreateDecomposition()
             ! set the domain of the ElementM to the same domain as the containing global element
             !                                        DECOMPOSITION,  GLOBAL_ELEMENT_NUMBER, DOMAIN_NUMBER
             CALL cmfe_Decomposition_ElementDomainSet(DecompositionM,  ElementMNo,            DomainNo, Err)
+            !PRINT "(I3.3,A,I5.5,A,I2)", ComputationalNodeNumber, ": 1D el. no. ", ElementMNo, " to domain no. ", DomainNo
 
             ElementMNo = ElementMNo + 1
           ENDDO
@@ -1831,6 +1866,8 @@ SUBROUTINE InitializeFieldFiniteElasticity()
        & ElementNo,           4,                1,     Err)
       CALL cmfe_Field_ParameterSetUpdateElement(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
        & ElementNo,           1,                NumberOfNodesInXi1, Err)
+
+      !PRINT "(A,I3.3,A,I5.5,A)", "x ", ComputationalNodeNumber, ": 3D el. no. ", ElementNo, " has beginning fibre "
     ENDIF
   ENDDO
 
@@ -2291,23 +2328,103 @@ FUNCTION GetMemoryConsumption()
    & pid, comm, state, ppid, pgrp, session, tty_nr, &
    & tpgid, flags, minflt, cminflt, majflt, cmajflt, &
    & utime, stime, cutime, cstime, priority, nice, &
-   & O, itrealvalue, starttime
-  INTEGER(CMISSLintg) :: MemoryConsumption, MemoryConsumptionEnd2
+   & O, itrealvalue, starttime, Description, Limit
+  CHARACTER(LEN=10000) :: Debug
+  INTEGER(CMISSIntg) :: I
+  INTEGER(CMISSLintg) :: MemoryConsumption, &
+   & VmSize, VmRSS, Shared, Text, Lib, Data, Dt, RssLimBytes, RssAnon, Pagesize, VSizeBytes
 
-  OPEN(UNIT=10, FILE="/proc/self/stat", ACTION="read", IOSTAT=stat)
-  IF (STAT /= 0) THEN
-    PRINT*, "Could not read memory consumption from /proc/self/stat."
-  ELSE
-    READ(10,*, IOSTAT=stat) pid, comm, state, ppid, pgrp, session, tty_nr, &
-       & tpgid, flags, minflt, cminflt, majflt, cmajflt, &
-       & utime, stime, cutime, cstime, priority, nice, &
-       & O, itrealvalue, starttime, MemoryConsumption, MemoryConsumptionEnd2
-    CLOSE(UNIT=10)
+  ! Critical Section
+  DO I=0,NumberOfComputationalNodes
+    CALL MPI_BARRIER(MPI_COMM_WORLD, Err)
+    IF (I == ComputationalNodeNumber) THEN
 
-    IF (ComputationalNodeNumber == 0) PRINT*, "MemoryConsumption: ", MemoryConsumption, " Bytes, ", MemoryConsumptionEnd2, " pages"
+      ! read memory page size
+      CALL SYSTEM("getconf PAGESIZE > pagesize", Stat)
+      IF (Stat == 0) THEN
+        OPEN(UNIT=10, FILE="pagesize", ACTION="read", IOSTAT=Stat)
+        IF (Stat == 0) THEN
+          READ(10,*, IOSTAT=Stat) Pagesize
+          CLOSE(UNIT=10)
+        ELSE
+          PRINT*, "Error opening pagesize."
+        ENDIF
+      ELSE
+        PRINT*, "Error calling 'getconf PAGESIZE'"
+        Pagesize = 4096
+      ENDIF
 
-    WRITE(GetMemoryConsumption, *) MemoryConsumption
-  ENDIF
+      ! read from /proc/self/stat
+      ! see http://man7.org/linux/man-pages/man5/proc.5.html for reference
+      OPEN(UNIT=10, FILE="/proc/self/stat", ACTION="read", IOSTAT=stat)
+      IF (STAT /= 0) THEN
+        PRINT*, "Could not read memory consumption from /proc/self/stat."
+      ELSE
+        !READ(10,"(A)",IOSTAT=stat,advance='no') Debug
+        !PRINT*, "proc/self/stat: "//TRIM(Debug)
+        READ(10,*, IOSTAT=stat) pid, comm, state, ppid, pgrp, session, tty_nr, &
+           & tpgid, flags, minflt, cminflt, majflt, cmajflt, &
+           & utime, stime, cutime, cstime, priority, nice, &
+           & O, itrealvalue, starttime, VSizeBytes, VmRSS, RssLimBytes
+        CLOSE(UNIT=10)
+
+        MemoryConsumption = VSizeBytes
+
+        IF (ComputationalNodeNumber == 0) THEN
+          WRITE(*, "(A,F7.3,A,I11,A,F7.3,A)") "     MemoryConsumption:", (MemoryConsumption/1e9), " GB (", &
+            & MemoryConsumption, " B), Resident: ", (VmRSS*PageSize/1e9), " GB"
+        ENDIF
+
+        WRITE(GetMemoryConsumption, *) MemoryConsumption
+      ENDIF
+
+      ! read from /proc/self/limits
+      IF (.TRUE.) THEN
+        OPEN(UNIT=10, FILE="/proc/self/limits", ACTION="read", IOSTAT=stat)
+        IF (STAT /= 0) THEN
+          PRINT*, "Could not read limits from /proc/self/limits."
+        ELSE
+          DO
+            READ(10, "(A26,A21)", IOSTAT=Stat) Description, Limit
+            !PRINT*, "Description:["//TRIM(Description)//"], Limit:["//TRIM(Limit)//"]"
+            IF (Stat /= 0) EXIT
+            IF (INDEX(Description, "Max resident set") /= 0) THEN
+              IF (TRIM(Limit) == "unlimited") THEN
+                IF (ComputationalNodeNumber == 0) PRINT*, "    (Resident has no soft limit)"
+              ELSE
+                IF (ComputationalNodeNumber == 0) PRINT*, "    (Resident is limited to ", Limit,")"
+              ENDIF
+            ENDIF
+          ENDDO
+          CLOSE(UNIT=10)
+        ENDIF
+      ENDIF
+
+      ! read from /proc/self/statm
+      OPEN(UNIT=10, FILE="/proc/self/statm", ACTION="read", IOSTAT=stat)
+      IF (STAT /= 0) THEN
+        PRINT*, "Could not read memory consumption from /proc/self/statm."
+      ELSE
+        READ(10,*, IOSTAT=stat) VmSize, VmRSS, Shared, Text, Lib, Data, Dt
+        CLOSE(UNIT=10)
+
+        ! VmRSS = RssAnon + Shared (all as number of pages)
+        ! RssAnon is the resident set size of anonymous memory (real memory in RAM, not laid out in files)
+        RssAnon = VmRSS - Shared
+
+        IF (ComputationalNodeNumber == 0) THEN
+          !PRINT*, "VmSize: ", VmSize, ", VmRSS: ", VmRSS, ", Shared: ", Shared, ", Text: ", Text, ", Lib:", Lib, ", Data:", Data
+          !PRINT*, "RssAnon: ", RSSAnon, ", RssLimBytes: ", RssLimBytes, ", Pagesize: ", Pagesize
+
+          ! Output Percentage
+          !WRITE(*, "(3(A,F7.3),A,F5.1,A)") "     VmSize:", (VmSize*Pagesize/1.e9), " GB, RssAnon:", (RssAnon*Pagesize/1.e9), &
+          !  & " GB, RssLimBytes: ", (RssLimBytes/1.e9), " GB (", (REAL(RssAnon*Pagesize) / RssLimBytes * 100.0), "%)"
+        ENDIF
+      ENDIF
+
+      PRINT*, TRIM(cmfe_CustomProfilingGetInfo(Err))
+    ENDIF
+  ENDDO
 
 END FUNCTION GetMemoryConsumption
 

@@ -2289,7 +2289,7 @@ END SUBROUTINE CalculateBioelectrics
 
 SUBROUTINE ExportEMG()
   RETURN
-  WRITE(*,'(A)',advance='no') "Export EMG ..."
+  WRITE(*,'(A)',advance='no') "Output EMG Data ..."
   EXPORT_FIELD=.TRUE.
   IF(EXPORT_FIELD) THEN
     CALL cmfe_Fields_Initialise(Fields,Err)

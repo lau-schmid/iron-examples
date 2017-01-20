@@ -10,3 +10,6 @@ CMakeCache.txt
 *.pyc
 *.csv
 duration*
+profil*
+fort.*
+.project

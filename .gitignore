@@ -7,3 +7,6 @@ Makefile
 CMakeFiles/*
 CMakeCache.txt
 *.o
+*.pyc
+*.csv
+duration*

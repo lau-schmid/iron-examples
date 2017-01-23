@@ -1,4 +1,5 @@
 
+
   num_of_EquationsSet= 0
   num_of_Problem = 0
   num_of_Basis = 0
@@ -16,7 +17,7 @@
   num_of_CoordinateSystem = 0
   num_of_FiberField       = 0 
   num_of_PressureBasis    = 0
-
+  num_of_Field    = 0
 
   open(12,file=fileplace,status="old")
   read(12,'(A)') rdline
@@ -40,6 +41,7 @@ do while (trim(rdline).NE."STOP_PARSING")
        call searching(rdline,"START_CONTROL_LOOP",num_of_ControlLoop)
        call searching(rdline,"START_FIBER_FIELD",num_of_FiberField) 
        call searching(rdline,"START_PRESSURE_BASIS",num_of_PressureBasis) 
+       call searching(rdline,"START_FIELD",num_of_Field) 
 enddo
 
   num_of_WorldCoordinateSystem = num_of_CoordinateSystem
@@ -50,7 +52,10 @@ enddo
 
 !!!!!!!!!!!!!!!!!!!		ALLOCATE DATA STRUCTURES 		!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  allocate(all_Basis%Basis(num_of_Basis))
+
+!!!!!!!!!!!!!!!!!!!		ALLOCATE DATA STRUCTURES 		!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  allocate(all_Basis%Basis(1))
   allocate(all_PressureBasis%PressureBasis(num_of_PressureBasis))
   allocate(all_BoundaryConditions%BoundaryConditions(num_of_BoundaryCondition))
   allocate(all_CoordinateSystem%CoordinateSystem(num_of_CoordinateSystem))

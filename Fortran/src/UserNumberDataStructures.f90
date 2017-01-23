@@ -13,93 +13,100 @@
   allocate (EquationSetUserNumber(num_of_EquationsSet))
   allocate (EquationsSetFieldUserNumber(num_of_EquationSetField ))
   allocate (ProblemUserNumber(num_of_Problem))
-
+  allocate (FieldUserNumber(num_of_Field))
 !!!!!!!!!!!!!!!!!! Assigning tags. NOTE:  Each tag should be distinct !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 j = 1  
 
 do i = 1, num_of_CoordinateSystem
 
-  	CoordinateSystemUserNumber(num_of_CoordinateSystem)  = j 
+  	CoordinateSystemUserNumber(i)  = j 
         j = j + 1 
 end do 
 
 do i = 1, num_of_Region
 
-  	RegionUserNumber(num_of_Region)  = j 
+  	RegionUserNumber(i)  = j 
         j = j + 1 
 end do 
 
 
-do i = 1, num_of_Basis
+do i = 1, num_of_Basis+1
 
-  	BasisUserNumber(num_of_Basis)  = j 
+  	BasisUserNumber(i)  = j 
         j = j + 1 
 end do 
 
 
 do i = 1, num_of_PressureBasis
 
-  	PressureBasisUserNumber(num_of_PressureBasis)  = j 
+  	PressureBasisUserNumber(i)  = j 
         j = j + 1 
 end do 
 
 do i = 1,num_of_GeneratedMesh
 
-  	GeneratedMeshUserNumber(num_of_GeneratedMesh)  = j 
+  	GeneratedMeshUserNumber(i)  = j 
         j = j + 1 
 end do 
 
 do i = 1, num_of_Mesh
 
- 	MeshUserNumber(num_of_Mesh) = j 
+ 	MeshUserNumber(i) = j 
         j = j + 1 
 end do 
 
 do i = 1, num_of_Decomposition
 
- 	DecompositionUserNumber(num_of_Decomposition) = j 
+ 	DecompositionUserNumber(i) = j 
         j = j + 1 
 end do 
 
 do i = 1, num_of_GeometricField
 
- 	FieldGeometryUserNumber(num_of_GeometricField) = j 
+ 	FieldGeometryUserNumber(i) = j 
         j = j + 1 
 end do
 
 do i = 1, num_of_FiberField
 
- 	FieldFibreUserNumber(num_of_FiberField) = j 
+ 	FieldFibreUserNumber(i) = j 
         j = j + 1 
 end do
 
 do i = 1, num_of_MaterialField
 
- 	FieldMaterialUserNumber(num_of_MaterialField) = j 
+ 	FieldMaterialUserNumber(i) = j 
         j = j + 1 
 end do
 
 do i = 1, num_of_DependentField
 
- 	FieldDependentUserNumber(num_of_DependentField) = j 
+ 	FieldDependentUserNumber(i) = j 
         j = j + 1 
 end do
 
 do i = 1, num_of_EquationsSet
 
- 	EquationSetUserNumber(num_of_EquationsSet) = j 
+ 	EquationSetUserNumber(i) = j 
         j = j + 1 
 end do
 
-do i = 1, num_of_EquationSetField
+do i = 1, 1
 
- 	EquationsSetFieldUserNumber(num_of_EquationSetField) = j 
+ 	EquationsSetFieldUserNumber(i) = j 
+
         j = j + 1 
 end do
-
+        
 
 do i = 1, num_of_Problem
 
- 	ProblemUserNumber(num_of_Problem) = j 
+ 	ProblemUserNumber(i) = j 
         j = j + 1 
 end do
+
+do i = 1, num_of_Field
+
+  	FieldUserNumber(i)  = j 
+        j = j + 1 
+end do 

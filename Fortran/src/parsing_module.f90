@@ -47,9 +47,74 @@ module parsing
   
   character(len=100),allocatable              :: Output_parsing(:), Output_arguments(:,:)
 
+  character(len=100),allocatable              :: Field_parsing(:), Field_arg1(:,:),Field_arg2(:,:), Field_arg3(:,:)
 
 contains
 
+
+subroutine   Field_parsing_subroutine(string1,Field_arg1,Field_arg2, Field_arg3, &
+                                              & rdline)
+
+ integer                                            :: i,filestat,n,stat,k,pos1,pos2
+ character(len=100) , dimension(:,:),allocatable    :: Field_arg1,Field_arg2,Field_arg3
+ character(len=100)                                 :: rdline,g
+ character(len=100),   dimension(:)                 :: string1
+ k=0
+
+
+ if (trim(rdline)=="START_FIELD") then
+    readline:do
+
+        read(12,'(A)',iostat=filestat), rdline
+        rdline =  strip_space(rdline)
+        call remove_character(rdline,"!")
+        if (trim(rdline)=="END_FIELD") then
+
+		exit 
+        end if 
+
+
+        if (rdline.EQ.string1(1)) then
+
+            read(12,'(A)',iostat=filestat), rdline
+            call skip_blank_lines(rdline)
+            call remove_character(rdline,"!")
+            rdline =  strip_space(rdline)
+
+            Field_arg1(:,1) = rdline
+
+
+        end if
+
+
+        if (rdline.EQ.string1(2)) then
+            read(12,'(A)',iostat=filestat), rdline
+            call skip_blank_lines(rdline)
+            call remove_character(rdline,"!")
+            rdline =  strip_space(rdline)
+            Field_arg2(:,1) = rdline
+
+        end if
+
+        if (rdline.EQ.string1(3)) then
+            read(12,'(A)',iostat=filestat), rdline
+            call skip_blank_lines(rdline)
+            call remove_character(rdline,"!")
+            rdline =  strip_space(rdline)
+            call split_inline_argument(rdline,Field_arg3)
+
+
+        end if
+
+    end do readline
+
+
+ end if
+
+end subroutine Field_parsing_subroutine
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 subroutine   BC_parsing_subroutine(string1,boundary_conditions_arg1,boundary_conditions_arg2,boundary_conditions_arg3,&
                        & boundary_conditions_arg4, rdline,num_of_dirichelet)
 

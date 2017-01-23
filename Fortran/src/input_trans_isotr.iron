@@ -124,6 +124,9 @@ NEWTON_MAX_ITERATIONS
 NEWTON_TOLERANCE
 1e-6
 
+NONLINEAR_SOLVER
+ACTIVE
+
 END_SOLVER_SETTINGS
 
 !!!!!!!!!!!!!!!! Defining cartesian coordinates !!!!!!!!!!!!!
@@ -203,6 +206,21 @@ NumberOfGaussXi
 3
 
 END_BASIS
+
+
+START_FIELD
+
+FIELD_ID 
+SOLID
+
+TYPE
+GRAVITY
+
+VALUE
+0,0,9.8
+
+
+END_FIELD
 
 !!!!!!!!!!!!!!!!!!! START BOUNDARY CONDITIONS !!!!!!!!!!!!!!!!
 

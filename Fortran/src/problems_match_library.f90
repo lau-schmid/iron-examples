@@ -24,11 +24,19 @@ function match_problem(type_string) result (type_number)
       type_number = CMFE_PROBLEM_OPTIMISATION_CLASS
     elseif (type_string == "PROBLEM_MULTI_PHYSICS_CLASS") then
       type_number = CMFE_PROBLEM_MULTI_PHYSICS_CLASS
+    elseif (type_string == "PROBLEM_MULTI_PHYSICS_CLASS") then
+      type_number = CMFE_PROBLEM_MULTI_PHYSICS_CLASS
+    elseif (type_string == "PROBLEM_CLASSICAL_FIELD_CLASS") then
+      type_number = CMFE_PROBLEM_CLASSICAL_FIELD_CLASS
     elseif (type_string == "PROBLEM_NO_CLASS") then
       type_number = CMFE_PROBLEM_NO_CLASS
     elseif (type_string == "PROBLEM_FINITE_ELASTICITY_TYPE") then
       type_number = CMFE_PROBLEM_FINITE_ELASTICITY_TYPE
-    ! TODO add more types.. TODO
+    elseif (type_string == "PROBLEM_LAPLACE_EQUATION_TYPE") then
+      type_number = CMFE_PROBLEM_LAPLACE_EQUATION_TYPE
+    elseif (type_string == "PROBLEM_STANDARD_LAPLACE_SUBTYPE") then
+      type_number =  CMFE_PROBLEM_STANDARD_LAPLACE_SUBTYPE
+    ! TODO add more types.. TODO  
     ! subtype
     elseif (type_string == "U_VARIABLE") then
 
@@ -182,18 +190,20 @@ print *, "i am here"
     ! class
     elseif (type_string == "EQUATIONS_SET_ELASTICITY_CLASS") then
       type_number = CMFE_EQUATIONS_SET_ELASTICITY_CLASS
+    elseif (type_string == "EQUATIONS_SET_CLASSICAL_FIELD_CLASS") then
+      type_number = CMFE_EQUATIONS_SET_CLASSICAL_FIELD_CLASS
     ! TODO insert more classes.. TODO
     ! type
     elseif (type_string == "EQUATIONS_SET_FINITE_ELASTICITY_TYPE") then
       type_number = CMFE_EQUATIONS_SET_FINITE_ELASTICITY_TYPE
-    ! TODO insert more types.. TODO
+
+    elseif (type_string == "EQUATIONS_SET_LAPLACE_EQUATION_TYPE") then
+      type_number = CMFE_EQUATIONS_SET_LAPLACE_EQUATION_TYPE
     ! subtype
     elseif (type_string == "EQUATIONS_SET_MOONEY_RIVLIN_SUBTYPE") then
       type_number = CMFE_EQUATIONS_SET_MOONEY_RIVLIN_SUBTYPE
     elseif (type_string == "EQUATIONS_SET_TRANSVERSE_ISOTROPIC_ACTIVE_SUBTYPE") then
       type_number = CMFE_EQUATIONS_SET_TRANSVERSE_ISOTROPIC_ACTIVE_SUBTYPE
-    elseif (type_string == "EQUATIONS_SET_LAPLACE_EQUATION_TYPE") then
-      type_number = CMFE_EQUATIONS_SET_LAPLACE_EQUATION_TYPE
     elseif (type_string == "EQUATIONS_SET_STANDARD_LAPLACE_SUBTYPE") then
       type_number = CMFE_EQUATIONS_SET_STANDARD_LAPLACE_SUBTYPE
     elseif (type_string == "GUESS_TYPE") then

@@ -90,8 +90,8 @@ allocate(BC_arg2(100,num_of_BoundaryCondition))
 allocate(BC_arg3(100,num_of_BoundaryCondition))
 allocate(BC_arg4(100,num_of_BoundaryCondition))
 
-allocate(Solvers_arguments(7,num_of_Solver))
-allocate(Solvers_parsing(7))
+allocate(Solvers_arguments(8,num_of_Solver))
+allocate(Solvers_parsing(8))
 
 Solvers_parsing(1) =  "SOLVER_ID"
 Solvers_parsing(2) =  "EQUATION_SET_SOLVER_TYPE"
@@ -100,6 +100,7 @@ Solvers_parsing(4) =  "EQUATION_SOLVER_MAXITER"
 Solvers_parsing(5) =  "EQUATION_SOLVER_TOLERANCE"
 Solvers_parsing(6) =  "NEWTON_MAX_ITERATIONS"
 Solvers_parsing(7) =  "NEWTON_TOLERANCE"
+Solvers_parsing(8) =  "NONLINEAR_SOLVER"
 
 allocate(Basis_arguments(5,num_of_Basis))
 allocate(Basis_parsing(5))
@@ -123,6 +124,16 @@ allocate(Output_parsing(2))
 Output_parsing(1) =  "MATRIX_TYPE"
 Output_parsing(2) =  "OUTPUT_TYPE"
 
+allocate(Field_parsing(3))
+Field_parsing(1) ="FIELD_ID"
+Field_parsing(2) ="TYPE"
+Field_parsing(3) ="VALUE"
+
+allocate(Field_arg1(3,num_of_Field))
+allocate(Field_arg2(3,num_of_Field))
+allocate(Field_arg3(4,num_of_Field))
+
+
  close(12)
 
  open(12,file=fileplace,status="old")
@@ -145,23 +156,40 @@ do while (trim(rdline).NE."STOP_PARSING")
 
  call FiberField_parsing_subroutine(FiberField_parsing,FiberField_arg1,FiberField_arg2,rdline)
 
+
+
  call parsing_subroutine(Solvers_parsing,Solvers_arguments,rdline,8,"SOLVER_SETTINGS")
+
+ call Field_parsing_subroutine(Field_parsing,Field_arg1,Field_arg2,Field_arg3,rdline)
 
  call parsing_subroutine(ControlLoop_parsing,ControlLoop_arguments,rdline,3,"CONTROL_LOOP")
 
+
  call parsing_subroutine(Basis_parsing,Basis_arguments,rdline,5,"BASIS")
+
 
  call parsing_subroutine(CoordinateSystem_parsing,CoordinateSystem_arguments,rdline,2,"COORDINATE_SYSTEM")
 
+
  call parsing_subroutine(Region_parsing,Region_arguments,rdline,1,"REGION")
+
 
  call BC_parsing_subroutine(BC_parsing,BC_arg1,BC_arg2,BC_arg3,BC_arg4, rdline,num_of_dirichelet)
 
+
+
  call Mesh_parsing_subroutine(Mesh_parsing,Mesh_arg1,Mesh_arg2,Mesh_arg3,Mesh_arg4,rdline)
+
+
 
  call parsing_subroutine(PressureBasis_parsing,PressureBasis_arguments,rdline,2,"PRESSURE_BASIS")
 
+
+
  call parsing_subroutine(Output_parsing,Output_arguments,rdline,2,"OUTPUT")
+
+
+
 
 end do
 

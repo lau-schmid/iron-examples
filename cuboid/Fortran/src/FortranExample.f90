@@ -69,7 +69,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !--------------------------------------------------------------------------------------------------------------------------------
   !Test program parameters
   LOGICAL, PARAMETER :: DEBUGGING_ONLY_RUN_SHORT_PART_OF_SIMULATION = .FALSE.    ! only run one timestep of MAIN_LOOP with stimulus
-  INTEGER(CMISSINTg) :: RUN_SCENARIO = 3  !0 = default, 1 = short for testing, 2 = medium for testing, 3 = very short
+  INTEGER(CMISSINTg) :: RUN_SCENARIO = 2  !0 = default, 1 = short for testing, 2 = medium for testing, 3 = very short
   LOGICAL, PARAMETER :: DEBUGGING_OUTPUT = .FALSE.    ! enable information from solvers
   LOGICAL, PARAMETER :: OLD_TOMO_MECHANICS = .TRUE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
 
@@ -288,7 +288,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   LOGICAL :: EXPORT_FIELD
 
   INTEGER(CMISSIntg) :: shortenModelIndex!,shortenModelIndex2
-  INTEGER(CMISSIntg) :: stimcomponent
+  INTEGER(CMISSIntg) :: StimComponent
 
 !  REAL(CMISSRP) :: YVALUE
   REAL(CMISSRP) :: VALUE
@@ -409,11 +409,22 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !--------------------------------------------------------------------------------------------------------------------------------
   !boundary conditions
   CALL SetBoundaryConditions()
+
+  ! Output the data structure Problem
+  IF (ComputationalNodeNumber == 0) THEN
+    PRINT*, ""
+    PRINT*, ""
+    CALL cmfe_PrintProblemType(Problem,Err)
+    PRINT*, ""
+    PRINT*, ""
+    !PRINT*, "End the program after output of problem datastructure"
+    !STOP
+  ENDIF
+
   !--------------------------------------------------------------------------------------------------------------------------------
   !Calculate the bioelectrics geometric field
   CALL CalculateBioelectrics()
   CALL ExportEMG()
-
   !--------------------------------------------------------------------------------------------------------------------------------
   !Solve the problem
 
@@ -473,11 +484,24 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
     !-------------------------------------------------------------------------------------------------------------------------------
     !Set the Stimulus for monodomain at the middle of the fibres
     IF (OLD_TOMO_MECHANICS) THEN
+
+  !>Find the component ID in the given field for the variable defined by the given variable ID in the provided CellML environment.
+  !! This generic routine will be used to map variable ID's in CellML models to components in the various fields defined in the CellML models defined for the provided CellML environment.
+  !! - may need to also provide a FIELD_VARIABLE_NUMBER (always 1?) for completeness
+  !! - is the model ID also needed?
+  !! - because the CellML fields should all be set up to allow direct use in the CellML code, the component number matches the index of the given variable in its associated array in the CellML generated code.
+  !SUBROUTINE CELLML_FIELD_COMPONENT_GET_C(CELLML,MODEL_INDEX,CELLML_FIELD_TYPE,VARIABLE_ID,COMPONENT_USER_NUMBER,ERR,ERROR,*)
+   !Argument variables
+   !TYPE(CELLML_TYPE), POINTER :: CELLML !<The CellML environment object from which to get the field component.
+   !INTEGER(INTG), INTENT(IN) :: MODEL_INDEX !<The index of the CellML model to map from.
+   !INTEGER(INTG), INTENT(IN) :: CELLML_FIELD_TYPE !<The type of CellML field type to get the component for. \see CELLML_FieldTypes,CMISS_CELLML
+   !CHARACTER(LEN=*), INTENT(IN) :: VARIABLE_ID !<The ID of the model variable which needs to be located in the provided field.
+   !INTEGER(INTG), INTENT(OUT) :: COMPONENT_USER_NUMBER !<On return, the field component for the model variable defined by the given ID.
       CALL cmfe_CellML_FieldComponentGet(CellML,shortenModelIndex,CMFE_CELLML_PARAMETERS_FIELD, &
-        & "wal_environment/I_HH",stimcomponent,Err)
+        & "wal_environment/I_HH",StimComponent,Err)
     ELSE
       CALL cmfe_CellML_FieldComponentGet(CellML,shortenModelIndex,CMFE_CELLML_PARAMETERS_FIELD, &
-        & "Aliev_Panfilov/I_HH",stimcomponent,Err)
+        & "Aliev_Panfilov/I_HH",StimComponent,Err)
     ENDIF
 
 
@@ -510,9 +534,10 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
           PRINT*, "Warning! MotorUnitRank=",MotorUnitRank,", set to 100"
           MotorUnitRank=100
         ELSE
+          PRINT*, "MotorUnitFiringTimes row k=", k, ": MU rank=", MotorUnitRank, ", StimComponent=",StimComponent
           MotorUnitFires = MotorUnitFiringTimes(k, MotorUnitRank)   ! determine if mu fires
           IF (MotorUnitFires == 1) THEN
-            !print *, k,": MU ",mu_nr," fires"
+            PRINT*, "k=", k, ": MU ", MotorUnitRank, " fires, StimComponent=",StimComponent,", STIM_VALUE=",STIM_VALUE
             CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
               & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,JunctionNodeNo,StimComponent,STIM_VALUE,Err)
           ENDIF
@@ -812,6 +837,8 @@ SUBROUTINE ParseParameters()
   INTEGER(CMISSINTg) :: Length
   CHARACTER(LEN=256) :: Arg
   LOGICAL :: GeometryIsValid, FileExists
+  LOGICAL :: CustomProfilingEnabled !< If custom profiling is compiled in
+  LOGICAL :: TauProfilingEnabled !< If TAU profiling is compiled in
 
   NumberGlobalXElements = 3 !6
   NumberGlobalYElements = 4 !4
@@ -1054,10 +1081,25 @@ SUBROUTINE ParseParameters()
     PRINT *, "------------------------------------------------------------------------------"
     PRINT *, ""
 
-    IF (OLD_TOMO_MECHANICS) then
+    ! Output some static (compile-time) settings
+    IF (OLD_TOMO_MECHANICS) THEN
       PRINT*, "Old mechanics formulation that works in parallel."
     ELSE
       PRINT*, "New mechanics formulation that does not work in parallel."
+    ENDIF
+
+    CALL cmfe_CustomProfilingGetEnabled(CustomProfilingEnabled, TAUProfilingEnabled, Err)
+
+    IF (CustomProfilingEnabled) THEN
+      PRINT*, "Custom Profiling is enabled."
+    ELSE
+      PRINT*, "Custom Profiling is disabled. (Enable with -DUSE_CUSTOM_PROFILING)"
+    ENDIF
+
+    IF (TAUProfilingEnabled) THEN
+      PRINT*, "TAU Profiling is enabled."
+    ELSE
+      PRINT*, "TAU Profiling is disabled."
     ENDIF
 
     IF (.NOT. GeometryIsValid) THEN
@@ -2066,9 +2108,13 @@ SUBROUTINE CreateControlLoops()
 
   CALL cmfe_ControlLoop_TimeOutputSet(ControlLoopMain,OUTPUT_FREQUENCY,Err)
   IF (DEBUGGING_OUTPUT) THEN
-    CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,CMFE_CONTROL_LOOP_TIMING_OUTPUT,Err) !DO NOT CHANGE!!!
+    CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,cmfe_CONTROL_LOOP_TIMING_OUTPUT,Err)
   ELSE
-    CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,CMFE_CONTROL_LOOP_NO_OUTPUT,Err)
+    ! output types:
+    ! CONTROL_LOOP_NO_OUTPUT = 0 !<No output from the control loop (no output of MainTime_* files)
+    ! CONTROL_LOOP_PROGRESS_OUTPUT = 1 !<Progress output from control loop (also output MainTime_* files)
+    ! CONTROL_LOOP_TIMING_OUTPUT = 2 !<Timing output from the control loop
+    CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,cmfe_CONTROL_LOOP_PROGRESS_OUTPUT,Err)
   ENDIF
 
 
@@ -2288,8 +2334,7 @@ SUBROUTINE CalculateBioelectrics()
 END SUBROUTINE CalculateBioelectrics
 
 SUBROUTINE ExportEMG()
-  RETURN
-  WRITE(*,'(A)',advance='no') "Output EMG Data ..."
+  WRITE(*,'(A)',advance='no') "Output EMG Data ... "
   EXPORT_FIELD=.TRUE.
   IF(EXPORT_FIELD) THEN
     CALL cmfe_Fields_Initialise(Fields,Err)

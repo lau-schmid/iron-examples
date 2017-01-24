@@ -36,7 +36,7 @@ function match_problem(type_string) result (type_number)
       type_number = CMFE_PROBLEM_LAPLACE_EQUATION_TYPE
     elseif (type_string == "PROBLEM_STANDARD_LAPLACE_SUBTYPE") then
       type_number =  CMFE_PROBLEM_STANDARD_LAPLACE_SUBTYPE
-    ! TODO add more types.. TODO  
+    ! TODO add more types.. TODO
     ! subtype
     elseif (type_string == "U_VARIABLE") then
 
@@ -74,7 +74,6 @@ function match_problem(type_string) result (type_number)
     ! generated mesh type
     elseif (type_string == "REGULAR_MESH_TYPE") then
       type_number = CMFE_GENERATED_MESH_REGULAR_MESH_TYPE
-     
     elseif (type_string == "POLAR_MESH_TYPE") then
       type_number = CMFE_GENERATED_MESH_POLAR_MESH_TYPE
     elseif (type_string == "TREE_MESH_TYPE") then
@@ -253,7 +252,7 @@ print *, "i am here"
     else
       call handle_error("Invalid string "//type_string)
     endif
-   end function 
+   end function
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -266,7 +265,7 @@ function match_dependent_field(type_string) result (type_number)
     integer                  :: type_number
     if (type_string == "FIELD_U_VARIABLE_TYPE") then
     type_number = CMFE_FIELD_U_VARIABLE_TYPE
-    end if      
+    end if
 end function match_dependent_field
 
 
@@ -278,17 +277,16 @@ function bc_def(type_string) result (type_number)
     character(*), intent(in) :: type_string
     integer                :: type_number
     if (type_string == "SURFACE") then
-    
-    elseif (type_string == "RIGHT") then 
+    elseif (type_string == "RIGHT") then
     type_number = CMFE_GENERATED_MESH_REGULAR_RIGHT_SURFACE
-    elseif (type_string == "LEFT") then 
+    elseif (type_string == "LEFT") then
     type_number = CMFE_GENERATED_MESH_REGULAR_LEFT_SURFACE
-    elseif (type_string == "FRONT") then 
+    elseif (type_string == "FRONT") then
     type_number = CMFE_GENERATED_MESH_REGULAR_FRONT_SURFACE
-    elseif (type_string == "BOTTOM") then 
+    elseif (type_string == "BOTTOM") then
     type_number = CMFE_GENERATED_MESH_REGULAR_BOTTOM_SURFACE
-    end if      
-end function 
+    end if
+end function
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -371,7 +369,7 @@ function material_parameters(type_string) result (type_number)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!! THE FOLLOWING function  !!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!..used for error handling !!!!!!!!!!!!!!!!!!!!!!! 
+!!!!!!!!!!!!!!!!!!!!!!!..used for error handling !!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
  SUBROUTINE HANDLE_ERROR(ERROR_STRING)

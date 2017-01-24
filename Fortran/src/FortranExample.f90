@@ -1,6 +1,6 @@
 !> \file
-!> \Authors: Waleed Mirza, Andreas Hessenthaler, Thomas Heidlauf 
-!> \brief This is an example program to solve a finite elasticity equation using OpenCMISS calls.
+!> \author: Waleed Mirza
+!> \brief This is a generic OpenCMISS-iron example program to solve various different types of equations using OpenCMISS calls.
 !>
 !> \section LICENSE
 !>
@@ -24,7 +24,7 @@
 !> of Oxford are Copyright (C) 2007 by the University of Auckland and
 !> the University of Oxford. All Rights Reserved.
 !>
-
+!> Contributor(s): Waleed Mirza, Andreas Hessenthaler, Thomas Heidlauf, Thomas Klotz
 !>
 !> Alternatively, the contents of this file may be used under the terms of
 !> either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,22 +39,12 @@
 !> the terms of any one of the MPL, the GPL or the LGPL.
 !>
 
-!> \example FiniteElasticity/LargeUniAxialExtension/src/LargeUniAxialExtensionExample.f90
-!! Example program to solve a finite elasticity equation using openCMISS calls.
-!! \par Latest Builds:
-!! \li <a href='http://autotest.bioeng.auckland.ac.nz/opencmiss-build/logs_x86_64-linux/FiniteElasticity/LargeUniAxialExtension/build-intel'>Linux Intel Build</a>
-!! \li <a href='http://autotest.bioeng.auckland.ac.nz/opencmiss-build/logs_x86_64-linux/FiniteElasticity/LargeUniAxialExtension/build-gnu'>Linux GNU Build</a>
-!<
-
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! THE FOLLOWING MODULE INCLUDES THE DATA STRUCTURES AND  "CONTAIN SUBROUTINES AND FUNCTIONS" USED IN PARSING ALGORITHM  !!!!!!!!!!!!!!!!1
 include "parsing_module.f90"
 
 !> Main program
-PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
-
-
-
+PROGRAM GENERICEXAMPLE
 
   USE OpenCMISS
   USE OpenCMISS_Iron
@@ -153,8 +143,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   INTEGER(CMISSIntg)		   NUMBER_OF_COMPONENTS  
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!! 		          MY CONTRIBUTION 		!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  
+  !!!!!!!!!!!!!!!!!!!!!!!!!!! 		          MY CONTRIBUTION 		!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   include "DerivedTypes.f90" !!DECLARING THE DERIVED TYPES HERE      
 
   
@@ -177,23 +166,23 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
  fileplace = InputFile
 
 
- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 		INITIALIZE THE DERIVED DATA STRUCTURES 			 !!!!!!!!!!!!!!!!!!!!!
- include "AllocatingDerivedDataStructures.f90"
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 		INITIALIZE THE DERIVED DATA STRUCTURES 			 !!!!!!!!!!!!!!!!!!!!!
+  include "AllocatingDerivedDataStructures.f90"
 
 
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!              ALLOCATE  "USERNUMBER"  DATA STRUCTURE SIZE 		 !!!!!!!!!!!!!!!!!!!!!!
- include "UserNumberDataStructures.f90"
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!              ALLOCATE  "USERNUMBER"  DATA STRUCTURE SIZE 		 !!!!!!!!!!!!!!!!!!!!!!
+  include "UserNumberDataStructures.f90"
 
  
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!        INCLUDES I/0 STATEMENT THAT PARSE THROUGH THE INPUT FILE        !!!!!!!!!!!!!!!!!!!!!!
- include "parsing_algorithm.f90"
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!        INCLUDES I/0 STATEMENT THAT PARSE THROUGH THE INPUT FILE        !!!!!!!!!!!!!!!!!!!!!!
+  include "parsing_algorithm.f90"
 
 
 
 
-NUMBER_OF_COMPONENTS = str2int(DependentField_arguments(3,1))
+  NUMBER_OF_COMPONENTS = str2int(DependentField_arguments(3,1))
 
 #ifdef WIN32
   !Initialise QuickWin
@@ -215,32 +204,29 @@ NUMBER_OF_COMPONENTS = str2int(DependentField_arguments(3,1))
   !Set all diganostic levels on for testing
   !CALL cmfe_DiagnosticsSetOn(CMFE_FROM_DIAG_TYPE,[1,2,3,4,5],"Diagnostics",["PROBLEM_RESIDUAL_EVALUATE"],Err)
 
-DO  Csys_idx = 1,num_of_CoordinateSystem 			!!!!!!!!!!!!! introducing a LOOP for assigning  coordinate systems to thier respective regions !!!!!!!!!!
- 
-  !Create a 3D rectangular cartesian coordinate system
-  CALL cmfe_CoordinateSystem_Initialise(all_CoordinateSystem%CoordinateSystem(Csys_idx),Err)
-  CALL cmfe_CoordinateSystem_CreateStart(CoordinateSystemUserNumber(Csys_idx),all_CoordinateSystem%CoordinateSystem(Csys_idx),Err)
-  Call cmfe_CoordinateSystem_TypeSet(CoordinateSystemUserNumber(Csys_idx), &
-       & match_coordinate_system(CoordinateSystem_arguments(2,Csys_idx)), err)
-  CALL cmfe_CoordinateSystem_CreateFinish(all_CoordinateSystem%CoordinateSystem(Csys_idx),Err)
-  
+  !!!!!!!!!!!!! introducing a LOOP for assigning  coordinate systems to their respective regions !!!!!!!!!!
+  DO  Csys_idx = 1,num_of_CoordinateSystem
+    !Create a 3D rectangular cartesian coordinate system
+    CALL cmfe_CoordinateSystem_Initialise(all_CoordinateSystem%CoordinateSystem(Csys_idx),Err)
+    CALL cmfe_CoordinateSystem_CreateStart(CoordinateSystemUserNumber(Csys_idx),all_CoordinateSystem%CoordinateSystem(Csys_idx),Err)
+    Call cmfe_CoordinateSystem_TypeSet(CoordinateSystemUserNumber(Csys_idx), &
+      & match_coordinate_system(CoordinateSystem_arguments(2,Csys_idx)), err)
+    CALL cmfe_CoordinateSystem_CreateFinish(all_CoordinateSystem%CoordinateSystem(Csys_idx),Err)
+  END DO ! Csys_idx
 
-END do ! csys_idx
-
-Do Region_idx = 1, num_of_region
-  !Create a region and assign the coordinate system to the region
-  CALL cmfe_Region_Initialise(all_Region%Region(Region_idx),Err)
-  CALL cmfe_Region_CreateStart(RegionUserNumber(Region_idx),all_WorldRegion%WorldRegion(Region_idx), & 
-				all_Region%Region(Region_idx),Err)
-  CALL cmfe_Region_LabelSet(all_Region%Region(Region_idx),"Region",Err)
-  CALL cmfe_Region_CoordinateSystemSet(all_Region%Region(Region_idx), & 
-       (all_CoordinateSystem%CoordinateSystem(Region_idx)),Err)
-  CALL cmfe_Region_CreateFinish(all_Region%Region(Region_idx),Err)
-
-END DO  ! region_idx
+  DO Region_idx = 1, num_of_region
+    !Create a region and assign the coordinate system to the region
+    CALL cmfe_Region_Initialise(all_Region%Region(Region_idx),Err)
+    CALL cmfe_Region_CreateStart(RegionUserNumber(Region_idx),all_WorldRegion%WorldRegion(Region_idx), & 
+      & all_Region%Region(Region_idx),Err)
+    CALL cmfe_Region_LabelSet(all_Region%Region(Region_idx),"Region",Err)
+    CALL cmfe_Region_CoordinateSystemSet(all_Region%Region(Region_idx), & 
+      & (all_CoordinateSystem%CoordinateSystem(Region_idx)),Err)
+    CALL cmfe_Region_CreateFinish(all_Region%Region(Region_idx),Err)
+  END DO  ! region_idx
 
 
-DO basis_idx = 1, num_of_basis  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  Assigning basis to thier respective edges       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+DO basis_idx = 1, num_of_basis  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  Assigning basis to their respective edges       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   UsePressureBasis  = (str2int(Basis_arguments(2,basis_idx)) == 4)
 
   if (UsePressureBasis)  then
@@ -724,26 +710,4 @@ end do
 
  include "problems_match_library.f90"
 
-END PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+END PROGRAM GENERICEXAMPLE

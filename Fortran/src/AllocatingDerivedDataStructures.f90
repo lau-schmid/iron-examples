@@ -8,14 +8,14 @@
   num_of_BoundaryCondition = 0
   num_of_Basis = 0
   num_of_PressureBasis = 0
-  num_of_MaterialField = 0 
-  num_of_Equation = 0 
+  num_of_MaterialField = 0
+  num_of_Equation = 0
   num_of_GeometricField = 0
   num_of_ControlLoop = 0
   num_of_DependentField = 0
-  num_of_Region = 0 
+  num_of_Region = 0
   num_of_CoordinateSystem = 0
-  num_of_FiberField       = 0 
+  num_of_FiberField       = 0
   num_of_PressureBasis    = 0
   num_of_Field    = 0
 
@@ -27,7 +27,7 @@ do while (trim(rdline).NE."STOP_PARSING")
        read(12,'(A)') rdline
 
        call searching(rdline,"START_EQUATIONS_SET",num_of_EquationsSet)
-       call searching(rdline,"START_PROBLEM",num_of_Problem)      
+       call searching(rdline,"START_PROBLEM",num_of_Problem)
        call searching(rdline,"START_BOUNDARY_CONDITIONS",num_of_BoundaryCondition)
        call searching(rdline,"START_BASIS",num_of_Basis)
        call searching(rdline,"PRESSURE_BASIS",num_of_PressureBasis)
@@ -39,15 +39,15 @@ do while (trim(rdline).NE."STOP_PARSING")
        call searching(rdline,"START_DEPENDENT_FIELD",num_of_DependentField)
        call searching(rdline,"START_SOLVER_SETTINGS",num_of_Solver)
        call searching(rdline,"START_CONTROL_LOOP",num_of_ControlLoop)
-       call searching(rdline,"START_FIBER_FIELD",num_of_FiberField) 
-       call searching(rdline,"START_PRESSURE_BASIS",num_of_PressureBasis) 
-       call searching(rdline,"START_FIELD",num_of_Field) 
+       call searching(rdline,"START_FIBER_FIELD",num_of_FiberField)
+       call searching(rdline,"START_PRESSURE_BASIS",num_of_PressureBasis)
+       call searching(rdline,"START_FIELD",num_of_Field)
 enddo
 
   num_of_WorldCoordinateSystem = num_of_CoordinateSystem
   num_of_Decomposition = num_of_Mesh
   num_of_GeneratedMesh =  num_of_Mesh
-  
+
 
 
 !!!!!!!!!!!!!!!!!!!		ALLOCATE DATA STRUCTURES 		!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

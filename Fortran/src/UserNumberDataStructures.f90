@@ -1,5 +1,5 @@
 
-  allocate (CoordinateSystemUserNumber(num_of_CoordinateSystem))  
+  allocate (CoordinateSystemUserNumber(num_of_CoordinateSystem))
   allocate (RegionUserNumber(num_of_Region))
   allocate (BasisUserNumber(num_of_Basis))
   allocate (PressureBasisUserNumber(num_of_PressureBasis))
@@ -15,98 +15,97 @@
   allocate (ProblemUserNumber(num_of_Problem))
   allocate (FieldUserNumber(num_of_Field))
 !!!!!!!!!!!!!!!!!! Assigning tags. NOTE:  Each tag should be distinct !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-j = 1  
+j = 1
 
 do i = 1, num_of_CoordinateSystem
 
-  	CoordinateSystemUserNumber(i)  = j 
-        j = j + 1 
-end do 
+  	CoordinateSystemUserNumber(i)  = j
+        j = j + 1
+end do
 
 do i = 1, num_of_Region
 
-  	RegionUserNumber(i)  = j 
-        j = j + 1 
-end do 
+  	RegionUserNumber(i)  = j
+        j = j + 1
+end do
 
 
 do i = 1, num_of_Basis+1
 
-  	BasisUserNumber(i)  = j 
-        j = j + 1 
-end do 
+  	BasisUserNumber(i)  = j
+        j = j + 1
+end do
 
 
 do i = 1, num_of_PressureBasis
 
-  	PressureBasisUserNumber(i)  = j 
-        j = j + 1 
-end do 
+  	PressureBasisUserNumber(i)  = j
+        j = j + 1
+end do
 
 do i = 1,num_of_GeneratedMesh
 
-  	GeneratedMeshUserNumber(i)  = j 
-        j = j + 1 
-end do 
+  	GeneratedMeshUserNumber(i)  = j
+        j = j + 1
+end do
 
 do i = 1, num_of_Mesh
 
- 	MeshUserNumber(i) = j 
-        j = j + 1 
-end do 
+ 	MeshUserNumber(i) = j
+        j = j + 1
+end do
 
 do i = 1, num_of_Decomposition
 
- 	DecompositionUserNumber(i) = j 
-        j = j + 1 
-end do 
+ 	DecompositionUserNumber(i) = j
+        j = j + 1
+end do
 
 do i = 1, num_of_GeometricField
 
- 	FieldGeometryUserNumber(i) = j 
-        j = j + 1 
+ 	FieldGeometryUserNumber(i) = j
+        j = j + 1
 end do
 
 do i = 1, num_of_FiberField
 
- 	FieldFibreUserNumber(i) = j 
-        j = j + 1 
+ 	FieldFibreUserNumber(i) = j
+        j = j + 1
 end do
 
 do i = 1, num_of_MaterialField
 
- 	FieldMaterialUserNumber(i) = j 
-        j = j + 1 
+ 	FieldMaterialUserNumber(i) = j
+        j = j + 1
 end do
 
 do i = 1, num_of_DependentField
 
- 	FieldDependentUserNumber(i) = j 
-        j = j + 1 
+ 	FieldDependentUserNumber(i) = j
+        j = j + 1
 end do
 
 do i = 1, num_of_EquationsSet
 
- 	EquationSetUserNumber(i) = j 
-        j = j + 1 
+ 	EquationSetUserNumber(i) = j
+        j = j + 1
 end do
 
 do i = 1, 1
 
- 	EquationsSetFieldUserNumber(i) = j 
+ 	EquationsSetFieldUserNumber(i) = j
 
-        j = j + 1 
+        j = j + 1
 end do
-        
 
 do i = 1, num_of_Problem
 
- 	ProblemUserNumber(i) = j 
-        j = j + 1 
+ 	ProblemUserNumber(i) = j
+        j = j + 1
 end do
 
 do i = 1, num_of_Field
 
-  	FieldUserNumber(i)  = j 
-        j = j + 1 
+  	FieldUserNumber(i)  = j
+        j = j + 1
 end do 

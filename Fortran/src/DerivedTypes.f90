@@ -16,22 +16,22 @@
 	type(cmfe_MeshType), allocatable:: Mesh(:)
   end type  mesh_array
 
- type decomposition_array 
+ type decomposition_array
         type(cmfe_DecompositionType) , allocatable :: Decomposition(:)
  end type  decomposition_array
 
- type equations_array 
+ type equations_array
         type(cmfe_EquationsType) , allocatable :: Equations(:)
  end type equations_array
 
- type equations_set_array 
+ type equations_set_array
         type(cmfe_EquationsSetType) , allocatable :: EquationsSet(:)
  end type equations_set_array
 
- type field_type_array 
+ type field_type_array
         type(cmfe_FieldType) , allocatable ::  GeometricField(:),FibreField(:),MaterialField(:), &
                                                & EquationsSetField(:)
- end type  field_type_array 
+ end type  field_type_array
 
  type fields_type_array
         type(cmfe_FieldsType) , allocatable ::  Fields(:)
@@ -41,10 +41,10 @@
 	type(cmfe_ProblemType) , allocatable :: Problem(:)
  end type  problem_type
 
- type region_type 
+ type region_type
 	TYPE(cmfe_RegionType) , allocatable :: Region(:),WorldRegion(:)
  end type region_type
- 
+
  type solver_type
 	TYPE(cmfe_SolverType)  , allocatable:: Solver(:),LinearSolver(:)	
  end type solver_type
@@ -61,7 +61,7 @@
  type generate_mesh_type
 	TYPE(cmfe_GeneratedMeshType)  , allocatable:: GeneratedMesh(:)
  end type generate_mesh_type
- 
+
  type dependent_field_type
  	TYPE(cmfe_FieldType)  , allocatable:: DependentField(:)
  end type dependent_field_type
@@ -89,8 +89,4 @@
   TYPE(generate_mesh_type)            :: all_GeneratedMesh
   TYPE(dependent_field_type) 	      :: all_DependentField
   TYPE(cmfe_FieldType) 		      :: SourceField
-  
-
-
-  REAL(CMISSRP), PARAMETER :: Gravity(3)=[0.0_CMISSRP,0.0_CMISSRP,-9.8_CMISSRP] !in m s^-2
   

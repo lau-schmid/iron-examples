@@ -3,10 +3,10 @@ module parsing
   USE OpenCMISS
   USE OpenCMISS_Iron
 
-  CHARACTER(len=300)                                 :: fileplace 
+  CHARACTER(len=300)                                 :: fileplace
 
 
- 
+
   integer                                      :: i,filestat,n,stat,pos1,pos2,dummy
 
   character(len=100)                           :: rdline
@@ -44,7 +44,7 @@ module parsing
   character(len=100),allocatable              :: FiberField_arg1(:,:), FiberField_arg2(:,:),FiberField_parsing(:)
 
   character(len=100),allocatable              :: PressureBasis_parsing(:), PressureBasis_arguments(:,:)
-  
+
   character(len=100),allocatable              :: Output_parsing(:), Output_arguments(:,:)
 
   character(len=100),allocatable              :: Field_parsing(:), Field_arg1(:,:),Field_arg2(:,:), Field_arg3(:,:)
@@ -70,8 +70,8 @@ subroutine   Field_parsing_subroutine(string1,Field_arg1,Field_arg2, Field_arg3,
         call remove_character(rdline,"!")
         if (trim(rdline)=="END_FIELD") then
 
-		exit 
-        end if 
+		exit
+        end if
 
 
         if (rdline.EQ.string1(1)) then
@@ -174,7 +174,7 @@ if (trim(rdline)=="START_BOUNDARY_CONDITIONS") then
             end if
 
 
-    end do readline  
+    end do readline
 
 end if   !! if (trim(rdline)=="END_BOUNDARY_CONDITIONS")
 

@@ -69,6 +69,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !--------------------------------------------------------------------------------------------------------------------------------
   !Test program parameters
   LOGICAL, PARAMETER :: DEBUGGING_ONLY_RUN_SHORT_PART_OF_SIMULATION = .FALSE.    ! only run one timestep of MAIN_LOOP with stimulus
+  LOGICAL, PARAMETER :: DEBUGGING_OUTPUT_PROBLEM = .FALSE.    ! output information about problem data structure
   INTEGER(CMISSINTg) :: RUN_SCENARIO = 2  !0 = default, 1 = short for testing, 2 = medium for testing, 3 = very short
   LOGICAL, PARAMETER :: DEBUGGING_OUTPUT = .FALSE.    ! enable information from solvers
   LOGICAL, PARAMETER :: OLD_TOMO_MECHANICS = .TRUE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
@@ -411,7 +412,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   CALL SetBoundaryConditions()
 
   ! Output the data structure Problem
-  IF (ComputationalNodeNumber == 0) THEN
+  IF (DEBUGGING_OUTPUT_PROBLEM .AND. ComputationalNodeNumber == 0) THEN
     PRINT*, ""
     PRINT*, ""
     CALL cmfe_PrintProblemType(Problem,Err)
@@ -534,10 +535,10 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
           PRINT*, "Warning! MotorUnitRank=",MotorUnitRank,", set to 100"
           MotorUnitRank=100
         ELSE
-          PRINT*, "MotorUnitFiringTimes row k=", k, ": MU rank=", MotorUnitRank, ", StimComponent=",StimComponent
+          !PRINT*, "MotorUnitFiringTimes row k=", k, ": MU rank=", MotorUnitRank, ", StimComponent=",StimComponent
           MotorUnitFires = MotorUnitFiringTimes(k, MotorUnitRank)   ! determine if mu fires
           IF (MotorUnitFires == 1) THEN
-            PRINT*, "k=", k, ": MU ", MotorUnitRank, " fires, StimComponent=",StimComponent,", STIM_VALUE=",STIM_VALUE
+            !PRINT*, "k=", k, ": MU ", MotorUnitRank, " fires, StimComponent=",StimComponent,", STIM_VALUE=",STIM_VALUE
             CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
               & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,JunctionNodeNo,StimComponent,STIM_VALUE,Err)
           ENDIF
@@ -2467,7 +2468,7 @@ FUNCTION GetMemoryConsumption()
         ENDIF
       ENDIF
 
-      PRINT*, TRIM(cmfe_CustomProfilingGetInfo(Err))
+      !PRINT*, TRIM(cmfe_CustomProfilingGetInfo(Err))
     ENDIF
   ENDDO
 

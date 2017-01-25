@@ -1,4 +1,12 @@
 
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! THE FOLLOWING HEADER FILE PERFOMS THE FOLLOWINGS TASKS. ... !!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 1) PARSE THROUGH THE INPUT FILE TO COUNT AND STORE BASIS, REGIONS ETC. DEFINED... !!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ...BY USER IN THE INPUT FILE.  ...!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 2) BASED ON THE COUNTS IT ALLOCATES THE DERIVED DATA STRUCTURE. !!!!!!!!!!!!!!!!!!!!!
+
+  
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! FOLLOWING VARIABLES STORE  NUMBER OF TIMES BASIS , PARTS , REGIONS ETC.  .....!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! .... ARE DEFINED BY THE USER. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   num_of_EquationsSet= 0
   num_of_Problem = 0
@@ -18,11 +26,13 @@
   num_of_FiberField       = 0
   num_of_PressureBasis    = 0
   num_of_Field    = 0
+  
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!! PARSE INPUT FILE TO STORE INFORMATION. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  open(12,file=fileplace,status="old")
+  open(12,file=InputFile ,status="old")
   read(12,'(A)') rdline
 
-do while (trim(rdline).NE."STOP_PARSING")
+  do while (trim(rdline).NE."STOP_PARSING")
 
        read(12,'(A)') rdline
 
@@ -42,20 +52,15 @@ do while (trim(rdline).NE."STOP_PARSING")
        call searching(rdline,"START_FIBER_FIELD",num_of_FiberField)
        call searching(rdline,"START_PRESSURE_BASIS",num_of_PressureBasis)
        call searching(rdline,"START_FIELD",num_of_Field)
-enddo
 
-  num_of_WorldCoordinateSystem = num_of_CoordinateSystem
-  num_of_Decomposition = num_of_Mesh
-  num_of_GeneratedMesh =  num_of_Mesh
-
+  enddo
+  num_of_Decomposition = num_of_Mesh               !! This is wrong , though works for this study. Gonna fix it later.                
+  num_of_GeneratedMesh = num_of_Mesh    	   !! As per my understanding these two always seem  to be equal.
 
 
-!!!!!!!!!!!!!!!!!!!		ALLOCATE DATA STRUCTURES 		!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!		ALLOCATE DATA STRUCTURES BASED ON THE PARAMETERS INITIALIZED ABOVE.  !!!!!!!!!!!!!!!!!
 
-
-!!!!!!!!!!!!!!!!!!!		ALLOCATE DATA STRUCTURES 		!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-  allocate(all_Basis%Basis(1))
+  allocate(all_Basis%Basis(num_of_Basis))
   allocate(all_PressureBasis%PressureBasis(num_of_PressureBasis))
   allocate(all_BoundaryConditions%BoundaryConditions(num_of_BoundaryCondition))
   allocate(all_CoordinateSystem%CoordinateSystem(num_of_CoordinateSystem))
@@ -67,17 +72,16 @@ enddo
   allocate(all_GeometricField%GeometricField(num_of_GeometricField))
   allocate(all_FibreField%FibreField(num_of_FiberField))
   allocate(all_MaterialField%MaterialField(num_of_MaterialField))
-
-  allocate(all_EquationsSetField%EquationsSetField(1))
-  allocate(all_Fields%Fields(1))
-  allocate(all_Problem%Problem(1))
-  allocate(all_Region%Region(1))
-  allocate(all_WorldRegion%WorldRegion(1))
-  allocate(all_Solver%Solver(1))
-  allocate(all_LinearSolver%LinearSolver(1))
-  allocate(all_SolverEquations%SolverEquations(1))
-  allocate(all_ControlLoop%ControlLoop(1))
-  allocate(all_GeneratedMesh%GeneratedMesh(1))
+  allocate(all_EquationsSetField%EquationsSetField(num_of_EquationsSet))
+  allocate(all_Fields%Fields(num_of_Field))
+  allocate(all_Problem%Problem(num_of_Problem))
+  allocate(all_Region%Region(num_of_Region))
+  allocate(all_WorldRegion%WorldRegion(num_of_WorldRegion))  
+  allocate(all_Solver%Solver(num_of_Solver))
+  allocate(all_LinearSolver%LinearSolver(num_of_Solver))
+  allocate(all_SolverEquations%SolverEquations(num_of_Solver))
+  allocate(all_ControlLoop%ControlLoop(1))     !! Hard coded , gonna fix it later. 
+  allocate(all_GeneratedMesh%GeneratedMesh(num_of_GeneratedMesh))
   allocate(all_DependentField%DependentField(num_of_DependentField))
 
 

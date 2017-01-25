@@ -51,19 +51,17 @@ function match_problem(type_string) result (type_number)
       call handle_error("Invalid string "// type_string)
     endif
 
-  end function
+end function
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!! THE FOLLOWING FUNCTION !!!!!!!!!!!!!!!!!!!!!!!!1
 !!!!!!!!!!!!!!!!!!!!!!!.DEFINES MESH TYPE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  function match_generated_mesh(type_string) result (type_number)
-
+function match_generated_mesh(type_string) result (type_number)
     implicit none
     character(*), intent(in) :: type_string
     integer                  :: type_number
-
     ! number of dimensions
     if (type_string == "GENERATED_MESH_1D") then
       type_number = 1
@@ -83,17 +81,16 @@ function match_problem(type_string) result (type_number)
     elseif (type_string == "ELLIPSOID_MESH_TYPE") then
       type_number = CMFE_GENERATED_MESH_ELLIPSOID_MESH_TYPE
     else
-      print *, 2222
+      call handle_error("Invalid string "//type_string)  
     endif
-
-  end function
+end function
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!! THE FOLLOWING FUNCTION !!!!!!!!!!!!!!!!!!!!!!!!1
 !!!!!!!!!!!!!!!!!!!!!!!.REMOVES INTERPOLATION TYPE FOR STATE VARIABLE!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  function match_basis(type_string) result (type_number)
+function match_basis(type_string) result (type_number)
 
     implicit none
     character(*), intent(in) :: type_string
@@ -118,14 +115,15 @@ function match_problem(type_string) result (type_number)
     case("CUBIC_SIMPLEX_INTERPOLATION")
     type_number=CMFE_BASIS_CUBIC_SIMPLEX_INTERPOLATION
     END SELECT
-  end function
+
+end function
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!! THE FOLLOWING FUNCTION !!!!!!!!!!!!!!!!!!!!!!!!1
 !!!!!!!!!!!!!!!!!!!!!!!.DEFINES COORDINATE SYSTEM !!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  function match_coordinate_system(type_string) result (type_number)
+function match_coordinate_system(type_string) result (type_number)
 
     implicit none
     character(*), intent(in) :: type_string
@@ -148,22 +146,17 @@ function match_problem(type_string) result (type_number)
     elseif (type_string == "COORDINATE_SYSTEM_3D") then
       type_number = 3
     else
-print *, "i am here"
-    print *, "COORDINATE_RECTANGULAR_CARTESIAN_TYPE"
-    print *,  type_string
-print *, "i am here"
-
-   !    call handle_error("Invalid string "//type_string)
+      call handle_error("Invalid string "//type_string)
     endif
 
-  end function
+end function
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!! THE FOLLOWING FUNCTION !!!!!!!!!!!!!!!!!!!!!!!!1
 !!!!!!!!!!!!!!!!!!!!!!!.REMOVES INTERPOLATION TYPE FOR STATE VARIABLE!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-   function match_equations_set(type_string) result (type_number)
+function match_equations_set(type_string) result (type_number)
 
     implicit none
     character(*), intent(in) :: type_string
@@ -220,7 +213,7 @@ print *, "i am here"
       call handle_error("Invalid string "//type_string)
     endif
 
-  end function
+end function
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!! THE FOLLOWING FUNCTION !!!!!!!!!!!!!!!!!!!!!!!!1
@@ -228,7 +221,7 @@ print *, "i am here"
 !!!!!!!!!!!!!!!!!!!!!!!!OF THE ANALYSIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
-   function output_type(type_string) result (type_number)
+function output_type(type_string) result (type_number)
 
     implicit none
     character(*), intent(in) :: type_string
@@ -252,7 +245,7 @@ print *, "i am here"
     else
       call handle_error("Invalid string "//type_string)
     endif
-   end function
+end function
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -276,16 +269,19 @@ end function match_dependent_field
 function bc_def(type_string) result (type_number)
     character(*), intent(in) :: type_string
     integer                :: type_number
-    if (type_string == "SURFACE") then
-    elseif (type_string == "RIGHT") then
-    type_number = CMFE_GENERATED_MESH_REGULAR_RIGHT_SURFACE
-    elseif (type_string == "LEFT") then
-    type_number = CMFE_GENERATED_MESH_REGULAR_LEFT_SURFACE
-    elseif (type_string == "FRONT") then
-    type_number = CMFE_GENERATED_MESH_REGULAR_FRONT_SURFACE
-    elseif (type_string == "BOTTOM") then
-    type_number = CMFE_GENERATED_MESH_REGULAR_BOTTOM_SURFACE
-    end if
+    
+     if  (type_string == "RIGHT") then
+       type_number = CMFE_GENERATED_MESH_REGULAR_RIGHT_SURFACE
+     elseif (type_string == "LEFT") then
+       type_number = CMFE_GENERATED_MESH_REGULAR_LEFT_SURFACE
+     elseif (type_string == "FRONT") then
+       type_number = CMFE_GENERATED_MESH_REGULAR_FRONT_SURFACE
+     elseif (type_string == "BOTTOM") then
+       type_number = CMFE_GENERATED_MESH_REGULAR_BOTTOM_SURFACE
+     else
+       print *, "in surface" 
+       call handle_error("Invalid string "//type_string)
+     end if     
 end function
 
 
@@ -323,7 +319,7 @@ function solver_def(type_string) result (type_number)
       call handle_error("Invalid string "//type_string)
     endif
 
-  end function
+end function
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -337,12 +333,12 @@ function control_loop_def(type_string) result (type_number)
     integer                  :: type_number
     if (type_string == "CONTROL_LOAD_INCREMENT_LOOP_TYPE") then
       type_number = CMFE_PROBLEM_CONTROL_LOAD_INCREMENT_LOOP_TYPE
- !!! add more options later
+    !!! add more options later
     else
       call handle_error("Invalid string "//type_string)
     endif
 
-  end function
+end function
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!! THE FOLLOWING FUNCTION !!!!!!!!!!!!!!!!!!!!!!!!1
@@ -361,24 +357,23 @@ function material_parameters(type_string) result (type_number)
     elseif (type_string == "EQUATIONS_SET_THREE_DIMENSIONAL_SUBTYPE")  then
       type_number = 2
     else
-      print *, " i am here "
       call handle_error("Invalid string "//type_string)
     endif
 
-  end function material_parameters
+end function material_parameters
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!! THE FOLLOWING function  !!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!..used for error handling !!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
- SUBROUTINE HANDLE_ERROR(ERROR_STRING)
+SUBROUTINE HANDLE_ERROR(ERROR_STRING)
 
-         CHARACTER(LEN=*), INTENT(IN) :: ERROR_STRING
-         WRITE(*,'(">>ERROR: ",A)') ERROR_STRING(1:LEN_TRIM(ERROR_STRING))
-         STOP
+    CHARACTER(LEN=*), INTENT(IN) :: ERROR_STRING
+    WRITE(*,'(">>ERROR: ",A)') ERROR_STRING(1:LEN_TRIM(ERROR_STRING))
+    STOP
 
- END SUBROUTINE HANDLE_ERROR
+END SUBROUTINE HANDLE_ERROR
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 

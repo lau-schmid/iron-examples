@@ -36,7 +36,7 @@
 
        read(12,'(A)') rdline
 
-       call searching(rdline,"START_EQUATIONS_SET",num_of_EquationsSet)
+       CALL searching(rdline,"START_EQUATIONS_SET",num_of_EquationsSet)
        call searching(rdline,"START_PROBLEM",num_of_Problem)
        call searching(rdline,"START_BOUNDARY_CONDITIONS",num_of_BoundaryCondition)
        call searching(rdline,"START_BASIS",num_of_Basis)
@@ -54,7 +54,7 @@
        call searching(rdline,"START_FIELD",num_of_Field)
 
   enddo
-  num_of_Decomposition = num_of_Mesh               !! This is wrong , though works for this study. Gonna fix it later.                
+  num_of_Decomposition = num_of_Mesh               !! This is wrong , though works for this study. Gonna fix it later.
   num_of_GeneratedMesh = num_of_Mesh    	   !! As per my understanding these two always seem  to be equal.
 
 

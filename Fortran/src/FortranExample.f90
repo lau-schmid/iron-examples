@@ -50,7 +50,7 @@ PROGRAM GENERICEXAMPLE
 
   USE OpenCMISS
   USE OpenCMISS_Iron
-  USE parsing
+  USE Parsing
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! LOGICAL PREPROCESSOR  DIRECTIVES. !!!!!!!!!!!!!!!
 #ifndef NOMPIMOD
@@ -71,7 +71,7 @@ PROGRAM GENERICEXAMPLE
 
   !!!!!!!!!!!!!!!!!!!!		VARIABLES DEFINING SIZES OF DERIVED DATA STRUCTURES. !!!!!!!!!!!!!!!
 
-  INTEGER(CMISSIntg)    	  :: num_of_PressureBasis
+  INTEGER(CMISSIntg)    	  :: NumberOfPressureBasis
   INTEGER(CMISSIntg)    	  :: num_of_Basis
   INTEGER(CMISSIntg)    	  :: num_of_BoundaryCondition
   INTEGER(CMISSIntg),PARAMETER    :: num_of_WorldCoordinateSystem = 1 ! ALways equal to 1. 
@@ -94,15 +94,15 @@ PROGRAM GENERICEXAMPLE
   INTEGER(CMISSIntg)    	  :: num_of_SolverEquations
   INTEGER(CMISSIntg)    	  :: num_of_ControlLoop
   INTEGER(CMISSIntg)    	  :: num_of_GeneratedMesh
-  INTEGER(CMISSIntg)    	  :: num_of_dirichelet,num_of_traction_neumann,num_of_pressure_neumann 		   !!  These store the number of boundary conditions defined by user in the input file.  
+  INTEGER(CMISSIntg)    	  :: num_of_dirichelet,num_of_traction_neumann,num_of_pressure_neumann 		   !!  These store the number of boundary conditions defined by user in the input file.
 
   !!!!!!!!!!!!!!!!!!!!	 COUNTERS USED IN FORTRAN EXAMPLE FILE. 		     !!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!   FOR INSTANCE "Solver_idx" IS USED IN THE BLOCK ........     !!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!  ......WHERE SOLVER IS DEFINED.	 	 		     !!!!!!!!!!!!!!!
 
-  INTEGER(CMISSIntg)    	  :: Csys_idx, Region_idx,Basis_idx,Decomposition_idx,BoundaryCondition_idx, & 
-                         	     &Problem_idx,Solver_idx,EquationSet_idx,MaterialField_idx,DependentField_idx, & 
- 			   	     FiberField_idx,GeometricField_idx,mesh_idx,ControlLoop_idx
+  INTEGER(CMISSIntg)    	  :: Csys_idx, Region_idx,Basis_idx,Decomposition_idx,BoundaryCondition_idx
+  INTEGER(CMISSIntg)          :: Problem_idx,Solver_idx,EquationSet_idx,MaterialField_idx,DependentField_idx
+  INTEGER(CMISSIntg)          :: FiberField_idx,GeometricField_idx,mesh_idx,ControlLoop_idx
   INTEGER(CMISSIntg)    	  :: j,k ,component_idx 				    			   !! Counters used in different sections of FortranExample.f90.
   character(len = 100)  	  :: constraint  					   			   !! Parameter to be used in Boundary Condition bit. 
   
@@ -128,7 +128,7 @@ PROGRAM GENERICEXAMPLE
   !!!!!!!!!!!!!!! FOLLOWING ARE THE PROGRAM VARIABLES  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  
   INTEGER(CMISSIntg) 		  :: Err
-  REAL(CMISSRP)                   :: HEIGHT,WIDTH,LENGTH						        !! These variables stores dimensions of the domain.
+  REAL(CMISSRP)                   :: Height,WIDTH,LENGTH						        !! These variables stores dimensions of the domain.
   INTEGER(CMISSIntg)              :: NumberGlobalXElements,NumberGlobalYElements,NumberGlobalZElements          !! These variables stores  number of elements in each dimension.
   INTEGER(CMISSIntg)              :: NumberOfArguments,ArgumentLength,ArgStatus                                 !! These variables are used in reading input arguments "path + file name"" .. 
   CHARACTER(LEN=300)              :: CommandArgument,inputFile                                                  !! ... from the command line. 
@@ -229,10 +229,11 @@ PROGRAM GENERICEXAMPLE
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  ASSIGNING BASIS TO RESPECTIVE REGIONS       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
   DO basis_idx = 1, num_of_basis  
-     
+    
+    ! DO remove the pressure basis stuff; run the loop on both basis if you need them (e.g. displacement and pressure)
     UsePressureBasis 				= (str2int(Basis_arguments(2,basis_idx)) == 4)
     if (UsePressureBasis)  then
- 	j=2
+ 	j=2 ! TODO use descriptive names
     else 
         j=1
     end if 
@@ -256,10 +257,11 @@ PROGRAM GENERICEXAMPLE
 		     CMFE_BASIS_LINEAR_SIMPLEX_INTERPOLATION )
     			CALL cmfe_Basis_TypeSet(all_Basis%Basis(k),CMFE_BASIS_SIMPLEX_TYPE,Err)
   	END SELECT
-  	IF(NumberGlobalZElements==0) THEN
-   		CALL cmfe_Basis_NumberOfXiSet(all_Basis%Basis(k),2,Err)
-    		CALL cmfe_Basis_InterpolationXiSet(all_Basis%Basis(k),[InterpolationType,InterpolationType],Err)
-    		IF(NumberOfGaussXi>0) THEN
+    IF(NumberGlobalZElements==0) THEN
+        ! TODO proper indentation (and througout all files)
+        CALL cmfe_Basis_NumberOfXiSet(all_Basis%Basis(k),2,Err)
+        CALL cmfe_Basis_InterpolationXiSet(all_Basis%Basis(k),[InterpolationType,InterpolationType],Err)
+        IF(NumberOfGaussXi>0) THEN
       			CALL cmfe_Basis_QuadratureNumberOfGaussXiSet(all_Basis%Basis(k),[NumberOfGaussXi,NumberOfGaussXi],Err)
     		ENDIF
   	ELSE
@@ -278,6 +280,9 @@ PROGRAM GENERICEXAMPLE
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  DEFINING MESH AND ASSIGNING RESPECTIVE MESHES TO THIER  REGIONS       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
+  ! TODO DO / END DO upper case with space between END and DO and likewise for IF / END IF
+  ! change this to:
+  ! DO MeshIdx=1,NumberOfMeshes
   do mesh_idx = 1,num_of_Mesh
   
     NUMBER_OF_COMPONENTS 		      = str2int(DependentField_arguments(3,mesh_idx))   !! number of state variables ( for instance 3 ( displacements) +1(Pressure) for 3D cantiliverbeam study).
@@ -287,8 +292,9 @@ PROGRAM GENERICEXAMPLE
 
     !Start the creation of a generated mesh in the region
     CALL cmfe_GeneratedMesh_Initialise(all_GeneratedMesh%GeneratedMesh(mesh_idx),Err)
-    CALL cmfe_GeneratedMesh_CreateStart(GeneratedMeshUserNumber(mesh_idx),all_Region%Region(mesh_idx),& 
- 				      all_GeneratedMesh%GeneratedMesh(mesh_idx),Err)
+    ! TODO proper line continuation (throughout the files)
+    CALL cmfe_GeneratedMesh_CreateStart(GeneratedMeshUserNumber(mesh_idx),all_Region%Region(mesh_idx), &
+        & all_GeneratedMesh%GeneratedMesh(mesh_idx),Err)
     !Set up a regular x*y*z mesh
     CALL cmfe_GeneratedMesh_TypeSet(all_GeneratedMesh%GeneratedMesh(mesh_idx),CMFE_GENERATED_MESH_REGULAR_MESH_TYPE,Err)
     !Set the default basis
@@ -298,6 +304,7 @@ PROGRAM GENERICEXAMPLE
     ELSE
       CALL cmfe_GeneratedMesh_BasisSet(all_GeneratedMesh%GeneratedMesh(mesh_idx),[all_Basis%Basis(mesh_idx)],Err)
     ENDIF
+    ! TODO cover the 1D case
     !Define the mesh on the region
     IF(NumberGlobalZElements==0) THEN
       CALL cmfe_GeneratedMesh_ExtentSet(all_GeneratedMesh%GeneratedMesh(mesh_idx),[WIDTH,HEIGHT],Err)
@@ -324,6 +331,7 @@ PROGRAM GENERICEXAMPLE
 				   all_Mesh%Mesh(Decomposition_idx),all_Decomposition%Decomposition(Decomposition_idx),Err)
     CALL cmfe_Decomposition_TypeSet(all_Decomposition%Decomposition(Decomposition_idx),CMFE_DECOMPOSITION_CALCULATED_TYPE,Err)
     CALL cmfe_Decomposition_NumberOfDomainsSet(all_Decomposition%Decomposition(Decomposition_idx),NumberOfDomains,Err)
+    ! TODO this should be optional as it is additional work
     CALL cmfe_Decomposition_CalculateFacesSet(all_Decomposition%Decomposition(Decomposition_idx),.TRUE.,Err) 
     CALL cmfe_Decomposition_CreateFinish(all_Decomposition%Decomposition(Decomposition_idx),Err)
   end do !Decomposition_idx
@@ -540,6 +548,9 @@ PROGRAM GENERICEXAMPLE
            ,SourceField,Err)
       CALL cmfe_Field_ScalingTypeSet(SourceField,CMFE_FIELD_ARITHMETIC_MEAN_SCALING,Err)
       CALL cmfe_EquationsSet_SourceCreateFinish(all_EquationsSet%EquationsSet(EquationSet_idx),Err)
+      ! TODO don't hard-code and default to 3D
+      ! should read something like
+      ! DO ComponentIdx=1,NumberOfComponents
       DO component_idx=1,3
 	
         CALL cmfe_Field_ComponentValuesInitialise(SourceField, & 
@@ -589,7 +600,8 @@ PROGRAM GENERICEXAMPLE
 	 		      all_Solver%Solver(solver_idx),Err)
     CALL cmfe_Solver_OutputTypeSet(all_Solver%Solver(solver_idx),CMFE_SOLVER_PROGRESS_OUTPUT,Err)
 
-    if (trim(Solvers_arguments(8,solver_idx)) == "ACTIVE") then 
+    if (trim(Solvers_arguments(8,solver_idx)) == "ACTIVE") then
+      ! TODO this should be optionally FD_CALCULATED or ANALYTICAL
       CALL cmfe_Solver_NewtonJacobianCalculationTypeSet(all_Solver%Solver(solver_idx),CMFE_SOLVER_NEWTON_JACOBIAN_FD_CALCULATED,Err)
 
       CALL cmfe_Solver_NewtonLinearSolverGet(all_Solver%Solver(solver_idx),all_LinearSolver%LinearSolver(solver_idx),Err)
@@ -634,6 +646,7 @@ PROGRAM GENERICEXAMPLE
 
         IF(NodeDomain==ComputationalNodeNumber) THEN
 
+          ! TODO remove hard-coded defaults
           DO component_idx=1,3
 
               constraint =  BC_arg2(3+4*(i-1),BOundaryCondition_idx)

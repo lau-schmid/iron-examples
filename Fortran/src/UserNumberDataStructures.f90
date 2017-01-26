@@ -1,117 +1,118 @@
 
-  
+
  !!!!!!!!!!!!!!!!!!!!________THE FOLLOWING HEADER FILE ALLOCATES THE SIZE OF "USER NUMBER" DATA STRUCTURES BASED ON THE VARIABLES INITIALIED IN _____!!!!!!!!!!
  !!!!!!!!!!!!!!!!!!!!! ....... HEADER FILE ALLOCATING DERIVED DATA STRUCTURES !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!________________________________________________________________________________________________________________!!!!!!!!!!!!!!!!
-  allocate (CoordinateSystemUserNumber(num_of_CoordinateSystem))
-  allocate (RegionUserNumber(num_of_Region))
-  allocate (BasisUserNumber(num_of_Basis))
-  allocate (PressureBasisUserNumber(num_of_PressureBasis))
-  allocate (GeneratedMeshUserNumber(num_of_GeneratedMesh))
-  allocate (MeshUserNumber(num_of_Mesh))
-  allocate (DecompositionUserNumber(num_of_Decomposition))
-  allocate (FieldGeometryUserNumber(num_of_GeometricField))
-  allocate (FieldFibreUserNumber(num_of_FiberField))
-  allocate (FieldMaterialUserNumber(num_of_MaterialField))
-  allocate (FieldDependentUserNumber(num_of_DependentField))
-  allocate (EquationSetUserNumber(num_of_EquationsSet))
-  allocate (EquationsSetFieldUserNumber(num_of_EquationSetField ))
-  allocate (ProblemUserNumber(num_of_Problem))
-  allocate (FieldUserNumber(num_of_Field))
+
+  allocate (CoordinateSystemUserNumber(NumberOfCoordinateSystem))
+  allocate (RegionUserNumber(NumberOfRegion))
+  allocate (BasisUserNumber(NumberOfBasis))
+  allocate (PressureBasisUserNumber(NumberOfPressureBasis))
+  allocate (GeneratedMeshUserNumber(NumberOfGeneratedMesh))
+  allocate (MeshUserNumber(NumberOfMesh))
+  allocate (DecompositionUserNumber(NumberOfDecomposition))
+  allocate (FieldGeometryUserNumber(NumberOfGeometricField))
+  allocate (FieldFibreUserNumber(NumberOfFiberField))
+  allocate (FieldMaterialUserNumber(NumberOfMaterialField))
+  allocate (FieldDependentUserNumber(NumberOfDependentField))
+  allocate (EquationSetUserNumber(NumberOfEquationsSet))
+  allocate (EquationsSetFieldUserNumber(NumberOfEquationSetField ))
+  allocate (ProblemUserNumber(NumberOfProblem))
+  allocate (FieldUserNumber(NumberOfProblem))
 
 !!!!!!!!!!!!!!!!!! Assigning tags. NOTE:  Each tag should be distinct !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  
- j = 1
- 
-  do i = 1, num_of_CoordinateSystem
 
-  	CoordinateSystemUserNumber(i)  = j
-        j = j + 1
+ UserNumberLabel = 1
+
+  do i = 1, NumberOfCoordinateSystem
+
+        CoordinateSystemUserNumber(i)  = UserNumberLabel
+        UserNumberLabel = UserNumberLabel + 1
   end do
 
- do i = 1, num_of_Region
+ do i = 1, NumberOfRegion
 
-  	RegionUserNumber(i)  = j
-        j = j + 1
+        RegionUserNumber(i)  = UserNumberLabel
+        UserNumberLabel = UserNumberLabel + 1
  end do
 
 
- do i = 1, num_of_Basis+1
+ do i = 1, NumberOfBasis+1
 
-  	BasisUserNumber(i)  = j
-        j = j + 1
+        BasisUserNumber(i)  = UserNumberLabel
+        UserNumberLabel = UserNumberLabel + 1
  end do
 
 
- do i = 1, num_of_PressureBasis
+ do i = 1, NumberOfPressureBasis
 
-  	PressureBasisUserNumber(i)  = j
-        j = j + 1
+        PressureBasisUserNumber(i)  = UserNumberLabel
+        UserNumberLabel = UserNumberLabel + 1
  end do
 
- do i = 1,num_of_GeneratedMesh
+ do i = 1,NumberOfGeneratedMesh
 
-  	GeneratedMeshUserNumber(i)  = j
-        j = j + 1
+        GeneratedMeshUserNumber(i)  = UserNumberLabel
+        UserNumberLabel = UserNumberLabel + 1
  end do
 
- do i = 1, num_of_Mesh
+ do i = 1, NumberOfMesh
 
- 	MeshUserNumber(i) = j
-        j = j + 1
+       MeshUserNumber(i) = UserNumberLabel
+       UserNumberLabel = UserNumberLabel + 1
  end do
 
- do i = 1, num_of_Decomposition
+ do i = 1, NumberOfDecomposition
 
- 	DecompositionUserNumber(i) = j
-        j = j + 1
+       DecompositionUserNumber(i) = UserNumberLabel
+       UserNumberLabel = UserNumberLabel + 1
  end do
 
- do i = 1, num_of_GeometricField
+ do i = 1, NumberOfGeometricField
 
- 	FieldGeometryUserNumber(i) = j
-        j = j + 1
+       FieldGeometryUserNumber(i) = UserNumberLabel
+       UserNumberLabel = UserNumberLabel + 1
  end do
 
- do i = 1, num_of_FiberField
+ do i = 1, NumberOfFiberField
 
- 	FieldFibreUserNumber(i) = j
-        j = j + 1
+       FieldFibreUserNumber(i) = UserNumberLabel
+       UserNumberLabel = UserNumberLabel + 1
  end do
 
- do i = 1, num_of_MaterialField
+ do i = 1, NumberOfMaterialField
 
- 	FieldMaterialUserNumber(i) = j
-        j = j + 1
+       FieldMaterialUserNumber(i) = UserNumberLabel
+       UserNumberLabel = UserNumberLabel + 1
  end do
 
- do i = 1, num_of_DependentField
+ do i = 1, NumberOfDependentField
 
- 	FieldDependentUserNumber(i) = j
-        j = j + 1
+       FieldDependentUserNumber(i) = UserNumberLabel
+       UserNumberLabel = UserNumberLabel + 1
  end do
 
- do i = 1, num_of_EquationsSet
+ do i = 1, NumberOfEquationsSet
 
- 	EquationSetUserNumber(i) = j
-        j = j + 1
+       EquationSetUserNumber(i) = UserNumberLabel
+       UserNumberLabel = UserNumberLabel + 1
  end do
 
- do i = 1, 1
+ do i = 1, NumberOfEquationsSet
 
- 	EquationsSetFieldUserNumber(i) = j
-
-        j = j + 1
+       EquationsSetFieldUserNumber(i) = UserNumberLabel
+       UserNumberLabel = UserNumberLabel + 1
  end do
 
- do i = 1, num_of_Problem
+ do i = 1, NumberOfProblem
 
- 	ProblemUserNumber(i) = j
-        j = j + 1
+       ProblemUserNumber(i) = UserNumberLabel
+       UserNumberLabel = UserNumberLabel + 1
  end do
 
- do i = 1, num_of_Field
+ do i = 1, NumberOfField
 
-  	FieldUserNumber(i)  = j
-        j = j + 1
- end do 
+        FieldUserNumber(i)  = UserNumberLabel
+        UserNumberLabel = UserNumberLabel + 1
+ end do
+

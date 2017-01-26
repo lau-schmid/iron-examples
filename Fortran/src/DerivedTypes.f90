@@ -1,109 +1,109 @@
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! _______________________ HEADER COMMENTS ____________________!!!!!!!!!!!!!!!!!!!!!!!!! 
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! _______________________ HEADER COMMENTS ____________________!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! THE FOLLOWING HEADER FILE INITILIZES THE POINTER TYPE DERIVED DATA STRCUTRES....!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! .... WITH DERIVED TYPES. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!________________________________________________________!!!!!!!!!!!!!!!!!!!!!!!!
-  
+
 
 
   !!!!!!!!!!!!!!!!!!!!!!!!! DEFINING DERIVED TYPES AND ALLOCATING THIER RESPECTIVE DATA STRUCTURES !!!!!!!!!!!!!!!!!!!
 
-  type basis_array
+  TYPE basis_array
 
-	type(cmfe_BasisType) 	         , allocatable :: Basis(:),PressureBasis(:)
+    TYPE(cmfe_BasisType) 	         , allocatable :: Basis(:),PressureBasis(:)
 
-  end type basis_array
+  end TYPE basis_array
 
-  type boundary_conditions_array
+  TYPE boundary_conditions_array
 
-	TYPE(cmfe_BoundaryConditionsType), allocatable :: BoundaryConditions(:)
+    TYPE(cmfe_BoundaryConditionsType)    , allocatable :: BoundaryConditions(:)
 
-  end type  boundary_conditions_array
+  end TYPE  boundary_conditions_array
 
-  type coordinate_system_array
+  TYPE coordinate_system_array
 
-	type(cmfe_CoordinateSystemType)  , allocatable :: CoordinateSystem(:),  & 
- 							  WorldCoordinateSystem(:)
-  end type coordinate_system_array
+    TYPE(cmfe_CoordinateSystemType)      , allocatable :: CoordinateSystem(:), WorldCoordinateSystem(:)
 
-  type mesh_array
+  end TYPE coordinate_system_array
 
-	type(cmfe_MeshType)              , allocatable :: Mesh(:)
+  TYPE mesh_array
 
-  end type  mesh_array
+    TYPE(cmfe_MeshType)                 , allocatable :: Mesh(:)
 
-  type decomposition_array
+  end TYPE  mesh_array
 
-        type(cmfe_DecompositionType)     , allocatable :: Decomposition(:)
+  TYPE decomposition_array
 
-  end type  decomposition_array
+    TYPE(cmfe_DecompositionType)       , allocatable :: Decomposition(:)
 
-  type equations_array
+  end TYPE  decomposition_array
 
-        type(cmfe_EquationsType)         , allocatable :: Equations(:)
+  TYPE equations_array
 
-  end type equations_array
+    TYPE(cmfe_EquationsType)           , allocatable :: Equations(:)
 
-  type equations_set_array
+  end TYPE equations_array
 
-        type(cmfe_EquationsSetType)      , allocatable :: EquationsSet(:)
+  TYPE equations_set_array
 
-  end type equations_set_array
+    TYPE(cmfe_EquationsSetType)        , allocatable :: EquationsSet(:)
 
-  type field_type_array
+  end TYPE equations_set_array
 
-        type(cmfe_FieldType)             , allocatable ::  GeometricField(:),FibreField(:), & 
-							   MaterialField(:), EquationsSetField(:)
-  end type  field_type_array
+  TYPE field_type_array
 
-  type fields_type_array
+    TYPE(cmfe_FieldType)            , allocatable :: GeometricField(:),FibreField(:),MaterialField(:),EquationsSetField(:)
 
-        type(cmfe_FieldsType)            , allocatable ::  Fields(:)
+  end TYPE  field_type_array
 
-  end type  fields_type_array
+  TYPE fields_type_array
 
-  type problem_type
+    TYPE(cmfe_FieldsType)           , allocatable ::  Fields(:)
 
-	type(cmfe_ProblemType)           , allocatable :: Problem(:)
+  end TYPE  fields_type_array
 
-  end type  problem_type
+  TYPE problem_type
 
-  type region_type
+    TYPE(cmfe_ProblemType)           , allocatable :: Problem(:)
 
-	TYPE(cmfe_RegionType)            , allocatable :: Region(:),WorldRegion(:)
+  end TYPE  problem_type
 
-  end type region_type
+  TYPE region_type
 
-  type solver_type
+    TYPE(cmfe_RegionType)            , allocatable :: Region(:),WorldRegion(:)
 
-	TYPE(cmfe_SolverType)            , allocatable :: Solver(:),LinearSolver(:)
-	
-  end type solver_type
+  end TYPE region_type
+
+  TYPE solver_type
+
+    TYPE(cmfe_SolverType)            , allocatable :: Solver(:),LinearSolver(:)
+
+  end TYPE solver_type
 
 
-  type solvers_equations_type
+  TYPE solvers_equations_type
 
-        TYPE(cmfe_SolverEquationsType)   , allocatable :: SolverEquations(:)
-	
-  end type solvers_equations_type
+    TYPE(cmfe_SolverEquationsType)   , allocatable :: SolverEquations(:)
 
-  type control_loop_type
+  end TYPE solvers_equations_type
 
-	TYPE(cmfe_ControlLoopType)       , allocatable :: ControlLoop(:)
+  TYPE control_loop_type
 
-  end type control_loop_type
+    TYPE(cmfe_ControlLoopType)       , allocatable :: ControlLoop(:)
 
-  type generate_mesh_type
+  end TYPE control_loop_type
 
-	TYPE(cmfe_GeneratedMeshType)     , allocatable :: GeneratedMesh(:)
+  TYPE generate_mesh_type
 
-  end type generate_mesh_type
+    TYPE(cmfe_GeneratedMeshType)     , allocatable :: GeneratedMesh(:)
 
-  type dependent_field_type
+  end TYPE generate_mesh_type
 
- 	TYPE(cmfe_FieldType)             , allocatable :: DependentField(:)
+  TYPE dependent_field_type
 
-  end type dependent_field_type
+    TYPE(cmfe_FieldType)             , allocatable :: DependentField(:)
+
+  end TYPE dependent_field_type
 
  !!!!!! INITIALIZING POINTER THAT POINT AT THE DATA STRUCTURES OF DERIVED TYPES !!!!!!!!!!!!!!!!
 
@@ -129,5 +129,5 @@
  TYPE(control_loop_type)	      :: all_ControlLoop
  TYPE(generate_mesh_type)             :: all_GeneratedMesh
  TYPE(dependent_field_type) 	      :: all_DependentField
- TYPE(cmfe_FieldType) 		      :: SourceField
-  
+ TYPE(cmfe_FieldTYPE) 		      :: SourceField
+

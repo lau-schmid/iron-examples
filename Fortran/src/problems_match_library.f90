@@ -48,7 +48,7 @@ function match_problem(type_string) result (type_number)
 
     ! TODO add more subtypes.. TODO
     else
-      call handle_error("Invalid string "// type_string)
+      CALL handle_error("Invalid string "// type_string)
     endif
 
 end function
@@ -81,7 +81,7 @@ function match_generated_mesh(type_string) result (type_number)
     elseif (type_string == "ELLIPSOID_MESH_TYPE") then
       type_number = CMFE_GENERATED_MESH_ELLIPSOID_MESH_TYPE
     else
-      call handle_error("Invalid string "//type_string)  
+      CALL handle_error("Invalid string "//type_string)
     endif
 end function
 
@@ -146,7 +146,7 @@ function match_coordinate_system(type_string) result (type_number)
     elseif (type_string == "COORDINATE_SYSTEM_3D") then
       type_number = 3
     else
-      call handle_error("Invalid string "//type_string)
+      CALL handle_error("Invalid string "//type_string)
     endif
 
 end function
@@ -210,7 +210,7 @@ function match_equations_set(type_string) result (type_number)
      type_number =  3.0
     ! TODO insert more subtypes.. TODO
     else
-      call handle_error("Invalid string "//type_string)
+      CALL handle_error("Invalid string "//type_string)
     endif
 
 end function
@@ -243,7 +243,7 @@ function output_type(type_string) result (type_number)
     elseif (type_string == "EQUATIONS_ELEMENT_MATRIX_OUTPUT") then
       type_number = CMFE_EQUATIONS_ELEMENT_MATRIX_OUTPUT
     else
-      call handle_error("Invalid string "//type_string)
+      CALL handle_error("Invalid string "//type_string)
     endif
 end function
 
@@ -269,7 +269,7 @@ end function match_dependent_field
 function bc_def(type_string) result (type_number)
     character(*), intent(in) :: type_string
     integer                :: type_number
-    
+
      if  (type_string == "RIGHT") then
        type_number = CMFE_GENERATED_MESH_REGULAR_RIGHT_SURFACE
      elseif (type_string == "LEFT") then
@@ -279,9 +279,8 @@ function bc_def(type_string) result (type_number)
      elseif (type_string == "BOTTOM") then
        type_number = CMFE_GENERATED_MESH_REGULAR_BOTTOM_SURFACE
      else
-       print *, "in surface" 
-       call handle_error("Invalid string "//type_string)
-     end if     
+       CALL handle_error("Invalid string "//type_string)
+     end if
 end function
 
 
@@ -316,7 +315,7 @@ function solver_def(type_string) result (type_number)
     elseif (type_string == "INCREMENTAL") then
       type_number = CMFE_PROBLEM_CONTROL_LOAD_INCREMENT_LOOP_TYPE
     else
-      call handle_error("Invalid string "//type_string)
+      CALL handle_error("Invalid string "//type_string)
     endif
 
 end function
@@ -335,7 +334,7 @@ function control_loop_def(type_string) result (type_number)
       type_number = CMFE_PROBLEM_CONTROL_LOAD_INCREMENT_LOOP_TYPE
     !!! add more options later
     else
-      call handle_error("Invalid string "//type_string)
+      CALL handle_error("Invalid string "//type_string)
     endif
 
 end function
@@ -357,7 +356,7 @@ function material_parameters(type_string) result (type_number)
     elseif (type_string == "EQUATIONS_SET_THREE_DIMENSIONAL_SUBTYPE")  then
       type_number = 2
     else
-      call handle_error("Invalid string "//type_string)
+      CALL handle_error("Invalid string "//type_string)
     endif
 
 end function material_parameters

@@ -70,7 +70,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !Test program parameters
   LOGICAL, PARAMETER :: DEBUGGING_ONLY_RUN_SHORT_PART_OF_SIMULATION = .FALSE.    ! only run one timestep of MAIN_LOOP with stimulus
   LOGICAL, PARAMETER :: DEBUGGING_OUTPUT_PROBLEM = .FALSE.    ! output information about problem data structure
-  INTEGER(CMISSINTg) :: RUN_SCENARIO = 2  !0 = default, 1 = short for testing, 2 = medium for testing, 3 = very short
+  INTEGER(CMISSINTg) :: RUN_SCENARIO = 3  !0 = default, 1 = short for testing, 2 = medium for testing, 3 = very short
   LOGICAL, PARAMETER :: DEBUGGING_OUTPUT = .FALSE.    ! enable information from solvers
   LOGICAL, PARAMETER :: OLD_TOMO_MECHANICS = .TRUE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
 
@@ -2335,7 +2335,7 @@ SUBROUTINE CalculateBioelectrics()
 END SUBROUTINE CalculateBioelectrics
 
 SUBROUTINE ExportEMG()
-  WRITE(*,'(A)',advance='no') "Output EMG Data ... "
+  IF (ComputationalNodeNumber == 0) WRITE(*,'(A)',advance='no') "Output EMG Data ... "
   EXPORT_FIELD=.TRUE.
   IF(EXPORT_FIELD) THEN
     CALL cmfe_Fields_Initialise(Fields,Err)
@@ -2350,7 +2350,7 @@ SUBROUTINE ExportEMG()
     CALL cmfe_Fields_ElementsExport(Fields,"EMGExample_FE","FORTRAN",Err)
     CALL cmfe_Fields_Finalise(Fields,Err)
   ENDIF
-  PRINT*, " done"
+  IF (ComputationalNodeNumber == 0) PRINT*, " done"
 
 END SUBROUTINE ExportEMG
 

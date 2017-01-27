@@ -1,98 +1,99 @@
 
-function match_problem(type_string) result (type_number)
+FUNCTION match_problem(type_string) RESULT (type_number)
 
-    implicit none
+    IMPLICIT NONE
     character(*), intent(in) :: type_string
     integer                  :: type_number
 
     ! class
-    if (type_string == "PROBLEM_ELASTICITY_CLASS") then
+    IF (type_string == "PROBLEM_ELASTICITY_CLASS") THEN
       type_number = CMFE_PROBLEM_ELASTICITY_CLASS
-    elseif (type_string == "PROBLEM_FLUID_MECHANICS_CLASS") then
+    ELSEIF (type_string == "PROBLEM_FLUID_MECHANICS_CLASS") THEN
       type_number = CMFE_PROBLEM_FLUID_MECHANICS_CLASS
-    elseif (type_string == "PROBLEM_ELECTROMAGNETICS_CLASS") then
+    ELSEIF (type_string == "PROBLEM_ELECTROMAGNETICS_CLASS") THEN
       type_number = CMFE_PROBLEM_ELECTROMAGNETICS_CLASS
-    elseif (type_string == "CLASSICAL_FIELD_CLASS") then
+    ELSEIF (type_string == "CLASSICAL_FIELD_CLASS") THEN
       type_number = CMFE_PROBLEM_CLASSICAL_FIELD_CLASS
-    elseif (type_string == "PROBLEM_BIOELECTRICS_CLASS") then
+    ELSEIF (type_string == "PROBLEM_BIOELECTRICS_CLASS") THEN
       type_number = CMFE_PROBLEM_BIOELECTRICS_CLASS
-    elseif (type_string == "PROBLEM_MODAL_CLASS") then
+    ELSEIF (type_string == "PROBLEM_MODAL_CLASS") THEN
       type_number = CMFE_PROBLEM_MODAL_CLASS
-    elseif (type_string == "PROBLEM_FITTING_CLASS") then
+    ELSEIF (type_string == "PROBLEM_FITTING_CLASS") THEN
       type_number = CMFE_PROBLEM_FITTING_CLASS
-    elseif (type_string == "PROBLEM_OPTIMISATION_CLASS") then
+    ELSEIF (type_string == "PROBLEM_OPTIMISATION_CLASS") THEN
       type_number = CMFE_PROBLEM_OPTIMISATION_CLASS
-    elseif (type_string == "PROBLEM_MULTI_PHYSICS_CLASS") then
+    ELSEIF (type_string == "PROBLEM_MULTI_PHYSICS_CLASS") THEN
       type_number = CMFE_PROBLEM_MULTI_PHYSICS_CLASS
-    elseif (type_string == "PROBLEM_MULTI_PHYSICS_CLASS") then
+    ELSEIF (type_string == "PROBLEM_MULTI_PHYSICS_CLASS") THEN
       type_number = CMFE_PROBLEM_MULTI_PHYSICS_CLASS
-    elseif (type_string == "PROBLEM_CLASSICAL_FIELD_CLASS") then
+    ELSEIF (type_string == "PROBLEM_CLASSICAL_FIELD_CLASS") THEN
       type_number = CMFE_PROBLEM_CLASSICAL_FIELD_CLASS
-    elseif (type_string == "PROBLEM_NO_CLASS") then
+    ELSEIF (type_string == "PROBLEM_NO_CLASS") THEN
       type_number = CMFE_PROBLEM_NO_CLASS
-    elseif (type_string == "PROBLEM_FINITE_ELASTICITY_TYPE") then
+    ELSEIF (type_string == "PROBLEM_FINITE_ELASTICITY_TYPE") THEN
       type_number = CMFE_PROBLEM_FINITE_ELASTICITY_TYPE
-    elseif (type_string == "PROBLEM_LAPLACE_EQUATION_TYPE") then
+    ELSEIF (type_string == "PROBLEM_LAPLACE_EQUATION_TYPE") THEN
       type_number = CMFE_PROBLEM_LAPLACE_EQUATION_TYPE
-    elseif (type_string == "PROBLEM_STANDARD_LAPLACE_SUBTYPE") then
+    ELSEIF (type_string == "PROBLEM_STANDARD_LAPLACE_SUBTYPE") THEN
       type_number =  CMFE_PROBLEM_STANDARD_LAPLACE_SUBTYPE
     ! TODO add more types.. TODO
     ! subtype
-    elseif (type_string == "U_VARIABLE") then
+    ELSEIF (type_string == "U_VARIABLE") THEN
 
       type_number = CMFE_FIELD_U_VARIABLE_TYPE
-    elseif (type_string == "SEPARATED") then
+    ELSEIF (type_string == "SEPARATED") THEN
       type_number = CMFE_FIELD_SEPARATED_COMPONENT_DOF_ORDER
-    elseif (type_string == "PROBLEM_NO_SUBTYPE") then
+    ELSEIF (type_string == "PROBLEM_NO_SUBTYPE") THEN
       type_number = CMFE_PROBLEM_NO_SUBTYPE
 
     ! TODO add more subtypes.. TODO
-    else
+    ELSE
       CALL handle_error("Invalid string "// type_string)
-    endif
+    ENDIF
 
-end function
+END FUNCTION
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!! THE FOLLOWING FUNCTION !!!!!!!!!!!!!!!!!!!!!!!!1
 !!!!!!!!!!!!!!!!!!!!!!!.DEFINES MESH TYPE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-function match_generated_mesh(type_string) result (type_number)
-    implicit none
+FUNCTION match_generated_mesh(type_string) RESULT (type_number)
+    IMPLICIT NONE
     character(*), intent(in) :: type_string
     integer                  :: type_number
     ! number of dimensions
-    if (type_string == "GENERATED_MESH_1D") then
+    IF (type_string == "GENERATED_MESH_1D") THEN
       type_number = 1
-    elseif (type_string == "GENERATED_MESH_2D") then
+    ELSEIF (type_string == "GENERATED_MESH_2D") THEN
       type_number = 2
-    elseif (type_string == "GENERATED_MESH_3D") then
+    ELSEIF (type_string == "GENERATED_MESH_3D") THEN
       type_number = 3
     ! generated mesh type
-    elseif (type_string == "REGULAR_MESH_TYPE") then
+    ELSEIF (type_string == "REGULAR_MESH_TYPE") THEN
       type_number = CMFE_GENERATED_MESH_REGULAR_MESH_TYPE
-    elseif (type_string == "POLAR_MESH_TYPE") then
+    ELSEIF (type_string == "POLAR_MESH_TYPE") THEN
       type_number = CMFE_GENERATED_MESH_POLAR_MESH_TYPE
-    elseif (type_string == "TREE_MESH_TYPE") then
+    ELSEIF (type_string == "TREE_MESH_TYPE") THEN
       type_number = CMFE_GENERATED_MESH_FRACTAL_TREE_MESH_TYPE
-    elseif (type_string == "CYLINDER_MESH_TYPE") then
+    ELSEIF (type_string == "CYLINDER_MESH_TYPE") THEN
       type_number = CMFE_GENERATED_MESH_CYLINDER_MESH_TYPE
-    elseif (type_string == "ELLIPSOID_MESH_TYPE") then
+    ELSEIF (type_string == "ELLIPSOID_MESH_TYPE") THEN
       type_number = CMFE_GENERATED_MESH_ELLIPSOID_MESH_TYPE
-    else
+    ELSE
       CALL handle_error("Invalid string "//type_string)
-    endif
-end function
+
+    ENDIF
+END FUNCTION
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!! THE FOLLOWING FUNCTION !!!!!!!!!!!!!!!!!!!!!!!!1
 !!!!!!!!!!!!!!!!!!!!!!!.REMOVES INTERPOLATION TYPE FOR STATE VARIABLE!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-function match_basis(type_string) result (type_number)
+FUNCTION match_basis(type_string) RESULT (type_number)
 
-    implicit none
+    IMPLICIT NONE
     character(*), intent(in) :: type_string
     integer                  :: type_number
     SELECT CASE (type_string)
@@ -116,104 +117,107 @@ function match_basis(type_string) result (type_number)
     type_number=CMFE_BASIS_CUBIC_SIMPLEX_INTERPOLATION
     END SELECT
 
-end function
+END FUNCTION
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!! THE FOLLOWING FUNCTION !!!!!!!!!!!!!!!!!!!!!!!!1
 !!!!!!!!!!!!!!!!!!!!!!!.DEFINES COORDINATE SYSTEM !!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-function match_coordinate_system(type_string) result (type_number)
+FUNCTION match_coordinate_system(type_string) RESULT (type_number)
 
-    implicit none
+    IMPLICIT NONE
     character(*), intent(in) :: type_string
     integer                  :: type_number
 
-    if (type_string == "COORDINATE_RECTANGULAR_CARTESIAN_TYPE") then
+    IF (type_string == "COORDINATE_RECTANGULAR_CARTESIAN_TYPE") THEN
       type_number = CMFE_COORDINATE_RECTANGULAR_CARTESIAN_TYPE
-    elseif (type_string == "COORDINATE_CYLINDRICAL_POLAR_TYPE") then
+    ELSEIF (type_string == "COORDINATE_CYLINDRICAL_POLAR_TYPE") THEN
       type_number = CMFE_COORDINATE_CYLINDRICAL_POLAR_TYPE
-    elseif (type_string == "COORDINATE_SPHERICAL_POLAR_TYPE") then
+    ELSEIF (type_string == "COORDINATE_SPHERICAL_POLAR_TYPE") THEN
       type_number = CMFE_COORDINATE_SPHERICAL_POLAR_TYPE
-    elseif (type_string == "COORDINATE_PROLATE_SPHEROIDAL_TYPE") then
+    ELSEIF (type_string == "COORDINATE_PROLATE_SPHEROIDAL_TYPE") THEN
       type_number = CMFE_COORDINATE_PROLATE_SPHEROIDAL_TYPE
-    elseif (type_string == "COORDINATE_OBLATE_SPHEROIDAL_TYPE") then
+    ELSEIF (type_string == "COORDINATE_OBLATE_SPHEROIDAL_TYPE") THEN
       type_number = CMFE_COORDINATE_OBLATE_SPHEROIDAL_TYPE
-    elseif (type_string == "COORDINATE_SYSTEM_1D") then
+    ELSEIF (type_string == "COORDINATE_SYSTEM_1D") THEN
       type_number = 1
-    elseif (type_string == "COORDINATE_SYSTEM_2D") then
+    ELSEIF (type_string == "COORDINATE_SYSTEM_2D") THEN
       type_number = 2
-    elseif (type_string == "COORDINATE_SYSTEM_3D") then
+    ELSEIF (type_string == "COORDINATE_SYSTEM_3D") THEN
       type_number = 3
-    else
-      CALL handle_error("Invalid string "//type_string)
-    endif
+    ELSE
 
-end function
+      CALL handle_error("Invalid string "//type_string)
+
+    ENDIF
+
+END FUNCTION
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!! THE FOLLOWING FUNCTION !!!!!!!!!!!!!!!!!!!!!!!!1
 !!!!!!!!!!!!!!!!!!!!!!!.REMOVES INTERPOLATION TYPE FOR STATE VARIABLE!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-function match_equations_set(type_string) result (type_number)
+FUNCTION match_equations_set(type_string) RESULT (type_number)
 
-    implicit none
+    IMPLICIT NONE
     character(*), intent(in) :: type_string
     integer                   :: type_number
     ! sparsity type
-    if (type_string == "SPARSE_MATRIX") then
+    IF (type_string == "EQUATIONS_SPARSE_MATRICES") THEN
       type_number = CMFE_EQUATIONS_SPARSE_MATRICES
-    elseif (type_string == "EQUATIONS_FULL_MATRICES") then
+    ELSEIF (type_string == "EQUATIONS_FULL_MATRICES") THEN
       type_number = CMFE_EQUATIONS_FULL_MATRICES
-    elseif (type_string == "SEPARATED") then
+    ELSEIF (type_string == "SEPARATED") THEN
       type_number = CMFE_FIELD_SEPARATED_COMPONENT_DOF_ORDER
     ! output type
-    elseif (type_string == "NO_OUTPUT") then
+    ELSEIF (type_string == "NO_OUTPUT") THEN
       type_number = CMFE_EQUATIONS_NO_OUTPUT
-    elseif (type_string == "EQUATIONS_TIMING_OUTPUT") then
+    ELSEIF (type_string == "EQUATIONS_TIMING_OUTPUT") THEN
       type_number = CMFE_EQUATIONS_TIMING_OUTPUT
-    elseif (type_string == "EQUATIONS_MATRIX_OUTPUT") then
+    ELSEIF (type_string == "EQUATIONS_MATRIX_OUTPUT") THEN
       type_number = CMFE_EQUATIONS_MATRIX_OUTPUT
-    elseif (type_string == "EQUATIONS_ELEMENT_MATRIX_OUTPUT") then
+    ELSEIF (type_string == "EQUATIONS_ELEMENT_MATRIX_OUTPUT") THEN
       type_number = CMFE_EQUATIONS_ELEMENT_MATRIX_OUTPUT
-    elseif (type_string == "U_VARIABLE") then
+    ELSEIF (type_string == "U_VARIABLE") THEN
       type_number = CMFE_FIELD_U_VARIABLE_TYPE
     ! class
-    elseif (type_string == "EQUATIONS_SET_ELASTICITY_CLASS") then
+    ELSEIF (type_string == "EQUATIONS_SET_ELASTICITY_CLASS") THEN
       type_number = CMFE_EQUATIONS_SET_ELASTICITY_CLASS
-    elseif (type_string == "EQUATIONS_SET_CLASSICAL_FIELD_CLASS") then
+    ELSEIF (type_string == "EQUATIONS_SET_CLASSICAL_FIELD_CLASS") THEN
       type_number = CMFE_EQUATIONS_SET_CLASSICAL_FIELD_CLASS
     ! TODO insert more classes.. TODO
     ! type
-    elseif (type_string == "EQUATIONS_SET_FINITE_ELASTICITY_TYPE") then
+    ELSEIF (type_string == "EQUATIONS_SET_FINITE_ELASTICITY_TYPE") THEN
       type_number = CMFE_EQUATIONS_SET_FINITE_ELASTICITY_TYPE
 
-    elseif (type_string == "EQUATIONS_SET_LAPLACE_EQUATION_TYPE") then
+    ELSEIF (type_string == "EQUATIONS_SET_LAPLACE_EQUATION_TYPE") THEN
       type_number = CMFE_EQUATIONS_SET_LAPLACE_EQUATION_TYPE
     ! subtype
-    elseif (type_string == "EQUATIONS_SET_MOONEY_RIVLIN_SUBTYPE") then
+    ELSEIF (type_string == "EQUATIONS_SET_MOONEY_RIVLIN_SUBTYPE") THEN
       type_number = CMFE_EQUATIONS_SET_MOONEY_RIVLIN_SUBTYPE
-    elseif (type_string == "EQUATIONS_SET_TRANSVERSE_ISOTROPIC_ACTIVE_SUBTYPE") then
+    ELSEIF (type_string == "EQUATIONS_SET_TRANSVERSE_ISOTROPIC_ACTIVE_SUBTYPE") THEN
       type_number = CMFE_EQUATIONS_SET_TRANSVERSE_ISOTROPIC_ACTIVE_SUBTYPE
-    elseif (type_string == "EQUATIONS_SET_STANDARD_LAPLACE_SUBTYPE") then
+    ELSEIF (type_string == "EQUATIONS_SET_STANDARD_LAPLACE_SUBTYPE") THEN
       type_number = CMFE_EQUATIONS_SET_STANDARD_LAPLACE_SUBTYPE
-    elseif (type_string == "GUESS_TYPE") then
+    ELSEIF (type_string == "GUESS_TYPE") THEN
       type_number = CMFE_FIELD_VALUES_SET_TYPE
-    elseif (type_string == "BOUNDARY_CONDITIONS_SET") then
+    ELSEIF (type_string == "BOUNDARY_CONDITIONS_SET") THEN
      type_number =  CMFE_FIELD_BOUNDARY_CONDITIONS_SET_TYPE
-    elseif (type_string == "UX_VALUE") then
+    ELSEIF (type_string == "UX_VALUE") THEN
      type_number =  1.0
-    elseif (type_string == "UY_VALUE") then
+    ELSEIF (type_string == "UY_VALUE") THEN
      type_number =  2.0
-    elseif (type_string == "UZ_VALUE") then
+    ELSEIF (type_string == "UZ_VALUE") THEN
      type_number =  3.0
     ! TODO insert more subtypes.. TODO
-    else
+    ELSE
       CALL handle_error("Invalid string "//type_string)
-    endif
 
-end function
+    ENDIF
+
+END FUNCTION
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!! THE FOLLOWING FUNCTION !!!!!!!!!!!!!!!!!!!!!!!!1
@@ -221,67 +225,72 @@ end function
 !!!!!!!!!!!!!!!!!!!!!!!!OF THE ANALYSIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
-function output_type(type_string) result (type_number)
+FUNCTION output_type(type_string) RESULT (type_number)
 
-    implicit none
+    IMPLICIT NONE
     character(*), intent(in) :: type_string
     integer                  :: type_number
     ! sparsity type
-    if (type_string == "EQUATIONS_SPARSE_MATRICES") then
+    IF (type_string == "EQUATIONS_SPARSE_MATRICES") THEN
       type_number = CMFE_EQUATIONS_SPARSE_MATRICES
-    elseif (type_string == "EQUATIONS_FULL_MATRICES") then
+    ELSEIF (type_string == "EQUATIONS_FULL_MATRICES") THEN
       type_number = CMFE_EQUATIONS_FULL_MATRICES
-    elseif (type_string == "SEPARATED") then
+    ELSEIF (type_string == "SEPARATED") THEN
       type_number = CMFE_FIELD_SEPARATED_COMPONENT_DOF_ORDER
     ! output type
-    elseif (type_string == "EQUATIONS_NO_OUTPUT") then
+    ELSEIF (type_string == "EQUATIONS_NO_OUTPUT") THEN
       type_number = CMFE_EQUATIONS_NO_OUTPUT
-    elseif (type_string == "EQUATIONS_TIMING_OUTPUT") then
+    ELSEIF (type_string == "EQUATIONS_TIMING_OUTPUT") THEN
       type_number = CMFE_EQUATIONS_TIMING_OUTPUT
-    elseif (type_string == "EQUATIONS_MATRIX_OUTPUT") then
+    ELSEIF (type_string == "EQUATIONS_MATRIX_OUTPUT") THEN
       type_number = CMFE_EQUATIONS_MATRIX_OUTPUT
-    elseif (type_string == "EQUATIONS_ELEMENT_MATRIX_OUTPUT") then
+    ELSEIF (type_string == "EQUATIONS_ELEMENT_MATRIX_OUTPUT") THEN
       type_number = CMFE_EQUATIONS_ELEMENT_MATRIX_OUTPUT
-    else
+    ELSE
+
       CALL handle_error("Invalid string "//type_string)
-    endif
-end function
+
+    ENDIF
+END FUNCTION
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!! THE FOLLOWING FUNCTION !!!!!!!!!!!!!!!!!!!!!!!!1
-!!!!!!!!!!!!!!!!!!!!!!!.READS KEYWORDDS TO DEFINE the dependent field!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!.READS KEYWORDDS TO DEFINE the depENDent field!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-function match_dependent_field(type_string) result (type_number)
+FUNCTION match_depENDent_field(type_string) RESULT (type_number)
     character(*), intent(in) :: type_string
     integer                  :: type_number
-    if (type_string == "FIELD_U_VARIABLE_TYPE") then
-    type_number = CMFE_FIELD_U_VARIABLE_TYPE
-    end if
-end function match_dependent_field
+    IF (type_string == "FIELD_U_VARIABLE_TYPE") THEN
+      type_number = CMFE_FIELD_U_VARIABLE_TYPE
+    END IF
+
+END FUNCTION match_depENDent_field
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!! THE FOLLOWING FUNCTION !!!!!!!!!!!!!!!!!!!!!!!!1
 !!!!!!!!!!!!!!!!!!!!!!!.READS KEYWORDDS TO DEFINE BCs!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-function bc_def(type_string) result (type_number)
+FUNCTION bc_def(type_string) RESULT (type_number)
     character(*), intent(in) :: type_string
     integer                :: type_number
 
-     if  (type_string == "RIGHT") then
+     IF  (type_string == "RIGHT") THEN
        type_number = CMFE_GENERATED_MESH_REGULAR_RIGHT_SURFACE
-     elseif (type_string == "LEFT") then
+     ELSEIF (type_string == "LEFT") THEN
        type_number = CMFE_GENERATED_MESH_REGULAR_LEFT_SURFACE
-     elseif (type_string == "FRONT") then
+     ELSEIF (type_string == "FRONT") THEN
        type_number = CMFE_GENERATED_MESH_REGULAR_FRONT_SURFACE
-     elseif (type_string == "BOTTOM") then
+     ELSEIF (type_string == "BOTTOM") THEN
        type_number = CMFE_GENERATED_MESH_REGULAR_BOTTOM_SURFACE
-     else
+     ELSE
+
        CALL handle_error("Invalid string "//type_string)
-     end if
-end function
+
+     END IF
+END FUNCTION
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -289,36 +298,42 @@ end function
 !!!!!!!!!!!!!!!!!!!!!!!.READS KEYWORDDS TO DEFINE SOLVER!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-function solver_def(type_string) result (type_number)
-    implicit none
+FUNCTION solver_def(type_string) RESULT (type_number)
+    IMPLICIT NONE
     character(*), intent(in) :: type_string
     integer                  :: type_number
-    if (type_string == "SPARSE_MATRIX") then
+    IF (type_string == "SPARSE_MATRIX") THEN
       type_number = CMFE_EQUATIONS_SPARSE_MATRICES
-    elseif (type_string == "FULL_MATRICES") then
+    ELSEIF (type_string == "FULL_MATRICES") THEN
       type_number = CMFE_EQUATIONS_FULL_MATRICES
-    elseif (type_string == "SEPARATED") then
+    ELSEIF (type_string == "SEPARATED") THEN
       type_number = CMFE_FIELD_SEPARATED_COMPONENT_DOF_ORDER
-    ! output type
-    elseif (type_string == "NO_OUTPUT") then
+    ELSEIF (type_string == "NO_OUTPUT") THEN
       type_number = CMFE_EQUATIONS_NO_OUTPUT
-    elseif (type_string == "EQUATIONS_TIMING_OUTPUT") then
+    ELSEIF (type_string == "EQUATIONS_TIMING_OUTPUT") THEN
       type_number = CMFE_EQUATIONS_TIMING_OUTPUT
-    elseif (type_string == "EQUATIONS_MATRIX_OUTPUT") then
+    ELSEIF (type_string == "EQUATIONS_MATRIX_OUTPUT") THEN
       type_number = CMFE_EQUATIONS_MATRIX_OUTPUT
-    elseif (type_string == "EQUATIONS_ELEMENT_MATRIX_OUTPUT") then
+    ELSEIF (type_string == "EQUATIONS_ELEMENT_MATRIX_OUTPUT") THEN
       type_number = CMFE_EQUATIONS_ELEMENT_MATRIX_OUTPUT
-    elseif (type_string == "SOLVER_LINEAR_DIRECT_SOLVE_TYPE") then
+    ELSEIF (type_string == "SOLVER_LINEAR_DIRECT_SOLVE_TYPE") THEN
       type_number = CMFE_SOLVER_LINEAR_DIRECT_SOLVE_TYPE
-    elseif (type_string == "ITERATIVE") then
+    ELSEIF (type_string == "ITERATIVE") THEN
       type_number = CMFE_SOLVER_LINEAR_ITERATIVE_SOLVE_TYPE
-    elseif (type_string == "INCREMENTAL") then
+    ELSEIF (type_string == "INCREMENTAL") THEN
       type_number = CMFE_PROBLEM_CONTROL_LOAD_INCREMENT_LOOP_TYPE
-    else
+    ELSEIF (type_string == "SOLVER_NEWTON_JACOBIAN_FD_CALCULATED") THEN
+      type_number = CMFE_SOLVER_NEWTON_JACOBIAN_FD_CALCULATED
+    ELSEIF (type_string == "SOLVER_NEWTON_JACOBIAN_EQUATIONS_CALCULATED") THEN
+      type_number = CMFE_SOLVER_NEWTON_JACOBIAN_EQUATIONS_CALCULATED
+    ELSEIF (type_string == "SOLVER_NEWTON_JACOBIAN_FD_CALCULATED") THEN
+      type_number = CMFE_SOLVER_NEWTON_JACOBIAN_FD_CALCULATED
+    ELSE
       CALL handle_error("Invalid string "//type_string)
-    endif
 
-end function
+    ENDIF
+
+END FUNCTION
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -326,43 +341,44 @@ end function
 !!!!!!!!!!!!!!!!!!!!!!!.READS KEYWORDDS TO DEFINE SOLVER!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-function control_loop_def(type_string) result (type_number)
-    implicit none
+FUNCTION control_loop_def(type_string) RESULT (type_number)
+    IMPLICIT NONE
     character(*), intent(in) :: type_string
     integer                  :: type_number
-    if (type_string == "CONTROL_LOAD_INCREMENT_LOOP_TYPE") then
+    IF (type_string == "CONTROL_LOAD_INCREMENT_LOOP_TYPE") THEN
       type_number = CMFE_PROBLEM_CONTROL_LOAD_INCREMENT_LOOP_TYPE
     !!! add more options later
-    else
+    ELSE
       CALL handle_error("Invalid string "//type_string)
-    endif
+    ENDIF
 
-end function
+END FUNCTION
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!! THE FOLLOWING FUNCTION !!!!!!!!!!!!!!!!!!!!!!!!1
 !!!!!!!!!!!!!!!!!!!!!!!.READS KEYWORDDS TO DEFINE MATERIALS!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-function material_parameters(type_string) result (type_number)
+FUNCTION material_parameters(type_string) RESULT (type_number)
 
-    implicit none
+    IMPLICIT NONE
     character(*), intent(in) :: type_string
     integer                 :: type_number
-    if (type_string == "EQUATIONS_SET_TRANSVERSE_ISOTROPIC_ACTIVE_SUBTYPE") then
+    IF (type_string == "EQUATIONS_SET_TRANSVERSE_ISOTROPIC_ACTIVE_SUBTYPE") THEN
       type_number = 5
-    else if (type_string == "EQUATIONS_SET_MOONEY_RIVLIN_SUBTYPE") then
+    ELSE IF (type_string == "EQUATIONS_SET_MOONEY_RIVLIN_SUBTYPE") THEN
        type_number =2
-    elseif (type_string == "EQUATIONS_SET_THREE_DIMENSIONAL_SUBTYPE")  then
+    ELSEIF (type_string == "EQUATIONS_SET_THREE_DIMENSIONAL_SUBTYPE")  THEN
       type_number = 2
-    else
+    ELSE
       CALL handle_error("Invalid string "//type_string)
-    endif
 
-end function material_parameters
+    ENDIF
+
+END FUNCTION material_parameters
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!! THE FOLLOWING function  !!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!! THE FOLLOWING FUNCTION  !!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!..used for error handling !!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 

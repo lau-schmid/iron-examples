@@ -54,6 +54,7 @@ MODULE parsing
 
   character(len=100),allocatable               :: Field_parsing(:), Field_arg1(:,:),Field_arg2(:,:), Field_arg3(:,:)            !! related to the Field.
 
+  character(len=100),allocatable               :: DecompositionParsing(:), DecompositionArguments(:,:)                        !! related to the Decompostion.
   contains
 
   !!!!!!!!!!!!!!!!!!!!!!!! FOLLOWING SUBROUTINE PARSE "FIELD  (GRAVITATIONAL FIELD etc. ) BLOCK" IN INPUT FILE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -475,7 +476,7 @@ MODULE parsing
   !!!!!!!!!!!!!!!!!!!!!!!!! FOLLOWING SUBROUTINE PARSE VERY BLOCK WITH SCALAR INPUTS     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
-  SUBROUTINE  parsing_subroutine(string,arguments,Rdline,num_of_arguments,string_tobe_parsed)
+  SUBROUTINE  parsing_subroutine(string,arguments,Rdline,num_of_arguments,string_tobe_parsed,ID)
 
 
     character(len=100),dimension(:,:)          :: arguments
@@ -485,20 +486,24 @@ MODULE parsing
     integer                                    :: m,num_of_arguments
 
 
-    IF (trim(Rdline)=="START_"// trim(string_tobe_parsed)) then
 
+    IF (trim(Rdline)=="START_"// trim(string_tobe_parsed)) then
+      ID = ID+1
       Readline:DO
 
         READ(12,'(A)',IOSTAT=FileStat), Rdline
         Rdline =  strip_space(Rdline)
         CALL remove_character(Rdline,"!")
         ! terminate upon encoutering END_start_string
-        IF (trim(Rdline)=="END_" // string_tobe_parsed ) EXIT
+
+        IF (trim(Rdline)=="END_" // string_tobe_parsed ) THEN
+          EXIT
+        END IF
 
         IF ( (trim(Rdline).NE."") .AND.  (trim(Rdline(:1)).NE."!")) then
           DO m = 1,num_of_arguments
             IF ((trim(Rdline)).EQ.string(m))  then
-              READ(12,'(A)',IOSTAT=FileStat), arguments(m,1)
+              READ(12,'(A)',IOSTAT=FileStat), arguments(m,ID)
               EXIT
             END IF
           END DO

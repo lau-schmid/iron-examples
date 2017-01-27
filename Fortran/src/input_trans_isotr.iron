@@ -127,6 +127,9 @@ NEWTON_TOLERANCE
 NONLINEAR_SOLVER
 ACTIVE
 
+JACOBIAN_TYPE
+SOLVER_NEWTON_JACOBIAN_FD_CALCULATED
+
 END_SOLVER_SETTINGS
 
 !!!!!!!!!!!!!!!! Defining cartesian coordinates !!!!!!!!!!!!!
@@ -149,11 +152,11 @@ START_DEPENDENT_FIELD
 DEPENDENT_FIELD_ID
 SOLID
 
-TYPE
+STATE_VARIABLE
 FIELD_U_VARIABLE_TYPE
 
 NUM_OF_COMPONENTS
-4
+3
 
 INITIAL_VALUE_OF_STATE_VARIABLE
 UNDEFORMED
@@ -187,27 +190,51 @@ END_MESH
 
 
 !!!!!!!!!!!!!!!!!!!! DEFINE BASIS !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!! DEFINE BASIS !!!!!!!!!!!!!!!!!!!!!!!!!!!!
 START_BASIS
+
+TYPE
+PRIMARY
 
 BASIS_ID
 SOLID
 
 COMPONENTS        !!! no. of DOFs each node
-4                 
-
-PRESSURE_BASIS 
-LINEAR_LAGRANGE_INTERPOLATION      
-
+3
 
 BASIS
-QUADRATIC_LAGRANGE_INTERPOLATION 
+QUADRATIC_LAGRANGE_INTERPOLATION
 
 NumberOfGaussXi
 3
 
 END_BASIS
 
+!!!!!!!!!!!!!!!!!!!! DEFINE PRESSURE BASIS !!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+START_BASIS
+
+TYPE
+SECONDARY
+
+BASIS_ID
+SOLID
+
+COMPONENTS        !!! no. of DOFs each node
+1
+
+
+BASIS
+LINEAR_LAGRANGE_INTERPOLATION
+
+NumberOfGaussXi
+3
+
+
+END_BASIS
+
+
+!!!!!!!!!!!!!!!!!1 DEFINE GRAVITY FIELD !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 START_FIELD
 
 FIELD_ID 

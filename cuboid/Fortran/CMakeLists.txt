@@ -1,5 +1,6 @@
 # Add example executable
 add_executable(cuboid src/FortranExample.f90)
+#add_executable(cuboid src/FortranExample_3.f90)
 
 # Turn on Fortran preprocessing (#include directives)
 if (MSVC)

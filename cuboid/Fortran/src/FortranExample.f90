@@ -70,6 +70,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !Test program parameters
   LOGICAL, PARAMETER :: DEBUGGING_ONLY_RUN_SHORT_PART_OF_SIMULATION = .FALSE.    ! only run one timestep of MAIN_LOOP with stimulus
   LOGICAL, PARAMETER :: DEBUGGING_OUTPUT_PROBLEM = .FALSE.    ! output information about problem data structure
+  LOGICAL, PARAMETER :: DEBUGGING_PARALLEL_BARRIER = .TRUE.   !
   INTEGER(CMISSINTg) :: RUN_SCENARIO = 3  !0 = default, 1 = short for testing, 2 = medium for testing, 3 = very short
   LOGICAL, PARAMETER :: DEBUGGING_OUTPUT = .FALSE.    ! enable information from solvers
   LOGICAL, PARAMETER :: OLD_TOMO_MECHANICS = .TRUE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
@@ -433,6 +434,9 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   IF (ComputationalNodeNumber == 0) PRINT*, "1.) Start solve before stimulation"
   Temp = GetMemoryConsumption()
   CALL cmfe_CustomSolverInfoReset(Err)
+  IF (DEBUGGING_PARALLEL_BARRIER) CALL gdbParallelDebuggingBarrier()
+
+
   CALL CPU_Time(TimeInitFinshed)
 
   CALL cmfe_Problem_Solve(Problem,Err)
@@ -468,7 +472,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !--------------------------------------------------------------------------------------------------------------------------------
   !--------------------------------------------------------------------------------------------------------------------------------
   IF (ComputationalNodeNumber == 0) PRINT*, "2.) Simulate with stimulation"
-  IF (ComputationalNodeNumber == 0) MemoryConsumptionBeforeSim = GetMemoryConsumption()
+  MemoryConsumptionBeforeSim = GetMemoryConsumption()
 
   CALL cmfe_CustomTimingGet(CustomTimingOdeSolver, CustomTimingParabolicSolver, CustomTimingFESolverBeforeMainSim, Err)
   IF (ComputationalNodeNumber == 0) PRINT*, "    Nonliner Solver duration: ", CustomTimingFESolverBeforeMainSim, " s"
@@ -2382,11 +2386,12 @@ FUNCTION GetMemoryConsumption()
 
   ! Critical Section
   DO I=0,NumberOfComputationalNodes
-    CALL MPI_BARRIER(MPI_COMM_WORLD, Err)
+    !CALL MPI_BARRIER(MPI_COMM_WORLD, Err)
     IF (I == ComputationalNodeNumber) THEN
 
       ! read memory page size
-      CALL SYSTEM("getconf PAGESIZE > pagesize", Stat)
+      Stat = 0
+      IF (I==0) CALL SYSTEM("getconf PAGESIZE > pagesize", Stat)
       IF (Stat == 0) THEN
         OPEN(UNIT=10, FILE="pagesize", ACTION="read", IOSTAT=Stat)
         IF (Stat == 0) THEN
@@ -2710,6 +2715,21 @@ SUBROUTINE HandleSolverInfo(TimeStep)
   ENDIF
 
 END SUBROUTINE HandleSolverInfo
+
+SUBROUTINE gdbParallelDebuggingBarrier()
+  INTEGER(CMISSIntg) :: Gdb_Resume
+  Gdb_Resume = 0
+
+  IF (NumberOfComputationalNodes > 1) THEN
+    PRINT*, "Node ", ComputationalNodeNumber, " is waiting for Gdb_Resume=", Gdb_Resume &
+      & , " to become 1 (gdb: set var gdb_resume = 1)!"
+    DO WHILE (Gdb_Resume == 0)
+      CALL Sleep(1)
+    ENDDO
+    PRINT*, "Node ", ComputationalNodeNumber, " resumes because gdb_resume=", Gdb_Resume, "."
+  ENDIF
+
+END SUBROUTINE gdbParallelDebuggingBarrier
 
 END PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 

@@ -20,6 +20,7 @@
   ALLOCATE (ProblemUserNumber(NumberOfProblem))
   ALLOCATE (FieldUserNumber(NumberOfProblem))
 
+
 !!!!!!!!!!!!!!!!!! Assigning tags. NOTE:  Each tag should be distinct !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
  UserNumberLabel = 1
@@ -96,6 +97,7 @@
 
        EquationSetUserNumber(i) = UserNumberLabel
        UserNumberLabel = UserNumberLabel + 1
+
  END DO
 
  DO i = 1, NumberOfEquationsSet
@@ -110,7 +112,7 @@
        UserNumberLabel = UserNumberLabel + 1
  END DO
 
- DO i = 1, NumberOfField
+ DO i = 1, NumberOfSourceField
 
         FieldUserNumber(i)  = UserNumberLabel
         UserNumberLabel = UserNumberLabel + 1

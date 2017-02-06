@@ -10,100 +10,100 @@
 
   TYPE basis_array
 
-    TYPE(cmfe_BasisType) 	         , allocatable :: Basis(:),PressureBasis(:)
+    TYPE(cmfe_BasisType) 	         , ALLOCATABLE :: Basis(:),PressureBasis(:)
 
   END TYPE basis_array
 
   TYPE boundary_conditions_array
 
-    TYPE(cmfe_BoundaryConditionsType)    , allocatable :: BoundaryConditions(:)
+    TYPE(cmfe_BoundaryConditionsType)    , ALLOCATABLE :: BoundaryConditions(:)
 
   END TYPE  boundary_conditions_array
 
   TYPE coordinate_system_array
 
-    TYPE(cmfe_CoordinateSystemType)      , allocatable :: CoordinateSystem(:), WorldCoordinateSystem(:)
+    TYPE(cmfe_CoordinateSystemType)      , ALLOCATABLE :: CoordinateSystem(:), WorldCoordinateSystem(:)
 
   END TYPE coordinate_system_array
 
   TYPE mesh_array
 
-    TYPE(cmfe_MeshType)                 , allocatable :: Mesh(:)
+    TYPE(cmfe_MeshType)                  , ALLOCATABLE :: Mesh(:)
 
   END TYPE  mesh_array
 
   TYPE decomposition_array
 
-    TYPE(cmfe_DecompositionType)       , allocatable :: Decomposition(:)
+    TYPE(cmfe_DecompositionType)         , ALLOCATABLE :: Decomposition(:)
 
   END TYPE  decomposition_array
 
   TYPE equations_array
 
-    TYPE(cmfe_EquationsType)           , allocatable :: Equations(:)
+    TYPE(cmfe_EquationsType)             , ALLOCATABLE :: Equations(:)
 
   END TYPE equations_array
 
   TYPE equations_set_array
 
-    TYPE(cmfe_EquationsSetType)        , allocatable :: EquationsSet(:)
+    TYPE(cmfe_EquationsSetType)          , ALLOCATABLE :: EquationsSet(:)
 
   END TYPE equations_set_array
 
   TYPE field_type_array
 
-    TYPE(cmfe_FieldType)            , allocatable :: GeometricField(:),FibreField(:),MaterialField(:),EquationsSetField(:)
+    TYPE(cmfe_FieldType)                 , ALLOCATABLE :: GeometricField(:),FibreField(:),MaterialField(:),EquationsSetField(:)
 
   END TYPE  field_type_array
 
   TYPE fields_type_array
 
-    TYPE(cmfe_FieldsType)           , allocatable ::  Fields(:)
+    TYPE(cmfe_FieldsType)                , ALLOCATABLE ::  Fields(:)
 
   END TYPE  fields_type_array
 
   TYPE problem_type
 
-    TYPE(cmfe_ProblemType)           , allocatable :: Problem(:)
+    TYPE(cmfe_ProblemType)               , ALLOCATABLE :: Problem(:)
 
   END TYPE  problem_type
 
   TYPE region_type
 
-    TYPE(cmfe_RegionType)            , allocatable :: Region(:),WorldRegion(:)
+    TYPE(cmfe_RegionType)                , ALLOCATABLE :: Region(:),WorldRegion(:)
 
   END TYPE region_type
 
   TYPE solver_type
 
-    TYPE(cmfe_SolverType)            , allocatable :: Solver(:),LinearSolver(:)
+    TYPE(cmfe_SolverType)                , ALLOCATABLE :: Solver(:),LinearSolver(:)
 
   END TYPE solver_type
 
 
   TYPE solvers_equations_type
 
-    TYPE(cmfe_SolverEquationsType)   , allocatable :: SolverEquations(:)
+    TYPE(cmfe_SolverEquationsType)       , ALLOCATABLE :: SolverEquations(:)
 
   END TYPE solvers_equations_type
 
   TYPE control_loop_type
 
-    TYPE(cmfe_ControlLoopType)       , allocatable :: ControlLoop(:)
+    TYPE(cmfe_ControlLoopType)           , ALLOCATABLE :: ControlLoop(:)
 
   END TYPE control_loop_type
 
   TYPE generate_mesh_type
 
-    TYPE(cmfe_GeneratedMeshType)     , allocatable :: GeneratedMesh(:)
+    TYPE(cmfe_GeneratedMeshType)         , ALLOCATABLE :: GeneratedMesh(:)
 
   END TYPE generate_mesh_type
 
-  TYPE depENDent_field_type
+  TYPE Dependent_field_type
 
-    TYPE(cmfe_FieldType)             , allocatable :: DepENDentField(:)
+    TYPE(cmfe_FieldType)                 , ALLOCATABLE :: DependentField(:),SourceField(:)
 
-  END TYPE depENDent_field_type
+  END TYPE Dependent_field_type
 
  !!!!!! INITIALIZING POINTER THAT POINT AT THE DATA STRUCTURES OF DERIVED TYPES !!!!!!!!!!!!!!!!
 
@@ -128,6 +128,6 @@
  TYPE(solvers_equations_type)	      :: all_SolverEquations
  TYPE(control_loop_type)	      :: all_ControlLoop
  TYPE(generate_mesh_type)             :: all_GeneratedMesh
- TYPE(depENDent_field_type) 	      :: all_DepENDentField
- TYPE(cmfe_FieldTYPE) 		      :: SourceField
+ TYPE(Dependent_field_type) 	      :: all_DependentField
+ TYPE(Dependent_field_type) 	      :: all_SourceField
 

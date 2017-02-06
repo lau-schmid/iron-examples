@@ -248,7 +248,7 @@ FUNCTION output_type(type_string) RESULT (type_number)
       type_number = CMFE_EQUATIONS_ELEMENT_MATRIX_OUTPUT
     ELSE
 
-      CALL handle_error("Invalid string "//type_string)
+      CALL handle_error("Invalid output string  "//type_string)
 
     ENDIF
 END FUNCTION
@@ -285,6 +285,8 @@ FUNCTION bc_def(type_string) RESULT (type_number)
        type_number = CMFE_GENERATED_MESH_REGULAR_FRONT_SURFACE
      ELSEIF (type_string == "BOTTOM") THEN
        type_number = CMFE_GENERATED_MESH_REGULAR_BOTTOM_SURFACE
+     ELSEIF (type_string == "TOP") THEN
+       type_number = CMFE_GENERATED_MESH_REGULAR_TOP_SURFACE
      ELSE
 
        CALL handle_error("Invalid string "//type_string)

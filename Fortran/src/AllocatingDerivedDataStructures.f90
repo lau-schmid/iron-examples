@@ -24,8 +24,8 @@
   NumberOfCoordinateSystem = 0
   NumberOfFiberField       = 0
   NumberOfPressureBasis    = 0
-  NumberOfField    = 0
-
+  NumberOfSourceField    = 0
+  NumberOfOutput   = 0
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!! PARSE INPUT FILE TO STORE INFORMATION. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   OPEN(12,file=InputFile ,status="old")
@@ -49,8 +49,8 @@
        CALL searching(rdline,"START_CONTROL_LOOP",NumberOfControlLoop)
        CALL searching(rdline,"START_FIBER_FIELD",NumberOfFiberField)
        CALL searching(rdline,"START_PRESSURE_BASIS",NumberOfPressureBasis)
-       CALL searching(rdline,"START_FIELD",NumberOfField)
-
+       CALL searching(rdline,"START_SOURCE_FIELD",NumberOfSourceField)
+       CALL searching(rdline,"START_OUTPUT",NumberOfOutput)
   END DO
   NumberOfDecomposition = NumberOfMesh               !! PLEASE IGNORE IT, I WILL FIX IT AFTER OUR MEETING
   NumberOfGeneratedMesh = NumberOfMesh    	     !! PLEASE IGNORE IT, I WILL FIX IT AFTER OUR MEETING
@@ -71,7 +71,7 @@
   ALLOCATE(all_FibreField%FibreField(NumberOfFiberField))
   ALLOCATE(all_MaterialField%MaterialField(NumberOfMaterialField))
   ALLOCATE(all_EquationsSetField%EquationsSetField(NumberOfEquationsSet))
-  ALLOCATE(all_Fields%Fields(NumberOfField))
+  ALLOCATE(all_Fields%Fields(NumberOfSourceField))
   ALLOCATE(all_Problem%Problem(NumberOfProblem))
   ALLOCATE(all_Region%Region(NumberOfRegion))
   ALLOCATE(all_WorldRegion%WorldRegion(NumberOfWorldRegion))
@@ -81,4 +81,5 @@
   ALLOCATE(all_ControlLoop%ControlLoop(1))     !! PLEASE IGNORE IT, I WILL FIX IT AFTER OUR MEETING
   ALLOCATE(all_GeneratedMesh%GeneratedMesh(NumberOfGeneratedMesh))
   ALLOCATE(all_DependentField%DependentField(NumberOfDependentField))
+  ALLOCATE(all_SourceField%SourceField(NumberOfSourceField))
 

@@ -39,7 +39,7 @@ MODULE parsing
                                                         & NewtonTolerance(:,:), NewtonJacobianType(:,:), &
                                                           & NonlinearSolver(:,:)
 
-    TYPE(CHARACTER(LEN=100)), ALLOCATABLE      :: CoordinateSystemId(:,:),CoordinateSystemType(:,:)
+    TYPE(CHARACTER(LEN=100)), ALLOCATABLE      :: CoordinateSystemId(:,:),CoordinateSystemType(:,:),CoordinateSystemDimension(:,:)
 
     TYPE(CHARACTER(LEN=100)), ALLOCATABLE      :: MeshID(:,:),MeshTopology(:,:),MeshGeometricParameters(:,:), &
                                                     & MeshNumberOfElements(:,:)
@@ -120,7 +120,6 @@ MODULE parsing
               Flag = .FALSE.
               READ(12,'(A)',IOSTAT=FileStat), Rdline
               CALL skip_blank_lines(Rdline)
-
               CALL remove_CHARACTER(Rdline,"!")
               Rdline =  strip_space(Rdline)
 

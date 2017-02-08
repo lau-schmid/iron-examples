@@ -34,8 +34,15 @@ FUNCTION match_problem(type_string) RESULT (type_number)
       type_number = CMFE_PROBLEM_FINITE_ELASTICITY_TYPE
     ELSEIF (type_string == "PROBLEM_LAPLACE_EQUATION_TYPE") THEN
       type_number = CMFE_PROBLEM_LAPLACE_EQUATION_TYPE
+    ELSEIF (type_string == "PROBLEM_NAVIER_STOKES_EQUATION_TYPE") THEN
+      type_number = CMFE_PROBLEM_NAVIER_STOKES_EQUATION_TYPE
     ELSEIF (type_string == "PROBLEM_STANDARD_LAPLACE_SUBTYPE") THEN
       type_number =  CMFE_PROBLEM_STANDARD_LAPLACE_SUBTYPE
+    ELSEIF (type_string == "PROBLEM_TRANSIENT_NAVIER_STOKES_SUBTYPE") THEN
+      type_number =  CMFE_PROBLEM_TRANSIENT_NAVIER_STOKES_SUBTYPE
+
+
+
     ! TODO add more types.. TODO
     ! subtype
     ELSEIF (type_string == "U_VARIABLE") THEN
@@ -48,7 +55,7 @@ FUNCTION match_problem(type_string) RESULT (type_number)
 
     ! TODO add more subtypes.. TODO
     ELSE
-      CALL handle_error("Invalid string "// type_string)
+      CALL handle_error("Invalid problem type argument "// type_string)
     ENDIF
 
 END FUNCTION
@@ -81,7 +88,7 @@ FUNCTION match_generated_mesh(type_string) RESULT (type_number)
     ELSEIF (type_string == "ELLIPSOID_MESH_TYPE") THEN
       type_number = CMFE_GENERATED_MESH_ELLIPSOID_MESH_TYPE
     ELSE
-      CALL handle_error("Invalid string "//type_string)
+      CALL handle_error("Invalid mesh argument  "//type_string)
 
     ENDIF
 END FUNCTION
@@ -148,7 +155,7 @@ FUNCTION match_coordinate_system(type_string) RESULT (type_number)
       type_number = 3
     ELSE
 
-      CALL handle_error("Invalid string "//type_string)
+      CALL handle_error("Invalid coordinate system argument  "//type_string)
 
     ENDIF
 
@@ -187,6 +194,8 @@ FUNCTION match_equations_set(type_string) RESULT (type_number)
       type_number = CMFE_EQUATIONS_SET_ELASTICITY_CLASS
     ELSEIF (type_string == "EQUATIONS_SET_CLASSICAL_FIELD_CLASS") THEN
       type_number = CMFE_EQUATIONS_SET_CLASSICAL_FIELD_CLASS
+    ELSEIF (type_string == "EQUATIONS_SET_FLUID_MECHANICS_CLASS") THEN
+      type_number = CMFE_EQUATIONS_SET_FLUID_MECHANICS_CLASS
     ! TODO insert more classes.. TODO
     ! type
     ELSEIF (type_string == "EQUATIONS_SET_FINITE_ELASTICITY_TYPE") THEN
@@ -194,6 +203,10 @@ FUNCTION match_equations_set(type_string) RESULT (type_number)
 
     ELSEIF (type_string == "EQUATIONS_SET_LAPLACE_EQUATION_TYPE") THEN
       type_number = CMFE_EQUATIONS_SET_LAPLACE_EQUATION_TYPE
+    ELSEIF (type_string == "EQUATIONS_SET_LAPLACE_EQUATION_TYPE") THEN
+      type_number = CMFE_EQUATIONS_SET_LAPLACE_EQUATION_TYPE
+    ELSEIF (type_string == "EQUATIONS_SET_NAVIER_STOKES_EQUATION_TYPE") THEN
+      type_number = CMFE_EQUATIONS_SET_NAVIER_STOKES_EQUATION_TYPE
     ! subtype
     ELSEIF (type_string == "EQUATIONS_SET_MOONEY_RIVLIN_SUBTYPE") THEN
       type_number = CMFE_EQUATIONS_SET_MOONEY_RIVLIN_SUBTYPE
@@ -201,6 +214,8 @@ FUNCTION match_equations_set(type_string) RESULT (type_number)
       type_number = CMFE_EQUATIONS_SET_TRANSVERSE_ISOTROPIC_ACTIVE_SUBTYPE
     ELSEIF (type_string == "EQUATIONS_SET_STANDARD_LAPLACE_SUBTYPE") THEN
       type_number = CMFE_EQUATIONS_SET_STANDARD_LAPLACE_SUBTYPE
+    ELSEIF (type_string == "EQUATIONS_SET_TRANSIENT_NAVIER_STOKES_SUBTYPE") THEN
+      type_number = CMFE_EQUATIONS_SET_TRANSIENT_NAVIER_STOKES_SUBTYPE
     ELSEIF (type_string == "GUESS_TYPE") THEN
       type_number = CMFE_FIELD_VALUES_SET_TYPE
     ELSEIF (type_string == "BOUNDARY_CONDITIONS_SET") THEN
@@ -213,7 +228,7 @@ FUNCTION match_equations_set(type_string) RESULT (type_number)
      type_number =  3.0
     ! TODO insert more subtypes.. TODO
     ELSE
-      CALL handle_error("Invalid string "//type_string)
+      CALL handle_error("Invalid equation set argument "//type_string)
 
     ENDIF
 
@@ -248,7 +263,7 @@ FUNCTION output_type(type_string) RESULT (type_number)
       type_number = CMFE_EQUATIONS_ELEMENT_MATRIX_OUTPUT
     ELSE
 
-      CALL handle_error("Invalid output string  "//type_string)
+      CALL handle_error("Invalid output argument  "//type_string)
 
     ENDIF
 END FUNCTION
@@ -259,14 +274,14 @@ END FUNCTION
 !!!!!!!!!!!!!!!!!!!!!!!.READS KEYWORDDS TO DEFINE the depENDent field!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-FUNCTION match_depENDent_field(type_string) RESULT (type_number)
+FUNCTION match_dependent_field(type_string) RESULT (type_number)
     character(*), intent(in) :: type_string
     integer                  :: type_number
     IF (type_string == "FIELD_U_VARIABLE_TYPE") THEN
       type_number = CMFE_FIELD_U_VARIABLE_TYPE
     END IF
 
-END FUNCTION match_depENDent_field
+END FUNCTION match_dependent_field
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -287,9 +302,12 @@ FUNCTION bc_def(type_string) RESULT (type_number)
        type_number = CMFE_GENERATED_MESH_REGULAR_BOTTOM_SURFACE
      ELSEIF (type_string == "TOP") THEN
        type_number = CMFE_GENERATED_MESH_REGULAR_TOP_SURFACE
+     ELSEIF (type_string == "BOUNDARY_CONDITION_FIXED") THEN
+       type_number = CMFE_BOUNDARY_CONDITION_FIXED
+     ELSEIF (type_string == "BOUNDARY_CONDITION_FIXED_INCREMENTED") THEN
+       type_number = CMFE_BOUNDARY_CONDITION_FIXED_INCREMENTED
      ELSE
-
-       CALL handle_error("Invalid string "//type_string)
+       CALL handle_error( type_string // " is an invalid boundary condition argument "//type_string)
 
      END IF
 END FUNCTION
@@ -331,7 +349,7 @@ FUNCTION solver_def(type_string) RESULT (type_number)
     ELSEIF (type_string == "SOLVER_NEWTON_JACOBIAN_FD_CALCULATED") THEN
       type_number = CMFE_SOLVER_NEWTON_JACOBIAN_FD_CALCULATED
     ELSE
-      CALL handle_error("Invalid string "//type_string)
+      CALL handle_error("Invalid solver argument "//type_string)
 
     ENDIF
 
@@ -349,9 +367,12 @@ FUNCTION control_loop_def(type_string) RESULT (type_number)
     integer                  :: type_number
     IF (type_string == "CONTROL_LOAD_INCREMENT_LOOP_TYPE") THEN
       type_number = CMFE_PROBLEM_CONTROL_LOAD_INCREMENT_LOOP_TYPE
-    !!! add more options later
+    ELSE IF (type_string == "CONTROL_TIME_LOOP_TYPE") THEN
+      type_number = CMFE_PROBLEM_CONTROL_TIME_LOOP_TYPE
+    ELSE IF (type_string == "CONTROL_TIME_INCREMENT_LOOP_TYPE") THEN
+      type_number = CMFE_PROBLEM_CONTROL_TIME_LOOP_TYPE
     ELSE
-      CALL handle_error("Invalid string "//type_string)
+      CALL handle_error("Invalid control loop argument  "//type_string)
     ENDIF
 
 END FUNCTION
@@ -370,10 +391,10 @@ FUNCTION material_parameters(type_string) RESULT (type_number)
       type_number = 5
     ELSE IF (type_string == "EQUATIONS_SET_MOONEY_RIVLIN_SUBTYPE") THEN
        type_number =2
-    ELSEIF (type_string == "EQUATIONS_SET_THREE_DIMENSIONAL_SUBTYPE")  THEN
+    ELSEIF (type_string == "EQUATIONS_SET_TRANSIENT_NAVIER_STOKES_SUBTYPE")  THEN
       type_number = 2
     ELSE
-      CALL handle_error("Invalid string "//type_string)
+      CALL handle_error("Invalid material argument "//type_string)
 
     ENDIF
 

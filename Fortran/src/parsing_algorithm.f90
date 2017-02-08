@@ -6,9 +6,10 @@ ALLOCATE(RegionKeyWords(1))
 RegionKeyWords(1) = "REGION_ID"
 !! Might need to add more functinalities later
 
-ALLOCATE(CoordinateSystemKeywords(2))
+ALLOCATE(CoordinateSystemKeywords(3))
 CoordinateSystemKeywords(1) = "CARTESIAN_SYSTEM_ID"
 CoordinateSystemKeywords(2) = "TYPE"
+CoordinateSystemKeywords(3) = "DIMENSION"
 
 ALLOCATE(ControlLoopKeyWords(4))                                                               !! Allocation of "ControlLoop BLock " related Data Structures.
 ControlLoopKeyWords(1) = "CONTROL_LOOP_ID"
@@ -149,6 +150,7 @@ ALLOCATE(Solver%NonlinearSolver(1,NumberOfSolver))
 
 ALLOCATE(CoordinateSystem%CoordinateSystemId(1,NumberOfCoordinateSystem))
 ALLOCATE(CoordinateSystem%CoordinateSystemType(1,NumberOfCoordinateSystem))
+ALLOCATE(CoordinateSystem%CoordinateSystemDimension(1,NumberOfCoordinateSystem))
 
 ALLOCATE(Mesh%MeshID(1,NumberOfMesh))
 ALLOCATE(Mesh%MeshTopology(1,NumberOfMesh))
@@ -161,7 +163,7 @@ ALLOCATE(Decomposition%DecompositionFaceActive(1,1)) !! Always 1
 ALLOCATE(DependentField%DependentFieldID(1,NumberOfDependentField))
 ALLOCATE(DependentField%DependentFieldStateVariable(1,NumberOfDependentField))
 ALLOCATE(DependentField%DependentFieldNumberOfComponents(1,NumberOfDependentField))
-ALLOCATE(DependentField%DependentFieldInitialValueOfStateVector(1,NumberOfDependentField))
+ALLOCATE(DependentField%DependentFieldInitialValueOfStateVector(3,NumberOfDependentField))
 ALLOCATE(DependentField%DependentFieldInitialValueOfStateScalar(1,NumberOfDependentField))
 
 
@@ -174,7 +176,7 @@ ALLOCATE(Region%RegionId(1,NumberOfRegion))
 
 ALLOCATE(ControlLoop%ControlLoopId(1,NumberOfControlLoop))
 ALLOCATE(ControlLoop%ControlLoopType(1,NumberOfControlLoop))
-ALLOCATE(ControlLoop%ControlLoopTimeIncrement(1,NumberOfControlLoop))
+ALLOCATE(ControlLoop%ControlLoopTimeIncrement(3,NumberOfControlLoop))
 ALLOCATE(ControlLoop%ControlLoopLoadIncrement(3,NumberOfControlLoop))
 
 ALLOCATE(SourceField%SourceFieldId(1,NumberOfSourceField))
@@ -236,9 +238,10 @@ DO WHILE (TRIM(rdline).NE."STOP_PARSING")
                                   & Solver%NewtonTolerance(:,SolverSettingsId), &
                                     & Solver%NonlinearSolver(:,SolverSettingsId),Solver%NewtonJacobianType(:,SolverSettingsId))
 
-  CALL GenericParsing(CoordinateSystemKeyWords,"COORDINATE_SYSTEM",2,CoordinateSystemId,rdline, &
+  CALL GenericParsing(CoordinateSystemKeyWords,"COORDINATE_SYSTEM",3,CoordinateSystemId,rdline, &
                        & CoordinateSystem%CoordinateSystemId(:,CoordinateSystemId), &
-                         & CoordinateSystem%CoordinateSystemType(:,CoordinateSystemId))
+                         & CoordinateSystem%CoordinateSystemType(:,CoordinateSystemId), &
+                           & CoordinateSystem%CoordinateSystemDimension(:,CoordinateSystemId))
 
   CALL GenericParsing(MeshKeyWords,"MESH",4,MeshSettingsId,rdline, Mesh%MeshId(:,MeshSettingsId), &
                         & Mesh%MeshTopology(:,MeshSettingsId), Mesh%MeshGeometricParameters(:,MeshSettingsId), &

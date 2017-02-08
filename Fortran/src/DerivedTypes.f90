@@ -76,7 +76,7 @@
 
   TYPE solver_type
 
-    TYPE(cmfe_SolverType)                , ALLOCATABLE :: Solver(:),LinearSolver(:)
+    TYPE(cmfe_SolverType)                , ALLOCATABLE :: Solver(:),LinearSolver(:),NonLinearSolver(:)
 
   END TYPE solver_type
 
@@ -125,6 +125,7 @@
  TYPE(region_type)		      :: all_WorldRegion
  TYPE(solver_type)		      :: all_Solver
  TYPE(solver_type)		      :: all_LinearSolver
+ TYPE(solver_type)		      :: all_NonLinearSolver
  TYPE(solvers_equations_type)	      :: all_SolverEquations
  TYPE(control_loop_type)	      :: all_ControlLoop
  TYPE(generate_mesh_type)             :: all_GeneratedMesh

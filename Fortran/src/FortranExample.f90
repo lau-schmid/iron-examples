@@ -220,11 +220,12 @@ PROGRAM GENERICEXAMPLE
 
   DO  CsysIdx = 1,NumberOfCoordinateSystem
     !Create a 3D rectangular cartesian coordinate system
-
     CALL cmfe_CoordinateSystem_Initialise(all_CoordinateSystem%CoordinateSystem(CsysIdx),Err)
     CALL cmfe_CoordinateSystem_CreateStart(CoordinateSystemUserNumber(CsysIdx),all_CoordinateSystem%CoordinateSystem(CsysIdx),Err)
     CALL cmfe_CoordinateSystem_TypeSet(CoordinateSystemUserNumber(CsysIdx), &
-     & match_coordinate_system(CoordinateSystem%CoordinateSystemType(1,CsysIdx)), err)
+      & match_coordinate_system(CoordinateSystem%CoordinateSystemType(1,CsysIdx)), err)
+    CALL cmfe_CoordinateSystem_DimensionSet(all_CoordinateSystem%CoordinateSystem(CsysIdx), &
+      & match_coordinate_system(CoordinateSystem%CoordinateSystemDimension(1,CsysIdx)),Err)
     CALL cmfe_CoordinateSystem_CreateFinish(all_CoordinateSystem%CoordinateSystem(CsysIdx),Err)
 
   END DO ! CsysIdx
@@ -255,6 +256,8 @@ PROGRAM GENERICEXAMPLE
     NumberOfGaussXi(1) = str2int(Basis%BasisNumberOfGaussPoints(1,BasisIdx))
     NumberOfGaussXi(2) = str2int(Basis%BasisNumberOfGaussPoints(2,BasisIdx))
     NumberOfGaussXi(3) = str2int(Basis%BasisNumberOfGaussPoints(3,BasisIdx))
+
+
 
       !Define geometric basis
 
@@ -352,13 +355,13 @@ PROGRAM GENERICEXAMPLE
     ! 1D case
     IF(NumberGlobalYElements==0 .AND. NumberGlobalZElements==0) THEN
 
-      CALL cmfe_GeneratedMesh_ExtentSet(all_GeneratedMesh%GeneratedMesh(MeshIdx),[Width],Err)
+      CALL cmfe_GeneratedMesh_ExtentSet(all_GeneratedMesh%GeneratedMesh(MeshIdx),[Height],Err)
       CALL cmfe_GeneratedMesh_NumberOfElementsSet(all_GeneratedMesh%GeneratedMesh(MeshIdx), &
        & [NumberGlobalXElements],Err)
+    ! 2D case
+    ELSE IF (NumberGlobalZElements==0) THEN
 
-    ELSEIF (NumberGlobalZElements==0) THEN
-
-      CALL cmfe_GeneratedMesh_ExtentSet(all_GeneratedMesh%GeneratedMesh(MeshIdx),[Width,Height],Err)
+      CALL cmfe_GeneratedMesh_ExtentSet(all_GeneratedMesh%GeneratedMesh(MeshIdx),[Height,Width],Err)
       CALL cmfe_GeneratedMesh_NumberOfElementsSet(all_GeneratedMesh%GeneratedMesh(MeshIdx), &
         & [NumberGlobalXElements,NumberGlobalYElements],Err)
 
@@ -388,7 +391,7 @@ PROGRAM GENERICEXAMPLE
     CALL cmfe_Decomposition_TypeSet(all_Decomposition%Decomposition(DecompositionIdx),CMFE_DECOMPOSITION_CALCULATED_TYPE,Err)
     CALL cmfe_Decomposition_NumberOfDomainsSet(all_Decomposition%Decomposition(DecompositionIdx),NumberOfDomains,Err)
 
-    IF (Decomposition%DecompositionFaceActive(1,1) == "ACTIVE") then 
+    IF (Decomposition%DecompositionFaceActive(1,DecompositionIdx) == "ACTIVE") then 
       CALL cmfe_Decomposition_CalculateFacesSet(all_Decomposition%Decomposition(DecompositionIdx),.TRUE.,Err)
     END IF
 
@@ -444,12 +447,14 @@ PROGRAM GENERICEXAMPLE
       CALL cmfe_Field_ComponentValuesInitialise(all_FibreField%FibreField(FiberFieldIdx), &
         & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
           & str2real(FibreField%FibreFieldParameters(2,NumberOfFiberField)),Err)
+
     END IF
 
     IF ( NumberGlobalZElements .NE. 0) THEN
       CALL cmfe_Field_ComponentValuesInitialise(all_FibreField%FibreField(FiberFieldIdx), &
         & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3, &
           & str2real(FibreField%FibreFieldParameters(3,NumberOfFiberField)),Err)
+
     END IF
 
   END DO   !!!!! END LOOP FOR Fiber FIELD
@@ -505,17 +510,20 @@ PROGRAM GENERICEXAMPLE
 
     END DO
 
-
     IF(UsePressureBasis) THEN
-
-      CALL cmfe_Field_ComponentInterpolationSet(all_DependentField%DependentField(DependentFieldIdx), &
-        & CMFE_FIELD_U_VARIABLE_TYPE,4,CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
-      CALL cmfe_Field_ComponentInterpolationSet(all_DependentField%DependentField(DependentFieldIdx), &
-        & CMFE_FIELD_DELUDELN_VARIABLE_TYPE,4, CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
+      IF (NumberOfComponents .GT. 2) THEN !! HARD CODED DUE TO AN ISSUE, WILL BE REMOVED AFTER THE NEXT MEETING.
+        CALL cmfe_Field_ComponentInterpolationSet(all_DependentField%DependentField(DependentFieldIdx), &
+          & CMFE_FIELD_U_VARIABLE_TYPE,NumberOfComponents+1,CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
+        CALL cmfe_Field_ComponentInterpolationSet(all_DependentField%DependentField(DependentFieldIdx), &
+          & CMFE_FIELD_DELUDELN_VARIABLE_TYPE,NumberOfComponents+1, CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
+      END IF
+  
       CALL cmfe_Field_ComponentMeshComponentSet( &
-        & all_DependentField%DependentField(DependentFieldIdx),CMFE_FIELD_U_VARIABLE_TYPE,4,2,Err)
+        & all_DependentField%DependentField(DependentFieldIdx),CMFE_FIELD_U_VARIABLE_TYPE, &
+          & NumberOfComponents+1,2,Err)
       CALL cmfe_Field_ComponentMeshComponentSet( &
-        & all_DependentField%DependentField(DependentFieldIdx),CMFE_FIELD_DELUDELN_VARIABLE_TYPE,4,2,Err)
+        & all_DependentField%DependentField(DependentFieldIdx),CMFE_FIELD_DELUDELN_VARIABLE_TYPE, &
+          & NumberOfComponents+1,2,Err)
 
     END IF
 
@@ -536,7 +544,7 @@ PROGRAM GENERICEXAMPLE
 
         CALL cmfe_Field_ComponentValuesInitialise(all_DependentField%DependentField(DependentFieldIdx), &
           &  CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,ComponentIdx, &
-            & str2real(DependentField%DependentFieldInitialValueOfStateVector(1,DependentFieldIdx)),Err)
+            & str2real(DependentField%DependentFieldInitialValueOfStateVector(ComponentIdx,DependentFieldIdx)),Err)
 
        END DO 
     END IF  ! TRIM(DependentField_arguments(4,DependentFieldIdx)) == "UNDEFORMED")
@@ -544,7 +552,7 @@ PROGRAM GENERICEXAMPLE
     IF(UsePressureBasis) THEN
 
       CALL cmfe_Field_ComponentValuesInitialise(all_DependentField%DependentField(DependentFieldIdx), &
-        &  CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,4, &
+        &  CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,NUmberOfComponents+1, &
           & str2real(DependentField%DependentFieldInitialValueOfStateScalar(1,DependentFieldIdx)),Err)
 
     END IF
@@ -625,7 +633,7 @@ PROGRAM GENERICEXAMPLE
     CALL cmfe_Problem_CreateFinish(all_Problem%Problem(ProblemIdx),Err)
 
   END DO ! ProblemIdx
-
+ 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   CONTROL LOOP BLOCK           !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   DO ControlLoopIdx = 1,NumberOfControlLoop 
     !Create the problem control loop
@@ -635,11 +643,24 @@ PROGRAM GENERICEXAMPLE
       & all_ControlLoop%ControlLoop(ControlLoopIdx),Err)
     CALL cmfe_ControlLoop_TypeSet(all_ControlLoop%ControlLoop(ControlLoopIdx), &
       & control_loop_def(ControlLoop%ControlLoopType(1,ControlLoopIdx)),Err)
-   !CALL cmfe_ControlLoop_TimesSet(ControlLoop,StartTime,StopTime,TimeIncrement,Err)
-   !CALL cmfe_ControlLoop_TimeOutputSet(ControlLoop,1,Err)
-    CALL cmfe_ControlLoop_LoaDOutputSet(all_ControlLoop%ControlLoop(ControlLoopIdx),1,Err)
-    CALL cmfe_ControlLoop_MaximumIterationsSet(all_ControlLoop%ControlLoop(ControlLoopIdx), &
-      & str2int(ControlLoop%ControlLoopLoadIncrement(1,ControlLoopIdx)),Err)
+
+    SELECT CASE(control_loop_def(ControlLoop%ControlLoopType(1,ControlLoopIdx)))
+      CASE (CMFE_PROBLEM_CONTROL_LOAD_INCREMENT_LOOP_TYPE)
+
+        CALL cmfe_ControlLoop_MaximumIterationsSet(all_ControlLoop%ControlLoop(ControlLoopIdx), &
+          & str2int(ControlLoop%ControlLoopLoadIncrement(1,ControlLoopIdx)),Err)
+        CALL cmfe_ControlLoop_LoaDOutputSet(all_ControlLoop%ControlLoop(ControlLoopIdx),1,Err)
+
+      CASE (CMFE_PROBLEM_CONTROL_TIME_LOOP_TYPE)
+
+        CALL cmfe_ControlLoop_TimesSet(all_ControlLoop%ControlLoop(ControlLoopIdx), &
+          & str2real(ControlLoop%ControlLoopTimeIncrement(1,ControlLoopIdx)), &
+            & str2real(ControlLoop%ControlLoopTimeIncrement(2,ControlLoopIdx)), &
+              &  str2real(ControlLoop%ControlLoopTimeIncrement(3,ControlLoopIdx)),Err)
+        CALL cmfe_ControlLoop_TimeOutputSet(all_ControlLoop%ControlLoop(ControlLoopIdx),1,Err)
+
+    END SELECT
+
     CALL cmfe_Problem_ControlLoopCreateFinish(all_Problem%Problem(ControlLoopIdx),Err)
 
   END DO ! ControlLoopIdx
@@ -650,20 +671,52 @@ PROGRAM GENERICEXAMPLE
     !Create the problem solvers
     CALL cmfe_Solver_Initialise(all_Solver%Solver(solverIdx),Err)
     CALL cmfe_Solver_Initialise(all_LinearSolver%LinearSolver(solverIdx),Err)
+
+
     CALL cmfe_Problem_SolversCreateStart(all_Problem%Problem(solverIdx),Err)
     CALL cmfe_Problem_SolverGet(all_Problem%Problem(solverIdx),CMFE_CONTROL_LOOP_NODE,1,all_Solver%Solver(solverIdx),Err)
     CALL cmfe_Solver_OutputTypeSet(all_Solver%Solver(solverIdx),CMFE_SOLVER_PROGRESS_OUTPUT,Err)
-    IF (TRIM(Solver%NonlinearSolver(1,solverIdx)) == "ACTIVE") THEN
-      CALL cmfe_Solver_NewtonJacobianCalculationTypeSet(all_Solver%Solver(solverIdx), &
-                                                         & solver_def(Solver%NewtonJacobianType(1,solverIdx)),Err)
-      CALL cmfe_Solver_NewtonLinearSolverGet(all_Solver%Solver(solverIdx),all_LinearSolver%LinearSolver(solverIdx),Err)
-      CALL cmfe_Solver_LinearTypeSet(all_LinearSolver%LinearSolver(solverIdx),solver_def(Solver%SolverType(1,solverIdx)),Err)
-      CALL cmfe_Solver_NewtonRelativeToleranceSet(all_Solver%Solver(solverIdx), &
-                                                   & str2real(Solver%NewtonTolerance(1,solverIdx)),Err)
-      CALL cmfe_Solver_NewtonAbsoluteToleranceSet(all_Solver%Solver(solverIdx), &
-                                                    & str2real(Solver%NewtonTolerance(1,solverIdx)),Err)
-      CALL cmfe_Solver_NewtonMaximumIterationsSet(all_Solver%Solver(solverIdx),str2int(Solver%NewtonMaxIterations(1,solverIdx)),Err)
-    ENDIF
+
+    IF ((TRIM(Solver%NonlinearSolver(1,solverIdx)) == "STATIC_NONLINEAR") .OR. &
+      & (TRIM(Solver%NonlinearSolver(1,solverIdx)) == "DYNAMIC_NONLINEAR") ) THEN
+
+      CALL cmfe_Solver_Initialise(all_NonLinearSolver%NonLinearSolver(solverIdx),Err)
+
+      IF (TRIM(Solver%NonlinearSolver(1,solverIdx)) == "STATIC_NONLINEAR") THEN
+
+        all_NonLinearSolver%NonLinearSolver(solverIdx) = all_Solver%Solver(solverIdx)
+
+      ELSE IF (TRIM(Solver%NonlinearSolver(1,solverIdx)) == "DYNAMIC_NONLINEAR") THEN
+
+        CALL cmfe_Solver_DynamicThetaSet(all_Solver%Solver(solverIdx),1.0_CMISSRP,Err)
+
+        CALL cmfe_Solver_DynamicNonlinearSolverGet(all_Solver%Solver(solverIdx), &
+          & all_NonlinearSolver%NonlinearSolver(solveridx),Err)
+
+      END IF
+
+      CALL cmfe_Solver_NewtonJacobianCalculationTypeSet(all_NonLinearSolver%NonLinearSolver(solverIdx), &
+        & solver_def(Solver%NewtonJacobianType(1,solverIdx)),Err)
+
+
+      CALL cmfe_Solver_NewtonLinearSolverGet(all_NonlinearSolver%NonlinearSolver(solveridx), &
+        & all_LinearSolver%LinearSolver(solverIdx),Err)
+
+      CALL cmfe_Solver_NewtonRelativeToleranceSet(all_NonlinearSolver%NonlinearSolver(solveridx), &
+        & str2real(Solver%NewtonTolerance(1,solverIdx)),Err)
+
+      CALL cmfe_Solver_NewtonAbsoluteToleranceSet(all_NonlinearSolver%NonlinearSolver(solveridx), &
+        & str2real(Solver%NewtonTolerance(1,solverIdx)),Err)
+
+      CALL cmfe_Solver_NewtonMaximumIterationsSet(all_NonlinearSolver%NonlinearSolver(solveridx), &
+        & str2int(Solver%NewtonMaxIterations(1,solverIdx)),Err)
+
+      CALL cmfe_Solver_OutputTypeSet(all_NonlinearSolver%NonlinearSolver(solveridx),CMFE_SOLVER_PROGRESS_OUTPUT,Err)
+      CALL cmfe_Solver_OutputTypeSet(all_LinearSolver%LinearSolver(solverIdx),CMFE_SOLVER_NO_OUTPUT,Err)
+      CALL cmfe_Solver_LinearTypeSet(all_LinearSolver%LinearSolver(solverIdx), &
+        & solver_def(Solver%SolverType(1,solverIdx)),Err)
+      CALL cmfe_Solver_LibraryTypeSet(all_LinearSolver%LinearSolver(solverIdx),CMFE_SOLVER_MUMPS_LIBRARY,Err)
+    END IF
 
     CALL cmfe_Problem_SolversCreateFinish(all_Problem%Problem(solverIdx),Err)
 
@@ -690,8 +743,8 @@ PROGRAM GENERICEXAMPLE
     DO i = 1,NumberOfDirichelet
 
       CALL cmfe_GeneratedMesh_SurfaceGet(all_GeneratedMesh%GeneratedMesh(BOundaryConditionIdx), &
-        & bc_def(BoundaryDirichelet(2+4*(i-1),BOundaryConditionIdx)),SurfaceNodes,LeftNormalXi,Err)
-
+        & bc_def(BoundaryDirichelet(2+5*(i-1),BOundaryConditionIdx)),SurfaceNodes,LeftNormalXi,Err)
+      
       DO nodeIdx=1,SIZE(SurfaceNodes,1)
         NodeNumber=SurfaceNodes(nodeIdx)
 
@@ -699,17 +752,17 @@ PROGRAM GENERICEXAMPLE
 
         IF(NodeDOmain==ComputationalNodeNumber) THEN
 
-
           DO ComponentIdx=1,NumberOfComponents
 
-            Constraint =  BoundaryDirichelet(3+4*(i-1),BOundaryConditionIdx)
+            Constraint =  BoundaryDirichelet(3+5*(i-1),BoundaryConditionIdx)
 
             IF (TRIM(Constraint(ComponentIdx:ComponentIdx)) == "1") THEN
 
-              CALL cmfe_BoundaryConditions_SetNode(all_BoundaryConditions%BoundaryConditions(BOundaryConditionIdx), &
+              CALL cmfe_BoundaryConditions_SetNode(all_BoundaryConditions%BoundaryConditions(BoundaryConditionIdx), &
                 & all_DependentField%DependentField(BOundaryConditionIdx), &
-                  & CMFE_FIELD_U_VARIABLE_TYPE,1,1,NodeNumber, ComponentIdx,CMFE_BOUNDARY_CONDITION_FIXED_INCREMENTED, &
-                    & str2real(BoundaryDirichelet(4+4*(i-1),BOundaryConditionIdx)),Err)
+                  & CMFE_FIELD_U_VARIABLE_TYPE,1,1,NodeNumber, ComponentIdx, &
+                    & bc_def(BoundaryDirichelet(5+5*(i-1),BOundaryConditionIdx)), &
+                      & str2real(BoundaryDirichelet(4+5*(i-1),BOundaryConditionIdx)),Err)
 
             END IF  ! (TRIM(Constraint(ComponentIdx:ComponentIdx)) == "1")
           END DO  ! ComponentIdx=1,3

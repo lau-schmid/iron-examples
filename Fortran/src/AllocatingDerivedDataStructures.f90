@@ -77,6 +77,7 @@
   ALLOCATE(all_WorldRegion%WorldRegion(NumberOfWorldRegion))
   ALLOCATE(all_Solver%Solver(NumberOfSolver))
   ALLOCATE(all_LinearSolver%LinearSolver(NumberOfSolver))
+  ALLOCATE(all_NonLinearSolver%NonLinearSolver(NumberOfSolver))
   ALLOCATE(all_SolverEquations%SolverEquations(NumberOfSolver))
   ALLOCATE(all_ControlLoop%ControlLoop(1))     !! PLEASE IGNORE IT, I WILL FIX IT AFTER OUR MEETING
   ALLOCATE(all_GeneratedMesh%GeneratedMesh(NumberOfGeneratedMesh))

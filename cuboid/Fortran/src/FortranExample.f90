@@ -69,7 +69,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !--------------------------------------------------------------------------------------------------------------------------------
   !Test program parameters
   LOGICAL, PARAMETER :: DEBUGGING_ONLY_RUN_SHORT_PART_OF_SIMULATION = .FALSE.    ! only run one timestep of MAIN_LOOP with stimulus
-  LOGICAL, PARAMETER :: DEBUGGING_OUTPUT_PROBLEM = .FALSE.    ! output information about problem data structure
+  LOGICAL, PARAMETER :: DEBUGGING_OUTPUT_PROBLEM = .TRUE.    ! output information about problem data structure
   LOGICAL, PARAMETER :: DEBUGGING_PARALLEL_BARRIER = .FALSE.   !
   INTEGER(CMISSINTg) :: RUN_SCENARIO = 2  !0 = default, 1 = short for testing, 2 = medium for testing, 3 = very short
   LOGICAL, PARAMETER :: DEBUGGING_OUTPUT = .FALSE.    ! enable information from solvers
@@ -416,7 +416,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   IF (DEBUGGING_OUTPUT_PROBLEM .AND. ComputationalNodeNumber == 0) THEN
     PRINT*, ""
     PRINT*, ""
-    CALL cmfe_PrintProblemType(Problem,Err)
+    CALL cmfe_PrintProblem(Problem,6,30,Err)
     PRINT*, ""
     PRINT*, ""
     !PRINT*, "End the program after output of problem datastructure"
@@ -542,7 +542,9 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
           !PRINT*, "MotorUnitFiringTimes row k=", k, ": MU rank=", MotorUnitRank, ", StimComponent=",StimComponent
           MotorUnitFires = MotorUnitFiringTimes(k, MotorUnitRank)   ! determine if mu fires
           IF (MotorUnitFires == 1) THEN
-            !PRINT*, "k=", k, ": MU ", MotorUnitRank, " fires, StimComponent=",StimComponent,", STIM_VALUE=",STIM_VALUE
+            PRINT*, "k=", k, ": MU ", MotorUnitRank, " fires, JunctionNodeNo=",JunctionNodeNo, &
+              & ", StimComponent=",StimComponent,", STIM_VALUE=",STIM_VALUE
+
             CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
               & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,JunctionNodeNo,StimComponent,STIM_VALUE,Err)
           ENDIF
@@ -740,6 +742,7 @@ SUBROUTINE ReadInputFiles()
   DO I = 1, 10000
     READ(5,*,iostat=Status) MotorUnitFiringTimes(I,:)
     IF (Status /= 0) THEN
+      IF (ComputationalNodeNumber == 0) PRINT*,  "File """ // TRIM(FiringTimesFile) // """ contains ", I, " firing times."
       EXIT
     ENDIF
   ENDDO
@@ -2119,7 +2122,9 @@ SUBROUTINE CreateControlLoops()
     ! CONTROL_LOOP_NO_OUTPUT = 0 !<No output from the control loop (no output of MainTime_* files)
     ! CONTROL_LOOP_PROGRESS_OUTPUT = 1 !<Progress output from control loop (also output MainTime_* files)
     ! CONTROL_LOOP_TIMING_OUTPUT = 2 !<Timing output from the control loop
-    CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,cmfe_CONTROL_LOOP_PROGRESS_OUTPUT,Err)
+    ! CONTROL_LOOP_FILE_OUTPUT = -1
+    !CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,cmfe_CONTROL_LOOP_FILE_OUTPUT,Err)
+    CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,-1,Err)
   ENDIF
 
 

@@ -49,7 +49,7 @@
 				<Option type="4" />
 				<Option compiler="gfortran" />
 				<ExtraCommands>
-					<Add before="cd /store/DiHu/software/opencmiss/2_iron_thomas_unofficial/manage/build_release &amp;&amp; make clean &amp;&amp; time make all &amp;&amp; make insitall" />
+					<Add before="cd /store/DiHu/software/opencmiss/2_iron_thomas_unofficial/manage/build_release_no_profiling &amp;&amp; make clean &amp;&amp; time make all &amp;&amp; make insitall" />
 				</ExtraCommands>
 			</Target>
 			<Target title="build iron debug + release">

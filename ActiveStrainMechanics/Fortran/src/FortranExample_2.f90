@@ -587,11 +587,13 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   !Create the DAE solver
   CALL cmfe_Solver_Initialise(SolverDAE,Err)
-  CALL cmfe_Problem_SolverGet(Problem,CMFE_CONTROL_LOOP_NODE,1,SolverDAE,Err)
-  CALL cmfe_Solver_DAETimeStepSet(SolverDAE,ODE_TIME_STEP,Err)
-  CALL cmfe_Solver_DAETimesSet(SolverDAE,0.0_CMISSRP,0.001_CMISSRP,Err)!ELASTICITY_TIME_STEP,Err)
+  CALL cmfe_Problem_SolverGet(Problem,CMFE_CONTROL_LOOP_NODE,1,SolverDAE,Err)! here? was 1
+  CALL cmfe_Solver_DAETimeStepSet(SolverDAE,ODE_TIME_STEP,Err) ! setzt SOLVER%DAE_SOLVER%INITIAL_STEP=TIME_STEP
+  CALL cmfe_Solver_DAETimesSet(SolverDAE,0.0_CMISSRP,0.001_CMISSRP,Err)!ELASTICITY_TIME_STEP,Err) ! setzt star und endzeit SOLVER%DAE_SOLVER%START_TIME=START_TIME / und  ...END_TIME
   !> \todo - solve the CellML equations on the GPU for efficiency (later)
-  !CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_EXTERNAL,Err) 
+  CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_EULER,Err)  ! wirft fehler in problem_solverdaecellmlrhspetsc in problem_routines.f90, zeile 4704.
+  CALL cmfe_Solver_DAEEulerSolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_EULER_BACKWARD,Err)  !>>ERROR:  1: Problem has not been finished. in line 763 CALL cmfe_Problem_Solve(Problem,Err) - passive mechanical problem 
+
   CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_NO_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_TIMING_OUTPUT,Err)

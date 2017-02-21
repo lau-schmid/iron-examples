@@ -68,15 +68,15 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !Test program parameters
-!  real etime          ! Declare the type of etime()
-  INTEGER(CMISSINTg) :: RUN_SCENARIO = 1  !0 = default, 1 = short for testing, 2 = medium for testing, 3 = very short
+  LOGICAL, PARAMETER :: DEBUGGING_ONLY_RUN_SHORT_PART_OF_SIMULATION = .FALSE.    ! only run one timestep of MAIN_LOOP with stimulus
+  LOGICAL, PARAMETER :: DEBUGGING_OUTPUT_PROBLEM = .FALSE.    ! output information about problem data structure
+  LOGICAL, PARAMETER :: DEBUGGING_PARALLEL_BARRIER = .FALSE.   !
+  INTEGER(CMISSINTg) :: RUN_SCENARIO = 2  !0 = default, 1 = short for testing, 2 = medium for testing, 3 = very short
   LOGICAL, PARAMETER :: DEBUGGING_OUTPUT = .FALSE.    ! enable information from solvers
   LOGICAL, PARAMETER :: OLD_TOMO_MECHANICS = .TRUE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
 
   REAL(CMISSRP), PARAMETER :: tol=1.0E-8_CMISSRP
-
-  LOGICAL :: independent_field_auto_create=.FALSE.
-  !all lengths in [cm]
+  ! physical dimensions in [cm]
   REAL(CMISSRP), PARAMETER :: LENGTH=3.0_CMISSRP ! (6)     X-direction
   REAL(CMISSRP), PARAMETER :: WIDTH= 3.0_CMISSRP ! (3)     Y-direction
   REAL(CMISSRP), PARAMETER :: HEIGHT=1.5_CMISSRP ! (1.5)   Z-direction
@@ -142,25 +142,35 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   !--------------------------------------------------------------------------------------------------------------------------------
 
+  INTEGER(CMISSIntg) :: NumberGlobalXElements
+  INTEGER(CMISSIntg) :: NumberGlobalYElements
+  INTEGER(CMISSIntg) :: NumberGlobalZElements
   INTEGER(CMISSLIntg) :: NumberOfElementsFE
   INTEGER(CMISSIntg) :: NumberOfElementsM
   INTEGER(CMISSIntg) :: NumberOfNodesM
-  INTEGER(CMISSIntg) :: NumberOfNodesPerFibre,NumberOfFibres
-  INTEGER(CMISSIntg) :: NumberOfInSeriesFibres=1
+  INTEGER(CMISSIntg) :: NumberOfFibres
+  INTEGER(CMISSIntg) :: NumberOfNodesPerFibre
+  INTEGER(CMISSIntg) :: NumberOfInSeriesFibres
+  INTEGER(CMISSIntg) :: NumberOfElementsInAtomicPortionPerDomain
+  INTEGER(CMISSIntg) :: NumberOfElementsMInXi1
+  INTEGER(CMISSINTg) :: NumberOfFibreLinesPerGlobalElement
+  INTEGER(CMISSIntg) :: NumberOfGlobalElementLines
+  INTEGER(CMISSIntg) :: NumberOfFibreLinesTotal
+  INTEGER(CMISSIntg) :: NumberOfElementsMPerFibre
+  INTEGER(CMISSIntg) :: NumberOfElementsMPerFibreLine
 
-  integer(CMISSIntg) :: stat
-  character(len=256) :: filename,filename2,pathname,arg
+  INTEGER(CMISSIntg) :: Stat
+  CHARACTER(len=256) :: CellMLModelFilename
   CHARACTER(len=1024) :: inputDirectory = "input/"
-  CHARACTER(LEN=256) :: MemoryConsumption1StTimeStep, MemoryConsumptionBeforeSim
-  integer(CMISSIntg) :: MPI_Rank, numberOfProcesses
+  CHARACTER(len=1024) :: FiringTimesFile = "MU_firing_times_10s.txt"
+  CHARACTER(len=1024) :: InnervationZoneFile = "innervation_zone_18.txt"
+  CHARACTER(len=1024) :: FibreDistributionFile = "MU_fibre_distribution_4050.txt"
+  CHARACTER(len=256) :: MemoryConsumption1StTimeStep = "", MemoryConsumptionBeforeSim, Temp
 
-  INTEGER(CMISSIntg) :: NumberGlobalXElements,NumberGlobalYElements,NumberGlobalZElements
-  INTEGER(CMISSIntg) :: mu_nr,Ftype,fibre_nr,NearestGP,InElement
+  INTEGER(CMISSIntg) :: Ftype,fibre_nr,NearestGP,InElement
 
   logical :: less_info,fast_twitch
 
-  INTEGER(CMISSIntg) :: val
-  REAL(CMISSRP) :: total
   REAL(CMISSRP) :: TimeStart, TimeInitFinshed, TimeStretchSimFinished, TimeMainSimulationStart, TimeMainSimulationFinished
 
   INTEGER(CMISSIntg) :: CustomSolverConvergenceReasonParabolic = 0
@@ -173,10 +183,12 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   INTEGER(CMISSIntg) :: CustomSolverNumberIterationsNewtonMax = 0
 
 
-  INTEGER(CMISSIntg), DIMENSION(10000,100) :: FIRING_TIMES
-  INTEGER(CMISSIntg), ALLOCATABLE :: IZ_offset(:)
+  INTEGER(CMISSIntg), DIMENSION(10000,100) :: MotorUnitFiringTimes
+  INTEGER(CMISSIntg), ALLOCATABLE :: InnervationZoneOffset(:)
+  INTEGER(CMISSIntg) :: JunctionNodeNo
+  INTEGER(CMISSIntg) :: MotorUnitFires, MotorUnitRank
 
-  INTEGER(CMISSIntg), ALLOCATABLE :: mu_distri(:)
+  INTEGER(CMISSIntg), ALLOCATABLE :: MuDistribution(:)
   REAL(CMISSRP) :: CustomTimingOdeSolver, CustomTimingParabolicSolver, CustomTimingFESolver, CustomTimingFESolverBeforeMainSim
 
   !--------------------------------------------------------------------------------------------------------------------------------
@@ -278,7 +290,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   LOGICAL :: EXPORT_FIELD
 
   INTEGER(CMISSIntg) :: shortenModelIndex!,shortenModelIndex2
-  INTEGER(CMISSIntg) :: stimcomponent
+  INTEGER(CMISSIntg) :: StimComponent
 
 !  REAL(CMISSRP) :: YVALUE
   REAL(CMISSRP) :: VALUE
@@ -346,7 +358,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   WRITE(*,'(A,A)') TRIM(GetTimeStamp()), " Program started."
 
   CALL CPU_Time(TimeStart)
-  CALL SetParameters()
+  CALL ParseParameters()
 
   !================================================================================================================================
   !  G E N E R A L   F E A T U R E S
@@ -399,24 +411,38 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !--------------------------------------------------------------------------------------------------------------------------------
   !boundary conditions
   CALL SetBoundaryConditions()
+
+  ! Output the data structure Problem
+  IF (DEBUGGING_OUTPUT_PROBLEM .AND. ComputationalNodeNumber == 0) THEN
+    PRINT*, ""
+    PRINT*, ""
+    CALL cmfe_PrintProblemType(Problem,Err)
+    PRINT*, ""
+    PRINT*, ""
+    !PRINT*, "End the program after output of problem datastructure"
+    !STOP
+  ENDIF
+
   !--------------------------------------------------------------------------------------------------------------------------------
   !Calculate the bioelectrics geometric field
   CALL CalculateBioelectrics()
   CALL ExportEMG()
-
   !--------------------------------------------------------------------------------------------------------------------------------
   !Solve the problem
 
   !Solve the problem -- bring to new length before applying the stimulus
   IF (ComputationalNodeNumber == 0) PRINT*, "1.) Start solve before stimulation"
+  Temp = GetMemoryConsumption()
   CALL cmfe_CustomSolverInfoReset(Err)
+  IF (DEBUGGING_PARALLEL_BARRIER) CALL gdbParallelDebuggingBarrier()
+
+
   CALL CPU_Time(TimeInitFinshed)
 
   CALL cmfe_Problem_Solve(Problem,Err)
 
   CALL CPU_Time(TimeStretchSimFinished)
   CALL HandleSolverInfo(-1.0_CMISSRP)
-  IF (ComputationalNodeNumber == 0) print*, "2.) After solve before stimulation"
 
   !reset the relative contraction velocity to 0
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3, &
@@ -442,34 +468,11 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 !      & "Aliev_Panfilov/I_HH",stimcomponent,Err)
 !  ENDIF
 
-  !--------------------------------------------------------------------------------------------------------------------------------
-  !Read in the MU firing times
-
-  IF (ComputationalNodeNumber == 0) PRINT*, "3.) Read in MU firing times"
-
-  open(unit=5,file="input/MU_firing_times_10s.txt",action="read",iostat=stat)
-  do i=1,10000
-    read(5,*,iostat=stat) FIRING_TIMES(i,:)
-  enddo
-  close(unit=5)
-
-  ! Gaussian distribution with mean 0 and std 2 (MATLAB: k = 2*randn(len,1), kk = int64(k);)
-  ALLOCATE(IZ_offset(NumberOfFibres))
-
-  !open(unit=6,file="input/innervation_zone_18.txt",action="read",iostat=stat)
-  !if(stat /= 0) print*, "Error reading file input/innervation_zone_*.txt"
-  !read(6,*,iostat=stat) IZ_offset(:)
-  !close(unit=6)
-  !write(*,*) "Finished reading file: input/innervation_zone_*.txt"
-
-  DO I=1,NumberOfFibres
-     IZ_offset(I) = 0
-  ENDDO
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !--------------------------------------------------------------------------------------------------------------------------------
-  IF (ComputationalNodeNumber == 0) PRINT*, "4.) Simulate with stimulation"
-  IF (ComputationalNodeNumber == 0) MemoryConsumptionBeforeSim = GetMemoryConsumption()
+  IF (ComputationalNodeNumber == 0) PRINT*, "2.) Simulate with stimulation"
+  MemoryConsumptionBeforeSim = GetMemoryConsumption()
 
   CALL cmfe_CustomTimingGet(CustomTimingOdeSolver, CustomTimingParabolicSolver, CustomTimingFESolverBeforeMainSim, Err)
   IF (ComputationalNodeNumber == 0) PRINT*, "    Nonliner Solver duration: ", CustomTimingFESolverBeforeMainSim, " s"
@@ -478,19 +481,32 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   time = 0.0_CMISSRP
   VALUE = 0.0_CMISSRP
-  k=1       ! row in firing_times input (time)
-  m=1
-  DO WHILE(time <= TIME_STOP)
+  k = 1       ! row in firing_times input (time)
+  m = 1
+  DO WHILE(time < TIME_STOP-1e-10)
 
     IF (ComputationalNodeNumber == 0) PRINT "(A,F0.5,A)","t = ",time," s"
     !-------------------------------------------------------------------------------------------------------------------------------
     !Set the Stimulus for monodomain at the middle of the fibres
     IF (OLD_TOMO_MECHANICS) THEN
+
+  !>Find the component ID in the given field for the variable defined by the given variable ID in the provided CellML environment.
+  !! This generic routine will be used to map variable ID's in CellML models to components in the various fields defined in the CellML models defined for the provided CellML environment.
+  !! - may need to also provide a FIELD_VARIABLE_NUMBER (always 1?) for completeness
+  !! - is the model ID also needed?
+  !! - because the CellML fields should all be set up to allow direct use in the CellML code, the component number matches the index of the given variable in its associated array in the CellML generated code.
+  !SUBROUTINE CELLML_FIELD_COMPONENT_GET_C(CELLML,MODEL_INDEX,CELLML_FIELD_TYPE,VARIABLE_ID,COMPONENT_USER_NUMBER,ERR,ERROR,*)
+   !Argument variables
+   !TYPE(CELLML_TYPE), POINTER :: CELLML !<The CellML environment object from which to get the field component.
+   !INTEGER(INTG), INTENT(IN) :: MODEL_INDEX !<The index of the CellML model to map from.
+   !INTEGER(INTG), INTENT(IN) :: CELLML_FIELD_TYPE !<The type of CellML field type to get the component for. \see CELLML_FieldTypes,CMISS_CELLML
+   !CHARACTER(LEN=*), INTENT(IN) :: VARIABLE_ID !<The ID of the model variable which needs to be located in the provided field.
+   !INTEGER(INTG), INTENT(OUT) :: COMPONENT_USER_NUMBER !<On return, the field component for the model variable defined by the given ID.
       CALL cmfe_CellML_FieldComponentGet(CellML,shortenModelIndex,CMFE_CELLML_PARAMETERS_FIELD, &
-        & "wal_environment/I_HH",stimcomponent,Err)
+        & "wal_environment/I_HH",StimComponent,Err)
     ELSE
       CALL cmfe_CellML_FieldComponentGet(CellML,shortenModelIndex,CMFE_CELLML_PARAMETERS_FIELD, &
-        & "Aliev_Panfilov/I_HH",stimcomponent,Err)
+        & "Aliev_Panfilov/I_HH",StimComponent,Err)
     ENDIF
 
 
@@ -507,30 +523,35 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !  ENDDO
 
 
-    NodeNumber=(NumberOfNodesPerFibre+1)/2
+    NodeNumber = (NumberOfNodesPerFibre+1)/2
+
     !loop over all neuromuscular junctions (middle point of the fibres)
-    DO WHILE(NodeNumber<NumberOfNodesM)
+    DO WHILE(NodeNumber < NumberOfNodesM)
 
-      CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber+IZ_offset(m),1,NodeDomain,Err)
-      IF(NodeDomain==ComputationalNodeNumber) THEN
+      JunctionNodeNo = NodeNumber + InnervationZoneOffset(m)
+
+      CALL cmfe_Decomposition_NodeDomainGet(DecompositionM, JunctionNodeNo, 1, NodeDomain, Err)
+      IF (NodeDomain == ComputationalNodeNumber) THEN
         CALL cmfe_Field_ParameterSetGetNode(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1, &
-        & NodeNumber+IZ_offset(m),1,mu_nr,Err)
+        & JunctionNodeNo,1,MotorUnitRank,Err)
 
-        if((mu_nr.LE.0).OR.(mu_nr.GE.101)) then
-          mu_nr=101
-        else
-          val=FIRING_TIMES(k,mu_nr)   ! determine if mu fires
-          if(val==1) then
-            !print *, k,": MU ",mu_nr," fires"
+        IF ((MotorUnitRank <= 0) .OR. (MotorUnitRank >= 101)) THEN
+          PRINT*, "Warning! MotorUnitRank=",MotorUnitRank,", set to 100"
+          MotorUnitRank=100
+        ELSE
+          !PRINT*, "MotorUnitFiringTimes row k=", k, ": MU rank=", MotorUnitRank, ", StimComponent=",StimComponent
+          MotorUnitFires = MotorUnitFiringTimes(k, MotorUnitRank)   ! determine if mu fires
+          IF (MotorUnitFires == 1) THEN
+            !PRINT*, "k=", k, ": MU ", MotorUnitRank, " fires, StimComponent=",StimComponent,", STIM_VALUE=",STIM_VALUE
             CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
-              & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,NodeNumber+IZ_offset(m),stimcomponent,STIM_VALUE,Err)
-          endif
-        endif
+              & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,JunctionNodeNo,StimComponent,STIM_VALUE,Err)
+          ENDIF
+        ENDIF
       ENDIF
-      NodeNumber=NodeNumber+NumberOfNodesPerFibre
-      m=m+1
+      NodeNumber = NodeNumber + NumberOfNodesPerFibre
+      m = m+1
     ENDDO
-    m=m-NumberOfFibres
+    m = m - NumberOfFibres
 
 
     !-------------------------------------------------------------------------------------------------------------------------------
@@ -542,17 +563,25 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
     CALL cmfe_Problem_Solve(Problem,Err)
     CALL HandleSolverInfo(time)
 
+    Temp = GetMemoryConsumption()
+    IF (DEBUGGING_ONLY_RUN_SHORT_PART_OF_SIMULATION) EXIT
+
     !-------------------------------------------------------------------------------------------------------------------------------
     !Now turn the stimulus off
-    NodeNumber=(NumberOfNodesPerFibre+1)/2
-    DO WHILE(NodeNumber<NumberOfNodesM)
-      CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber+IZ_offset(m),1,NodeDomain,Err)
-      IF(NodeDomain==ComputationalNodeNumber) CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
-      & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,NodeNumber+IZ_offset(m),stimcomponent,0.0_CMISSRP,Err)
-      NodeNumber = NodeNumber+NumberOfNodesPerFibre
-      m=m+1
+    NodeNumber = (NumberOfNodesPerFibre+1)/2
+    DO WHILE (NodeNumber < NumberOfNodesM)
+
+      JunctionNodeNo = NodeNumber + InnervationZoneOffset(m)
+
+      CALL cmfe_Decomposition_NodeDomainGet(DecompositionM, JunctionNodeNo ,1,NodeDomain,Err)
+      IF(NodeDomain==ComputationalNodeNumber) THEN
+        CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, CMFE_FIELD_U_VARIABLE_TYPE, CMFE_FIELD_VALUES_SET_TYPE,1,1, &
+          & JunctionNodeNo, StimComponent,0.0_CMISSRP,Err)
+      ENDIF
+      NodeNumber = NodeNumber + NumberOfNodesPerFibre
+      m = m + 1
     ENDDO
-    m=m-NumberOfFibres
+    m = m - NumberOfFibres
 
     !-------------------------------------------------------------------------------------------------------------------------------
     !Solve the problem for the rest of the period
@@ -564,10 +593,12 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
     CALL HandleSolverInfo(time+STIM_STOP)
     !-------------------------------------------------------------------------------------------------------------------------------
     time = time + PERIODD
-    k=k+1
+    k = k+1
 
     IF (k == 2) THEN
-      MemoryConsumption1StTimeStep = getMemoryConsumption()
+      MemoryConsumption1StTimeStep = GetMemoryConsumption()
+    ELSE
+      Temp = GetMemoryConsumption()
     ENDIF
 
   ENDDO
@@ -592,7 +623,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   CALL WriteCustomProfilingFile()
 
   IF (ComputationalNodeNumber == 0) THEN
-    PRINT*, cmfe_CustomProfilingGetInfo(Err)
+    PRINT*, TRIM(cmfe_CustomProfilingGetInfo(Err))
   ENDIF
 
   PRINT*, ""
@@ -610,56 +641,271 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   STOP
 CONTAINS
 
-SUBROUTINE SetParameters()
+! Test whether parametrization and number of processes matches and is valid
+FUNCTION CheckGeometry()
+  LOGICAL :: CheckGeometry
+  REAL(CMISSDP) :: NumberOfAtomicElementPortions
+  INTEGER(CMISSIntg) :: NumberOfAtomicPortionsPerDomain
+  CheckGeometry = .TRUE.
 
-  INTEGER(CMISSLINTg) :: factor
-  INTEGER(CMISSLINTg) :: scale, NumberArguments
-  INTEGER(CMISSINTg) :: length
+  ! NumberOfElementsMPerFibre = NumberOfElementsMPerFibreLine / NumberOfInSeriesFibres
 
-  NumberGlobalXElements=3 !6
-  NumberGlobalYElements=4 !4
-  NumberGlobalZElements=1 !1
-  NumberOfInSeriesFibres=1 !1
+  IF (NumberGlobalXElements <= 0 .OR. NumberGlobalYElements <= 0 .OR. NUmberGlobalZElements <= 0 &
+    & .OR. NumberOfInSeriesFibres <= 0) THEN
+    IF (ComputationalNodeNumber == 0) THEN
+      PRINT*, "Error: Number of elements (", NumberGlobalXElements, ", ",NumberGlobalYElements, ", ", &
+        & NumberGlobalZElements, ", ", NumberOfInSeriesFibres, ") is invalid!"
+    ENDIF
+    CheckGeometry = .FALSE.
+  ENDIF
 
-  NumberArguments = iargc()
+  IF (NumberOfElementsInAtomicPortionPerDomain <= 0 ) THEN
+    IF (ComputationalNodeNumber == 0) THEN
+      PRINT*, "Error: NumberOfElementsInAtomicPortionPerDomain=", NumberOfElementsInAtomicPortionPerDomain, " is invalid!"
+    ENDIF
+    CheckGeometry = .FALSE.
+  ENDIF
 
-  IF (NumberArguments >= 1) THEN
-    CALL GETARG(1, inputDirectory)
-    ! Append slash to input directory if necessary
-    length = LEN_TRIM(inputDirectory)
+  IF (NumberOfElementsMPerFibre * NumberOfInSeriesFibres /= NumberOfElementsMPerFibreLine) THEN
+    IF (ComputationalNodeNumber == 0) THEN
+      PRINT*, "Error: NumberOfElementsMPerFibreLine=",NumberOfElementsMPerFibreLine, &
+        & " is not an integer multiple of F=",NumberOfInSeriesFibres,"!"
+    ENDIF
 
-    IF (.NOT. inputDirectory(length:length) == "/") THEN
-      inputDirectory(length+1:length+1) = "/"
+    CheckGeometry = .FALSE.
+  ENDIF
+
+  IF (NumberOfElementsInAtomicPortionPerDomain > NumberOfElementsFE) THEN
+    IF (ComputationalNodeNumber == 0) THEN
+      PRINT*, "Error: NumberOfElementsInAtomicPortionPerDomain=",NumberOfElementsInAtomicPortionPerDomain, &
+        & " is greater than NumberOfElementsFE=",NumberOfElementsFE,"!"
+    ENDIF
+    CheckGeometry = .FALSE.
+  ENDIF
+
+  NumberOfAtomicElementPortions = REAL(NumberOfElementsFE) / NumberOfElementsInAtomicPortionPerDomain
+  NumberOfAtomicPortionsPerDomain = NumberOfAtomicElementPortions / NumberOfDomains
+
+  IF (NumberOfAtomicPortionsPerDomain == 0) THEN
+    IF (ComputationalNodeNumber == 0) THEN
+      WRITE(*,"(A, I5, A, I11, A, I5, A)") &
+        & " Error: Too much processes (", NumberOfDomains, ") for problem with ", NumberOfElementsFE, " elements " // &
+        & "and atomic size of ", NumberOfElementsInAtomicPortionPerDomain, "!"
+    ENDIF
+    CheckGeometry = .FALSE.
+  ENDIF
+
+  IF (NumberOfElementsInAtomicPortionPerDomain < NumberGlobalXElements) THEN
+    IF (ComputationalNodeNumber == 0) THEN
+      PRINT*, "Warning: NumberOfElementsInAtomicPortionPerDomain=",NumberOfElementsInAtomicPortionPerDomain, &
+        & " is smaller than X=",NumberGlobalXElements,"."
+      PRINT*, "Therefore fibres will be subdivided."
+    ENDIF
+  ELSE IF ((NumberOfElementsInAtomicPortionPerDomain / NumberGlobalXElements) * NumberGlobalXElements &
+    & /= NumberOfElementsInAtomicPortionPerDomain) THEN
+    IF (ComputationalNodeNumber == 0) THEN
+      PRINT*, "Warning: NumberOfElementsInAtomicPortionPerDomain=",NumberOfElementsInAtomicPortionPerDomain, &
+        & " is not an integer multiple of X=",NumberGlobalXElements,"."
+      PRINT*, "Therefore fibres will be subdivided."
     ENDIF
   ENDIF
+
+
+
+
+
+END FUNCTION CheckGeometry
+
+SUBROUTINE ReadInputFiles()
+  LOGICAL :: FileExists
+  INTEGER :: Status
+  INTEGER :: I
+  CHARACTER(len=100000) :: Buffer
+  INTEGER :: NumberOfEntries
+
+  ! Read in firing times file
+  FiringTimesFile = TRIM(InputDirectory) // TRIM(FiringTimesFile)
+  INQUIRE(file=FiringTimesFile, exist=FileExists)
+
+  IF (.NOT. FileExists) THEN
+    PRINT*, "Error: File """ // TRIM(FiringTimesFile) // """ does not exist!"
+    STOP
+  ENDIF
+
+  IF (ComputationalNodeNumber == 0) PRINT*,  "Open file """ // TRIM(FiringTimesFile) // """."
+
+  OPEN(unit=5, file=FiringTimesFile, action="read", iostat=Status)
+
+  ! loop over maximum 10000 lines
+  DO I = 1, 10000
+    READ(5,*,iostat=Status) MotorUnitFiringTimes(I,:)
+    IF (Status /= 0) THEN
+      EXIT
+    ENDIF
+  ENDDO
+  CLOSE(unit=5)
+
+
+  !--------------------------------------------------------------------------------------------------------------------------------
+  ! Read in InnervationZoneFile
+  ! Gaussian distribution with mean 0 and std 2 (MATLAB: k = 2*randn(len,1), kk = int64(k);)
+  InnervationZoneFile = TRIM(InputDirectory) // TRIM(InnervationZoneFile)
+  INQUIRE(file=InnervationZoneFile, exist=FileExists)
+
+  IF (.NOT. FileExists) THEN
+    PRINT*, "Error: File """ // TRIM(InnervationZoneFile) // """ does not exist!"
+    STOP
+  ENDIF
+
+  OPEN(unit=5, file=InnervationZoneFile, action="read", iostat=Status)
+  READ(unit=5, fmt='(A)') Buffer
+
+  ! Determine the number of entries in the first line
+  NumberOfEntries = 1
+  DO I = 0, LEN_TRIM(Buffer)
+    IF (Buffer(I:I) == ',') THEN
+      NumberOfEntries = NumberOfEntries + 1
+    ENDIF
+  ENDDO
+
+  REWIND(UNIT=5)
+  IF (ComputationalNodeNumber == 0) THEN
+    PRINT*, "File  """ // TRIM(InnervationZoneFile) // """ contains ", NumberOfEntries, " Entries, NumberOfFibres=", &
+      & NumberOfFibres, "."
+  ENDIF
+
+  ALLOCATE(InnervationZoneOffset(NumberOfFibres))
+
+  IF (NumberOfFibres <= NumberOfEntries) THEN
+    READ(unit=5, fmt=*, iostat=Status) InnervationZoneOffset(1:NumberOfFibres)
+  ELSE
+    READ(unit=5, fmt=*, iostat=Status) InnervationZoneOffset(1:NumberOfEntries)
+
+    ! fill with already read data
+    DO I = NumberOfEntries,NumberOfFibres
+      InnervationZoneOffset(I) = InnervationZoneOffset(MOD(I, NumberOfEntries)+1)
+      !PRINT*, "fill I=",I," with entry ", InnervationZoneOffset(MOD(I, NumberOfEntries)+1), " from index ", &
+      !  & MOD(I, NumberOfEntries)+1
+    ENDDO
+  ENDIF
+  CLOSE(unit=5)
+
+  !--------------------------------------------------------------------------------------------------------------------------------
+  !Read in motor unit fibre distribution
+  !the MU (=motor unit) number the fiber belongs to
+  FibreDistributionFile = TRIM(InputDirectory) // TRIM(FibreDistributionFile)
+  INQUIRE(file=FibreDistributionFile, exist=FileExists)
+
+  IF (.NOT. FileExists) THEN
+    PRINT*, "Error: File """ // TRIM(FibreDistributionFile) // """ does not exist!"
+    STOP
+  ENDIF
+
+  OPEN(unit=5, file=FibreDistributionFile, action="read", iostat=Status)
+  READ(unit=5, fmt='(A)') Buffer
+
+  ! Determine the number of entries in the first line
+  NumberOfEntries = 1
+  DO I = 0, LEN_TRIM(Buffer)
+    IF (Buffer(I:I) == ',') THEN
+      NumberOfEntries = NumberOfEntries + 1
+    ENDIF
+  ENDDO
+
+  REWIND(UNIT=5)
+  IF (ComputationalNodeNumber == 0) THEN
+    PRINT*, "File  """ // TRIM(FibreDistributionFile) // """ contains ", NumberOfEntries, " Entries, NumberOfFibres=", &
+      & NumberOfFibres, "."
+  ENDIF
+
+  ALLOCATE(MUDistribution(NumberOfFibres))
+
+  IF (NumberOfFibres <= NumberOfEntries) THEN
+    READ(unit=5, fmt=*, iostat=Status) MUDistribution(1:NumberOfFibres)
+  ELSE
+    READ(unit=5, fmt=*, iostat=Status) MUDistribution(1:NumberOfEntries)
+
+    ! fill with already read data
+    DO I = NumberOfEntries,NumberOfFibres
+      MUDistribution(I) = MUDistribution(MOD(I, NumberOfEntries)+1)
+      !PRINT*, "fill I=",I," with entry ", MUDistribution(MOD(I, NumberOfEntries)+1), " from index ", &
+      !  & MOD(I, NumberOfEntries)+1
+    ENDDO
+  ENDIF
+  CLOSE(unit=5)
+END SUBROUTINE ReadInputFiles
+
+! Parse command line parameters and set numbers of elements
+SUBROUTINE ParseParameters()
+
+  INTEGER(CMISSLINTg) :: Factor, NumberArguments
+  INTEGER(CMISSINTg) :: Length
+  CHARACTER(LEN=256) :: Arg
+  LOGICAL :: GeometryIsValid, FileExists
+  LOGICAL :: CustomProfilingEnabled !< If custom profiling is compiled in
+  LOGICAL :: TauProfilingEnabled !< If TAU profiling is compiled in
+
+  NumberGlobalXElements = 3 !6
+  NumberGlobalYElements = 4 !4
+  NumberGlobalZElements = 1 !1
+  NumberOfInSeriesFibres = 1 !1
+  NumberOfElementsInAtomicPortionPerDomain = 1
+
+  NumberArguments = iargc()
+  ! number of arguments:
+  ! 0: default values (3 x 4 x 1 elements)
+  ! 1: <input folder>
+  ! 2: <input folder> <scale>
+  ! 4: <input folder> <X> <Y> <Z>
+  ! 5: <input folder> <X> <Y> <Z> <F>
+  ! 6: <input folder> <X> <Y> <Z> <F> <NumberOfElementsInAtomicPortionPerDomain>
+  !
+  ! X = NumberGlobalXElements, Y = NumberGlobalYElements, Z = NumberGlobalZElements, F = NumberOfInSeriesFibres
+
+  IF (NumberArguments >= 1) THEN
+    CALL GETARG(1, InputDirectory)    ! first argument is input directory
+    ! Append slash to input directory if necessary
+    Length = LEN_TRIM(InputDirectory)
+
+    IF (.NOT. InputDirectory(Length:Length) == "/") THEN
+      InputDirectory(Length+1:Length+1) = "/"
+    ENDIF
+    InputDirectory = TRIM(InputDirectory)
+  ENDIF
   IF (NumberArguments == 2) THEN
-    CALL getarg(2, arg)
-    read(arg,*,iostat=stat)  scale
-    NumberGlobalXElements = NumberGlobalXElements * scale
-    NumberGlobalYElements = NumberGlobalYElements * scale
-    NumberGlobalZElements = NumberGlobalZElements * scale
+    CALL GETARG(2, arg)
+    read(arg,*,iostat=stat)  Factor
+    NumberGlobalXElements = NumberGlobalXElements * Factor
+    NumberGlobalYElements = NumberGlobalYElements * Factor
+    NumberGlobalZElements = NumberGlobalZElements * Factor
+
   ELSEIF (NumberArguments >= 4) THEN
-    CALL getarg(2, arg)
+    CALL GETARG(2, arg)
     read(arg,*,iostat=stat)  NumberGlobalXElements
-    CALL getarg(3, arg)
+
+    CALL GETARG(3, arg)
     read(arg,*,iostat=stat)  NumberGlobalYElements
-    CALL getarg(4, arg)
+
+    CALL GETARG(4, arg)
     read(arg,*,iostat=stat)  NumberGlobalZElements
 
-    IF (NumberArguments == 5) THEN
-      CALL getarg(5, arg)
+    IF (NumberArguments >= 5) THEN
+      CALL GETARG(5, arg)
       read(arg,*,iostat=stat)  NumberOfInSeriesFibres
     ENDIF
 
+    IF (NumberArguments >= 6) THEN
+      CALL GETARG(6, arg)
+      read(arg,*,iostat=stat)  NumberOfElementsInAtomicPortionPerDomain
+    ENDIF
+
   ELSE
-    PRINT*, NumberArguments, " unrecognized arguments. Using default values. Usage: program [X Y Z [F]]";
+    PRINT*, "Using default values. " // NEW_LINE('A') &
+    // "Usage: program [<input folder> [<X> <Y> <Z> [<F> [<NumberOfElementsInAtomicPortionPerDomain>]]]] " // &
+      & "or program <f> where (X,Y,Z)=(3*f,4*f,1*f)";
   ENDIF
 
-
-
-  IF (ComputationalNodeNumber == 0) PRINT*, "Input directory: [",TRIM(inputDirectory),"]"
-
-  NumberOfElementsFE=NumberGlobalXElements*NumberGlobalYElements*NumberGlobalZElements
+  NumberOfElementsFE = NumberGlobalXElements*NumberGlobalYElements*NumberGlobalZElements
 
 !##################################################################################################################################
 
@@ -710,30 +956,46 @@ SUBROUTINE SetParameters()
 !  NumberOfElementsM=(NumberOfNodesPerFibre-1)*NumberGlobalYElements*NumberGlobalZElements*NumberOfNodesInXi2*NumberOfNodesInXi3* &
 !    & NumberGlobalXElements
 
-  NumberOfFibres=NumberOfNodesInXi2*NumberOfNodesInXi3*NumberGlobalYElements*NumberGlobalZElements*NumberOfInSeriesFibres
-  NumberOfNodesPerFibre=(NumberOfNodesInXi1-1)*NumberGlobalXElements/NumberOfInSeriesFibres+1
-  NumberOfNodesM=NumberOfNodesPerFibre*NumberOfInSeriesFibres*NumberGlobalYElements*NumberGlobalZElements*NumberOfNodesInXi2* &
-    & NumberOfNodesInXi3
-  NumberOfElementsM=(NumberOfNodesPerFibre-1)*NumberOfInSeriesFibres*NumberGlobalYElements*NumberGlobalZElements* &
-    & NumberOfNodesInXi2*NumberOfNodesInXi3
+  ! direction of fibres is in Xi1=Global X direction
+
+  NumberOfFibreLinesPerGlobalElement = NumberOfNodesInXi2 * NumberOfNodesInXi3
+  NumberOfGlobalElementLines = NumberGlobalYElements * NumberGlobalZElements
+  NumberOfFibreLinesTotal = NumberOfFibreLinesPerGlobalElement * NumberOfGlobalElementLines
+  NumberOfFibres = NumberOfFibreLinesTotal * NumberOfInSeriesFibres
+  NumberOfElementsMInXi1 = NumberOfNodesInXi1-1
+  NumberOfElementsMPerFibreLine = NumberOfElementsMInXi1*NumberGlobalXElements   ! nodes on inner boundaries of elements are doubled
+  NumberOfElementsMPerFibre = NumberOfElementsMPerFibreLine / NumberOfInSeriesFibres
+  NumberOfNodesPerFibre = NumberOfElementsMPerFibre + 1
+  ! the end point nodes of fibres are shared between different fibres
+
+  ! total number of 1D nodes
+  NumberOfNodesM = NumberOfNodesPerFibre * NumberOfFibres
+  NumberOfElementsM = NumberOfElementsMPerFibre * NumberOfFibres
 
 !##################################################################################################################################
 !  fast_twitch=.true.
 !  if(fast_twitch) then
 !  pathname="/home/heidlauf/OpenCMISS/OpenCMISS/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles/"
-  pathname=inputDirectory
-!  filename=trim(pathname)//"fast_2014_03_25_no_Fl_no_Fv.xml" !FAST
+!  CellMLModelFilename=trim(pathname)//"fast_2014_03_25_no_Fl_no_Fv.xml" !FAST
   IF (OLD_TOMO_MECHANICS) THEN
-    filename=trim(inputDirectory)//"slow_TK_2014_12_08.xml"
-    STIM_VALUE=2000.0_CMISSRP !700.0_CMISSRP!700.0_CMISSRP
+    CellMLModelFilename = TRIM(inputDirectory) // "slow_TK_2014_12_08.xml"
+    STIM_VALUE = 2000.0_CMISSRP !700.0_CMISSRP!700.0_CMISSRP
   ELSE
-    filename=trim(inputDirectory)//"Aliev_Panfilov_Razumova_2016_08_22.cellml"
-    STIM_VALUE=90.0_CMISSRP !90.0_CMISSRP
+    CellMLModelFilename = TRIM(inputDirectory) // "Aliev_Panfilov_Razumova_2016_08_22.cellml"
+    STIM_VALUE = 90.0_CMISSRP !90.0_CMISSRP
   ENDIF
+
+  ! check if file exists
+  INQUIRE(file=CellMLModelFilename, exist=FileExists)
+  IF (.NOT. FileExists) THEN
+    PRINT*, "Error: CellML file """ // TRIM(CellMLModelFilename) // """ does not exist!"
+    STOP
+  ENDIF
+
 
 !   &"/home/heidlauf/OpenCMISS/opencmiss/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles/shorten_mod_2011_07_04.xml"
 !    pathname="/home/heidlauf/OpenCMISS/opencmiss/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles"
-!    filename=trim(pathname)//"/fast_shortening_0.1vmax.xml"
+!    CellMLModelFilename=trim(pathname)//"/fast_shortening_0.1vmax.xml"
 !    STIM_VALUE=700.0_CMISSRP!2000.0_CMISSRP!700.0_CMISSRP
 !  else !slow twitch
 !    filename2= &
@@ -763,14 +1025,18 @@ SUBROUTINE SetParameters()
   ! cmfe_IN_TIMING_TYPE, cmfe_FROM_TIMING_TYPE, cmfe_ALL_TIMING_TYPE
   !CALL cmfe_TimingSetOn(cmfe_ALL_TIMING_TYPE, .TRUE.,             "", ["cmfe_Problem_Solve", "PROBLEM_SOLVE     "], Err)
 
+  CALL cmfe_OutputSetOn("EMG",Err)
+
   !Get the computational nodes information
   CALL cmfe_ComputationalNumberOfNodesGet(NumberOfComputationalNodes,Err)
   CALL cmfe_ComputationalNodeNumberGet(ComputationalNodeNumber,Err)
 
-  NumberOfDomains=NumberOfComputationalNodes
+  NumberOfDomains = NumberOfComputationalNodes
 
-  CALL cmfe_OutputSetOn("EMG",Err)
+  GeometryIsValid = CheckGeometry()
 
+  ! Read in input files, stops execution if files do not exist
+  CALL ReadInputFiles()
 
   ! output time step information
   IF (ComputationalNodeNumber == 0) THEN
@@ -804,27 +1070,57 @@ SUBROUTINE SetParameters()
       & ", Total: ", NumberOfElementsFE
     PRINT "(A,3(I6,A),I12)", "# local nodes per element: ", NumberOfNodesInXi1, ", ", NumberOfNodesInXi2, ", ", NumberOfNodesInXi3,&
       & ", Total: ", NumberOfNodesInXi1*NumberOfNodesInXi2*NumberOfNodesInXi3
-    PRINT "(A,I6)", "NumberOfNodesPerFibre:  ", NumberOfNodesPerFibre
-    PRINT "(A,I6)", "NumberOfInSeriesFibres: ", NumberOfInSeriesFibres
-    PRINT "(A,I6)", "NumberOfFibres:         ", NumberOfFibres
-    PRINT "(A,I6)", "NumberOfNodesM:         ", NumberOfNodesM
-    PRINT "(A,I6)", "NumberOfElementsM:      ", NumberOfElementsM
+    PRINT "(A,I6)", "                  NumberOfInSeriesFibres: ", NumberOfInSeriesFibres
+    PRINT "(A,I6)", "      NumberOfFibreLinesPerGlobalElement: ", NumberOfFibreLinesPerGlobalElement
+    PRINT "(A,I6)", "              NumberOfGlobalElementLines: ", NumberOfGlobalElementLines
+    PRINT "(A,I6)", "                 NumberOfFibreLinesTotal: ", NumberOfFibreLinesTotal
+    PRINT "(A,I6)", "                          NumberOfFibres: ", NumberOfFibres
+    PRINT "(A,I6)", "               NumberOfElementsMPerFibre: ", NumberOfElementsMPerFibre
+    PRINT "(A,I6)", "                   NumberOfNodesPerFibre: ", NumberOfNodesPerFibre
+    PRINT "(A,I6)", "                          NumberOfNodesM: ", NumberOfNodesM
+    PRINT "(A,I6)", "                       NumberOfElementsM: ", NumberOfElementsM
     PRINT *,""
-    PRINT "(A,I6)", "NumberOfDomains:        ", NumberOfDomains
+    PRINT "(A,I6)", "                         NumberOfDomains: ", NumberOfDomains
+    PRINT "(A,I6,A,I6,A)", "NumberOfElementsInAtomicPortionPerDomain: ", NumberOfElementsInAtomicPortionPerDomain, &
+      & "  (X:", NumberGlobalXElements, ")"
     PRINT *, "------------------------------------------------------------------------------"
     PRINT *, ""
 
-    IF (OLD_TOMO_MECHANICS) then
+    ! Output some static (compile-time) settings
+    IF (OLD_TOMO_MECHANICS) THEN
       PRINT*, "Old mechanics formulation that works in parallel."
     ELSE
       PRINT*, "New mechanics formulation that does not work in parallel."
     ENDIF
+
+    CALL cmfe_CustomProfilingGetEnabled(CustomProfilingEnabled, TAUProfilingEnabled, Err)
+
+    IF (CustomProfilingEnabled) THEN
+      PRINT*, "Custom Profiling is enabled."
+    ELSE
+      PRINT*, "Custom Profiling is disabled. (Enable with -DUSE_CUSTOM_PROFILING)"
+    ENDIF
+
+    IF (TAUProfilingEnabled) THEN
+      PRINT*, "TAU Profiling is enabled."
+    ELSE
+      PRINT*, "TAU Profiling is disabled."
+    ENDIF
+
+    IF (.NOT. GeometryIsValid) THEN
+      PRINT*, "Parametrization is invalid. Aborting."
+    ENDIF
   ENDIF
 
-END SUBROUTINE SetParameters
+  IF (.NOT. GeometryIsValid) THEN
+    STOP
+  ENDIF
+
+END SUBROUTINE ParseParameters
 
 SUBROUTINE CreateRegionMesh()
-
+  INTEGER(CMISSIntg) :: NodeNo
+  INTEGER(CMISSIntg) :: ElementNo
   !-------------------------------------------------------------------------------------------------------------------------------
 
   !Broadcast the number of elements in the X & Y directions and the number of partitions to the other computational nodes
@@ -833,7 +1129,7 @@ SUBROUTINE CreateRegionMesh()
   CALL MPI_BCAST(NumberGlobalZElements,1,MPI_INTEGER,0,MPI_COMM_WORLD,MPI_IERROR)
   CALL MPI_BCAST(NumberOfDomains,1,MPI_INTEGER,0,MPI_COMM_WORLD,MPI_IERROR)
 
-  IF (MPI_Rank == 0) THEN
+  IF (ComputationalNodeNumber == 0) THEN
     print*, "Running with ",NumberOfComputationalNodes," processes."
   ENDIF
 
@@ -934,17 +1230,24 @@ SUBROUTINE CreateRegionMesh()
 
   !Define nodes for the mesh
   CALL cmfe_Nodes_Initialise(Nodes,Err)
-  CALL cmfe_Nodes_CreateStart(RegionM,NumberOfNodesM,Nodes,Err)
+  CALL cmfe_Nodes_CreateStart(RegionM, NumberOfNodesM, Nodes, Err)
   CALL cmfe_Nodes_CreateFinish(Nodes,Err)
 
-  elem_idx=0
-  DO node1=1,NumberOfNodesM
-    IF(mod(node1,NumberOfNodesPerFibre)==0) CYCLE
-    elem_idx=elem_idx+1
-    CALL cmfe_MeshElements_NodesSet(ElementsM,elem_idx,[node1,node1+1],Err)
-!    WRITE(*,*) elem_idx,node1,node1+1
+  ! Set adjacent nodes for each element
+  NodeNo = 1
+  DO ElementNo = 1,NumberOfElementsM
+    CALL cmfe_MeshElements_NodesSet(ElementsM, ElementNo, [NodeNo,NodeNo+1], Err)
+
+    !PRINT "(A,I3.3,A,I5.5,A,I7.7,A,I7.7)", &
+    !  & "a ", ComputationalNodeNumber, ": 1D el. no. ", ElementNo, " has nodes ", NodeNo, ", ", NodeNo+1
+
+    NodeNo = NodeNo+1
+    ! If at the end of a fibre line, increment node to starting node of next fibre line
+    IF (MOD(ElementNo, NumberOfElementsMPerFibreLine) == 0) THEN
+      NodeNo = NodeNo+1
+    ENDIF
   ENDDO
-  write(*,*) "Finished setting up 1D elements"
+  !write(*,*) "Finished setting up 1D elements"
 
 
   CALL cmfe_MeshElements_CreateFinish(ElementsM,Err)
@@ -956,76 +1259,152 @@ END SUBROUTINE CreateRegionMesh
 SUBROUTINE CreateDecomposition()
 
   INTEGER(CMISSIntg) :: NumberOfElementsInDomain
+  INTEGER(CMISSIntg) :: DomainNo
+  INTEGER(CMISSIntg) :: ElementMNo, ElementFENo
+  INTEGER(CMISSIntg) :: ElementInFibreLineNo
+  INTEGER(CMISSIntg) :: I
+  INTEGER(CMISSIntg) :: FibreLineNo
+  INTEGER(CMISSIntg) :: GlobalElementLineNo
+  INTEGER(CMISSIntg) :: FirstElementInCurrentGlobalElementLineNo
+  REAL(CMISSDP) :: NumberOfAtomicElementPortions
+  INTEGER(CMISSIntg) :: NumberOfAtomicPortionsPerDomain
+  INTEGER(CMISSIntg) :: AtomicPortionNo, ElementInAtomicPortionNo, LastDomainNo
+  INTEGER(CMISSintg) :: NumberOfElementsAdditionallyForLastProcess
+  INTEGER(CMISSintg) :: NumberOfActualElementsInDomain
 
   !--------------------------------------------------------------------------------------------------------------------------------
-  !Create a decomposition
+  ! Create a decomposition for global FE elements
   CALL cmfe_Decomposition_Initialise(DecompositionFE,Err)
   CALL cmfe_Decomposition_CreateStart(DecompositionUserNumberFE,MeshFE,DecompositionFE,Err)
+  CALL cmfe_Decomposition_CalculateFacesSet(DecompositionFE,.TRUE.,Err)
 
-  IF(NumberOfDomains>1) THEN
-    CALL cmfe_Decomposition_TypeSet(DecompositionFE,CMFE_DECOMPOSITION_USER_DEFINED_TYPE,Err)
+  IF(NumberOfDomains > 1) THEN
+    CALL cmfe_Decomposition_TypeSet(DecompositionFE, CMFE_DECOMPOSITION_USER_DEFINED_TYPE, Err)
+
 
     ! compute number of elements per domain
-    NumberOfElementsInDomain = NumberOfElementsFE/NumberOfDomains
+    NumberOfElementsInDomain = NumberOfElementsFE / NumberOfDomains
 
-    elem_idx2 = 0
-    ! assign element numbers to domain
-    DO domain_idx = 0, NumberOfDomains-1           ! loop over domains
-      DO elem_idx = 1, NumberOfElementsInDomain   ! loop over elements of domain
-        elem_idx2 = elem_idx2 + 1
-        !PRINT "(I3.3,A,I5.5,A,I2)", ComputationalNodeNumber, ": 3D el. no. ", elem_idx2, " to domain no. ", domain_idx
-        CALL cmfe_Decomposition_ElementDomainSet(DecompositionFE,elem_idx2,domain_idx,Err)
-      ENDDO
+    NumberOfAtomicElementPortions = REAL(NumberOfElementsFE) / NumberOfElementsInAtomicPortionPerDomain
+
+    NumberOfAtomicPortionsPerDomain = NumberOfAtomicElementPortions / NumberOfDomains
+    NumberOfActualElementsInDomain = NumberOfAtomicPortionsPerDomain * NumberOfElementsInAtomicPortionPerDomain
+
+    NumberOfElementsAdditionallyForLastProcess = &
+      & NumberOfElementsFE - NumberOfAtomicPortionsPerDomain * NumberOfElementsInAtomicPortionPerDomain * NumberOfComputationalNodes
+
+    IF (NumberOfElementsAdditionallyForLastProcess /= 0) THEN
+      IF (ComputationalNodeNumber == 0) THEN
+        PRINT*, "Notice: Due to discretization size and Atomic size, the last process gets ", &
+          & NumberOfElementsAdditionallyForLastProcess, " 3D elements more (", &
+          & (NumberOfActualElementsInDomain+NumberOfElementsAdditionallyForLastProcess), " instead of ", &
+          & NumberOfActualElementsInDomain, ")!"
+      END IF
+
+    END IF
+
+    ! Assign domain numbers to elements
+    ElementFENo = 1
+    DomainNo = 0
+    LastDomainNo = -1
+    ElementInAtomicPortionNo = 1
+    AtomicPortionNo = 1
+    !PRINT*, "NumberOfElementsFE (global): ",NumberOfElementsFE,", NumberOfElementsInDomain (local): ",NumberOfElementsInDomain
+    !PRINT*, &
+    !  & ", NumberOfAtomicElementPortions (total): ",NumberOfAtomicElementPortions, &
+    !  & ", NumberOfAtomicPortionsPerDomain (local): ", NumberOfAtomicPortionsPerDomain, &
+    !  & ", Size of Portion: ", NumberOfElementsInAtomicPortionPerDomain
+    !PRINT*, "NumberOfElementsAdditionallyForLastProcess: ", NumberOfElementsAdditionallyForLastProcess
+    DO ElementFENo = 1, NumberOfElementsFE        ! loop over global ElementFE's
+
+
+      !                                        DECOMPOSITION,  GLOBAL_ELEMENT_NUMBER, DOMAIN_NUMBER
+      CALL cmfe_Decomposition_ElementDomainSet(DecompositionFE, ElementFENo,            DomainNo, Err)
+      LastDomainNo = DomainNo
+
+      !PRINT "(I3.3,A,I5.5,A,I2)", ComputationalNodeNumber, ": 3D el. no. ", ElementFENo, " to domain no. ", DomainNo
+
+      !PRINT*, "ElementFENo=",ElementFENo, ", ElementInAtomicPortionNo=", ElementInAtomicPortionNo,", DomainNo: ", DomainNo
+
+      IF (ElementInAtomicPortionNo == NumberOfElementsInAtomicPortionPerDomain) THEN
+        AtomicPortionNo = AtomicPortionNo + 1
+        ElementInAtomicPortionNo = 0
+        !PRINT*, "  next AtomicPortionNo (", AtomicPortionNo, ") in domain ", DomainNo
+      ENDIF
+
+      IF (AtomicPortionNo > NumberOfAtomicPortionsPerDomain) THEN
+        AtomicPortionNo = 1
+        ElementInAtomicPortionNo = 0
+
+        IF ((ElementFENo >= NumberOfElementsFE - NumberOfElementsAdditionallyForLastProcess) &
+          & .AND. (DomainNo == NumberOfDomains-1)) THEN
+          !PRINT*, "  remainder, stay in domain ", DomainNo
+        ELSE
+          DomainNo = DomainNo + 1
+          !PRINT*, "  next domain ", DomainNo
+        ENDIF
+      ENDIF
+
+      ElementInAtomicPortionNo = ElementInAtomicPortionNo + 1
     ENDDO
-    CALL cmfe_Decomposition_NumberOfDomainsSet(DecompositionFE,NumberOfDomains,Err)
 
+    IF (LastDomainNo+1 /= NumberOfDomains) then
+      PRINT*, "Error in Domain decomposition of FE elements, last domains no. ", &
+        & LastDomainNo, " /= number of processes (", NumberOfDomains ,")!"
+      STOP
+    ENDIF
   ELSE
     ! single process
     CALL cmfe_Decomposition_TypeSet(DecompositionFE,CMFE_DECOMPOSITION_CALCULATED_TYPE,Err)
-    CALL cmfe_Decomposition_NumberOfDomainsSet(DecompositionFE,NumberOfDomains,Err)
   ENDIF
 
-  CALL cmfe_Decomposition_CalculateFacesSet(DecompositionFE,.TRUE.,Err)
+  ! finish decomposition
+  CALL cmfe_Decomposition_NumberOfDomainsSet(DecompositionFE,NumberOfDomains,Err)
   CALL cmfe_Decomposition_CreateFinish(DecompositionFE,Err)
 
-  CALL MPI_Barrier(MPI_COMM_WORLD, Err)
-
-  ! CREATE A SECOND DECOMPOSITION (for monodomain)
+  ! ---------------------------------------------------
+  ! Create a decomposition for monodomain elements
   CALL cmfe_Decomposition_Initialise(DecompositionM,Err)
   CALL cmfe_Decomposition_CreateStart(DecompositionUserNumberM,MeshM,DecompositionM,Err)
-  IF(NumberOfDomains>1) THEN
-    CALL cmfe_Decomposition_TypeSet(DecompositionM,CMFE_DECOMPOSITION_USER_DEFINED_TYPE,Err)
 
-    ! compute number of elements per domain
-    NumberOfElementsInDomain = NumberOfElementsFE/NumberOfDomains
+  IF(NumberOfDomains > 1) THEN
+    CALL cmfe_Decomposition_TypeSet(DecompositionM, CMFE_DECOMPOSITION_USER_DEFINED_TYPE, Err)
 
-    elem_idx2 = 0
-    DO domain_idx = 0, NumberOfDomains-1   ! loop over domains
-      DO elem_idx = 1, NumberOfElementsInDomain/NumberGlobalXElements   ! loop over elements
-      !                                                            (elem_idx=local element number, elem_idx2=global element number)
-        DO i = 1, NumberOfNodesInXi3
-          DO j = 1, NumberOfNodesInXi2
-            DO k = 1, NumberOfNodesPerFibre-1
-              elem_idx2 = elem_idx2+1
-              !PRINT "(I3.3,A,I5.5,A,I2)", ComputationalNodeNumber, ": 1D el. no. ", elem_idx2, " to domain no. ", domain_idx
-              !                                        DECOMPOSITION,  GLOBAL_ELEMENT_NUMBER, DOMAIN_NUMBER
-              CALL cmfe_Decomposition_ElementDomainSet(DecompositionM, elem_idx2,             domain_idx, Err)
-            ENDDO
+    ! set domains of ElementM's
+    ElementMNo = 1
+    FirstElementInCurrentGlobalElementLineNo = 1
+    DO GlobalElementLineNo = 1, NumberOfGlobalElementLines    ! loop over lines in X direction of global elements
+
+      DO FibreLineNo = 1, NumberOfFibreLinesPerGlobalElement    ! loop over fibre lines in a global element line
+        ElementFENo = FirstElementInCurrentGlobalElementLineNo
+        DO ElementInFibreLineNo = 1, NumberGlobalXElements      ! loop over the global elements that are pierced by that fibre line
+          DO I = 1, NumberOfElementsMInXi1                      ! loop over the ElementsM in the global element
+
+            ! get the domain of the global ElementFE
+            CALL cmfe_Decomposition_ElementDomainGet(DecompositionFE, ElementFENo, DomainNo, Err)
+
+            ! set the domain of the ElementM to the same domain as the containing global element
+            !                                        DECOMPOSITION,  GLOBAL_ELEMENT_NUMBER, DOMAIN_NUMBER
+            CALL cmfe_Decomposition_ElementDomainSet(DecompositionM,  ElementMNo,            DomainNo, Err)
+            !PRINT "(I3.3,A,I5.5,A,I2)", ComputationalNodeNumber, ": 1D el. no. ", ElementMNo, " to domain no. ", DomainNo
+
+            ElementMNo = ElementMNo + 1
           ENDDO
+
+          ElementFENo = ElementFENo + 1
         ENDDO
       ENDDO
+
+      FirstElementInCurrentGlobalElementLineNo = FirstElementInCurrentGlobalElementLineNo + NumberGlobalXElements
     ENDDO
 
-    IF(elem_idx2/=NumberOfElementsM) THEN
-      WRITE(*,*) "Error in setting up the decomposition for monodomain!"
-      STOP
-    ENDIF
-
-    CALL cmfe_Decomposition_NumberOfDomainsSet(DecompositionM,NumberOfDomains,Err)
   ELSE
+    ! single process
     CALL cmfe_Decomposition_TypeSet(DecompositionM,CMFE_DECOMPOSITION_CALCULATED_TYPE,Err)
-    CALL cmfe_Decomposition_NumberOfDomainsSet(DecompositionM,NumberOfDomains,Err)
   ENDIF
+
+  ! finish decomposition
+  CALL cmfe_Decomposition_NumberOfDomainsSet(DecompositionM,NumberOfDomains,Err)
   CALL cmfe_Decomposition_CreateFinish(DecompositionM,Err)
 
 END SUBROUTINE CreateDecomposition
@@ -1153,41 +1532,38 @@ SUBROUTINE CreateFieldFiniteElasticity()
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !Create the independent field for the active stress in the mechanics mesh
-!  independent_field_auto_create = .TRUE.
   CALL cmfe_Field_Initialise(IndependentFieldFE,Err)
-  IF(.NOT. independent_field_auto_create) THEN
-    CALL cmfe_Field_CreateStart(FieldIndependentUserNumberFE,RegionFE,IndependentFieldFE,Err)
-    CALL cmfe_Field_TypeSet(IndependentFieldFE,CMFE_FIELD_GENERAL_TYPE,Err)
-    CALL cmfe_Field_MeshDecompositionSet(IndependentFieldFE,DecompositionFE,Err)
-    CALL cmfe_Field_GeometricFieldSet(IndependentFieldFE,GeometricFieldFE,Err)
-    CALL cmfe_Field_DependentTypeSet(IndependentFieldFE,CMFE_FIELD_INDEPENDENT_TYPE,Err)
-    CALL cmfe_Field_NumberOfVariablesSet(IndependentFieldFE,2,Err)
-    CALL cmfe_Field_VariableTypesSet(IndependentFieldFE,[CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_V_VARIABLE_TYPE],Err)
+  CALL cmfe_Field_CreateStart(FieldIndependentUserNumberFE,RegionFE,IndependentFieldFE,Err)
+  CALL cmfe_Field_TypeSet(IndependentFieldFE,CMFE_FIELD_GENERAL_TYPE,Err)
+  CALL cmfe_Field_MeshDecompositionSet(IndependentFieldFE,DecompositionFE,Err)
+  CALL cmfe_Field_GeometricFieldSet(IndependentFieldFE,GeometricFieldFE,Err)
+  CALL cmfe_Field_DependentTypeSet(IndependentFieldFE,CMFE_FIELD_INDEPENDENT_TYPE,Err)
+  CALL cmfe_Field_NumberOfVariablesSet(IndependentFieldFE,2,Err)
+  CALL cmfe_Field_VariableTypesSet(IndependentFieldFE,[CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_V_VARIABLE_TYPE],Err)
 
-    IF (OLD_TOMO_MECHANICS) THEN
-      CALL cmfe_Field_DimensionSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_SCALAR_DIMENSION_TYPE,Err)
-      CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1,Err)
-    ELSE
-      CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,5,Err)
-    ENDIF
+  IF (OLD_TOMO_MECHANICS) THEN
+    CALL cmfe_Field_DimensionSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_SCALAR_DIMENSION_TYPE,Err)
+    CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1,Err)
+  ELSE
+    CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,5,Err)
+  ENDIF
 
-    CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,4,Err)
+  CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,4,Err)
 
-    IF (OLD_TOMO_MECHANICS) THEN
-      CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1, &
-         & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err)
-    ELSE
-      CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1, &
-        & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) !A_1
-      CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,2, &
-        & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) !A_2
-      CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,3, &
-        & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) !x_1
-      CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,4, &
-        & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) !x_2
-      CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,5, &
-        & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) !lambda_a
-    ENDIF
+  IF (OLD_TOMO_MECHANICS) THEN
+    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1, &
+       & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err)
+  ELSE
+    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1, &
+      & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) !A_1
+    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,2, &
+      & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) !A_2
+    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,3, &
+      & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) !x_1
+    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,4, &
+      & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) !x_2
+    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,5, &
+      & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) !lambda_a
   ENDIF
 
   CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,1, &
@@ -1225,8 +1601,6 @@ SUBROUTINE CreateFieldMonodomain()
   CALL cmfe_Field_NumberOfComponentsSet(GeometricFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1,Err)
   CALL cmfe_Field_VariableLabelSet(GeometricFieldM,CMFE_FIELD_U_VARIABLE_TYPE,"GeometryM",Err)
   CALL cmfe_Field_CreateFinish(GeometricFieldM,Err)
-
-
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !Create a materials field for monodomain and attach it to the geometric field - constant interpolation
@@ -1278,86 +1652,82 @@ SUBROUTINE CreateFieldMonodomain()
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !Create the independent field for the active stress in the bioelectrics mesh
-!  independent_field_auto_create = .TRUE.
   CALL cmfe_Field_Initialise(IndependentFieldM,Err)
-  IF(.NOT. independent_field_auto_create) THEN
-    CALL cmfe_Field_CreateStart(FieldIndependentUserNumberM,RegionM,IndependentFieldM,Err)
-    CALL cmfe_Field_TypeSet(IndependentFieldM,CMFE_FIELD_GENERAL_TYPE,Err)
-    CALL cmfe_Field_MeshDecompositionSet(IndependentFieldM,DecompositionM,Err)
-    CALL cmfe_Field_GeometricFieldSet(IndependentFieldM,GeometricFieldM,Err)
-    CALL cmfe_Field_DependentTypeSet(IndependentFieldM,CMFE_FIELD_INDEPENDENT_TYPE,Err)
-    CALL cmfe_Field_NumberOfVariablesSet(IndependentFieldM,4,Err)
-    CALL cmfe_Field_VariableTypesSet(IndependentFieldM,[CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_V_VARIABLE_TYPE, &
-     & CMFE_FIELD_U1_VARIABLE_TYPE,CMFE_FIELD_U2_VARIABLE_TYPE],Err)
+  CALL cmfe_Field_CreateStart(FieldIndependentUserNumberM,RegionM,IndependentFieldM,Err)
+  CALL cmfe_Field_TypeSet(IndependentFieldM,CMFE_FIELD_GENERAL_TYPE,Err)
+  CALL cmfe_Field_MeshDecompositionSet(IndependentFieldM,DecompositionM,Err)
+  CALL cmfe_Field_GeometricFieldSet(IndependentFieldM,GeometricFieldM,Err)
+  CALL cmfe_Field_DependentTypeSet(IndependentFieldM,CMFE_FIELD_INDEPENDENT_TYPE,Err)
+  CALL cmfe_Field_NumberOfVariablesSet(IndependentFieldM,4,Err)
+  CALL cmfe_Field_VariableTypesSet(IndependentFieldM,[CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_V_VARIABLE_TYPE, &
+   & CMFE_FIELD_U1_VARIABLE_TYPE,CMFE_FIELD_U2_VARIABLE_TYPE],Err)
 
-    !first variable:   CMFE_FIELD_U_VARIABLE_TYPE
-    CALL cmfe_Field_DataTypeSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_DP_TYPE,Err)
-    IF (OLD_TOMO_MECHANICS) THEN
-      !first variable:   CMFE_FIELD_U_VARIABLE_TYPE -- 1) active stress
-      CALL cmfe_Field_DimensionSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_SCALAR_DIMENSION_TYPE,Err)
-      CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1,Err)
-      CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1, &
-       & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
-      CALL cmfe_Field_VariableLabelSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,"Active_Stress_M",Err)
-    ELSE
-      CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,4,Err)
-      CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1, &
-       & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err) !A_1
-      CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,2, &
-       & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err) !A_2
-      CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,3, &
-       & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err) !x_1
-      CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,4, &
-       & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err) !x_2
-      CALL cmfe_Field_VariableLabelSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,"XB_state_variables_M",Err)
-    ENDIF
-
-    !second variable:   CMFE_FIELD_V_VARIABLE_TYPE -- 1) motor unit number   2) fibre type   3) fibre number   4) nearest Gauss point   5) in element number (LOCAL NODE NUMBERING!!!)
-    CALL cmfe_Field_DataTypeSet(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_INTG_TYPE,Err)
-    CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,FieldIndependentNumberOfComponentsM2,Err)
-    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,1, &
+  !first variable:   CMFE_FIELD_U_VARIABLE_TYPE
+  CALL cmfe_Field_DataTypeSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_DP_TYPE,Err)
+  IF (OLD_TOMO_MECHANICS) THEN
+    !first variable:   CMFE_FIELD_U_VARIABLE_TYPE -- 1) active stress
+    CALL cmfe_Field_DimensionSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_SCALAR_DIMENSION_TYPE,Err)
+    CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1,Err)
+    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1, &
      & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
-    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,2, &
-     & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
-    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,3, &
-     & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
-    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,4, &
-     & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
-    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,5, &
-     & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
-    CALL cmfe_Field_VariableLabelSet(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,"fibre_info",Err)
-
-    !third variable:   FIELD_U1_VARIABLE_TYPE -- 1) half-sarcomere length   2) inital half-sarcomere length   3) initial node distance
-    CALL cmfe_Field_DataTypeSet(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,CMFE_FIELD_DP_TYPE,Err)
-    CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,3,Err)
-    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,1, &
-     & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
-    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,2, &
-     & CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
-    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,3, &
-     & CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
-    CALL cmfe_Field_VariableLabelSet(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,"half-sarcomere_length",Err)
-
-    !fourth variable:   FIELD_U2_VARIABLE_TYPE -- 1) old node distance   2) maximum contraction velocity   3) relative contraction velocity   4) velocity before 1 time step   5) velocity before 2 time step   6) velocity before 3 time steps
-    CALL cmfe_Field_DataTypeSet(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,CMFE_FIELD_DP_TYPE,Err)
-    CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,6,Err)
-    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,1, &
-     & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
-    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,2, &
-     & CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
-    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,3, &
-     & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
-    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,4, &
-     & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
-    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,5, &
-     & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
-    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,6, &
-     & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
-    CALL cmfe_Field_VariableLabelSet(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,"contraction_velocity",Err)
-
-    CALL cmfe_Field_CreateFinish(IndependentFieldM,Err)
+    CALL cmfe_Field_VariableLabelSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,"Active_Stress_M",Err)
+  ELSE
+    CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,4,Err)
+    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1, &
+     & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err) !A_1
+    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,2, &
+     & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err) !A_2
+    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,3, &
+     & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err) !x_1
+    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,4, &
+     & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err) !x_2
+    CALL cmfe_Field_VariableLabelSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,"XB_state_variables_M",Err)
   ENDIF
 
+  !second variable:   CMFE_FIELD_V_VARIABLE_TYPE -- 1) motor unit number   2) fibre type   3) fibre number   4) nearest Gauss point   5) in element number (LOCAL NODE NUMBERING!!!)
+  CALL cmfe_Field_DataTypeSet(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_INTG_TYPE,Err)
+  CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,FieldIndependentNumberOfComponentsM2,Err)
+  CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,1, &
+   & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
+  CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,2, &
+   & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
+  CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,3, &
+   & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
+  CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,4, &
+   & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
+  CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,5, &
+   & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
+  CALL cmfe_Field_VariableLabelSet(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,"fibre_info",Err)
+
+  !third variable:   FIELD_U1_VARIABLE_TYPE -- 1) half-sarcomere length   2) inital half-sarcomere length   3) initial node distance
+  CALL cmfe_Field_DataTypeSet(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,CMFE_FIELD_DP_TYPE,Err)
+  CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,3,Err)
+  CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,1, &
+   & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
+  CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,2, &
+   & CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
+  CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,3, &
+   & CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
+  CALL cmfe_Field_VariableLabelSet(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,"half-sarcomere_length",Err)
+
+  !fourth variable:   FIELD_U2_VARIABLE_TYPE -- 1) old node distance   2) maximum contraction velocity   3) relative contraction velocity   4) velocity before 1 time step   5) velocity before 2 time step   6) velocity before 3 time steps
+  CALL cmfe_Field_DataTypeSet(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,CMFE_FIELD_DP_TYPE,Err)
+  CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,6,Err)
+  CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,1, &
+   & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
+  CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,2, &
+   & CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
+  CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,3, &
+   & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
+  CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,4, &
+   & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
+  CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,5, &
+   & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
+  CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,6, &
+   & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
+  CALL cmfe_Field_VariableLabelSet(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,"contraction_velocity",Err)
+
+  CALL cmfe_Field_CreateFinish(IndependentFieldM,Err)
 
 END SUBROUTINE CreateFieldMonodomain
 
@@ -1423,6 +1793,11 @@ SUBROUTINE CreateEquationsSet()
 END SUBROUTINE CreateEquationsSet
 
 SUBROUTINE InitializeFieldMonodomain()
+  INTEGER(CMISSIntg) :: FibreLineNo
+  INTEGER(CMISSIntg) :: FibreInLineNo
+  INTEGER(CMISSIntg) :: FibreNo
+  INTEGER(CMISSIntg) :: MotorUnitRank
+
   !UPDATE THE INDEPENDENT FIELD IndependentFieldM
   ! OLD_TOMO_MECHANICS
   !first variable (U)
@@ -1448,46 +1823,34 @@ SUBROUTINE InitializeFieldMonodomain()
   !init the motor unit number to 101
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,101,Err) !
 
-  !--------------------------------------------------------------------------------------------------------------------------------
-  !Read in the MU fibre distribution
-  allocate(mu_distri(NumberOfNodesInXi2*NumberOfNodesInXi3*NumberGlobalYElements*NumberGlobalZElements))
-  !the MU number the fiber belongs to
-  open(unit=7,file="input/MU_fibre_distribution_4050.txt",action="read",iostat=stat)
-  read(7,*,iostat=stat) mu_distri(:)
-  close(unit=7)
-  write(*,*) "Finished reading file: input/MU_fibre_distribution_4050.txt"
+  NodeNumber = 1
+  FibreNo = 0
+  ! loop over fibres
+  DO FibreLineNo = 1, NumberOfFibreLinesTotal
+    DO FibreInLineNo = 1, NumberOfInSeriesFibres
 
-  CALL MPI_BARRIER(MPI_COMM_WORLD, Err)
+      ! get rank of fibre
+      MotorUnitRank = MUDistribution(MOD(FibreNo, 4050)+1)
+      DO j = 1, NumberOfNodesPerFibre
 
-  k = 0
-  do i = 1,NumberOfNodesInXi2*NumberOfNodesInXi3*NumberGlobalYElements*NumberGlobalZElements  ! number of fibres per cut in yz-plane
-    mu_nr = mu_distri(i)
-    do j = 1,NumberOfNodesPerFibre
-      k = k+1
-      NodeNumber = k
+        !CALL MPI_BARRIER(MPI_COMM_WORLD, Err)
+        !print*, ComputationalNodeNumber, ": mu_nr=",mu_nr,", k=",k
+                                             !DECOMPOSITION,  USER_NODE_NUMBER, MESH_COMPONENT_NUMBER, DOMAIN_NUMBER
+        CALL cmfe_Decomposition_NodeDomainGet(DecompositionM, NodeNumber,       1,                     NodeDomain, Err)
 
-      !CALL MPI_BARRIER(MPI_COMM_WORLD, Err)
-      !print*, ComputationalNodeNumber, ": mu_nr=",mu_nr,", k=",k
+        IF (NodeDomain == ComputationalNodeNumber) THEN
+	  !PRINT*, "Node ", NodeNumber, ", Fibre ", FibreNo, ", MotorUnitRank: ", MotorUnitRank
 
-      CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber,1,NodeDomain,Err)
-      IF(NodeDomain==ComputationalNodeNumber) THEN
-
-    !  TYPE(FIELD_TYPE), POINTER :: FIELD !<A pointer to the field to update
-    !  INTEGER(INTG), INTENT(IN) :: VARIABLE_TYPE !<The field variable type to update \see FIELD_ROUTINES_VariableTypes,FIELD_ROUTINES
-    !  INTEGER(INTG), INTENT(IN) :: FIELD_SET_TYPE !<The field parameter set identifier to finish the update for \see FIELD_ROUTINES_ParameterSetTypes,FIELD_ROUTINES
-    !  INTEGER(INTG), INTENT(IN) :: VERSION_NUMBER !<The node derivative version number to add
-    !  INTEGER(INTG), INTENT(IN) :: DERIVATIVE_NUMBER !<The node derivative number to update
-    !  INTEGER(INTG), INTENT(IN) :: USER_NODE_NUMBER !<The user node number to update
-    !  INTEGER(INTG), INTENT(IN) :: COMPONENT_NUMBER !<The field variable component number to update
-    !  INTEGER(INTG), INTENT(IN) :: VALUE !<The value to update to
-    !
-        CALL cmfe_Field_ParameterSetUpdateNode(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1, &
-    !      USER_NODE_NUMBER, COMPONENT_NUMBER, VALUE
-        & k,                1,                mu_nr, Err)
-
-      ENDIF
-    enddo
-  enddo
+          !                                      FIELD,             VARIABLE_TYPE               FIELD_SET_TYPE
+          CALL cmfe_Field_ParameterSetUpdateNode(IndependentFieldM, CMFE_FIELD_V_VARIABLE_TYPE, CMFE_FIELD_VALUES_SET_TYPE,&
+      !     VERSION_NO, DERIVATIVE_NO,  USER_NODE_NUMBER, COMPONENT_NUMBER, VALUE
+          & 1,          1,              NodeNumber,       1,                MotorUnitRank, Err)
+        ENDIF
+        NodeNumber = NodeNumber + 1
+      ENDDO
+      FibreNo = FibreNo + 1
+    ENDDO
+  ENDDO
 
   !init the fibre type to 1
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2,1,Err) !Ftype=1
@@ -1495,7 +1858,7 @@ SUBROUTINE InitializeFieldMonodomain()
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3,0,Err)
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,4,0,Err)
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,5,0,Err) !(LOCAL NODE NUMBERING!!!)
-  !third variable:
+  !third variable (U1):
   !  components:
   !    1) half-sarcomere length
   !    2) initial half-sarcomere length
@@ -1503,29 +1866,30 @@ SUBROUTINE InitializeFieldMonodomain()
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
    & 1.0_CMISSRP,Err) ! lengths in the cell model are in /micro/meters!!!
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3, &
-   & LENGTH/(NumberOfInSeriesFibres*NumberOfNodesPerFibre-1),Err)  !lengths in the cell model are in /micro/meters!!!
-  !fourth variable:
+   & LENGTH / (NumberOfElementsMPerFibreLine), Err)  !lengths in the cell model are in /micro/meters!!!
+  !fourth variable (U2):
   !  components:
   !    1) old node distance
   !    2) maximum contraction velocity
   !    3) relative contraction velocity
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1, &
-   & LENGTH/(NumberOfInSeriesFibres*NumberOfNodesPerFibre-1),Err)  !lengths in the cell model are in /micro/meters!!!
+   & LENGTH / (NumberOfElementsMPerFibreLine),Err)  !lengths in the cell model are in /micro/meters!!!
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
-   & Vmax/(NumberOfInSeriesFibres*NumberOfNodesPerFibre-1),Err)    !velocity in the cell model is in micro/meters/millisecond!!!
+   & Vmax / (NumberOfElementsMPerFibreLine),Err)    !velocity in the cell model is in micro/meters/millisecond!!!
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3, &
    & 0.0_CMISSRP,Err)    !velocity in the cell model is in /micro/meters/per/millisecond!!!
 
 END SUBROUTINE InitializeFieldMonodomain
 
 SUBROUTINE InitializeFieldFiniteElasticity()
+  INTEGER(CMISSIntg) :: ElementNo
   !UPDATE THE INDEPENDENT FIELD IndependentFieldFE
   !second variable of IndependentFieldFE
   !  components:
   !    1) number of nodes in Xi(1) direction per element
   !    2) number of nodes in Xi(2) direction per element
   !    3) number of nodes in Xi(3) direction per element
-  !    4) beginning of fibres in this FE element??? 1=yes, 0=no
+  !    4) beginning of fibres in this FE element? 1=yes, 0=no
   !
   !initialise as if the fibres would not start in any element, and adjust below
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1, &
@@ -1537,15 +1901,20 @@ SUBROUTINE InitializeFieldFiniteElasticity()
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,4, &
    & 0,Err)
 
-  !fibres are starting in elements 1,4,7,10,...
-  DO elem_idx=1,NumberOfElementsFE,NumberGlobalXElements/NumberOfInSeriesFibres
-    CALL cmfe_Decomposition_ElementDomainGet(DecompositionFE,elem_idx,ElementDomain,Err)
-    IF(ElementDomain==ComputationalNodeNumber) THEN
+  ! Set V component 4) to 1 if fibre starts in element
+  DO ElementNo=1, NumberOfElementsFE, NumberGlobalXElements/NumberOfInSeriesFibres
+    ! only if element is assigned to own domain
+    CALL cmfe_Decomposition_ElementDomainGet(DecompositionFE, ElementNo, ElementDomain,Err)
+    IF (ElementDomain == ComputationalNodeNumber) THEN
       !fibres begin in this element
+      !                                        FIELD,              VARIABLE_TYPE,             FIELD_SET_TYPE,
       CALL cmfe_Field_ParameterSetUpdateElement(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
-       & elem_idx,4,1,Err)
+      !  USER_ELEMENT_NUMBER, COMPONENT_NUMBER, VALUE
+       & ElementNo,           4,                1,     Err)
       CALL cmfe_Field_ParameterSetUpdateElement(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
-       & elem_idx,1,NumberOfNodesInXi1,Err)
+       & ElementNo,           1,                NumberOfNodesInXi1, Err)
+
+      !PRINT "(A,I3.3,A,I5.5,A)", "x ", ComputationalNodeNumber, ": 3D el. no. ", ElementNo, " has beginning fibre "
     ENDIF
   ENDDO
 
@@ -1580,7 +1949,7 @@ SUBROUTINE InitializeCellML()
   CALL cmfe_CellML_Initialise(CellML,Err)
   CALL cmfe_CellML_CreateStart(CellMLUserNumber,RegionM,CellML,Err)
   !Import the Shorten et al. 2007 model from a file
-  CALL cmfe_CellML_ModelImport(CellML,filename,shortenModelIndex,Err)
+  CALL cmfe_CellML_ModelImport(CellML,CellMLModelFilename,shortenModelIndex,Err)
   ! Now we have imported all the models we are able to specify which variables from the model we want:
   !,- to set from this side
 
@@ -1744,9 +2113,13 @@ SUBROUTINE CreateControlLoops()
 
   CALL cmfe_ControlLoop_TimeOutputSet(ControlLoopMain,OUTPUT_FREQUENCY,Err)
   IF (DEBUGGING_OUTPUT) THEN
-    CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,CMFE_CONTROL_LOOP_TIMING_OUTPUT,Err) !DO NOT CHANGE!!!
+    CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,cmfe_CONTROL_LOOP_TIMING_OUTPUT,Err)
   ELSE
-    CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,CMFE_CONTROL_LOOP_NO_OUTPUT,Err)
+    ! output types:
+    ! CONTROL_LOOP_NO_OUTPUT = 0 !<No output from the control loop (no output of MainTime_* files)
+    ! CONTROL_LOOP_PROGRESS_OUTPUT = 1 !<Progress output from control loop (also output MainTime_* files)
+    ! CONTROL_LOOP_TIMING_OUTPUT = 2 !<Timing output from the control loop
+    CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,cmfe_CONTROL_LOOP_PROGRESS_OUTPUT,Err)
   ENDIF
 
 
@@ -1906,41 +2279,45 @@ SUBROUTINE SetBoundaryConditions()
   CALL cmfe_GeneratedMesh_SurfaceGet(GeneratedMesh,CMFE_GENERATED_MESH_REGULAR_RIGHT_SURFACE,RightSurfaceNodes,RightNormalXi,Err)
   CALL cmfe_GeneratedMesh_SurfaceGet(GeneratedMesh,CMFE_GENERATED_MESH_REGULAR_FRONT_SURFACE,FrontSurfaceNodes,FrontNormalXi,Err)
 
-  !Set x=0 nodes to no x displacment in x. Set x=WIDTH nodes to 100% x displacement
-  DO node_idx=1,SIZE(LeftSurfaceNodes,1)
-    NodeNumber=LeftSurfaceNodes(node_idx)
-    CALL cmfe_Decomposition_NodeDomainGet(DecompositionFE,NodeNumber,1,NodeDomain,Err)
-    IF(NodeDomain==ComputationalNodeNumber) THEN
-      CALL cmfe_BoundaryConditions_SetNode(BoundaryConditionsFE,DependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1,1,NodeNumber,1, &
-!        & CMFE_BOUNDARY_CONDITION_FIXED_USER_CONTROLLED,0.0_CMISSRP,Err)
-        & CMFE_BOUNDARY_CONDITION_FIXED,0.0_CMISSRP,Err)
+  !Set x=0 nodes to no x displacment in x.
+  DO node_idx = 1, SIZE(LeftSurfaceNodes, 1)
+    NodeNumber = LeftSurfaceNodes(node_idx)
+    CALL cmfe_Decomposition_NodeDomainGet(DecompositionFE, NodeNumber, 1, NodeDomain, Err)
+    IF (NodeDomain == ComputationalNodeNumber) THEN
+      !                                    BOUNDARY_CONDITIONS,  FIELD,            VARIABLE_TYPE,
+      CALL cmfe_BoundaryConditions_SetNode(BoundaryConditionsFE, DependentFieldFE, CMFE_FIELD_U_VARIABLE_TYPE, &
+      !   VERSION_NUMBER, DERIVATIVE_NUMBER, USER_NODE_NUMBER, COMPONENT_NUMBER, CONDITION,
+        & 1,              1,                 NodeNumber,       1,                CMFE_BOUNDARY_CONDITION_FIXED, &   ! CMFE_BOUNDARY_CONDITION_FIXED_USER_CONTROLLED
+      ! VALUE
+        & 0.0_CMISSRP, Err)
     ENDIF
   ENDDO
 
-  DO node_idx=1,SIZE(RightSurfaceNodes,1)
-    NodeNumber=RightSurfaceNodes(node_idx)
-    CALL cmfe_Decomposition_NodeDomainGet(DecompositionFE,NodeNumber,1,NodeDomain,Err)
-    IF(NodeDomain==ComputationalNodeNumber) THEN
+ !Set x=WIDTH nodes to INITIAL_STRETCH x displacement
+  DO node_idx = 1, SIZE(RightSurfaceNodes, 1)
+    NodeNumber = RightSurfaceNodes(node_idx)
+    CALL cmfe_Decomposition_NodeDomainGet(DecompositionFE, NodeNumber, 1, NodeDomain, Err)
+    IF (NodeDomain == ComputationalNodeNumber) THEN
       CALL cmfe_BoundaryConditions_SetNode(BoundaryConditionsFE,DependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1,1,NodeNumber,1, &
-        & CMFE_BOUNDARY_CONDITION_FIXED_INCREMENTED,LENGTH*INITIAL_STRETCH,Err)
+        & CMFE_BOUNDARY_CONDITION_FIXED_INCREMENTED, LENGTH*INITIAL_STRETCH, Err)
     ENDIF
   ENDDO
 
   !Set y=0 nodes to no y displacement
-  DO node_idx=1,SIZE(FrontSurfaceNodes,1)
-    NodeNumber=FrontSurfaceNodes(node_idx)
+  DO node_idx = 1, SIZE(FrontSurfaceNodes, 1)
+    NodeNumber = FrontSurfaceNodes(node_idx)
     CALL cmfe_Decomposition_NodeDomainGet(DecompositionFE,NodeNumber,1,NodeDomain,Err)
-    IF(NodeDomain==ComputationalNodeNumber) THEN
+    IF (NodeDomain == ComputationalNodeNumber) THEN
       CALL cmfe_BoundaryConditions_SetNode(BoundaryConditionsFE,DependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1,1,NodeNumber,2, &
         & CMFE_BOUNDARY_CONDITION_FIXED,0.0_CMISSRP,Err)
     ENDIF
   ENDDO
 
   !Set z=0 nodes to no z displacement
-  DO node_idx=1,SIZE(BottomSurfaceNodes,1)
-    NodeNumber=BottomSurfaceNodes(node_idx)
+  DO node_idx = 1, SIZE(BottomSurfaceNodes, 1)
+    NodeNumber = BottomSurfaceNodes(node_idx)
     CALL cmfe_Decomposition_NodeDomainGet(DecompositionFE,NodeNumber,1,NodeDomain,Err)
-    IF(NodeDomain==ComputationalNodeNumber) THEN
+    IF (NodeDomain == ComputationalNodeNumber) THEN
       CALL cmfe_BoundaryConditions_SetNode(BoundaryConditionsFE,DependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1,1,NodeNumber,3, &
         & CMFE_BOUNDARY_CONDITION_FIXED,0.0_CMISSRP,Err)
     ENDIF
@@ -1962,8 +2339,7 @@ SUBROUTINE CalculateBioelectrics()
 END SUBROUTINE CalculateBioelectrics
 
 SUBROUTINE ExportEMG()
-  RETURN
-  WRITE(*,'(A)',advance='no') "Export EMG ..."
+  IF (ComputationalNodeNumber == 0) WRITE(*,'(A)',advance='no') "Output EMG Data ... "
   EXPORT_FIELD=.TRUE.
   IF(EXPORT_FIELD) THEN
     CALL cmfe_Fields_Initialise(Fields,Err)
@@ -1978,7 +2354,7 @@ SUBROUTINE ExportEMG()
     CALL cmfe_Fields_ElementsExport(Fields,"EMGExample_FE","FORTRAN",Err)
     CALL cmfe_Fields_Finalise(Fields,Err)
   ENDIF
-  PRINT*, " done"
+  IF (ComputationalNodeNumber == 0) PRINT*, " done"
 
 END SUBROUTINE ExportEMG
 
@@ -2002,23 +2378,104 @@ FUNCTION GetMemoryConsumption()
    & pid, comm, state, ppid, pgrp, session, tty_nr, &
    & tpgid, flags, minflt, cminflt, majflt, cmajflt, &
    & utime, stime, cutime, cstime, priority, nice, &
-   & O, itrealvalue, starttime
-  INTEGER(CMISSLintg) :: MemoryConsumption, MemoryConsumptionEnd2
+   & O, itrealvalue, starttime, Description, Limit
+  CHARACTER(LEN=10000) :: Debug
+  INTEGER(CMISSIntg) :: I
+  INTEGER(CMISSLintg) :: MemoryConsumption, &
+   & VmSize, VmRSS, Shared, Text, Lib, Data, Dt, RssLimBytes, RssAnon, Pagesize, VSizeBytes
 
-  OPEN(UNIT=10, FILE="/proc/self/stat", ACTION="read", IOSTAT=stat)
-  IF (STAT /= 0) THEN
-    PRINT*, "Could not read memory consumption from /proc/self/stat."
-  ELSE
-    READ(10,*, IOSTAT=stat) pid, comm, state, ppid, pgrp, session, tty_nr, &
-       & tpgid, flags, minflt, cminflt, majflt, cmajflt, &
-       & utime, stime, cutime, cstime, priority, nice, &
-       & O, itrealvalue, starttime, MemoryConsumption, MemoryConsumptionEnd2
-    CLOSE(UNIT=10)
+  ! Critical Section
+  DO I=0,NumberOfComputationalNodes
+    !CALL MPI_BARRIER(MPI_COMM_WORLD, Err)
+    IF (I == ComputationalNodeNumber) THEN
 
-    IF (ComputationalNodeNumber == 0) PRINT*, "MemoryConsumption: ", MemoryConsumption, " Bytes, ", MemoryConsumptionEnd2, " pages"
+      ! read memory page size
+      Stat = 0
+      IF (I==0) CALL SYSTEM("getconf PAGESIZE > pagesize", Stat)
+      IF (Stat == 0) THEN
+        OPEN(UNIT=10, FILE="pagesize", ACTION="read", IOSTAT=Stat)
+        IF (Stat == 0) THEN
+          READ(10,*, IOSTAT=Stat) Pagesize
+          CLOSE(UNIT=10)
+        ELSE
+          PRINT*, "Error opening pagesize."
+        ENDIF
+      ELSE
+        PRINT*, "Error calling 'getconf PAGESIZE'"
+        Pagesize = 4096
+      ENDIF
 
-    WRITE(GetMemoryConsumption, *) MemoryConsumption
-  ENDIF
+      ! read from /proc/self/stat
+      ! see http://man7.org/linux/man-pages/man5/proc.5.html for reference
+      OPEN(UNIT=10, FILE="/proc/self/stat", ACTION="read", IOSTAT=stat)
+      IF (STAT /= 0) THEN
+        PRINT*, "Could not read memory consumption from /proc/self/stat."
+      ELSE
+        !READ(10,"(A)",IOSTAT=stat,advance='no') Debug
+        !PRINT*, "proc/self/stat: "//TRIM(Debug)
+        READ(10,*, IOSTAT=stat) pid, comm, state, ppid, pgrp, session, tty_nr, &
+           & tpgid, flags, minflt, cminflt, majflt, cmajflt, &
+           & utime, stime, cutime, cstime, priority, nice, &
+           & O, itrealvalue, starttime, VSizeBytes, VmRSS, RssLimBytes
+        CLOSE(UNIT=10)
+
+        MemoryConsumption = VSizeBytes
+
+        IF (ComputationalNodeNumber == 0) THEN
+          WRITE(*, "(A,F7.3,A,I11,A,F7.3,A)") "     MemoryConsumption:", (MemoryConsumption/1e9), " GB (", &
+            & MemoryConsumption, " B), Resident: ", (VmRSS*PageSize/1e9), " GB"
+        ENDIF
+
+        WRITE(GetMemoryConsumption, *) MemoryConsumption
+      ENDIF
+
+      ! read from /proc/self/limits
+      IF (.TRUE.) THEN
+        OPEN(UNIT=10, FILE="/proc/self/limits", ACTION="read", IOSTAT=stat)
+        IF (STAT /= 0) THEN
+          PRINT*, "Could not read limits from /proc/self/limits."
+        ELSE
+          DO
+            READ(10, "(A26,A21)", IOSTAT=Stat) Description, Limit
+            !PRINT*, "Description:["//TRIM(Description)//"], Limit:["//TRIM(Limit)//"]"
+            IF (Stat /= 0) EXIT
+            IF (INDEX(Description, "Max resident set") /= 0) THEN
+              IF (TRIM(Limit) == "unlimited") THEN
+                IF (ComputationalNodeNumber == 0) PRINT*, "    (Resident has no soft limit)"
+              ELSE
+                IF (ComputationalNodeNumber == 0) PRINT*, "    (Resident is limited to ", Limit,")"
+              ENDIF
+            ENDIF
+          ENDDO
+          CLOSE(UNIT=10)
+        ENDIF
+      ENDIF
+
+      ! read from /proc/self/statm
+      OPEN(UNIT=10, FILE="/proc/self/statm", ACTION="read", IOSTAT=stat)
+      IF (STAT /= 0) THEN
+        PRINT*, "Could not read memory consumption from /proc/self/statm."
+      ELSE
+        READ(10,*, IOSTAT=stat) VmSize, VmRSS, Shared, Text, Lib, Data, Dt
+        CLOSE(UNIT=10)
+
+        ! VmRSS = RssAnon + Shared (all as number of pages)
+        ! RssAnon is the resident set size of anonymous memory (real memory in RAM, not laid out in files)
+        RssAnon = VmRSS - Shared
+
+        IF (ComputationalNodeNumber == 0) THEN
+          !PRINT*, "VmSize: ", VmSize, ", VmRSS: ", VmRSS, ", Shared: ", Shared, ", Text: ", Text, ", Lib:", Lib, ", Data:", Data
+          !PRINT*, "RssAnon: ", RSSAnon, ", RssLimBytes: ", RssLimBytes, ", Pagesize: ", Pagesize
+
+          ! Output Percentage
+          !WRITE(*, "(3(A,F7.3),A,F5.1,A)") "     VmSize:", (VmSize*Pagesize/1.e9), " GB, RssAnon:", (RssAnon*Pagesize/1.e9), &
+          !  & " GB, RssLimBytes: ", (RssLimBytes/1.e9), " GB (", (REAL(RssAnon*Pagesize) / RssLimBytes * 100.0), "%)"
+        ENDIF
+      ENDIF
+
+      !PRINT*, TRIM(cmfe_CustomProfilingGetInfo(Err))
+    ENDIF
+  ENDDO
 
 END FUNCTION GetMemoryConsumption
 
@@ -2047,7 +2504,22 @@ SUBROUTINE WriteTimingFile()
     WRITE(123,'(A)') '# Stamp; Host; NProc; X; Y; Z; F; Total FE; Total M; End Time; ' // &
       & 'Dur. Init; Stretch Sim; Int. Init; Main Sim; Total; Total (User); Total (System); ' // &
       & 'ODE; Parabolic; FE; FE before Main Sim; Mem. Consumption after 1st timestep; Memory Consumption At End; ' // &
-      & 'Parabolic reason; Newton reason; parabolic n. iter; min; max; newton n. iter; min; max '
+      & 'Parabolic reason; Newton reason; parabolic n. iter; min; max; newton n. iter; min; max; '
+    WRITE(123,'(A)') '# 1. problem solve; 1.1/2 pre solve; problem_solver_pre_solve; 1.1. problem cellml solve; ' // &
+      & 'cellml solve (*); 1.1.1. cellml field2cellml update; 1.1.2. cellml field var get; 1.1.3. cellml data get; ' // &
+      & '1.1.4. cellml integrate; cellml call rhs; 1.1.5. cellml data restore; 1.1.6. cellml field update; ' // &
+      & 'problem_solver_post_solve; 1.2. dynamic linear solve (*); 1.2.1 assemble equations; 1.2.2 get loop time; ' // &
+      & '1.2.3 solve; 1.2.4 back-substitute; 1.1/2 post solve; 1.2.3.1 dynamic mean predicted calculate; ' // &
+      & '1.2.3.2 dynamic assemble; 1.2.3.3 solve linear system; 1.2.3.4 update dependent field; 1.3.1 pre solve; ' // &
+      & '1.3.2 apply incremented BC; 1.3.3 solve; 1.3.3.1 static nonlinear solve (*); 1.3.3.1.1 apply BC, assemble; ' // &
+      & '1.3.3.1.2 assemble interface conditions; 1.3.3.1.3 solve; 1.3.3.1.3.1 newton update solution vector; ' // &
+      & '1.3.3.1.3.2 newton Petsc solve; 1.3.3.1.3.3 newton diagnostics; 1.3.3.1.4 update residual; 1.3.4 post solve;  '
+    WRITE(123,'(A)') '# (memory consumption, size 1 el., n. objects): distributed vector cmiss DP;;; ' // &
+      & 'distributed vector cmiss INTG;;; distributed matrix petsc, compr. row storage diag;;; ' // &
+      & 'distributed matrix petsc, compr. row storage, offdiag;;; distributed matrix petsc, compr. row storage, row ind.;;; ' // &
+      & 'distributed matrix petsc, compr. row storage, col. ind.;;; ' // &
+      & 'distributed matrix petsc, compr. row storage (local to global mapping);;; ' // &
+      & 'distributed vector petsc'
     CLOSE(unit=123)
   ENDIF
 
@@ -2066,7 +2538,7 @@ SUBROUTINE WriteTimingFile()
 
   TimeStampStr = GetTimeStamp()
 
-  WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A))") &
+  WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),35(F25.13,A),8(I17,A,I5,A,I7,A))") &
     & TRIM(TimeStampStr), ';', &
     & TRIM(Hostname(1:22)), ';', &
     & NumberOfComputationalNodes, ';', &
@@ -2097,7 +2569,68 @@ SUBROUTINE WriteTimingFile()
     & CustomSolverNumberIterationsParabolicMax, ';', &
     & CustomSolverNumberIterationsNewton, ';', &
     & CustomSolverNumberIterationsNewtonMin, ';', &
-    & CustomSolverNumberIterationsNewtonMax, ';'
+    & CustomSolverNumberIterationsNewtonMax, ';', &
+    ! Custom Profiling durations
+    & cmfe_CustomProfilingGetDuration("1. problem solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.1/2 pre solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("problem_solver_pre_solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.1. problem cellml solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("cellml solve (*)", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.1.1. cellml field2cellml update", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.1.2. cellml field var get", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.1.3. cellml data get", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.1.4. cellml integrate", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("cellml call rhs", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.1.5. cellml data restore", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.1.6. cellml field update", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("problem_solver_post_solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.2. dynamic linear solve (*)", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.2.1 assemble equations", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.2.2 get loop time", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.2.3 solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.2.4 back-substitute", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.1/2 post solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.2.3.1 dynamic mean predicted calculate", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.2.3.2 dynamic assemble", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.2.3.3 solve linear system", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.2.3.4 update dependent field", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.1 pre solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.2 apply incremented BC", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.3 solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.3.1 static nonlinear solve (*)", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.3.1.1 apply BC, assemble", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.3.1.2 assemble interface conditions", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.3.1.3 solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.3.1.3.1 newton update solution vector", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.3.1.3.2 newton Petsc solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.3.1.3.3 newton diagnostics", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.3.1.4 update residual", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.4 post solve", Err), ';', &
+    ! custom profiling memory consumption
+    & cmfe_CustomProfilingGetMemory("distributed vector cmiss DP", Err), ';', &
+    & cmfe_CustomProfilingGetSizePerElement("distributed vector cmiss DP", Err), ';', &
+    & cmfe_CustomProfilingGetNumberObjects("distributed vector cmiss DP", Err), ';', &
+    & cmfe_CustomProfilingGetMemory("distributed vector cmiss INTG", Err), ';', &
+    & cmfe_CustomProfilingGetSizePerElement("distributed vector cmiss INTG", Err), ';', &
+    & cmfe_CustomProfilingGetNumberObjects("distributed vector cmiss INTG", Err), ';', &
+    & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage diag", Err), ';', &
+    & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage diag", Err), ';', &
+    & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage diag", Err), ';', &
+    & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage, offdiag", Err), ';', &
+    & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage, offdiag", Err), ';', &
+    & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage, offdiag", Err), ';', &
+    & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage, row ind.", Err), ';', &
+    & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage, row ind.", Err), ';', &
+    & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage, row ind.", Err), ';', &
+    & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage, col. ind.", Err), ';', &
+    & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage, col. ind.", Err), ';', &
+    & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage, col. ind.", Err), ';', &
+    & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage (local to global mapping)", Err), ';', &
+    & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage (local to global mapping)", Err), ';', &
+    & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage (local to global mapping)", Err), ';', &
+    & cmfe_CustomProfilingGetMemory("distributed vector petsc", Err), ';', &
+    & cmfe_CustomProfilingGetSizePerElement("distributed vector petsc", Err), ';', &
+    & cmfe_CustomProfilingGetNumberObjects("distributed vector petsc", Err), ';'
 
   CLOSE(unit=123)
 END SUBROUTINE WriteTimingFile
@@ -2105,15 +2638,32 @@ END SUBROUTINE WriteTimingFile
 SUBROUTINE WriteCustomProfilingFile()
   CHARACTER(len=256) :: Filename = "profiling."
   CHARACTER(len=20)  :: ComputationalNodeNumberStr
+  CHARACTER(len=100) :: Hostname
+
+  CALL HOSTNM(Hostname)
 
   ! create filename
   WRITE(ComputationalNodeNumberStr, '(I0.5)') ComputationalNodeNumber     ! convert ComputationalNodeNumber to string
   Filename = TRIM(Filename) // TRIM(ComputationalNodeNumberStr) // ".txt"
 
-  ! Write Comment in first line if file does not yet exist
   OPEN(unit=123, file=Filename, iostat=stat, access='append')
   IF (stat /= 0 ) PRINT*, 'Failed to open File \"'// TRIM(Filename) // '\" for writing!.'
-  WRITE(123,'(2A)') '# CustomProfiling at ',GetTimeStamp()
+
+  ! Write header to file
+  WRITE(123,'(3A,I5)') '# CustomProfiling at ',GetTimeStamp(), ", number of computational nodes: ", NumberOfComputationalNodes
+  WRITE(123,'(A)') '# Hostname, NProc, X,Y,Z,F, nFE, nM, tEnd'
+  WRITE(123,'(2A,7(I11,A),(F8.3,A))')  &
+    & TRIM(Hostname(1:22)), ';', &
+    & NumberOfComputationalNodes, ';', &
+    & NumberGlobalXElements, ';', &
+    & NumberGlobalYElements, ';', &
+    & NumberGlobalZElements, ';', &
+    & NumberOfInSeriesFibres, ';', &
+    & NumberOfElementsFE, ';', &
+    & NumberOfElementsM, ';', &
+    & TIME_STOP, ';'
+
+  ! write info
   WRITE(123,*) cmfe_CustomProfilingGetInfo(Err)
 
   CLOSE(unit=123)
@@ -2165,6 +2715,21 @@ SUBROUTINE HandleSolverInfo(TimeStep)
   ENDIF
 
 END SUBROUTINE HandleSolverInfo
+
+SUBROUTINE gdbParallelDebuggingBarrier()
+  INTEGER(CMISSIntg) :: Gdb_Resume
+  Gdb_Resume = 0
+
+  IF (NumberOfComputationalNodes > 1) THEN
+    PRINT*, "Node ", ComputationalNodeNumber, " is waiting for Gdb_Resume=", Gdb_Resume &
+      & , " to become 1 (gdb: set var gdb_resume = 1)!"
+    DO WHILE (Gdb_Resume == 0)
+      CALL Sleep(1)
+    ENDDO
+    PRINT*, "Node ", ComputationalNodeNumber, " resumes because gdb_resume=", Gdb_Resume, "."
+  ENDIF
+
+END SUBROUTINE gdbParallelDebuggingBarrier
 
 END PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 

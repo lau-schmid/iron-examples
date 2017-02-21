@@ -1,0 +1,7 @@
+Thomas' ursprüngliche Bezeichnung und unsere Namen der Modelle:
+
+1: active strain simple                              -   ActiveStrain
+2: multiscale active strain, mechanics only          -   ActiveStrainMechanics
+3: multiscale and multiphysics active strain         -   MultiPhysStrain / cuboid
+4: titin                                             -   Titin
+5: titin heterogeneous material properties           -   Titin_hetero

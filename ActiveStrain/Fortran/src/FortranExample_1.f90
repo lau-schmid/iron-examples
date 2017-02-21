@@ -342,20 +342,50 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   !Create the equations_set
   CALL cmfe_Field_Initialise(EquationsSetField,Err)                                                                                        !hier (2)
+  
+  !***********************************************************************
+  CALL cmfe_Print_equationsSet_type(EquationsSet, 'EquationsSet 1', Err)!* -> not associated
+  !***********************************************************************
+  
   CALL cmfe_EquationsSet_CreateStart(EquationSetUserNumber,Region,FibreField,[CMFE_EQUATIONS_SET_ELASTICITY_CLASS, &                       !hier 2 (s.u.)
 !    & CMFE_EQUATIONS_SET_FINITE_ELASTICITY_TYPE,CMFE_EQUATIONS_SET_NEARLY_INCOMPRESSIBLE_MOONEY_RIVLIN_SUBTYPE, &
     & CMFE_EQUATIONS_SET_FINITE_ELASTICITY_TYPE,CMFE_EQUATIONS_SET_ACTIVE_STRAIN_SUBTYPE], &
 !    & CMFE_EQUATIONS_SET_FINITE_ELASTICITY_TYPE,CMFE_EQUATIONS_SET_MOONEY_RIVLIN_SUBTYPE, &
     & EquationsSetFieldUserNumber,EquationsSetField,EquationsSet,Err)
-  CALL cmfe_EquationsSet_CreateFinish(EquationsSet,Err)                                                                                    !hier 2
+  CALL cmfe_EquationsSet_CreateFinish(EquationsSet,Err)                                                                                    !hier 2                                                                                 !hier (2)
+
+  !*********************************************************************
+  CALL cmfe_Print_equationsSet_type(EquationsSet, 'EquationsSet 2', Err)!* -> associated
+  !*********************************************************************
+  
 
   !Create the equations set dependent field
   CALL cmfe_EquationsSet_DependentCreateStart(EquationsSet,FieldDependentUserNumber,DependentField,Err)                                    !hier 2
+  
+  !*********************************************************************
+  !CALL cmfe_Print_equationsSet_type(EquationsSet, 'EquationsSet 3', Err)!* -> no changes (maybe in toDos)
+  !*********************************************************************
+  
   CALL cmfe_EquationsSet_DependentCreateFinish(EquationsSet,Err)                                                                           !hier 2
+  
+  !*********************************************************************
+  !CALL cmfe_Print_equationsSet_type(EquationsSet, 'EquationsSet 4', Err)!* -> no changes (maybe in toDos)
+  !*********************************************************************
+  
 
   !Create the equations set material field 
   CALL cmfe_EquationsSet_MaterialsCreateStart(EquationsSet,FieldMaterialUserNumber,MaterialField,Err)                                      !hier 2
+  
+  !*********************************************************************
+  CALL cmfe_Print_equationsSet_type(EquationsSet, 'EquationsSet 5', Err)!* -> contained pointer associated
+  !*********************************************************************
+  
   CALL cmfe_EquationsSet_MaterialsCreateFinish(EquationsSet,Err)                                                                           !hier 2
+  
+  !*********************************************************************
+  !CALL cmfe_Print_equationsSet_type(EquationsSet, 'EquationsSet 6', Err)!* -> no changes (maybe in toDos)
+  !*********************************************************************
+  
 
   !Set Material-Parameters [mu(1) mu(2) mu(3) alpha(1) alpha(2) alpha(3) mu_0 XB]
   CALL cmfe_Field_ComponentValuesInitialise(MaterialField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,C(1),Err)
@@ -368,17 +398,38 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   CALL cmfe_Field_ComponentValuesInitialise(MaterialField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,8,0.0_CMISSRP,Err)
 
   !Create the equations set equations
-  CALL print_equations_type(Equations, 'Equations')
+  !CALL cmfe_print_equations_type(Equations, 'Equations', Err)
   CALL cmfe_Equations_Initialise(Equations,Err)                                                                                            !hier 1
-  CALL print_equations_type(Equations, 'Equations')
+  
+  !************************************************************
+  CALL cmfe_print_equations_type(Equations, 'Equations 1', Err)!* -> not associated
+  !************************************************************
+  
   CALL cmfe_EquationsSet_EquationsCreateStart(EquationsSet,Equations,Err)                                                                  !hier 2, 1
-  CALL print_equations_type(Equations, 'Equations')
+  
+  !*********************************************************************
+  CALL cmfe_Print_equationsSet_type(EquationsSet, 'EquationsSet 7', Err)!* -> contained pointer associated
+  CALL cmfe_print_equations_type(Equations, 'Equations 2', Err)!********** -> associated
+  !*********************************************************************
+  
   CALL cmfe_Equations_SparsityTypeSet(Equations,CMFE_EQUATIONS_SPARSE_MATRICES,Err)                                                        !hier 1
-  CALL print_equations_type(Equations, 'Equations')
+  
+  !*********************************************************************
+  CALL cmfe_print_equations_type(Equations, 'Equations 3', Err)!********** -> no changes
+  !*********************************************************************
+ 
   CALL cmfe_Equations_OutputTypeSet(Equations,CMFE_EQUATIONS_NO_OUTPUT,Err)                                                                !hier 1
-  CALL print_equations_type(Equations, 'Equations')
+  
+  !*********************************************************************
+  CALL cmfe_print_equations_type(Equations, 'Equations 4', Err)!********** -> no changes
+  !*********************************************************************
+  
   CALL cmfe_EquationsSet_EquationsCreateFinish(EquationsSet,Err)                                                                           !hier 2
 
+  !*********************************************************************
+  CALL cmfe_Print_equationsSet_type(EquationsSet, 'EquationsSet 8', Err)!* -> no changes (maybe in toDo-part)
+  !*********************************************************************
+  
   !Initialise dependent field from undeformed geometry and displacement bcs and set hydrostatic pressure
   CALL cmfe_Field_ParametersToFieldParametersComponentCopy(GeometricField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
     & 1,DependentField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,Err)
@@ -398,47 +449,182 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   !Define the problem
   CALL cmfe_Problem_Initialise(Problem,Err)                                                                                                !hier 3
+  
+  !*****************************************************
+  CALL cmfe_Print_problem_type(Problem,'Problem 1',Err)!** -> not associated
+  !*****************************************************
+  
   CALL cmfe_Problem_CreateStart(ProblemUserNumber,[CMFE_PROBLEM_ELASTICITY_CLASS,CMFE_PROBLEM_FINITE_ELASTICITY_TYPE, &
     & CMFE_PROBLEM_NO_SUBTYPE],Problem,Err)                                                                                                !hier 3
+  
+  !*****************************************************
+  CALL cmfe_Print_problem_type(Problem,'Problem 2',Err)!** -> associated
+  !*****************************************************
+  
 !  CALL cmfe_Problem_SpecificationSet(Problem,CMFE_PROBLEM_ELASTICITY_CLASS,CMFE_PROBLEM_FINITE_ELASTICITY_TYPE, &
 !    & CMFE_PROBLEM_NO_SUBTYPE,Err)
   CALL cmfe_Problem_CreateFinish(Problem,Err)                                                                                              !hier 3
+  
+  !*****************************************************
+  CALL cmfe_Print_problem_type(Problem,'Problem 3',Err)!** -> type finished
+  !*****************************************************
+  
 
   !Create the problem control loop
   CALL cmfe_Problem_ControlLoopCreateStart(Problem,Err)                                                                                    !hier 3
+  
+  !*****************************************************
+  CALL cmfe_Print_problem_type(Problem,'Problem 4',Err)!** -> pointer to control loop info associated
+  !*****************************************************
+  
   CALL cmfe_ControlLoop_Initialise(ControlLoop,Err)
   CALL cmfe_Problem_ControlLoopGet(Problem,CMFE_CONTROL_LOOP_NODE,ControlLoop,Err)                                                         !hier 3
+  
+  !*****************************************************
+  !CALL cmfe_Print_problem_type(Problem,'Problem 5',Err)!** -> no changes
+  !*****************************************************
+  
   CALL cmfe_ControlLoop_TypeSet(ControlLoop,CMFE_PROBLEM_CONTROL_LOAD_INCREMENT_LOOP_TYPE,Err)                                             !hier ()
   CALL cmfe_ControlLoop_MaximumIterationsSet(ControlLoop,1,Err)
   CALL cmfe_ControlLoop_LoadOutputSet(ControlLoop,1,Err)
   CALL cmfe_Problem_ControlLoopCreateFinish(Problem,Err)                                                                                   !hier 3
+  
+  !*****************************************************
+  !CALL cmfe_Print_problem_type(Problem,'Problem 6',Err)!** -> no changes
+  !*****************************************************
+  
 
   !Create the problem solvers
   CALL cmfe_Solver_Initialise(Solver,Err)                                                                                                  !hier 4
+  
+  !***************************************************
+  CALL cmfe_Print_solver_type(Solver, 'Solver 1', Err)!* -> not associated
+  !***************************************************
+  
   CALL cmfe_Solver_Initialise(LinearSolver,Err)                                                                                            !hier 5
+  
+  !***************************************************************
+  CALL cmfe_Print_solver_type(LinearSolver, 'LinearSolver 1', err)!* -> not associated
+  !***************************************************************
+  
   CALL cmfe_Problem_SolversCreateStart(Problem,Err)                                                                                        !hier 3
+  
+  !*****************************************************
+  !CALL cmfe_Print_problem_type(Problem,'Problem 7',Err)!** -> no changes
+  !*****************************************************
+  
   CALL cmfe_Problem_SolverGet(Problem,CMFE_CONTROL_LOOP_NODE,1,Solver,Err)                                                                 !hier 3, 4
+  
+  !*****************************************************
+  CALL cmfe_Print_solver_type(Solver, 'Solver 2', Err)!*** -> associated
+  !CALL cmfe_Print_problem_type(Problem,'Problem 7.1',Err)!** -> no changes
+  !*****************************************************
+  
   CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_PROGRESS_OUTPUT,Err)                                                                   !hier 4
+  
+  !***************************************************
+  CALL cmfe_Print_solver_type(Solver, 'Solver 3', Err)!* -> changed output type
+  !***************************************************
+  
   CALL cmfe_Solver_NewtonJacobianCalculationTypeSet(Solver,CMFE_SOLVER_NEWTON_JACOBIAN_EQUATIONS_CALCULATED,Err)                           !hier 4
+  
+  !***************************************************
+  !CALL cmfe_Print_solver_type(Solver, 'Solver 4', Err)!* -> no changes
+  !***************************************************
+  
   CALL cmfe_Solver_NewtonLinearSolverGet(Solver,LinearSolver,Err)                                                                          !hier 4, 5
+  
+  !***************************************************
+  CALL cmfe_Print_solver_type(LinearSolver, 'LinearSolver 2', err)!* -> associated, but badly initialised 
+  !CALL cmfe_Print_solver_type(Solver, 'Solver 5', Err)!* -> no changes
+  !***************************************************
+  
   CALL cmfe_Solver_LinearTypeSet(LinearSolver,CMFE_SOLVER_LINEAR_DIRECT_SOLVE_TYPE,Err)                                                    !hier 5
+  
+  !***************************************************************
+  !CALL cmfe_Print_solver_type(LinearSolver, 'LinearSolver 3', err)!* -> no changes
+  !***************************************************************
+  
   CALL cmfe_Solver_NewtonRelativeToleranceSet(Solver,1.E-6_CMISSRP,Err)                                                                    !hier 4
+  
+  !***************************************************
+  !CALL cmfe_Print_solver_type(Solver, 'Solver 6', Err)!* -> no changes
+  !***************************************************
+  
   CALL cmfe_Solver_NewtonAbsoluteToleranceSet(Solver,1.E-6_CMISSRP,Err)                                                                    !hier 4
+  
+  !***************************************************
+  !CALL cmfe_Print_solver_type(Solver, 'Solver 7', Err)!* -> no changes
+  !***************************************************
+  
   CALL cmfe_Solver_NewtonMaximumIterationsSet(Solver,200,Err)                                                                              !hier 4
+  
+  !***************************************************
+  !CALL cmfe_Print_solver_type(Solver, 'Solver 8', Err)!* -> no changes
+  !***************************************************
+  
   CALL cmfe_Problem_SolversCreateFinish(Problem,Err)                                                                                       !hier 3
+  
+  !************************************************
+  !CALL cmfe_Print_problem_type(Problem,'Problem 8',Err)!** -> no changes
+  !************************************************
+  
 
   !Create the problem solver equations
   CALL cmfe_Solver_Initialise(Solver,Err)                                                                                                  !hier 4
+  
+  !***************************************************
+  CALL cmfe_Print_solver_type(Solver, 'Solver 9', Err)!* -> not associated anymore
+  !***************************************************
+  
   CALL cmfe_SolverEquations_Initialise(SolverEquations,Err)                                                                                !hier 6
+  
+  !******************************************************************************
+  CALL cmfe_Print_solverEquations_type(SolverEquations, 'SolverEquations 1', Err)!* -> not associated
+  !******************************************************************************
+  
   CALL cmfe_Problem_SolverEquationsCreateStart(Problem,Err)                                                                                !hier 3
+  
+  !******************************************************
+  !CALL cmfe_Print_problem_type(Problem,'Problem 9', Err)!** -> no changes
+  !******************************************************
+  
   CALL cmfe_Problem_SolverGet(Problem,CMFE_CONTROL_LOOP_NODE,1,Solver,Err)                                                                 !hier 3, 4
+  
+  !*****************************************************
+  CALL cmfe_Print_solver_type(Solver, 'Solver 10', Err)!*** -> associated, different from 'Solver 8'
+  !CALL cmfe_Print_problem_type(Problem,'Problem 10',Err)!** -> no changes
+  !*****************************************************
+  
   CALL cmfe_Solver_SolverEquationsGet(Solver,SolverEquations,Err)                                                                          !hier 4, 6
+  
+  !***************************************************
+  !CALL cmfe_Print_solver_type(Solver, 'Solver 11', Err)!* -> no changes
+  CALL cmfe_Print_solverEquations_type(SolverEquations, 'SolverEquations 2', Err)!* -> associated
+  !***************************************************
+  
   CALL cmfe_SolverEquations_EquationsSetAdd(SolverEquations,EquationsSet,EquationsSetIndex,Err)                                            !hier 6, 5, 0
+  
+  !******************************************************************************
+  CALL cmfe_Print_equationsSet_index(EquationsSetIndex, Err)!********************
+  !CALL cmfe_Print_solverEquations_type(SolverEquations, 'SolverEquations 3', Err)!* -> no changes
+  CALL cmfe_Print_solver_type(LinearSolver, 'LinearSolver 4', Err)!************** -> type finished (still bad stuff)
+  !******************************************************************************
+  
   CALL cmfe_Problem_SolverEquationsCreateFinish(Problem,Err)                                                                               !hier 3
+  
+  !*****************************************************
+  !CALL cmfe_Print_problem_type(Problem,'Problem 11',Err)!** -> no changes
+  !*****************************************************
+  
 
   !Prescribe boundary conditions (absolute nodal parameters)
   CALL cmfe_BoundaryConditions_Initialise(BoundaryConditions,Err)
   CALL cmfe_SolverEquations_BoundaryConditionsCreateStart(SolverEquations,BoundaryConditions,Err)                                          !hier 6
+  
+  !******************************************************************************
+  CALL cmfe_Print_solverEquations_type(SolverEquations, 'SolverEquations 4', Err)!* -> type finished, Boundary Conditions pointer associated
+  !******************************************************************************
 
   CALL cmfe_GeneratedMesh_SurfaceGet(GeneratedMesh,CMFE_GENERATED_MESH_REGULAR_BOTTOM_SURFACE,BottomSurfaceNodes,BottomNormalXi, &
     & Err)
@@ -490,6 +676,9 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   CALL cmfe_SolverEquations_BoundaryConditionsCreateFinish(SolverEquations,Err)                                                            !hier 6
 
+  !******************************************************************************
+  CALL cmfe_Print_solverEquations_type(SolverEquations, 'SolverEquations 5', Err)!* -> solver matrices pointer associated
+  !******************************************************************************
 
   CALL cmfe_Fields_Initialise(Fields,Err)
   CALL cmfe_Fields_Create(Region,Fields,Err)
@@ -505,7 +694,9 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   
   WRITE(*,*) X
 
-  ! Loop over Time
+  ! Loop over Time ************************************************************************************************************************
+  !**************************************************** LOOP * BODY ***********************************************************************
+  !****************************************************************************************************************************************
   DO i=1,TIMESTEPS
 
 !    VALUE=0.9_CMISSRP+(i-1.0_CMISSRP)/TIMESTEPS
@@ -531,12 +722,22 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
     !Solve the mechanical problem fpr this time step
     CALL cmfe_Problem_Solve(Problem,Err)                                                                                                   !hier 3
   
+  !*****************************************************
+  !CALL cmfe_Print_problem_type(Problem,'Problem 12',Err)!** -> no changes
+  !*****************************************************
+  
+  
     !update X(i) [fraction of bound XBs] in OpenCMISS
     CALL cmfe_Field_ComponentValuesInitialise(MaterialField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,8, &
       & X(1)*1.0_CMISSRP,Err) ! WAS X(50) !!
     
     !Solve the mechanical problem for this time step
     CALL cmfe_Problem_Solve(Problem,Err)                                                                                                   !hier 3
+  
+  !*****************************************************
+  !CALL cmfe_Print_problem_type(Problem,'Problem 13',Err)!** -> no changes
+  !*****************************************************
+  
 
     IF (i.LE.9) THEN
       WRITE(filename, "(A23,I1)") "LargeUniaxialExtension_", i
@@ -552,6 +753,9 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 !    CALL cmfe_Fields_ElementsExport(Fields,filename,"FORTRAN",Err)
 
   END DO
+  !****************************************************************************************************************************************
+  !************************************************** END * LOOP * BODY *******************************************************************
+  !****************************************************************************************************************************************
 
   !Output solution
   CALL cmfe_Fields_NodesExport(Fields,"LargeUniaxialExtension","FORTRAN",Err)
@@ -560,8 +764,10 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   CALL cmfe_Finalise(Err)
   
-  CALL print_equations_type(Equations, 'Equations')
-
+  !**************************************************************
+  CALL cmfe_print_equations_type(Equations, 'Equations 5', Err)!* -> type finished, pointer to unterpolation info not associated anymore
+  !**************************************************************
+  
   WRITE(*,'(A)') "Program successfully completed."
 
   STOP

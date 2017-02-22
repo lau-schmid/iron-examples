@@ -1,5 +1,5 @@
 # Add example executable
-add_executable(active_strain_fortran src/FortranExample_1.f90)
+add_executable(active_strain src/FortranExample_1.f90)
 
 # Turn on Fortran preprocessing (#include directives)
 if (MSVC)
@@ -7,7 +7,7 @@ if (MSVC)
 else()
     set(PROC_OPT "-cpp")
 endif()
-target_compile_options(active_strain_fortran PRIVATE ${PROC_OPT})
+target_compile_options(active_strain PRIVATE ${PROC_OPT})
 
 # Link to opencmiss
 # -----------------
@@ -24,11 +24,11 @@ target_compile_options(active_strain_fortran PRIVATE ${PROC_OPT})
 #     target_link_libraries(${EXAMPLE_BINARY} PRIVATE petsc)
 #
 # All the OpenCMISS dependencies provide a target you can link against corresponding to the (lowercase) component name.
-target_link_libraries(active_strain_fortran PRIVATE opencmiss)
+target_link_libraries(active_strain PRIVATE opencmiss)
 
 # Add a simple test that runs the executable
-add_test(NAME Active_strain_fortran COMMAND active_strain_fortran)
-add_opencmiss_environment(Active_strain_fortran)
+add_test(NAME Active_strain COMMAND active_strain)
+add_opencmiss_environment(Active_strain)
 
 ###################
 # Developer notice!

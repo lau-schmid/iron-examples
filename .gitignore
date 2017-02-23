@@ -1,0 +1,15 @@
+*Time*
+*out*
+tmp*
+*build_*
+*Python*
+Makefile
+CMakeFiles/*
+CMakeCache.txt
+*.o
+*.pyc
+*.csv
+duration*
+profil*
+fort.*
+.project

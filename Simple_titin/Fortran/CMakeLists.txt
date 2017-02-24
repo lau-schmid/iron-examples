@@ -1,5 +1,5 @@
 # Add example executable
-add_executable(titin src/simple_titin.f90)
+add_executable(s_titin src/simple_titin.f90)
 
 # Turn on Fortran preprocessing (#include directives)
 if (MSVC)

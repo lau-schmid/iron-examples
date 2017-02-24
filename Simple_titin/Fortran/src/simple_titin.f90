@@ -377,7 +377,7 @@ PROGRAM TITINEXAMPLE
 !##################################################################################################################################
 !  fast_twitch=.true.
 !  if(fast_twitch) then
-    pathname = "/data/homes/klotz/opencmiss/examples/cell_models/"
+    pathname = "input/"
 !    filename = trim(pathname)//"Shorten_Titin_w_Fv_2016_08_23.cellml"
     filename = trim(pathname)//"Aliev_Panfilov_Razumova_Titin_2016_10_10.cellml"
 !     "/home/heidlauf/OpenCMISS/OpenCMISS/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles/slow_TK_2015_06_25.xml"

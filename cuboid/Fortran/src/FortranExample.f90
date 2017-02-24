@@ -69,9 +69,9 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !--------------------------------------------------------------------------------------------------------------------------------
   !Test program parameters
   LOGICAL, PARAMETER :: DEBUGGING_ONLY_RUN_SHORT_PART_OF_SIMULATION = .FALSE.    ! only run one timestep of MAIN_LOOP with stimulus
-  LOGICAL, PARAMETER :: DEBUGGING_OUTPUT_PROBLEM = .TRUE.    ! output information about problem data structure
+  LOGICAL, PARAMETER :: DEBUGGING_OUTPUT_PROBLEM = .FALSE.    ! output information about problem data structure
   LOGICAL, PARAMETER :: DEBUGGING_PARALLEL_BARRIER = .FALSE.   !
-  INTEGER(CMISSINTg) :: RUN_SCENARIO = 3  !0 = default, 1 = short for testing, 2 = medium for testing, 3 = very short, 4 = endless
+  INTEGER(CMISSINTg) :: RUN_SCENARIO = 0  !0 = default, no extra values set, 1 = short for testing, 2 = medium for testing, 3 = very short, 4 = endless
   LOGICAL, PARAMETER :: DEBUGGING_OUTPUT = .FALSE.    ! enable information from solvers
   LOGICAL, PARAMETER :: OLD_TOMO_MECHANICS = .TRUE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
 
@@ -84,16 +84,16 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !all times in [ms]
   REAL(CMISSRP) :: time !=10.00_CMISSRP
   REAL(CMISSRP), PARAMETER :: PERIODD=1.00_CMISSRP
-  REAL(CMISSRP)            :: TIME_STOP=1000.0_CMISSRP
+  REAL(CMISSRP)            :: TIME_STOP=5.0_CMISSRP
 
-  REAL(CMISSRP) :: ODE_TIME_STEP = 0.00001_CMISSRP            !0.0001_CMISSRP
-  REAL(CMISSRP) :: PDE_TIME_STEP = 0.0005_CMISSRP
+  REAL(CMISSRP) :: ODE_TIME_STEP = 0.01_CMISSRP            !0.0001_CMISSRP
+  REAL(CMISSRP) :: PDE_TIME_STEP = 0.05_CMISSRP
   REAL(CMISSRP) :: ELASTICITY_TIME_STEP = 0.10000000001_CMISSRP !0.5_CMISSRP!0.05_CMISSRP!0.8_CMISSRP
 
 !tomo keep ELASTICITY_TIME_STEP and STIM_STOP at the same values
-  REAL(CMISSRP), PARAMETER :: STIM_STOP=0.1_CMISSRP!ELASTICITY_TIME_STEP
+  REAL(CMISSRP), PARAMETER :: STIM_STOP=0.1_CMISSRP!ELASTICITY_TIME_STEP   
 
-  INTEGER(CMISSIntg), PARAMETER :: OUTPUT_FREQUENCY=10
+  INTEGER(CMISSIntg), PARAMETER :: OUTPUT_FREQUENCY=1  ! (10)
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !--------------------------------------------------------------------------------------------------------------------------------
@@ -2125,8 +2125,9 @@ SUBROUTINE CreateControlLoops()
     ! CONTROL_LOOP_PROGRESS_OUTPUT = 1 !<Progress output from control loop (also output MainTime_* files)
     ! CONTROL_LOOP_TIMING_OUTPUT = 2 !<Timing output from the control loop
     ! CONTROL_LOOP_FILE_OUTPUT = -1
+    CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,cmfe_CONTROL_LOOP_TIMING_OUTPUT,Err)
     !CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,cmfe_CONTROL_LOOP_FILE_OUTPUT,Err)
-    CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,-1,Err)
+    !CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,-1,Err)
   ENDIF
 
 

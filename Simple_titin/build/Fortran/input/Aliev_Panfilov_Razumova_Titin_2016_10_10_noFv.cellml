@@ -31,8 +31,7 @@
         <variable initial_value="0.002" name="e_0" units="dimensionless"/>
         <variable initial_value="0.2" name="m_1" units="dimensionless"/>
         <variable initial_value="0.3" name="m_2" units="dimensionless"/>
-        <variable initial_value="1" name="stim" units="dimensionless"/>
-        <!--I_HH_scale = I_HH*1{dimensionless};-->
+        <variable initial_value="99" name="stim" units="dimensionless"/>
         <math xmlns="http://www.w3.org/1998/Math/MathML">
             <apply>
                 <eq/>
@@ -487,7 +486,6 @@ endsel;-->
                     <times/>
                     <ci>rel_velo</ci>
                     <ci>velo_max</ci>
-                    <cn cellml:units="dimensionless">0</cn>
                 </apply>
             </apply>
             <apply>

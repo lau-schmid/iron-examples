@@ -379,7 +379,7 @@ PROGRAM TITINEXAMPLE
 !  if(fast_twitch) then
     pathname = "input/"
 !    filename = trim(pathname)//"Shorten_Titin_w_Fv_2016_08_23.cellml"
-    filename = trim(pathname)//"Aliev_Panfilov_Razumova_Titin_2016_10_10.cellml"
+    filename = trim(pathname)//"Aliev_Panfilov_Razumova_Titin_2016_10_10_b.cellml"
 !     "/home/heidlauf/OpenCMISS/OpenCMISS/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles/slow_TK_2015_06_25.xml"
 
 !    STIM_VALUE=1200.0_CMISSRP

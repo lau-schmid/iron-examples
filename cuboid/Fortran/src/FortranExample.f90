@@ -199,6 +199,8 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   REAL(CMISSRP) :: CustomTimingOdeSolver, CustomTimingParabolicSolver, CustomTimingFESolver, CustomTimingFileOutput
   REAL(CMISSRP) :: CustomTimingOdeSolverPreLoad, CustomTimingParabolicSolverPreLoad, CustomTimingFESolverPreLoad, &
     & CustomTimingFileOutputPreLoad
+  REAL(CMISSRP) :: TimingExportEMGUser = 0_CMISSRP
+  REAL(CMISSRP) :: TimingExportEMGSystem = 0_CMISSRP
 
   !--------------------------------------------------------------------------------------------------------------------------------
   INTEGER(CMISSIntg), PARAMETER :: CoordinateSystemUserNumberFE=1
@@ -640,11 +642,12 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   PRINT*, ""
   PRINT*, "--------------------------------------------------"
   PRINT*, "Process ", ComputationalNodeNumber
-  PRINT*, "Timing:"
+  PRINT*, "Timing (user time):"
   PRINT*, "   Ode Solver:       preload: ", CustomTimingOdeSolverPreLoad, " s, main: ", CustomTimingOdeSolver, " s"
   PRINT*, "   Parabolic Solver: preload: ", CustomTimingParabolicSolverPreLoad, " s, main: ", CustomTimingParabolicSolver, " s"
   PRINT*, "   3D FE Solver:     preload: ", CustomTimingFESolverPreLoad, " s, main: ", CustomTimingFESolver, " s"
-  PRINT*, "   File Output:      preload: ", CustomTimingFileOutputPreLoad, " s, main: ", CustomTimingFileOutput, " s"
+  PRINT*, "   Node File Output: preload: ", CustomTimingFileOutputPreLoad, " s, main: ", CustomTimingFileOutput, " s"
+  PRINT*, "   EMG Output: user: ", TimingExportEMGUser, " s, system: ", TimingExportEMGSystem, " s"
   PRINT*, ""
 
   WRITE(*,'(A,A)') TRIM(GetTimeStamp()), " Program successfully completed."
@@ -2401,7 +2404,12 @@ SUBROUTINE CalculateBioelectrics()
 END SUBROUTINE CalculateBioelectrics
 
 SUBROUTINE ExportEMG()
+  REAL(CMISSSP), DIMENSION(2) :: TimeStart, TimeStop
+  REAL(CMISSSP) :: Total
+  
   IF (ComputationalNodeNumber == 0) WRITE(*,'(A)',advance='no') "Output EMG Data ... "
+  CALL ETIME(TimeStart, Total)
+  
   EXPORT_FIELD=.TRUE.
   IF(EXPORT_FIELD) THEN
     CALL cmfe_Fields_Initialise(Fields,Err)
@@ -2416,6 +2424,11 @@ SUBROUTINE ExportEMG()
     CALL cmfe_Fields_ElementsExport(Fields,"EMGExample_FE","FORTRAN",Err)
     CALL cmfe_Fields_Finalise(Fields,Err)
   ENDIF
+  
+  CALL ETIME(TimeStop, Total)
+  TimingExportEMGUser = TimingExportEMGUser + (TimeStop(1) - TimeStart(1))
+  TimingExportEMGSystem = TimingExportEMGSystem + (TimeStop(2) - TimeStart(2))
+  
   IF (ComputationalNodeNumber == 0) PRINT*, " done"
 
 END SUBROUTINE ExportEMG
@@ -2581,9 +2594,9 @@ SUBROUTINE WriteTimingFile()
       & 'distributed matrix petsc, compr. row storage, offdiag;;; distributed matrix petsc, compr. row storage, row ind.;;; ' // &
       & 'distributed matrix petsc, compr. row storage, col. ind.;;; ' // &
       & 'distributed matrix petsc, compr. row storage (local to global mapping);;; ' // &
-      & 'distributed vector petsc; ' // &
+      & 'distributed vector petsc;;; ' // &
       & 'duration FESolverPreLoad; duration OdeSolverPreLoad; duration ParabolicSolverPreLoad; ' // &
-      & 'duration FileOutputSolverPreLoad; '
+      & 'duration FileOutputSolverPreLoad; duration export EMG user; duration export EMG system'
       
     CLOSE(unit=123)
   ENDIF
@@ -2605,7 +2618,7 @@ SUBROUTINE WriteTimingFile()
 
   IF (CustomProfilingEnabled) THEN
 
-    WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),35(F25.13,A),8(I17,A,I5,A,I7,A),4(F8.3,A))") &
+    WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),35(F25.13,A),8(I17,A,I5,A,I7,A),6(F8.3,A))") &
       & TRIM(TimeStampStr), ';', &
       & TRIM(Hostname(1:22)), ';', &
       & NumberOfComputationalNodes, ';', &
@@ -2701,11 +2714,13 @@ SUBROUTINE WriteTimingFile()
       & CustomTimingFESolverPreLoad, ';', &
       & CustomTimingOdeSolverPreLoad, ';', &
       & CustomTimingParabolicSolverPreLoad, ';', &
-      & CustomTimingFileOutputPreLoad, ';'
+      & CustomTimingFileOutputPreLoad, ';', &
+      & TimingExportEMGUser, ';', &
+      & TimingExportEMGSystem, ';'
 
   ELSE  ! custom profiling is disabled
     
-    WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),4(F8.3,A))") &
+    WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),6(F8.3,A))") &
       & TRIM(TimeStampStr), ';', &
       & TRIM(Hostname(1:22)), ';', &
       & NumberOfComputationalNodes, ';', &
@@ -2740,7 +2755,9 @@ SUBROUTINE WriteTimingFile()
       & CustomTimingFESolverPreLoad, ';', &
       & CustomTimingOdeSolverPreLoad, ';', &
       & CustomTimingParabolicSolverPreLoad, ';', &
-      & CustomTimingFileOutputPreLoad, ';'
+      & CustomTimingFileOutputPreLoad, ';', &
+      & TimingExportEMGUser, ';', &
+      & TimingExportEMGSystem, ';'
   ENDIF
 
   CLOSE(unit=123)

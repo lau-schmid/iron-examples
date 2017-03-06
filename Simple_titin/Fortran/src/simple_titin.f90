@@ -24,7 +24,7 @@
 !> of Oxford are Copyright (C) 2007 by the University of Auckland and
 !> the University of Oxford. All Rights Reserved.
 !>
-!> Contributor(s): Thomas Heidlauf
+!> Contributor(s): Adam Reeve, Thomas Heidlauf
 !>
 !> Alternatively, the contents of this file may be used under the terms of
 !> either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -71,11 +71,12 @@ PROGRAM TITINEXAMPLE
 !  real etime          ! Declare the type of etime()
   real :: elapsed(2)     ! For receiving user and system time
   real :: total 
+
 !  REAL(CMISSRP), PARAMETER :: P_max=2.7_CMISSRP ! N/cm^2
-  REAL(CMISSRP), PARAMETER :: P_max=7.3_CMISSRP ! N/cm^2
+  REAL(CMISSRP), PARAMETER :: P_max=0.0_CMISSRP !7.3_CMISSRP ! N/cm^2
 !  REAL(CMISSRP), PARAMETER :: P_max=27.0_CMISSRP ! N/cm^2
 
-  REAL(CMISSRP), PARAMETER :: TK_lin_param=1.0_CMISSRP ! 1: With Actin-Tintin Interaction 0: No Actin-Titin Interactions
+  REAL(CMISSRP), PARAMETER :: TK_lin_param=0.0_CMISSRP ! 1: With Actin-Tintin Interaction 0: No Actin-Titin Interactions
 
 
   REAL(CMISSRP), PARAMETER :: tol=1.0E-8_CMISSRP
@@ -83,8 +84,6 @@ PROGRAM TITINEXAMPLE
   LOGICAL :: independent_field_auto_create=.FALSE.
 
   INTEGER(CMISSIntg) :: NumberOfElementsFE
-
-  REAL(CMISSRP), DIMENSION(216) :: variability,variability2
 
   INTEGER(CMISSIntg) :: NumberOfElementsM
   INTEGER(CMISSIntg) :: NumberOfNodesM
@@ -113,20 +112,21 @@ PROGRAM TITINEXAMPLE
 !  REAL(CMISSRP), PARAMETER :: PERIODD=10.00_CMISSRP
   REAL(CMISSRP), PARAMETER :: PERIODD=10.0_CMISSRP !20.00_CMISSRP
 !  REAL(CMISSRP), PARAMETER :: TIME_STOP=300.0_CMISSRP
-  REAL(CMISSRP), PARAMETER :: TIME_STOP=500.0_CMISSRP
-  REAL(CMISSRP), PARAMETER :: TIME_STOP_2=600.0_CMISSRP !time the muscle is stimulated at fixed length + stretch
-  REAL(CMISSRP), PARAMETER :: TIME_STOP_3=1000.0_CMISSRP !time the muscle is stimulated at fixed length + stretch
+  
 
 
 
-!  REAL(CMISSRP), PARAMETER :: ODE_TIME_STEP=0.00001_CMISSRP
-  REAL(CMISSRP), PARAMETER :: ODE_TIME_STEP=0.0001_CMISSRP
-  REAL(CMISSRP), PARAMETER :: PDE_TIME_STEP=0.0005_CMISSRP
-  REAL(CMISSRP), PARAMETER :: ELASTICITY_TIME_STEP=0.10000000001_CMISSRP!0.5_CMISSRP!0.05_CMISSRP!0.8_CMISSRP
+  REAL(CMISSRP), PARAMETER :: TIME_STEP=0.0001_CMISSRP
+  REAL(CMISSRP), PARAMETER :: ODE_TIME_STEP=TIME_STEP
+  REAL(CMISSRP), PARAMETER :: PDE_TIME_STEP=TIME_STEP
+  REAL(CMISSRP), PARAMETER :: ELASTICITY_TIME_STEP=TIME_STEP!0.5_CMISSRP!0.05_CMISSRP!0.8_CMISSRP
 !tomo keep ELASTICITY_TIME_STEP and STIM_STOP at the same values
-  REAL(CMISSRP), PARAMETER :: STIM_STOP=0.1_CMISSRP!ELASTICITY_TIME_STEP
+  REAL(CMISSRP), PARAMETER :: STIM_STOP=TIME_STEP!0.1_CMISSRP!ELASTICITY_TIME_STEP
 
-  INTEGER(CMISSIntg), PARAMETER :: OUTPUT_FREQUENCY=1
+	REAL(CMISSRP), PARAMETER :: TIME_STOP=TIME_STEP
+  REAL(CMISSRP), PARAMETER :: TIME_STOP_2=TIME_STEP !time the muscle is stimulated at fixed length + stretch
+
+  INTEGER(CMISSIntg), PARAMETER :: OUTPUT_FREQUENCY=1 !1
   
   REAL(CMISSRP) :: stretch_sarcolength_ratio
   
@@ -149,7 +149,7 @@ PROGRAM TITINEXAMPLE
   REAL(CMISSRP), PARAMETER :: Vmax=-0.015_CMISSRP !-0.02_CMISSRP !-0.1_CMISSRP ! =0.2 m/s, rat GM
 !  REAL(CMISSRP), PARAMETER :: Vmax=-0.2_CMISSRP !to stabilise...
   
-  REAL(CMISSRP), PARAMETER :: alpha=5.0_CMISSRP  !1.0_CMISSRP Original Value
+  REAL(CMISSRP), PARAMETER :: alpha=5.0_CMISSRP   !5.0_CMISSRP to stabilize
   REAL(CMISSRP), PARAMETER :: beta=0.01_CMISSRP
   REAL(CMISSRP), PARAMETER :: gama=1.0_CMISSRP
   !CAUTION - what are the units???
@@ -331,244 +331,27 @@ PROGRAM TITINEXAMPLE
 !##################################################################################################################################
 !##################################################################################################################################
 
-  NumberGlobalXElements=4
-  NumberGlobalYElements=4
-  NumberGlobalZElements=4
+! 3D Finite Element Discetization
+  NumberGlobalXElements=1
+  NumberGlobalYElements=1
+  NumberGlobalZElements=1
   NumberOfElementsFE=NumberGlobalXElements*NumberGlobalYElements*NumberGlobalZElements
 
-  variability2 = 1.0_CMISSRP
-  variability = variability2 + 0.05_CMISSRP*[ &
-   0.527470251141925_CMISSRP, &
-   0.854202301151847_CMISSRP, &
-   1.341846522045954_CMISSRP, &
-  -2.499533441929706_CMISSRP, &
-  -0.167559322169704_CMISSRP, &
-   0.353015314527152_CMISSRP, &
-   0.717253725490156_CMISSRP, &
-  -1.304851638731612_CMISSRP, &
-  -1.005868951744076_CMISSRP, &
-   0.790683469747323_CMISSRP, &
-  -0.116571328658856_CMISSRP, &
-   0.553089887878288_CMISSRP, &
-  -0.960644804719149_CMISSRP, &
-  -1.633802395792786_CMISSRP, &
-   0.761200281866834_CMISSRP, &
-   1.193307151703070_CMISSRP, &
-   1.632057215920878_CMISSRP, &
-  -1.532189602965756_CMISSRP, &
-  -1.336852404720231_CMISSRP, &
-  -1.473846498008525_CMISSRP, &
-  -0.041663074296450_CMISSRP, &
-  -0.615507335128413_CMISSRP, &
-   1.314154808775845_CMISSRP, &
-  -1.455066582482240_CMISSRP, &
-  -1.742349220597613_CMISSRP, &
-   0.205304683292191_CMISSRP, &
-   1.192930398525721_CMISSRP, &
-  -0.802823098305938_CMISSRP, &
-  -1.265636422237970_CMISSRP, &
-  -0.149331353183561_CMISSRP, &
-  -1.636446678253894_CMISSRP, &
-   0.017344346043658_CMISSRP, &
-   0.828387265991092_CMISSRP, &
-   0.217738348381478_CMISSRP, &
-  -1.909244901262725_CMISSRP, &
-  -0.536821821287498_CMISSRP, &
-  -0.302032298446366_CMISSRP, &
-   1.813582130904333_CMISSRP, &
-   0.914851752841074_CMISSRP, &
-  -0.057080715914477_CMISSRP, &
-   1.309362077829420_CMISSRP, &
-  -1.044735848409628_CMISSRP, &
-  -0.348266810335265_CMISSRP, &
-   1.412561160729294_CMISSRP, &
-   1.502382928582795_CMISSRP, &
-   0.730375994537287_CMISSRP, &
-   0.490752271903370_CMISSRP, &
-  -0.586126139576403_CMISSRP, &
-   0.744899650424278_CMISSRP, &
-  -0.828154969805656_CMISSRP, &
-   0.574520731649430_CMISSRP, &
-   0.281841382645261_CMISSRP, &
-   1.139306269030506_CMISSRP, &
-  -0.425867845571710_CMISSRP, &
-   0.636139891402967_CMISSRP, &
-   0.793178081389574_CMISSRP, &
-  -0.898377114100747_CMISSRP, &
-   0.156244844277549_CMISSRP, &
-   1.597253911277571_CMISSRP, &
-   0.112439710593741_CMISSRP, &
-  -0.308624934547028_CMISSRP, &
-   0.456659609115151_CMISSRP, &
-  -0.275100830567669_CMISSRP, &
-   0.443143608783787_CMISSRP, &
-  -0.134765126722850_CMISSRP, &
-  -0.018328229738686_CMISSRP, &
-   0.460789425007212_CMISSRP, &
-   1.362315464342302_CMISSRP, &
-   0.451874567380709_CMISSRP, &
-   1.648383657046169_CMISSRP, &
-  -2.028361960852765_CMISSRP, &
-  -0.449256811444910_CMISSRP, &
-   0.235993201711949_CMISSRP, &
-  -0.835172963783281_CMISSRP, &
-  -1.275955163408218_CMISSRP, &
-   0.617035081280588_CMISSRP, &
-   0.612701503707273_CMISSRP, &
-   0.289381155294881_CMISSRP, &
-   0.395316122368463_CMISSRP, &
-  -0.870562842057010_CMISSRP, &
-  -0.497688378204225_CMISSRP, &
-  -0.106671817056153_CMISSRP, &
-  -0.687829135427859_CMISSRP, &
-   0.331880876981422_CMISSRP, &
-   2.365224742598913_CMISSRP, &
-  -0.482230718469758_CMISSRP, &
-   0.647448206700766_CMISSRP, &
-  -1.034424717234166_CMISSRP, &
-   1.339554597904117_CMISSRP, &
-  -0.969140355828830_CMISSRP, &
-   0.208715601272198_CMISSRP, &
-  -0.618593355360547_CMISSRP, &
-   0.512015643736454_CMISSRP, &
-   0.011354171100820_CMISSRP, &
-  -0.043988626266701_CMISSRP, &
-   2.949092541315588_CMISSRP, &
-  -0.630046193527348_CMISSRP, &
-  -0.046879399538193_CMISSRP, &
-   2.683025510771731_CMISSRP, &
-  -1.146690686179043_CMISSRP, &
-   0.552998745466265_CMISSRP, &
-  -1.076458409092499_CMISSRP, &
-   1.030639584086791_CMISSRP, &
-   0.327529812476210_CMISSRP, &
-   0.652124811269931_CMISSRP, &
-  -0.278861116387822_CMISSRP, &
-   0.245191593724021_CMISSRP, &
-   1.472513478821577_CMISSRP, &
-  -2.275101542347401_CMISSRP, &
-  -1.633290724921242_CMISSRP, &
-   0.415468936978757_CMISSRP, &
-  -0.654768851858014_CMISSRP, &
-  -0.296348315406598_CMISSRP, &
-  -1.496918876447554_CMISSRP, &
-  -0.904834447327702_CMISSRP, &
-  -0.404181545031202_CMISSRP, &
-  -0.725798166048959_CMISSRP, &
-  -0.866485025359611_CMISSRP, &
-  -0.421846780441972_CMISSRP, &
-  -0.942666324280616_CMISSRP, &
-   1.341883717257947_CMISSRP, &
-  -0.988434712294864_CMISSRP, &
-   1.817942687643474_CMISSRP, &
-  -0.374436606507962_CMISSRP, &
-  -1.451740719917382_CMISSRP, &
-  -0.618681807567465_CMISSRP, &
-   0.934500962295567_CMISSRP, &
-   1.055929256492714_CMISSRP, &
-   0.160227276748647_CMISSRP, &
-   0.287400320243155_CMISSRP, &
-   0.632905577041240_CMISSRP, &
-  -1.459041869083612_CMISSRP, &
-  -0.581709725467177_CMISSRP, &
-  -1.830149322103446_CMISSRP, &
-  -0.449103079849422_CMISSRP, &
-   0.949274703601312_CMISSRP, &
-   0.717441409444788_CMISSRP, &
-   2.287828605670752_CMISSRP, &
-   0.166727663349700_CMISSRP, &
-  -2.156490751699739_CMISSRP, &
-   1.689399307426665_CMISSRP, &
-   1.282280747092566_CMISSRP, &
-  -0.582630964347252_CMISSRP, &
-   0.222614480633598_CMISSRP, &
-   0.779451472862399_CMISSRP, &
-   0.384707157585715_CMISSRP, &
-   0.696366922883312_CMISSRP, &
-  -0.112715559173794_CMISSRP, &
-  -0.038823700928052_CMISSRP, &
-   0.088088629112916_CMISSRP, &
-  -0.789655973216349_CMISSRP, &
-   1.422960618799131_CMISSRP, &
-   0.006331684129616_CMISSRP, &
-   0.686480847833935_CMISSRP, &
-  -0.854933633648374_CMISSRP, &
-  -1.075235317478082_CMISSRP, &
-  -0.090967251193631_CMISSRP, &
-  -0.252771832938988_CMISSRP, &
-   1.194823818634131_CMISSRP, &
-   0.606063709364258_CMISSRP, &
-   0.540514429162091_CMISSRP, &
-  -1.444939419214897_CMISSRP, &
-  -0.967693807707260_CMISSRP, &
-   0.202051338217512_CMISSRP, &
-  -0.347877973085105_CMISSRP, &
-   1.290087990155372_CMISSRP, &
-   1.341153818879921_CMISSRP, &
-  -0.580797689400443_CMISSRP, &
-   0.875135601991687_CMISSRP, &
-   1.395449886932772_CMISSRP, &
-   0.320985221953096_CMISSRP, &
-   1.623382458419832_CMISSRP, &
-   1.062433309108719_CMISSRP, &
-   0.214105238034589_CMISSRP, &
-   0.876803201965984_CMISSRP, &
-   0.194407011291077_CMISSRP, &
-  -0.414892159767676_CMISSRP, &
-   0.358458734395179_CMISSRP, &
-   0.036222668044123_CMISSRP, &
-  -0.364631168089117_CMISSRP, &
-   1.771019567018272_CMISSRP, &
-   0.221273067715513_CMISSRP, &
-   2.730377584868035_CMISSRP, &
-  -0.296165383347162_CMISSRP, &
-   0.564295551934993_CMISSRP, &
-   1.582620663047223_CMISSRP, &
-   2.729230123210379_CMISSRP, &
-   0.303564280841044_CMISSRP, &
-  -0.790258478597882_CMISSRP, &
-   0.803380232506624_CMISSRP, &
-  -1.319902702358688_CMISSRP, &
-  -0.273845759626558_CMISSRP, &
-   0.271866921602583_CMISSRP, &
-   1.489553507786083_CMISSRP, &
-   1.437141524789824_CMISSRP, &
-  -0.027561396560498_CMISSRP, &
-   0.923931315126527_CMISSRP, &
-  -0.321280419965793_CMISSRP, &
-   0.661124886150418_CMISSRP, &
-   1.915293938539165_CMISSRP, &
-   0.156759609817161_CMISSRP, &
-  -0.300536457944020_CMISSRP, &
-  -0.500034777469846_CMISSRP, &
-   0.716471380571449_CMISSRP, &
-   1.337288727042258_CMISSRP, &
-   2.125679946856936_CMISSRP, &
-   0.054045784437604_CMISSRP, &
-   0.163035918032164_CMISSRP, &
-  -0.632706740469993_CMISSRP, &
-   1.611991492715337_CMISSRP, &
-  -0.075448724187086_CMISSRP, &
-  -0.473237143331362_CMISSRP, &
-   2.184240786857214_CMISSRP, &
-   0.809881106272956_CMISSRP, &
-   0.716342804277267_CMISSRP, &
-  -1.005571134463613_CMISSRP]
-
-
 !##################################################################################################################################
-  less_info = .false.!.true.!
+
+! 1D Muscle Fibre Discretization
+  less_info = .true.!
   if(less_info) then
     !note that the NumberOfNodesInXi1 only applies to elements in which fibres begin. Otherwise it's NumberOfNodesInXi1-1
-    NumberOfNodesInXi1=50!500!240
-    NumberOfNodesInXi2=2
+    NumberOfNodesInXi1=2!500!240
+    NumberOfNodesInXi2=1
     NumberOfNodesInXi3=1
   else
     if(NumberGlobalXElements*NumberGlobalYElements*NumberGlobalZElements==1) then
       NumberOfNodesInXi1=51
     else
  !      NumberOfNodesInXi1=30!500
-      NumberOfNodesInXi1=8
+      NumberOfNodesInXi1=15
     endif
     NumberOfNodesInXi2=3
     NumberOfNodesInXi3=3
@@ -594,8 +377,10 @@ PROGRAM TITINEXAMPLE
 !##################################################################################################################################
 !  fast_twitch=.true.
 !  if(fast_twitch) then
-    pathname = "input/"
+    pathname = "/data/homes/klotz/opencmiss/examples/cell_models/"
+!    filename = trim(pathname)//"Shorten_Titin_w_Fv_2016_08_23.cellml"
     filename = trim(pathname)//"Aliev_Panfilov_Razumova_Titin_2016_10_10.cellml"
+!     "/home/heidlauf/OpenCMISS/OpenCMISS/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles/slow_TK_2015_06_25.xml"
 
 !    STIM_VALUE=1200.0_CMISSRP
      STIM_VALUE=0.0_CMISSRP
@@ -857,20 +642,10 @@ PROGRAM TITINEXAMPLE
   CALL cmfe_Field_NumberOfComponentsSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,6,Err)
   CALL cmfe_Field_NumberOfComponentsSet(MaterialFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,FieldMaterialNumberOfComponentsFE2,Err)
 
-!  CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
-!  CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,2,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
-!  CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,3,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
-!  CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,4,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
-!  CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,5,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
-!  CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,6,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
-  CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_ELEMENT_BASED_INTERPOLATION, &
-    & Err)
-  CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,2,CMFE_FIELD_ELEMENT_BASED_INTERPOLATION, &
-    & Err)
-  CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,3,CMFE_FIELD_ELEMENT_BASED_INTERPOLATION, &
-    & Err)
-  CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,4,CMFE_FIELD_ELEMENT_BASED_INTERPOLATION, &
-    & Err)
+  CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
+  CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,2,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
+  CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,3,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
+  CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,4,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
   CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,5,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
   CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,6,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
 
@@ -888,15 +663,6 @@ PROGRAM TITINEXAMPLE
   CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,6,TK_lin_param,&
    & Err)
 !  CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,0.0_CMISSRP,Err)
-
-  DO elem_idx=1,NumberOfElementsFE
-    DO comp_idx=1,4
-      VALUE=variability(elem_idx)*MAT_FE(comp_idx)
-      CALL cmfe_Field_ParameterSetUpdateElement(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
-     & elem_idx,comp_idx,VALUE,Err) 
-   END DO
-  END DO
-
 
 
   !Create the dependent field for FE with 2 variables and * components 
@@ -1482,7 +1248,7 @@ PROGRAM TITINEXAMPLE
   CALL cmfe_ControlLoop_Initialise(ControlLoopFE,Err)
   CALL cmfe_Problem_ControlLoopGet(Problem,[ControlLoopElasticityNumber,CMFE_CONTROL_LOOP_NODE],ControlLoopFE,Err)
   CALL cmfe_ControlLoop_TypeSet(ControlLoopFE,CMFE_PROBLEM_CONTROL_LOAD_INCREMENT_LOOP_TYPE,Err)
-  CALL cmfe_ControlLoop_MaximumIterationsSet(ControlLoopFE,20,Err) ! tomo
+  CALL cmfe_ControlLoop_MaximumIterationsSet(ControlLoopFE,1,Err) ! tomo
 !  CALL cmfe_ControlLoop_MaximumIterationsSet(ControlLoopFE,1,Err)
   CALL cmfe_ControlLoop_LabelSet(ControlLoopFE,'ELASTICITY_LOOP',Err)
 
@@ -1607,7 +1373,7 @@ PROGRAM TITINEXAMPLE
     IF(NodeDomain==ComputationalNodeNumber) THEN
       CALL cmfe_BoundaryConditions_SetNode(BoundaryConditionsFE,DependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1,1,NodeNumber,1, &
 !        & CMFE_BOUNDARY_CONDITION_FIXED_INCREMENTED,LENGTH*1.0_CMISSRP,Err) ! To change the initial half-sarcomere length. To create cases similar to Rode. 
-        & CMFE_BOUNDARY_CONDITION_FIXED_INCREMENTED,LENGTH*1.1_CMISSRP/stretch_sarcolength_ratio,Err) ! To change the initial half-sarcomere length. To create cases similar to Rode. 
+        & CMFE_BOUNDARY_CONDITION_FIXED_INCREMENTED,LENGTH*1.0_CMISSRP/stretch_sarcolength_ratio,Err) ! To change the initial half-sarcomere length. To create cases similar to Rode. 
     ENDIF
   ENDDO
 
@@ -1688,7 +1454,7 @@ PROGRAM TITINEXAMPLE
 
   !Set the Stimulus for monodomain at the middle of the fibres
   CALL cmfe_CellML_FieldComponentGet(CellML,shortenModelIndex,CMFE_CELLML_PARAMETERS_FIELD, &
-   & "Aliev_Panfilov/I_HH",stimcomponent,Err)
+   & "Aliev_Panfilov/I_HH",stimcomponent,Err) !"wal_environment/I_HH",stimcomponent,Err)
 
   !update the sarcomere stretch at activation
   CALL cmfe_Field_ParametersToFieldParametersComponentCopy(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE, &
@@ -1698,185 +1464,9 @@ PROGRAM TITINEXAMPLE
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !--------------------------------------------------------------------------------------------------------------------------------
-  k = -1
-  time = 0.0_CMISSRP 
-  STIM_VALUE=90.0_CMISSRP !1200.0_CMISSRP
-  !first activate without stretching
-  do while(time <= TIME_STOP)
+	STIM_VALUE=90.0_CMISSRP !1200.0_CMISSRP
 
-  k = k+1
-
-
-    NodeNumber=(NumberOfNodesPerFibre+1)/2
-    DO WHILE(NodeNumber<NumberOfNodesM)
-      CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber,1,NodeDomain,Err)
-      IF(NodeDomain==ComputationalNodeNumber) CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
-       & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,NodeNumber,stimcomponent,STIM_VALUE,Err)
-      NodeNumber=NodeNumber+NumberOfNodesPerFibre
-    ENDDO
-    
-    CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time,time+STIM_STOP,ELASTICITY_TIME_STEP,Err)
-
-    !Solve the problem for the stimulation time
-    WRITE(*,'(A)') "Start solve with stimulation"
-    CALL cmfe_Problem_Solve(Problem,Err)
-
-    time = time+STIM_STOP
-
-    !--------------------------------------------------------------------------------------------------------------------------------
-    !Now turn the stimulus off
-    NodeNumber=(NumberOfNodesPerFibre+1)/2
-    DO WHILE(NodeNumber<NumberOfNodesM)
-      CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber,1,NodeDomain,Err)
-      IF(NodeDomain==ComputationalNodeNumber) CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
-       & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,NodeNumber,stimcomponent,0.0_CMISSRP,Err)
-      NodeNumber=NodeNumber+NumberOfNodesPerFibre
-    ENDDO
-
-    WRITE(*,'(A)') "Start solve without stimulation"
-
-    do while(time <= (k+1)*PERIODD)
-
-      CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time,time+STIM_STOP,ELASTICITY_TIME_STEP,Err)
-
-      !Solve the problem for the rest of the period
-      CALL cmfe_Problem_Solve(Problem,Err)
-    
-      time = time+STIM_STOP
-      
-    end do !time <= PERIODD
-
-!  time = time+PERIODD
-  end do !time <= TIME_STOP
-  !--------------------------------------------------------------------------------------------------------------------------------
-
-
-  !update the sarcomere stretch at activation
-!  CALL cmfe_Field_ParametersToFieldParametersComponentCopy(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE, &
-!   & CMFE_FIELD_VALUES_SET_TYPE,1,IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,4,Err)
-
-
-
-
-  !--------------------------------------------------------------------------------------------------------------------------------
-  !--------------------------------------------------------------------------------------------------------------------------------
-  !--------------------------------------------------------------------------------------------------------------------------------
-  ! bis hierher kein aktiver stretch!!!
-  !--------------------------------------------------------------------------------------------------------------------------------
-  !--------------------------------------------------------------------------------------------------------------------------------
-  !--------------------------------------------------------------------------------------------------------------------------------
-
-
-!tomo hack
-!  CALL cmfe_Field_ParameterSetUpdateConstant(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,6, &
-!   & 1.0_CMISSRP,Err)
-!tomo hack end
-
-
-
-  !--------------------------------------------------------------------------------------------------------------------------------
-  VALUE = 0.0_CMISSRP 
-
-  !second, activate and stretch!!!
-  do while(time <= TIME_STOP_2)
-
-  k = k+1
-
-
-!  VALUE = VALUE-ABS(Vmax)/10.0_CMISSRP*STIM_STOP
-!  VALUE = VALUE-ABS(Vmax)/10.0_CMISSRP*STIM_STOP*2.0_CMISSRP
-!  VALUE = VALUE-ABS(Vmax)/10.0_CMISSRP*STIM_STOP*0.5_CMISSRP
-  VALUE = VALUE-0.0002_CMISSRP
-
-  DO node_idx=1,SIZE(LeftSurfaceNodes,1)
-    NodeNumber=LeftSurfaceNodes(node_idx)
-    CALL cmfe_Decomposition_NodeDomainGet(DecompositionFE,NodeNumber,1,NodeDomain,Err)
-    IF(NodeDomain==ComputationalNodeNumber) THEN
-      CALL cmfe_Field_ParameterSetUpdateNode(DependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1, &
-        & NodeNumber,1,VALUE,Err)
-    ENDIF
-  ENDDO
-
-
-  NodeNumber=(NumberOfNodesPerFibre+1)/2
-  DO WHILE(NodeNumber<NumberOfNodesM)
-    CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber,1,NodeDomain,Err)
-    IF(NodeDomain==ComputationalNodeNumber) CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
-     & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,NodeNumber,stimcomponent,STIM_VALUE,Err)
-    NodeNumber=NodeNumber+NumberOfNodesPerFibre
-  ENDDO
-  
-!  !stimulate the fibers one after another
-!  NodeNumber=(NumberOfNodesPerFibre+1)/2+k*NumberOfNodesPerFibre
-!  DO WHILE(NodeNumber>NumberOfNodesM)
-!    NodeNumber = NodeNumber-NumberOfNodesM
-!  ENDDO
-!  
-!  WRITE(*,*) NodeNumber
-!  
-!  CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber,1,NodeDomain,Err)
-!  IF(NodeDomain==ComputationalNodeNumber) CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
-!   & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,NodeNumber,stimcomponent,STIM_VALUE,Err)
-
-
-  CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time,time+STIM_STOP,ELASTICITY_TIME_STEP,Err)
-
-  !Solve the problem for the stimulation time
-  WRITE(*,'(A)') "Start solve with stimulation"
-  CALL cmfe_Problem_Solve(Problem,Err)
-
-  time = time+STIM_STOP
-
-
-  !--------------------------------------------------------------------------------------------------------------------------------
-  !Now turn the stimulus off
-  NodeNumber=(NumberOfNodesPerFibre+1)/2
-  DO WHILE(NodeNumber<NumberOfNodesM)
-    CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber,1,NodeDomain,Err)
-    IF(NodeDomain==ComputationalNodeNumber) CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
-     & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,NodeNumber,stimcomponent,0.0_CMISSRP,Err)
-    NodeNumber=NodeNumber+NumberOfNodesPerFibre
-  ENDDO
-
-
-
-  WRITE(*,'(A)') "Start solve without stimulation"
-
-  do while(time <= (k+1)*PERIODD)
-
-!    VALUE = VALUE-ABS(Vmax)/10.0_CMISSRP*STIM_STOP
-!    VALUE = VALUE-ABS(Vmax)/10.0_CMISSRP*STIM_STOP*2.0_CMISSRP
-!  VALUE = VALUE-ABS(Vmax)/10.0_CMISSRP*STIM_STOP*0.5_CMISSRP
-  VALUE = VALUE-0.0002_CMISSRP
-    DO node_idx=1,SIZE(LeftSurfaceNodes,1)
-      NodeNumber=LeftSurfaceNodes(node_idx)
-      CALL cmfe_Decomposition_NodeDomainGet(DecompositionFE,NodeNumber,1,NodeDomain,Err)
-      IF(NodeDomain==ComputationalNodeNumber) THEN
-        CALL cmfe_Field_ParameterSetUpdateNode(DependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1, &
-          & NodeNumber,1,VALUE,Err)
-      ENDIF
-    ENDDO
-    
-    CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time,time+STIM_STOP,ELASTICITY_TIME_STEP,Err)
-
-    !Solve the problem for the rest of the period
-    CALL cmfe_Problem_Solve(Problem,Err)
-  
-    time = time+STIM_STOP
-    
-  end do !time <= PERIODD
-
-!  time = time+PERIODD
-  end do !time <= TIME_STOP_2
-  !--------------------------------------------------------------------------------------------------------------------------------
-
-
-  do while(time <= TIME_STOP_3)
-
-  k = k+1
-
-
-  NodeNumber=(NumberOfNodesPerFibre+1)/2
+	NodeNumber=(NumberOfNodesPerFibre+1)/2
   DO WHILE(NodeNumber<NumberOfNodesM)
     CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber,1,NodeDomain,Err)
     IF(NodeDomain==ComputationalNodeNumber) CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
@@ -1890,34 +1480,10 @@ PROGRAM TITINEXAMPLE
   WRITE(*,'(A)') "Start solve with stimulation"
   CALL cmfe_Problem_Solve(Problem,Err)
 
-  time = time+STIM_STOP
 
-  !--------------------------------------------------------------------------------------------------------------------------------
-  !Now turn the stimulus off
-  NodeNumber=(NumberOfNodesPerFibre+1)/2
-  DO WHILE(NodeNumber<NumberOfNodesM)
-    CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber,1,NodeDomain,Err)
-    IF(NodeDomain==ComputationalNodeNumber) CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
-     & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,NodeNumber,stimcomponent,0.0_CMISSRP,Err)
-    NodeNumber=NodeNumber+NumberOfNodesPerFibre
-  ENDDO
-
-  WRITE(*,'(A)') "Start solve without stimulation"
-
-  do while(time <= (k+1)*PERIODD)
-
-    CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time,time+STIM_STOP,ELASTICITY_TIME_STEP,Err)
-
-    !Solve the problem for the rest of the period
-    CALL cmfe_Problem_Solve(Problem,Err)
   
-    time = time+STIM_STOP
-    
-  end do !time <= PERIODD
-
-!  time = time+PERIODD
-  end do !time <= TIME_STOP_3
   !--------------------------------------------------------------------------------------------------------------------------------
+
 
   !--------------------------------------------------------------------------------------------------------------------------------
 
@@ -1944,7 +1510,7 @@ PROGRAM TITINEXAMPLE
   CALL cmfe_Finalise(Err)
 
   WRITE(*,'(A)') "Program successfully completed."
-  
+
   if(NumberOfComputationalNodes==1) then
     open(unit=888,file="times.out",iostat=stat)
     write(888,*) 'single processor'
@@ -1966,4 +1532,5 @@ PROGRAM TITINEXAMPLE
   STOP
   
 END PROGRAM TITINEXAMPLE
+
 

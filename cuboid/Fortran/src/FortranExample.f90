@@ -416,7 +416,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   IF (DEBUGGING_OUTPUT_PROBLEM .AND. ComputationalNodeNumber == 0) THEN
     PRINT*, ""
     PRINT*, ""
-    CALL cmfe_PrintProblem(Problem,6,30,Err)
+    !CALL cmfe_PrintProblem(Problem,6,30,Err)
     PRINT*, ""
     PRINT*, ""
     !PRINT*, "End the program after output of problem datastructure"

@@ -110,7 +110,7 @@ PROGRAM TITINEXAMPLE
   !all times in [ms]
   REAL(CMISSRP) :: time !=10.00_CMISSRP 
 !  REAL(CMISSRP), PARAMETER :: PERIODD=10.00_CMISSRP
-  REAL(CMISSRP), PARAMETER :: PERIODD=10.0_CMISSRP !20.00_CMISSRP
+!  REAL(CMISSRP), PARAMETER :: PERIODD=10.0_CMISSRP !20.00_CMISSRP
 !  REAL(CMISSRP), PARAMETER :: TIME_STOP=300.0_CMISSRP
   
 
@@ -375,22 +375,10 @@ PROGRAM TITINEXAMPLE
     & NumberOfNodesInXi2*NumberOfNodesInXi3
 
 !##################################################################################################################################
-!  fast_twitch=.true.
-!  if(fast_twitch) then
     pathname = "input/"
 !    filename = trim(pathname)//"Shorten_Titin_w_Fv_2016_08_23.cellml"
     filename = trim(pathname)//"Aliev_Panfilov_Razumova_Titin_2016_10_10_b.cellml"
-!     "/home/heidlauf/OpenCMISS/OpenCMISS/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles/slow_TK_2015_06_25.xml"
-
-!    STIM_VALUE=1200.0_CMISSRP
      STIM_VALUE=0.0_CMISSRP
-!  else !slow twitch
-!    filename2= &
-!  &"/home/heidlauf/OpenCMISS/opencmiss/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles/fast_stim_2012_07_23.xml"
-!  &"/home/heidlauf/OpenCMISS/opencmiss/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles/slow_2012_07_23.xml_0.401"
-!  &"/home/heidlauf/OpenCMISS/opencmiss/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles/slow_twitch_2012_01_27.xml"
-!    STIM_VALUE=2000.0_CMISSRP
-!  endif
 !##################################################################################################################################
 
 
@@ -1193,12 +1181,6 @@ PROGRAM TITINEXAMPLE
 
 !  CALL cmfe_Field_ParameterSetUpdateStart(CellMLModelsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,Err)
 !  CALL cmfe_Field_ParameterSetUpdateFinish(CellMLModelsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,Err)
-
-
-
-
-
-
 
   !Create the CellML state field
   CALL cmfe_Field_Initialise(CellMLStateField,Err)

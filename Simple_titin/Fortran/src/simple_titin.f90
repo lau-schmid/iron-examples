@@ -76,7 +76,7 @@ PROGRAM TITINEXAMPLE
   REAL(CMISSRP), PARAMETER :: P_max=0.0_CMISSRP !7.3_CMISSRP ! N/cm^2
 !  REAL(CMISSRP), PARAMETER :: P_max=27.0_CMISSRP ! N/cm^2
 
-  REAL(CMISSRP), PARAMETER :: TK_lin_param=0.0_CMISSRP ! 1: With Actin-Tintin Interaction 0: No Actin-Titin Interactions
+  REAL(CMISSRP), PARAMETER :: TK_lin_param=0.0_CMISSRP ! 1: With Actin-Titin Interaction 0: No Actin-Titin Interactions
 
 
   REAL(CMISSRP), PARAMETER :: tol=1.0E-8_CMISSRP

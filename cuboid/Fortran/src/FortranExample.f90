@@ -2596,7 +2596,7 @@ SUBROUTINE WriteTimingFile()
       & 'distributed matrix petsc, compr. row storage (local to global mapping);;; ' // &
       & 'distributed vector petsc;;; ' // &
       & 'duration FESolverPreLoad; duration OdeSolverPreLoad; duration ParabolicSolverPreLoad; ' // &
-      & 'duration FileOutputSolverPreLoad; duration export EMG user; duration export EMG system'
+      & 'duration FileOutputSolverPreLoad; duration export EMG user; duration export EMG system; duration FileOutput'
       
     CLOSE(unit=123)
   ENDIF

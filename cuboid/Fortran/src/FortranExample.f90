@@ -71,7 +71,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   LOGICAL, PARAMETER :: DEBUGGING_ONLY_RUN_SHORT_PART_OF_SIMULATION = .FALSE.    ! only run one timestep of MAIN_LOOP with stimulus
   LOGICAL, PARAMETER :: DEBUGGING_OUTPUT_PROBLEM = .FALSE.    ! output information about problem data structure
   LOGICAL, PARAMETER :: DEBUGGING_PARALLEL_BARRIER = .FALSE.   !
-  INTEGER(CMISSINTg) :: RUN_SCENARIO = 3  !0 = default, no extra values set, 1 = short for testing, 2 = medium for testing, 3 = very short, 4 = endless
+  INTEGER(CMISSINTg) :: RUN_SCENARIO = 1  !0 = default, no extra values set, 1 = short for testing, 2 = medium for testing, 3 = very short, 4 = endless
   LOGICAL, PARAMETER :: DEBUGGING_OUTPUT = .FALSE.    ! enable information from solvers
   LOGICAL, PARAMETER :: OLD_TOMO_MECHANICS = .TRUE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
 
@@ -93,7 +93,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 !tomo keep ELASTICITY_TIME_STEP and STIM_STOP at the same values
   REAL(CMISSRP), PARAMETER :: STIM_STOP=0.1_CMISSRP!ELASTICITY_TIME_STEP   
 
-  INTEGER(CMISSIntg), PARAMETER :: OUTPUT_FREQUENCY=1  ! (10)
+  INTEGER(CMISSIntg), PARAMETER :: OUTPUT_TIME_STEP_STRIDE=10  ! (10)
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !--------------------------------------------------------------------------------------------------------------------------------
@@ -170,16 +170,19 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   CHARACTER(len=1024) :: InnervationZoneFile = "innervation_zone_18.txt"
   CHARACTER(len=1024) :: FibreDistributionFile = "MU_fibre_distribution_4050.txt"
   CHARACTER(len=256) :: MemoryConsumption1StTimeStep = "", MemoryConsumptionBeforeSim, Temp
+  CHARACTER(len=10000) :: WorkingDirectory
   
   LOGICAL :: CustomProfilingEnabled !< If custom profiling is compiled in
   LOGICAL :: TauProfilingEnabled !< If TAU profiling is compiled in
 
   INTEGER(CMISSIntg) :: Ftype,fibre_nr,NearestGP,InElement
 
-  logical :: less_info,fast_twitch
+  LOGICAL :: less_info,fast_twitch
 
   REAL(CMISSRP) :: TimeStart, TimeInitFinshed, TimeStretchSimFinished, TimeMainSimulationStart, TimeMainSimulationFinished
-
+  REAL(CMISSSP), DIMENSION(2) :: DurationSystemUser     ! For receiving user and system time
+  REAL(CMISSSP) :: DurationTotal
+  
   INTEGER(CMISSIntg) :: CustomSolverConvergenceReasonParabolic = 0
   INTEGER(CMISSIntg) :: CustomSolverConvergenceReasonNewton = 0
   INTEGER(CMISSIntg) :: CustomSolverNumberIterationsParabolic = 0
@@ -196,9 +199,10 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   INTEGER(CMISSIntg) :: MotorUnitFires, MotorUnitRank
 
   INTEGER(CMISSIntg), ALLOCATABLE :: MuDistribution(:)
-  REAL(CMISSRP) :: CustomTimingOdeSolver, CustomTimingParabolicSolver, CustomTimingFESolver, CustomTimingFileOutput
+  REAL(CMISSRP) :: CustomTimingOdeSolver, CustomTimingParabolicSolver, CustomTimingFESolver, CustomTimingFileOutputUser, &
+    & CustomTimingFileOutputSystem
   REAL(CMISSRP) :: CustomTimingOdeSolverPreLoad, CustomTimingParabolicSolverPreLoad, CustomTimingFESolverPreLoad, &
-    & CustomTimingFileOutputPreLoad
+    & CustomTimingFileOutputUserPreLoad, CustomTimingFileOutputSystemPreLoad
   REAL(CMISSRP) :: TimingExportEMGUser = 0_CMISSRP
   REAL(CMISSRP) :: TimingExportEMGSystem = 0_CMISSRP
 
@@ -368,7 +372,8 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   WRITE(*,'(A,A)') TRIM(GetTimeStamp()), " Program started."
 
-  CALL CPU_Time(TimeStart)
+  CALL ETIME(DurationSystemUser, DurationTotal)
+  TimeStart = DurationSystemUser(2)
   CALL ParseParameters()
 
   !================================================================================================================================
@@ -447,12 +452,16 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   CALL cmfe_CustomSolverInfoReset(Err)
   IF (DEBUGGING_PARALLEL_BARRIER) CALL gdbParallelDebuggingBarrier()
 
-
-  CALL CPU_Time(TimeInitFinshed)
+  ! store duration
+  CALL ETIME(DurationSystemUser, DurationTotal)
+  TimeInitFinshed = DurationSystemUser(2)
 
   CALL cmfe_Problem_Solve(Problem,Err)
 
-  CALL CPU_Time(TimeStretchSimFinished)
+  ! store duration
+  CALL ETIME(DurationSystemUser, DurationTotal)
+  TimeStretchSimFinished = DurationSystemUser(2)
+  
   CALL HandleSolverInfo(-1.0_CMISSRP)
 
   !reset the relative contraction velocity to 0
@@ -486,9 +495,12 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   MemoryConsumptionBeforeSim = GetMemoryConsumption()
 
   CALL cmfe_CustomTimingGet(CustomTimingOdeSolverPreLoad, CustomTimingParabolicSolverPreLoad, &
-    & CustomTimingFESolverPreLoad, CustomTimingFileOutputPreLoad, Err)
+    & CustomTimingFESolverPreLoad, CustomTimingFileOutputUserPreLoad, CustomTimingFileOutputSystemPreLoad, Err)
   CALL cmfe_CustomTimingReset(Err)
-  CALL CPU_Time(TimeMainSimulationStart)
+  
+  ! store duration
+  CALL ETIME(DurationSystemUser, DurationTotal)
+  TimeMainSimulationStart = DurationSystemUser(2)
 
   time = 0.0_CMISSRP
   VALUE = 0.0_CMISSRP
@@ -616,7 +628,9 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   ENDDO
 
-  CALL CPU_Time(TimeMainSimulationFinished)
+  ! store duration
+  CALL ETIME(DurationSystemUser, DurationTotal)
+  TimeMainSimulationFinished = DurationSystemUser(2)
   !--------------------------------------------------------------------------------------------------------------------------------
   !--------------------------------------------------------------------------------------------------------------------------------
 
@@ -629,7 +643,8 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !Finialise CMISS
   CALL cmfe_Finalise(Err)
 
-  CALL cmfe_CustomTimingGet(CustomTimingOdeSolver, CustomTimingParabolicSolver, CustomTimingFESolver, CustomTimingFileOutput, Err)
+  CALL cmfe_CustomTimingGet(CustomTimingOdeSolver, CustomTimingParabolicSolver, CustomTimingFESolver, CustomTimingFileOutputUser, &
+    & CustomTimingFileOutputSystem, Err)
 
   CALL WriteTimingFile()
 
@@ -646,7 +661,10 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   PRINT*, "   Ode Solver:       preload: ", CustomTimingOdeSolverPreLoad, " s, main: ", CustomTimingOdeSolver, " s"
   PRINT*, "   Parabolic Solver: preload: ", CustomTimingParabolicSolverPreLoad, " s, main: ", CustomTimingParabolicSolver, " s"
   PRINT*, "   3D FE Solver:     preload: ", CustomTimingFESolverPreLoad, " s, main: ", CustomTimingFESolver, " s"
-  PRINT*, "   Node File Output: preload: ", CustomTimingFileOutputPreLoad, " s, main: ", CustomTimingFileOutput, " s"
+  PRINT*, "   Node File Output: preload: ", CustomTimingFileOutputUserPreLoad, " s, main: ", CustomTimingFileOutputUser, " s"
+  PRINT*, "           (system): preload: ", CustomTimingFileOutputSystemPreLoad, " s, main: ", CustomTimingFileOutputSystem, " s"
+  PRINT*, "   Total Simulation: preload: ", (TimeStretchSimFinished - TimeInitFinshed), " s, main: ", &
+    & (TimeMainSimulationFinished-TimeMainSimulationStart), " s"
   PRINT*, "   EMG Output: user: ", TimingExportEMGUser, " s, system: ", TimingExportEMGSystem, " s"
   PRINT*, ""
 
@@ -920,6 +938,10 @@ SUBROUTINE ParseParameters()
   SELECT CASE (RUN_SCENARIO)
   CASE(1)     ! short
     TIME_STOP = 1
+    
+    ODE_TIME_STEP = 0.0001_CMISSRP
+    PDE_TIME_STEP = 0.005_CMISSRP
+    ELASTICITY_TIME_STEP = 0.10000000001_CMISSRP
   CASE(2)     ! medium
     TIME_STOP = 10
   CASE(3)     ! very short
@@ -1053,13 +1075,17 @@ SUBROUTINE ParseParameters()
 
   GeometryIsValid = CheckGeometry()
 
+  ! print the current directory from which the program was launched
+  CALL PrintWorkingDirectory()
+
   ! Read in input files, stops execution if files do not exist
   CALL ReadInputFiles()
 
   ! output time step information
   IF (ComputationalNodeNumber == 0) THEN
     PRINT *, ""
-    PRINT *, "---------- Timing parameters -------------"
+    PRINT *, "---------- Timing parameters -----------------------------------------------"
+    PRINT *, "The time unit is 1 ms."
     PRINT "(A,F5.2,A,F5.2,A,F5.2)", "  Main loop, Δt = ", TIME_STOP, ", dt = ", ELASTICITY_TIME_STEP
     PRINT "(A,F5.2)", "  - stimulation enabled:  Δt = ", STIM_STOP
     PRINT "(A,F5.2)", "  - stimulation disabled: Δt = ", (PERIODD - STIM_STOP)
@@ -1076,6 +1102,8 @@ SUBROUTINE ParseParameters()
     PRINT "(A,I4,A,E10.4)", "    - SolverFE,                 # Iter (max): ", NewtonMaximumNumberOfIterations, &
       & ", Tol.: ",NewtonTolerance
     PRINT "(A,I4)", "      - LinearSolverFE, (direct solver)"
+    PRINT *, ""
+    PRINT *, "OUTPUT_TIME_STEP_STRIDE: ", OUTPUT_TIME_STEP_STRIDE
 
     ! It should be ELASTICITY_TIME_STEP = STIM_STOP
 
@@ -1107,7 +1135,7 @@ SUBROUTINE ParseParameters()
     PRINT "(A,I6,A,I6,A)", "NumberOfElementsInAtomicPortionPerDomain: ", NumberOfElementsInAtomicPortionPerDomain, &
       & "  (X:", NumberGlobalXElements, ")"
     PRINT *, ""
-    PRINT *, "---------- Physical parameters ------------------------------------------"
+    PRINT *, "---------- Physical parameters -----------------------------------------------"
     PRINT "(A,F5.2,A,F5.2,A,F5.2)", "      Dimensions [cm]: ",LENGTH,"x",WIDTH,"x",HEIGHT
     PRINT "(A,F11.2)", "Stimulation [uA/cm^2]: ",STIM_VALUE
     PRINT *, "------------------------------------------------------------------------------"
@@ -1144,6 +1172,29 @@ SUBROUTINE ParseParameters()
   ENDIF
 
 END SUBROUTINE ParseParameters
+
+SUBROUTINE PrintWorkingDirectory()
+
+  IF (ComputationalNodeNumber == 0) THEN
+    CALL SYSTEM("pwd > pwd.txt", Stat)
+    IF (Stat == 0) THEN
+      OPEN(UNIT=100, FILE="pwd.txt", ACTION="read", IOSTAT=Stat)
+      IF (Stat == 0) THEN
+        READ(100,"(A)", IOSTAT=Stat) WorkingDirectory
+        CLOSE(UNIT=100)
+        IF (Stat == 0) THEN
+          PRINT*, "Working Directory: """ // TRIM(WorkingDirectory) // """."
+        ELSE
+          PRINT*, "Error reading pwd.txt"
+        ENDIF
+      ELSE
+        PRINT*, "Error opening pwd.txt"
+      ENDIF
+    ELSE
+      PRINT*, "Error calling 'pwd'"
+    ENDIF
+  ENDIF
+END SUBROUTINE PrintWorkingDirectory
 
 SUBROUTINE CreateRegionMesh()
   INTEGER(CMISSIntg) :: NodeNo
@@ -2173,15 +2224,15 @@ SUBROUTINE CreateControlLoops()
   !Loop in time for STIM_STOP with the Stimulus applied.
   CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,0.0_CMISSRP,ELASTICITY_TIME_STEP,ELASTICITY_TIME_STEP,Err)
 
-  CALL cmfe_ControlLoop_TimeOutputSet(ControlLoopMain,OUTPUT_FREQUENCY,Err)
+  CALL cmfe_ControlLoop_TimeOutputSet(ControlLoopMain,OUTPUT_TIME_STEP_STRIDE,Err)
   IF (DEBUGGING_OUTPUT) THEN
     CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,cmfe_CONTROL_LOOP_TIMING_OUTPUT,Err)
   ELSE
     ! output types:
     ! CONTROL_LOOP_NO_OUTPUT = 0 !<No output from the control loop (no output of MainTime_* files)
     ! CONTROL_LOOP_PROGRESS_OUTPUT = 1 !<Progress output from control loop (also output MainTime_* files)
-    ! CONTROL_LOOP_TIMING_OUTPUT = 2 !<Timing output from the control loop
-    ! CONTROL_LOOP_FILE_OUTPUT = -1
+    ! CONTROL_LOOP_TIMING_OUTPUT = 2 !<Timing output from the control loop (also output MainTime_* files)
+    ! CONTROL_LOOP_FILE_OUTPUT = -1 <Only MainTime_* files output
     CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,cmfe_CONTROL_LOOP_TIMING_OUTPUT,Err)
     !CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,cmfe_CONTROL_LOOP_FILE_OUTPUT,Err)
     !CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,-1,Err)
@@ -2596,7 +2647,8 @@ SUBROUTINE WriteTimingFile()
       & 'distributed matrix petsc, compr. row storage (local to global mapping);;; ' // &
       & 'distributed vector petsc;;; ' // &
       & 'duration FESolverPreLoad; duration OdeSolverPreLoad; duration ParabolicSolverPreLoad; ' // &
-      & 'duration FileOutputSolverPreLoad; duration export EMG user; duration export EMG system; duration FileOutput'
+      & 'duration FileOutputPreLoad (user); duration export EMG user; duration export EMG system; duration FileOutput (user); ' // &
+      & 'duration FileOutput (system); duration FileOutputPreload (system);'
       
     CLOSE(unit=123)
   ENDIF
@@ -2618,7 +2670,7 @@ SUBROUTINE WriteTimingFile()
 
   IF (CustomProfilingEnabled) THEN
 
-    WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),35(F25.13,A),8(I17,A,I5,A,I7,A),7(F8.3,A))") &
+    WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),35(F25.13,A),8(I17,A,I5,A,I7,A),9(F8.3,A))") &
       & TRIM(TimeStampStr), ';', &
       & TRIM(Hostname(1:22)), ';', &
       & NumberOfComputationalNodes, ';', &
@@ -2714,14 +2766,16 @@ SUBROUTINE WriteTimingFile()
       & CustomTimingFESolverPreLoad, ';', &
       & CustomTimingOdeSolverPreLoad, ';', &
       & CustomTimingParabolicSolverPreLoad, ';', &
-      & CustomTimingFileOutputPreLoad, ';', &
+      & CustomTimingFileOutputUserPreLoad, ';', &
       & TimingExportEMGUser, ';', &
       & TimingExportEMGSystem, ';', &
-      & CustomTimingFileOutput, ';'
+      & CustomTimingFileOutputUser, ';', &
+      & CustomTimingFileOutputSystem, ';', &
+      & CustomTimingFileOutputSystemPreLoad, ';'
 
   ELSE  ! custom profiling is disabled
     
-    WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),7(F8.3,A))") &
+    WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),9(F8.3,A))") &
       & TRIM(TimeStampStr), ';', &
       & TRIM(Hostname(1:22)), ';', &
       & NumberOfComputationalNodes, ';', &
@@ -2756,10 +2810,12 @@ SUBROUTINE WriteTimingFile()
       & CustomTimingFESolverPreLoad, ';', &
       & CustomTimingOdeSolverPreLoad, ';', &
       & CustomTimingParabolicSolverPreLoad, ';', &
-      & CustomTimingFileOutputPreLoad, ';', &
+      & CustomTimingFileOutputUserPreLoad, ';', &
       & TimingExportEMGUser, ';', &
       & TimingExportEMGSystem, ';', &
-      & CustomTimingFileOutput, ';'
+      & CustomTimingFileOutputUser, ';', &
+      & CustomTimingFileOutputSystem, ';', &
+      & CustomTimingFileOutputSystemPreLoad, ';'
   ENDIF
 
   CLOSE(unit=123)

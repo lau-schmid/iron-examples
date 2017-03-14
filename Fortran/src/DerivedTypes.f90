@@ -8,127 +8,183 @@
 
   !!!!!!!!!!!!!!!!!!!!!!!!! DEFINING DERIVED TYPES AND ALLOCATING THIER RESPECTIVE DATA STRUCTURES !!!!!!!!!!!!!!!!!!!
 
-  TYPE basis_array
+  TYPE BasisStructure
 
-    TYPE(cmfe_BasisType) 	         , ALLOCATABLE :: Basis(:),PressureBasis(:)
+    TYPE(CMFE_BasisType) 	                       :: Basis
+    TYPE(CHARACTER(LEN=100))                           :: BasisId(1),BasisInterpolationType(1), BasisNumberOfGaussPoints(3)
 
-  END TYPE basis_array
+  END TYPE BasisStructure
 
-  TYPE boundary_conditions_array
+  TYPE BoundaryConditionStructure
 
-    TYPE(cmfe_BoundaryConditionsType)    , ALLOCATABLE :: BoundaryConditions(:)
+    TYPE(CMFE_BoundaryConditionsType)                  :: BoundaryConditions
 
-  END TYPE  boundary_conditions_array
 
-  TYPE coordinate_system_array
+  END TYPE  BoundaryConditionStructure
 
-    TYPE(cmfe_CoordinateSystemType)      , ALLOCATABLE :: CoordinateSystem(:), WorldCoordinateSystem(:)
+  TYPE CoordinateSystemStructure
 
-  END TYPE coordinate_system_array
+    TYPE(CMFE_CoordinateSystemType)    , ALLOCATABLE :: WorldCoordinateSystem(:)
+    TYPE(CHARACTER(LEN=100))                         :: CoordinateSystemId(1),CoordinateSystemType(1),CoordinateSystemDimension(1)
+    TYPE(CMFE_CoordinateSystemType)                  :: CoordinateSystem
 
-  TYPE mesh_array
+  END TYPE CoordinateSystemStructure
 
-    TYPE(cmfe_MeshType)                  , ALLOCATABLE :: Mesh(:)
+  TYPE MeshStructure
 
-  END TYPE  mesh_array
+    TYPE(CMFE_MeshType)                                :: Mesh
+    TYPE(CHARACTER(LEN=100))                           :: MeshId(1)
 
-  TYPE decomposition_array
+  END TYPE  MeshStructure
 
-    TYPE(cmfe_DecompositionType)         , ALLOCATABLE :: Decomposition(:)
+  TYPE DecompositionStructure
 
-  END TYPE  decomposition_array
+    TYPE(CMFE_DecompositionType)                      :: Decomposition
+    TYPE(CHARACTER(LEN=100))                          :: CalculateElementFaces(1),DecompositionId(1)
+
+  END TYPE  DecompositionStructure
 
   TYPE equations_array
 
-    TYPE(cmfe_EquationsType)             , ALLOCATABLE :: Equations(:)
+    TYPE(CMFE_EquationsType)            , ALLOCATABLE :: Equations(:)
 
   END TYPE equations_array
 
-  TYPE equations_set_array
+  TYPE EquationsSetStructure
 
-    TYPE(cmfe_EquationsSetType)          , ALLOCATABLE :: EquationsSet(:)
+    TYPE(CMFE_EquationsSetType)                        :: EquationsSet
+    TYPE(CHARACTER(LEN=100))                           :: EquationSetId(1),EquationSetClass(1),EquationSetType(1), &
+                                                          & EquationSetSubType(1),EquationSetOutputTypeSet(1)
 
-  END TYPE equations_set_array
+  END TYPE EquationsSetStructure
 
-  TYPE field_type_array
+  TYPE FieldTypeStructure
 
-    TYPE(cmfe_FieldType)                 , ALLOCATABLE :: GeometricField(:),FibreField(:),MaterialField(:),EquationsSetField(:)
+    TYPE(CMFE_FieldType)                               :: GeometricField,MaterialField,EquationsSetField,FibreField
+    TYPE(CHARACTER(LEN=100))                           :: GeometricFieldId(1),GeometricFieldLabel(1), EquationsSetFieldId(1)
+    TYPE(CHARACTER(LEN=100))                           :: FibreFieldId(1),FibreFieldParameters(3),FiberFieldLabel(1)
+    TYPE(CHARACTER(LEN=100))                           :: MaterialFieldId(1),MaterialFieldParameters(3),MaterialFieldLabel(1)
 
-  END TYPE  field_type_array
+  END TYPE  FieldTypeStructure
 
-  TYPE fields_type_array
+  TYPE FieldsStructure
 
-    TYPE(cmfe_FieldsType)                , ALLOCATABLE ::  Fields(:)
+    TYPE(CMFE_FieldsType)                              ::  Fields
+    TYPE(CHARACTER(LEN=100))                           ::  FieldsId(1)
 
-  END TYPE  fields_type_array
+  END TYPE  FieldsStructure
 
-  TYPE problem_type
+  TYPE ProblemStructure
 
-    TYPE(cmfe_ProblemType)               , ALLOCATABLE :: Problem(:)
+    TYPE(CMFE_ProblemType)                             :: Problem
+    CHARACTER(LEN=100)                                 :: ProblemId(1),ProblemClass(1),ProblemType(1),ProblemSubType(1)
 
-  END TYPE  problem_type
+  END TYPE  ProblemStructure
 
-  TYPE region_type
+  TYPE RegionStructure
 
-    TYPE(cmfe_RegionType)                , ALLOCATABLE :: Region(:),WorldRegion(:)
+    TYPE(CMFE_RegionType)                              :: Region
+    CHARACTER(LEN=100)                                 :: RegionId(1),RegionLabel(1)
+    TYPE(CMFE_RegionType)                , ALLOCATABLE :: WorldRegion(:)
 
-  END TYPE region_type
+  END TYPE RegionStructure
 
-  TYPE solver_type
+  TYPE SolverStructure
 
-    TYPE(cmfe_SolverType)                , ALLOCATABLE :: Solver(:),LinearSolver(:),NonLinearSolver(:)
+    TYPE(CMFE_SolverType)                             :: Solver,LinearSolver,NonLinearSolver
+    TYPE(CHARACTER(LEN=100))                          :: SolverId(1) , LinearSolverType(1), DirectSolverType(1)
+    TYPE(CHARACTER(LEN=100))                          :: IterativeSolverType(1),IterativeSolverRelativeTolerance(1)
+    TYPE(CHARACTER(LEN=100))                          :: IterativeSolverAbsoluteTolerance(1),IterativeSolverMaximumIterations(1)
+    TYPE(CHARACTER(LEN=100))                          :: IterativePreconditioner(1),NonlinearSolverType(1)
+    TYPE(CHARACTER(LEN=100))                          :: NewtonMaximumIterations(1),NewtonRelativeTolerance(1)
+    TYPE(CHARACTER(LEN=100))                          :: NewtonAbsoluteTolerance(1),OutputTypeSet(1)
+    TYPE(CHARACTER(LEN=100))                          :: JacobianType(1) , LibraryType(1)
 
-  END TYPE solver_type
+  END TYPE SolverStructure
+
+  TYPE SolverEquationsStructure
+
+    TYPE(CMFE_SolverEquationsType)                     :: SolverEquations
+
+  END TYPE SolverEquationsStructure
+
+  TYPE ControlLoopStructure
+
+    TYPE(CMFE_ControlLoopType)                         :: ControlLoop
+    TYPE(CHARACTER(LEN=100))                           :: ControlLoopId(1),ControlLoopType(1),ControlLoopTimeIncrement(3), &
+                                                          & ControlLoopLoadIncrement(3)
+
+  END TYPE ControlLoopStructure
+
+  TYPE GeneratedMeshStructure
+
+    TYPE(CMFE_GeneratedMeshType)                       :: GeneratedMesh
+    TYPE(CHARACTER(LEN=100))                           :: GeneratedMeshID(1),GeneratedMeshType(1)
+    TYPE(CHARACTER(LEN=100))                           :: GeneratedMeshGeometricExtents(3),GeneratedMeshOriginSet(3)
+    TYPE(CHARACTER(LEN=100))                           :: GeneratedMeshNumberOfElements(3)
+
+  END TYPE GeneratedMeshStructure
+
+  TYPE DependentFieldStructure
+
+    TYPE(CMFE_FieldType)                              :: DependentField
+    TYPE(CHARACTER(LEN=100))                          :: DependentFieldId(1),DependentFieldStateVariable(1)
+    TYPE(CHARACTER(LEN=100))                          :: DependentFieldNumberOfComponents(1)
+    TYPE(CHARACTER(LEN=100))                          :: DependentFieldInitialValueOfStateVector(3), DependentFieldLabel(1)
+    TYPE(CHARACTER(LEN=100))                          :: DependentFieldInitialValueOfStateScalar(1)
 
 
-  TYPE solvers_equations_type
+  END TYPE DependentFieldStructure
 
-    TYPE(cmfe_SolverEquationsType)       , ALLOCATABLE :: SolverEquations(:)
 
-  END TYPE solvers_equations_type
+  TYPE SourceFieldStructure
 
-  TYPE control_loop_type
+    TYPE(CMFE_FieldType)                               :: SourceField
+    TYPE(CHARACTER(LEN=100))                           :: SourceFieldId(1) , SourceFieldType(1), SourceFieldComponents(3)
 
-    TYPE(cmfe_ControlLoopType)           , ALLOCATABLE :: ControlLoop(:)
 
-  END TYPE control_loop_type
+  END TYPE SourceFieldStructure
 
-  TYPE generate_mesh_type
 
-    TYPE(cmfe_GeneratedMeshType)         , ALLOCATABLE :: GeneratedMesh(:)
+  TYPE OutputStructure
 
-  END TYPE generate_mesh_type
+    TYPE(CHARACTER(LEN=100))                           :: OutputID(1),NodeExport(1),ElementExport(1)
 
-  TYPE Dependent_field_type
+  END TYPE OutputStructure
 
-    TYPE(cmfe_FieldType)                 , ALLOCATABLE :: DependentField(:),SourceField(:)
 
-  END TYPE Dependent_field_type
+  TYPE FunctionStructure
+
+    TYPE(CHARACTER(LEN=100))                           :: FunctionID(1),FunctionConstants(10)
+
+  END TYPE FunctionStructure
 
  !!!!!! INITIALIZING POINTER THAT POINT AT THE DATA STRUCTURES OF DERIVED TYPES !!!!!!!!!!!!!!!!
 
- TYPE(basis_array)          	      :: all_Basis, all_PressureBasis
- TYPE(boundary_conditions_array)      :: all_BoundaryConditions
- TYPE(coordinate_system_array)        :: all_CoordinateSystem
- TYPE(coordinate_system_array)        :: all_WorldCoordinateSystem
- TYPE(mesh_array)                     :: all_Mesh
- TYPE(decomposition_array) 	      :: all_Decomposition
- TYPE(equations_array) 	              :: all_Equations
- TYPE(equations_set_array)            :: all_EquationsSet
- TYPE(field_type_array)     	      :: all_GeometricField
- TYPE(field_type_array)     	      :: all_FibreField
- TYPE(field_type_array)     	      :: all_MaterialField
- TYPE(field_type_array)     	      :: all_EquationsSetField
- TYPE(fields_type_array)	      :: all_Fields
- TYPE(problem_type)		      :: all_problem
- TYPE(region_type)		      :: all_Region
- TYPE(region_type)		      :: all_WorldRegion
- TYPE(solver_type)		      :: all_Solver
- TYPE(solver_type)		      :: all_LinearSolver
- TYPE(solver_type)		      :: all_NonLinearSolver
- TYPE(solvers_equations_type)	      :: all_SolverEquations
- TYPE(control_loop_type)	      :: all_ControlLoop
- TYPE(generate_mesh_type)             :: all_GeneratedMesh
- TYPE(Dependent_field_type) 	      :: all_DependentField
- TYPE(Dependent_field_type) 	      :: all_SourceField
+ TYPE(BasisStructure)             , ALLOCATABLE    :: all_Basis(:)
+ TYPE(BoundaryConditionStructure) , ALLOCATABLE    :: all_BoundaryConditions(:)
+ TYPE(CoordinateSystemStructure)  , ALLOCATABLE    :: all_CoordinateSystem(:)
+ TYPE(CoordinateSystemStructure)                   :: all_WorldCoordinateSystem
+ TYPE(MeshStructure)              , ALLOCATABLE    :: all_Mesh(:)
+ TYPE(DecompositionStructure) 	  , ALLOCATABLE    :: all_Decomposition(:)
+ TYPE(equations_array) 	                           :: all_Equations
+ TYPE(EquationsSetStructure)      , ALLOCATABLE    :: all_EquationsSet(:)
+ TYPE(FieldTypeStructure)         , ALLOCATABLE    :: all_GeometricField(:)
+ TYPE(FieldTypeStructure)         , ALLOCATABLE    :: all_FibreField(:)
+ TYPE(FieldTypeStructure)         , ALLOCATABLE    :: all_MaterialField(:)
+ TYPE(FieldTypeStructure)         , ALLOCATABLE    :: all_EquationsSetField(:)
+ TYPE(FieldsStructure)            , ALLOCATABLE    :: all_Fields(:)
+ TYPE(ProblemStructure)           , ALLOCATABLE    :: all_Problem(:)
+ TYPE(RegionStructure)            , ALLOCATABLE    :: all_Region(:)
+ TYPE(RegionStructure)		                   :: all_WorldRegion
+ TYPE(SolverStructure)		  , ALLOCATABLE    :: all_Solver(:)
+ TYPE(SolverStructure)		  , ALLOCATABLE    :: all_LinearSolver(:)
+ TYPE(SolverStructure)		  , ALLOCATABLE    :: all_NonLinearSolver(:)
+ TYPE(SolverEquationsStructure)   , ALLOCATABLE    :: all_SolverEquations(:)
+ TYPE(ControlLoopStructure)       , ALLOCATABLE    :: all_ControlLoop(:)
+ TYPE(GeneratedMeshStructure)     , ALLOCATABLE    :: all_GeneratedMesh(:)
+ TYPE(DependentFieldStructure)    , ALLOCATABLE    :: all_DependentField(:)
+ TYPE(SourceFieldStructure)       , ALLOCATABLE    :: all_SourceField(:)
+ TYPE(OUtputStructure)            , ALLOCATABLE    :: all_Output(:)
+ TYPE(FunctionStructure)          , ALLOCATABLE    :: all_Function(:)
 

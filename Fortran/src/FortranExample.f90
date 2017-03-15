@@ -331,7 +331,6 @@ PROGRAM GENERICEXAMPLE
       END IF
        ! 2D case
       IF(NumberGlobalZElements==0) THEN
-
         CALL cmfe_Basis_NumberOfXiSet(all_Basis(BasisIdx)%Basis,2,Err)
         CALL cmfe_Basis_InterpolationXiSet(all_Basis(BasisIdx)%Basis,[InterpolationType,InterpolationType],Err)
 
@@ -930,7 +929,7 @@ PROGRAM GENERICEXAMPLE
 
       CALL cmfe_GeneratedMesh_SurfaceGet(all_GeneratedMesh(BOundaryConditionIdx)%GeneratedMesh, &
         & MATCH_BC(BoundaryDirichelet(2+5*(i-1),BOundaryConditionIdx)),SurfaceNodes,LeftNormalXi,Err)
-      if (i == 4) THEN  !!! the following lines are hard coded and will be removed later upon discussion with Andreas
+      if (i == 5) THEN  !!! the following lines are hard coded and will be removed later upon discussion with Andreas
         h = 2
       else
         h = 1
@@ -977,9 +976,6 @@ PROGRAM GENERICEXAMPLE
                         & STR2REAL(all_Function(FunctionIdx)%FunctionConstants(9)), &
                           & STR2REAL(all_Function(FunctionIdx)%FunctionConstants(10)), &
                             & BOundaryConditionValue)
-
-     
-
       ELSE
 
         BOundaryConditionValue = STR2REAL(BoundaryDirichelet(4+5*(i-1),BOundaryConditionIdx)) !! for uniform BC

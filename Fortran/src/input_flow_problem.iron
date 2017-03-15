@@ -1,5 +1,9 @@
 
-!!!!!!!!! Define governing equation!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!! EQUATION_SET block defines the governing equation!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!! It creates an object of derived type CMFE_EquationsSetType !!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 START_EQUATIONS_SET
 
 MODEL_ID
@@ -22,7 +26,10 @@ EQUATIONS_NO_OUTPUT
 
 END_EQUATIONS_SET
 
-!!!!!!!!! Define governing equation!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!! PROBLEM block defines the governing equation!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!! It creates an object of derived type CMFE_ProblemType !!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 START_PROBLEM
 
@@ -41,7 +48,11 @@ PROBLEM_TRANSIENT_NAVIER_STOKES_SUBTYPE
 END_PROBLEM
 
 
-!!!!!!!!!!!!! Define Region !!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!! Creates a region to which geometric entities like ...!!!!!!!!!!!!!!!
+!!!!!!!!! Cooridnate System, Mesh are attached !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 START_REGION
 
 REGION_ID
@@ -50,7 +61,6 @@ FLUID
 REGION_LABEL_SET
 Region
 
-! --------- MORE PARAMETERS TO BE ADDED LATER -------------!
 END_REGION
 
 
@@ -99,7 +109,7 @@ TYPE
 PROBLEM_CONTROL_TIME_LOOP_TYPE
 
 TIME_INCREMENTS
-0,0.1,0.005   !! initial_time,final_time,increment
+0,0.1,0.001   !! initial_time,final_time,increment
 
 
 END_CONTROL_LOOP
@@ -217,7 +227,7 @@ GENERATED_MESH_TYPE
 GENERATED_REGULAR_MESH_TYPE
 
 GENERATED_MESH_GEOMETRIC_EXTENTS
-20,	3
+10,	2
 
 GENERATED_MESH_ORIGIN_SET
 0,0
@@ -276,20 +286,14 @@ START_BOUNDARY_CONDITIONS
 BOUNDARY_CONDITIONS_ID
 FLUID
 
-DIRICHELET  !!!! [ TYPE , LOCATION , COMPONENTS , VALUE ]
+DIRICHILET  !!!! [ TYPE , LOCATION , COMPONENTS , VALUE ]
 SURFACE,	MESH_REGULAR_LEFT_SURFACE,	100,		QUADRATIC_1  , BOUNDARY_CONDITION_FIXED
-SURFACE,	MESH_REGULAR_FRONT_SURFACE,	110,		0.0          , BOUNDARY_CONDITION_FIXED
-SURFACE,	MESH_REGULAR_BACK_SURFACE,	110,		0.0          , BOUNDARY_CONDITION_FIXED
-SURFACE,	MESH_REGULAR_RIGHT_SURFACE,	001,		0.0          , BOUNDARY_CONDITION_FIXED
+SURFACE,	MESH_REGULAR_LEFT_SURFACE,	010,		QUADRATIC_2  , BOUNDARY_CONDITION_FIXED
+SURFACE,	MESH_REGULAR_FRONT_SURFACE,	110,		QUADRATIC_2  , BOUNDARY_CONDITION_FIXED
+SURFACE,	MESH_REGULAR_BACK_SURFACE,	110,		QUADRATIC_2  , BOUNDARY_CONDITION_FIXED
+SURFACE,	MESH_REGULAR_RIGHT_SURFACE,	001,		QUADRATIC_2  , BOUNDARY_CONDITION_FIXED
 
 
-
-NEUMANN_CF  !!!! [ TYPE , LOCATION , COMPONENTS , VALUE ]
-!SURFACE,	RIGHT,	110,		0.2
-
-
-NEUMANN_PRESSURE  !!!! [ TYPE , LOCATION, VALUE ]
-!SURFACE,	RIGHT,	1.0
 
 END_BOUNDARY_CONDITIONS
 
@@ -338,8 +342,26 @@ START_FUNCTION
 FUNCTION_ID
 QUADRATIC_1
 
-FUNCTION_CONSTANTS
-0,0,0,0,0,0,0,0,0,4
+FUNCTION_CONSTANTS                               !!! A,B,C,E,F,G,H,I,J in equation ....
+0,-4,0,0,0,0,0,8,0,0
+                                                 !!! f(x,y,z) = A*x^2 + B*y^2 + C*z^2 + D*x*y + E*x*z + F*y*z ...
+                                                 !!! ... + G*x + H*y + I*z + J
+                                                 !!! The given constants correpond to a parabolic profile of ...
+                                                 !! .. shape V = 4*V_max * (y/h)(1-(y/h)) , where V_max = 4 units and h is 2 units
+
+
+END_FUNCTION
+
+START_FUNCTION
+
+FUNCTION_ID
+QUADRATIC_2
+
+FUNCTION_CONSTANTS                               !!! A,B,C,E,F,G,H,I,J in equation ....
+0,0,0,0,0,0,0,0,0,0
+                                                 !!! f(x,y,z) = A*x^2 + B*y^2 + C*z^2 + D*x*y + E*x*z + F*y*z ...
+                                                 !!! ... + G*x + H*y + I*z + J
+                                                 !!! The given constants correpond to zero BC
 
 
 END_FUNCTION

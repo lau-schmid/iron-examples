@@ -77,7 +77,7 @@ GeneratedMeshKeyWords(5) ="GENERATED_MESH_NUMBER_OF_ELEMENTS"
 
 ALLOCATE(BoundaryConditionKeyWords(4))                                                        !! Allocation of "BoundaryCondition BLock " related Data Structures.
 BoundaryConditionKeyWords(1) =  "BOUNDARY_CONDITIONS_ID"
-BoundaryConditionKeyWords(2) =  "DIRICHELET"
+BoundaryConditionKeyWords(2) =  "DIRICHILET"
 BoundaryConditionKeyWords(3) =  "NEUMANN_CF"
 BoundaryConditionKeyWords(4) =  "NEUMANN_PRESSURE"
 

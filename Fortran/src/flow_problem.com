@@ -18,7 +18,7 @@ gfx define field pressure component  DEPENDENTFIELD.3  ;
 
 ######## opening window to visualize results##########
 
-gfx cre win 1 ;
+gfx cre win 1;
 
 gfx cre mat copper ambient 1 0.2 0 diffuse 0.6 0.3 0 specular 0.7 0.7 0.5 shininess 0.3
 
@@ -45,7 +45,8 @@ gfx create colour_bar spectrum vel_spectrum
 gfx modify g_element "/" point glyph colour_bar general size "1*1*1" centre 0,0,0 select_on material copper selected_material copper normalised_window_fit_left;
 
 
-gfx modify window 1 image view_all
+gfx modify win 1 image view_all
+gfx modify win 1 background colour 1 1 1
 
 
 

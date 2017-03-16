@@ -72,7 +72,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   LOGICAL, PARAMETER :: DEBUGGING_OUTPUT_PROBLEM = .FALSE.    ! output information about problem data structure
   LOGICAL, PARAMETER :: DEBUGGING_PARALLEL_BARRIER = .FALSE.   !
   INTEGER(CMISSINTg) :: RUN_SCENARIO = 1  !0 = default, no extra values set, 1 = short for testing, 2 = medium for testing, 3 = very short, 4 = endless
-  LOGICAL, PARAMETER :: DEBUGGING_OUTPUT = .TRUE.    ! enable information from solvers
+  LOGICAL, PARAMETER :: DEBUGGING_OUTPUT = .FALSE.    ! enable information from solvers
   LOGICAL, PARAMETER :: OLD_TOMO_MECHANICS = .TRUE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
 
   REAL(CMISSRP), PARAMETER :: tol=1.0E-8_CMISSRP
@@ -2039,19 +2039,19 @@ SUBROUTINE CreateEquations()
   CALL cmfe_Equations_Initialise(EquationsM,Err)
   CALL cmfe_EquationsSet_EquationsCreateStart(EquationsSetM,EquationsM,Err)
   CALL cmfe_Equations_SparsityTypeSet(EquationsM,CMFE_EQUATIONS_SPARSE_MATRICES,Err)
-  !CALL cmfe_Equations_OutputTypeSet(EquationsM,CMFE_EQUATIONS_NO_OUTPUT,Err)
+  CALL cmfe_Equations_OutputTypeSet(EquationsM,CMFE_EQUATIONS_NO_OUTPUT,Err)
   !CALL cmfe_Equations_OutputTypeSet(Equations,CMFE_EQUATIONS_TIMING_OUTPUT,Err)
   !CALL cmfe_Equations_OutputTypeSet(Equations,CMFE_EQUATIONS_MATRIX_OUTPUT,Err)
-  CALL cmfe_Equations_OutputTypeSet(EquationsM,CMFE_EQUATIONS_ELEMENT_MATRIX_OUTPUT,Err)
+  !CALL cmfe_Equations_OutputTypeSet(EquationsM,CMFE_EQUATIONS_ELEMENT_MATRIX_OUTPUT,Err)
   CALL cmfe_EquationsSet_EquationsCreateFinish(EquationsSetM,Err)
 
   !Create the equations set equations for Finite Elasticity
   CALL cmfe_Equations_Initialise(EquationsFE,Err)
   CALL cmfe_EquationsSet_EquationsCreateStart(EquationsSetFE,EquationsFE,Err)
   !CALL cmfe_Equations_SparsityTypeSet(EquationsFE,CMFE_EQUATIONS_SPARSE_MATRICES,Err)
-  !CALL cmfe_Equations_OutputTypeSet(EquationsFE,CMFE_EQUATIONS_NO_OUTPUT,Err)
+  CALL cmfe_Equations_OutputTypeSet(EquationsFE,CMFE_EQUATIONS_NO_OUTPUT,Err)
   !CALL cmfe_Equations_OutputTypeSet(EquationsFE,CMFE_EQUATIONS_MATRIX_OUTPUT,Err)
-  CALL cmfe_Equations_OutputTypeSet(EquationsFE,CMFE_EQUATIONS_ELEMENT_MATRIX_OUTPUT,Err)
+  !CALL cmfe_Equations_OutputTypeSet(EquationsFE,CMFE_EQUATIONS_ELEMENT_MATRIX_OUTPUT,Err)
   CALL cmfe_EquationsSet_EquationsCreateFinish(EquationsSetFE,Err)
 
 END SUBROUTINE CreateEquations
@@ -2270,9 +2270,11 @@ SUBROUTINE CreateControlLoops()
 END SUBROUTINE CreateControlLoops
 
 SUBROUTINE CreateSolvers()
+  TYPE(cmfe_SolverType) :: linearSolver
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !Create the problem solvers
+  ! create parabolic and ode solver, create subsolver structure
   CALL cmfe_Problem_SolversCreateStart(Problem,Err)
 
   !Create the DAE solver
@@ -2297,7 +2299,34 @@ SUBROUTINE CreateSolvers()
   CALL cmfe_Solver_Initialise(SolverParabolic,Err)
   CALL cmfe_Problem_SolverGet(Problem,[ControlLoopMonodomainNumber,CMFE_CONTROL_LOOP_NODE], &
    & SolverParabolicIndex,SolverParabolic,Err)
+  
   CALL cmfe_Solver_DynamicSchemeSet(SolverParabolic,CMFE_SOLVER_DYNAMIC_BACKWARD_EULER_SCHEME,Err)
+  
+  ! data structure is as follows:
+  ! SolverParabolic
+  !   LinearSolver
+  !      IterativeSolver
+  !   LinkedSolver(1) -> LinearSolver
+  ! Retrieve linear solver
+  NULLIFY(linearSolver%solver)
+  CALL cmfe_Solver_DynamicLinearSolverGet(SolverParabolic, linearSolver, Err)
+  
+  PRINT*, ""
+  PRINT*, "before cmfe_Solver_LinearTypeSet"
+  CALL cmfe_PrintSolver(SolverParabolic, 5, 10, Err)
+  
+  ! Recreate linearSolver subtype as direct solver (instead of iterative solver)
+  CALL cmfe_Solver_LinearTypeSet(linearSolver, CMFE_SOLVER_LINEAR_DIRECT_SOLVE_TYPE, Err)
+  
+  PRINT*, ""
+  PRINT*, "========================================================================="
+  PRINT*, "After cmfe_Solver_LinearTypeSet"
+  CALL cmfe_PrintSolver(SolverParabolic, 5, 10, Err)
+  
+  !SOLVER_LINEAR_DIRECT_TYPE_SET
+  
+  !CALL cmfe_SOLVER_DYNAMICLINEARITYTYPESET(SolverParabolic, CMFE_SOLVER_DYNAMIC_LINEAR, Err)
+  !CALL cmfe_Solver_NonlinearTypeSet(SolverParabolic,CMFE_SOLVER_NONLINEAR_NEWTON,Err)
 
   IF (DEBUGGING_OUTPUT) THEN
     CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
@@ -2360,12 +2389,35 @@ SUBROUTINE CreateSolvers()
   !Create the problem solver parabolic equations (Monodomain)
   CALL cmfe_Solver_Initialise(SolverParabolic,Err)
   CALL cmfe_SolverEquations_Initialise(SolverEquationsM,Err)
+  
   CALL cmfe_Problem_SolverGet(Problem,[ControlLoopMonodomainNumber,CMFE_CONTROL_LOOP_NODE], &
    & SolverParabolicIndex,SolverParabolic,Err)
+   
+   
   CALL cmfe_Solver_SolverEquationsGet(SolverParabolic,SolverEquationsM,Err)
+  
+  
+  
+  !PRINT*, ""
+  !PRINT*, "After cmfe_Solver_SolverEquationsGet"
+  !CALL cmfe_PrintSolverEquationsM(SolverEquationsM, 5, 10, Err)
+  
+  
+  
   CALL cmfe_SolverEquations_SparsityTypeSet(SolverEquationsM,CMFE_SOLVER_SPARSE_MATRICES,Err)
+  
+  
+  !PRINT*, ""
+  !PRINT*, "After cmfe_SolverEquations_SparsityTypeSet"
+  !CALL cmfe_PrintSolverEquationsM(SolverEquationsM, 5, 10, Err)
+  
   !CALL cmfe_SolverEquations_SparsityTypeSet(SolverEquationsM,CMFE_SOLVER_FULL_MATRICES,Err)
   CALL cmfe_SolverEquations_EquationsSetAdd(SolverEquationsM,EquationsSetM,EquationsSetIndexM,Err)
+  
+  
+  !PRINT*, ""
+  !PRINT*, "After cmfe_SolverEquations_EquationsSetAdd"
+  !CALL cmfe_PrintSolverEquationsM(SolverEquationsM, 5, 10, Err)
 
   !Create the problem solver Finite Elasticity equations
   CALL cmfe_Solver_Initialise(SolverFE,Err)
@@ -2381,9 +2433,27 @@ SUBROUTINE CreateSolvers()
 END SUBROUTINE CreateSolvers
 
 SUBROUTINE SetBoundaryConditions()
+
   !Prescribe boundary conditions for monodomain
   CALL cmfe_BoundaryConditions_Initialise(BoundaryConditionsM,Err)
   CALL cmfe_SolverEquations_BoundaryConditionsCreateStart(SolverEquationsM,BoundaryConditionsM,Err)
+  
+  PRINT*, "Print SolverEquationsM Solver"
+  
+  !CALL cmfe_PrintSolver(SolverEquationsM, 5, 10, Err)
+  CALL cmfe_PrintSolverEquationsM(SolverEquationsM, 5, 10, Err)
+  
+  
+  !SolverEquationsM
+  !SolverEquationsM%solverEquations%SOLVER%SOLVERS%SOLVERS(2)% &
+  !  & PTR%LINKED_SOLVERS(1)%PTR%LINEAR_SOLVER%ITERATIVE_SOLVER%ABSOLUTE_TOLERANCE = 1e-5 
+
+
+  !PRINT*, "After changing tolerance"
+  !CALL cmfe_PrintSolverEquationsM(SolverEquationsM, 5, 10, Err)
+  
+  ! Finalize solver, set PETSC parameters, such as tolerances, solver type etc.
+  ! The parameters are already set in the data structure SolverEquations
   CALL cmfe_SolverEquations_BoundaryConditionsCreateFinish(SolverEquationsM,Err)
 
   !Prescribe boundary conditions for Finite Elasticity (absolute nodal parameters)

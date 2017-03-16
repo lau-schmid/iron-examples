@@ -72,7 +72,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   LOGICAL, PARAMETER :: DEBUGGING_OUTPUT_PROBLEM = .FALSE.    ! output information about problem data structure
   LOGICAL, PARAMETER :: DEBUGGING_PARALLEL_BARRIER = .FALSE.   !
   INTEGER(CMISSINTg) :: RUN_SCENARIO = 1  !0 = default, no extra values set, 1 = short for testing, 2 = medium for testing, 3 = very short, 4 = endless
-  LOGICAL, PARAMETER :: DEBUGGING_OUTPUT = .FALSE.    ! enable information from solvers
+  LOGICAL, PARAMETER :: DEBUGGING_OUTPUT = .TRUE.    ! enable information from solvers
   LOGICAL, PARAMETER :: OLD_TOMO_MECHANICS = .TRUE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
 
   REAL(CMISSRP), PARAMETER :: tol=1.0E-8_CMISSRP
@@ -2369,6 +2369,7 @@ SUBROUTINE CreateSolvers()
 !  CALL cmfe_Solver_LinearTypeSet(LinearSolverFE,CMFE_SOLVER_LINEAR_ITERATIVE_SOLVE_TYPE,Err)
 
   CALL cmfe_Problem_SolversCreateFinish(Problem,Err)
+  
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !Create the problem solver CellML equations
@@ -2430,6 +2431,12 @@ SUBROUTINE CreateSolvers()
 
   CALL cmfe_Problem_SolverEquationsCreateFinish(Problem,Err)
 
+  PRINT*, "==========================="
+  PRINT*, "SolverFE"
+  CALL cmfe_PrintSolver(SolverFE, 5, 10, Err)
+  
+  STOP
+  
 END SUBROUTINE CreateSolvers
 
 SUBROUTINE SetBoundaryConditions()
@@ -2438,10 +2445,10 @@ SUBROUTINE SetBoundaryConditions()
   CALL cmfe_BoundaryConditions_Initialise(BoundaryConditionsM,Err)
   CALL cmfe_SolverEquations_BoundaryConditionsCreateStart(SolverEquationsM,BoundaryConditionsM,Err)
   
-  PRINT*, "Print SolverEquationsM Solver"
+  !PRINT*, "Print SolverEquationsM Solver"
   
   !CALL cmfe_PrintSolver(SolverEquationsM, 5, 10, Err)
-  CALL cmfe_PrintSolverEquationsM(SolverEquationsM, 5, 10, Err)
+  !CALL cmfe_PrintSolverEquationsM(SolverEquationsM, 5, 10, Err)
   
   
   !SolverEquationsM

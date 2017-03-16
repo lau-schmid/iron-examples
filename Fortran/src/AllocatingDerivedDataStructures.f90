@@ -60,6 +60,7 @@
        CALL searching(rdline,"START_FUNCTION",NumberOfFunction)
 
   END DO
+
   !!!NumberOfGeneratedMesh = NumberOfMesh    	     !! PLEASE IGNORE IT, I WILL FIX IT AFTER OUR MEETING
   !!!!!!!!!!!!!!!!!		ALLOCATE DATA STRUCTURES BASED ON THE PARAMETERS INITIALIZED ABOVE.  !!!!!!!!!!!!!!!!!
 

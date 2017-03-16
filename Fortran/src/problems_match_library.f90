@@ -768,7 +768,7 @@ FUNCTION MATCH_OUTPUT(type_string) RESULT (type_number)
     ELSEIF (type_string == "SOLVER_PROGRESS_OUTPUT") THEN
       type_number = CMFE_SOLVER_PROGRESS_OUTPUT
     ELSE
-      CALL HANDLE_ERROR("Invalid output argument  "//type_string)
+      CALL HANDLE_ERROR("Invalid argument  "//type_string//  " in MATCH_OUTPUT subroutine")
     ENDIF
 END FUNCTION
 
@@ -912,7 +912,7 @@ FUNCTION MATCH_BC(type_string) RESULT (type_number)
        type_number = CMFE_BOUNDARY_CONDITION_IMPERMEABLE_WALL
      ELSEIF (type_string == "BOUNDARY_CONDITION_NEUMANN_INTEGRATED_ONLY") THEN
        type_number = CMFE_BOUNDARY_CONDITION_NEUMANN_INTEGRATED_ONLY
-     ELSEIF (type_string == "BOUNDARY_CONDITION_FIXED_INCREMENTED") THEN
+     ELSEIF (type_string == "BOUNDARY_CONDITION_FIXED_FITTED") THEN
        type_number = CMFE_BOUNDARY_CONDITION_FIXED_FITTED
      ELSEIF (type_string == "BOUNDARY_CONDITION_FIXED_NONREFLECTING") THEN
        type_number = CMFE_BOUNDARY_CONDITION_FIXED_NONREFLECTING

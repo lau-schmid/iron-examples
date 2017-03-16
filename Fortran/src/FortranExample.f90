@@ -168,7 +168,14 @@ PROGRAM GENERICEXAMPLE
   INTEGER(CMISSINTG)              :: NumberOfComputationalNodes,NumberOfDomains,ComputationalNodeNumber         !! THese variables are used in "DECOMPOSITION BLOCK".
   INTEGER(CMISSINTG)              :: NodeNumber,NodeDOmain,nodeIdx                                              !! Same as the last comment
   INTEGER(CMISSINTG),ALLOCATABLE  :: SurfaceNodes(:)                                                            !! Possible surface where Dirichelet  or Natural BCs are imposed.
-  INTEGER(CMISSINTG)              :: LeftNormalXi                                                               !! Normal directive of possible surfaces where Dirichelet  or Natural BCs are imposed.
+  INTEGER(CMISSIntg),ALLOCATABLE :: BottomSurfaceNodes(:)
+  INTEGER(CMISSIntg),ALLOCATABLE :: LeftSurfaceNodes(:)
+  INTEGER(CMISSIntg),ALLOCATABLE :: RightSurfaceNodes(:)
+  INTEGER(CMISSIntg),ALLOCATABLE :: FrontSurfaceNodes(:)
+
+  INTEGER(CMISSIntg) :: BottomNormalXi, LeftNormalXi, RightNormalXi,  BackNormalXi,t
+
+                                 !! Normal directive of possible surfaces where Dirichelet  or Natural BCs are imposed.
   INTEGER(CMISSINTG),ALLOCATABLE  :: PressureComponentExist(:)
   REAL(CMISSRP)                   :: x,y,z                                                                      !! spatial coordinates
   REAL(CMISSRP)                   :: BOundaryConditionValue
@@ -245,7 +252,7 @@ PROGRAM GENERICEXAMPLE
 
 
   !!!!!!!!!!!!! INTRODUCING  LOOPS FOR ASSIGNING COORDINATE SYSTEM TO THIER RESPECTIVE REGIONS !!!!!!!!!!
-  
+
   DO  CoordinateSystemIdx = 1,NumberOfCoordinateSystem
     !Create a 3D rectangular cartesian coordinate system
 
@@ -362,7 +369,7 @@ PROGRAM GENERICEXAMPLE
 
   END DO !GeneratedMeshIdx
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  DEFINING MESH AND ASSIGNING RESPECTIVE MESHES TO THIER  REGIONS       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  
+
   DO GeneratedMeshIdx = 1,NumberOfGeneratedMesh
 
     !! number of state variables ( for instance 3 ( displacements) +1(Pressure) for 3D cantiliverbeam study).
@@ -509,6 +516,7 @@ PROGRAM GENERICEXAMPLE
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   FIBER FIELD  BLOCK           !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+
   DO FiberFieldIdx = 1, NumberOfFiberField
 
 
@@ -635,7 +643,7 @@ PROGRAM GENERICEXAMPLE
 
     END DO
 
-    IF(NumberofBasis == 2) THEN
+    IF(NumberofBasis == 2) THEN           !! HARD CODED
       IF (NumberOfComponents .GT. 3) THEN !! HARD CODED DUE TO AN ISSUE, WILL BE REMOVED AFTER THE NEXT MEETING.
         CALL cmfe_Field_ComponentInterpolationSet(all_DependentField(DependentFieldIdx)%DependentField, &
           & CMFE_FIELD_U_VARIABLE_TYPE,NumberOfComponents,CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
@@ -808,14 +816,12 @@ PROGRAM GENERICEXAMPLE
     CALL cmfe_Problem_SolversCreateStart(all_Problem(solverIdx)%Problem,Err)
     CALL cmfe_Problem_SolverGet(all_Problem(solverIdx)%Problem,CMFE_CONTROL_LOOP_NODE,1,all_Solver(solverIdx)%Solver,Err)
     CALL cmfe_Solver_OutputTypeSet(all_Solver(solverIdx)%Solver,MATCH_OUTPUT(all_Solver(solverIdx)%OutputTypeSet(1)),Err)
-
     IF ((TRIM(all_Solver(solverIdx)%NonlinearSolverType(1)) == "STATIC_NONLINEAR") .OR. &
       & (TRIM(all_Solver(solverIdx)%NonlinearSolverType(1)) == "DYNAMIC_NONLINEAR") ) THEN
 
       CALL cmfe_Solver_Initialise(all_NonLinearSolver(solverIdx)%NonLinearSolver,Err)
 
       IF (TRIM(all_Solver(solverIdx)%NonlinearSolverType(1)) == "STATIC_NONLINEAR") THEN
-
         all_NonLinearSolver(solverIdx)%NonLinearSolver = all_Solver(solverIdx)%Solver
 
       ELSE IF (TRIM(all_Solver(solverIdx)%NonlinearSolverType(1)) == "DYNAMIC_NONLINEAR") THEN
@@ -927,7 +933,7 @@ PROGRAM GENERICEXAMPLE
 
     DO i = 1,NumberOfDirichelet
 
-      CALL cmfe_GeneratedMesh_SurfaceGet(all_GeneratedMesh(BOundaryConditionIdx)%GeneratedMesh, &
+      CALL cmfe_GeneratedMesh_SurfaceGet(all_GeneratedMesh(1)%GeneratedMesh, &
         & MATCH_BC(BoundaryDirichelet(2+5*(i-1),BOundaryConditionIdx)),SurfaceNodes,LeftNormalXi,Err)
       if (i == 5) THEN  !!! the following lines are hard coded and will be removed later upon discussion with Andreas
         h = 2
@@ -964,7 +970,6 @@ PROGRAM GENERICEXAMPLE
         !! FunctionName is the function ID
         !! FInd FUnction with label FunctionName in list of functions all_Function(:)
         CALL MATCH_IDs(TRIM(FunctionName),all_Function(:)%FUnctionID(1),FunctionIdx)
-
         CALL QUADRATIC(x,y,z, STR2REAL(all_Function(FunctionIdx)%FunctionConstants(1)), &
           & STR2REAL(all_Function(FunctionIdx)%FunctionConstants(2)), &
             & STR2REAL(all_Function(FunctionIdx)%FunctionConstants(3)), &
@@ -979,21 +984,18 @@ PROGRAM GENERICEXAMPLE
       ELSE
 
         BOundaryConditionValue = STR2REAL(BoundaryDirichelet(4+5*(i-1),BOundaryConditionIdx)) !! for uniform BC
-
       END IF
 
 
       !!!!!!!!
 
-      CALL cmfe_Decomposition_NodeDOmainGet(all_Decomposition(BOundaryConditionIdx)%Decomposition,NodeNumber,1,NodeDOmain,Err)
-
+      CALL cmfe_Decomposition_NodeDOmainGet(all_Decomposition(1)%Decomposition,NodeNumber,1,NodeDOmain,Err)
       IF(NodeDOmain==ComputationalNodeNumber) THEN
 
         DO ComponentIdx=1,NumberOfComponents
           Constraint =  BoundaryDirichelet(3+5*(i-1),BoundaryConditionIdx)
 
-            IF (TRIM(Constraint(ComponentIdx:ComponentIdx)) == "1") THEN
-
+              IF (TRIM(Constraint(ComponentIdx:ComponentIdx)) == "1") THEN             
               CALL cmfe_BoundaryConditions_SetNode(all_BoundaryConditions(BOundaryConditionIdx)%BoundaryConditions, &
                 & all_DependentField(BOundaryConditionIdx)%DependentField, &
                   & CMFE_FIELD_U_VARIABLE_TYPE,1,1,NodeNumber, ComponentIdx, &
@@ -1008,36 +1010,19 @@ PROGRAM GENERICEXAMPLE
       DEALLOCATE(SurfaceNodes)
 
     END DO  !! i = 1,NumberOfDirichelet
-
-  !!__________________________________________________________________________________________________________________________!!!
-  ! Will INCLUDE the pressure Neumann later.
-
-  !#DO nodeIdx=1,SIZE(SurfaceNodes,1)
-
-  ! NodeNumber=SurfaceNodes(nodeIdx)
-
-  ! CALL cmfe_Decomposition_NodeDOmainGet(all_Decomposition%Decomposition(1),NodeNumber,1,NodeDOmain,Err)
-
-
-  ! IF(NodeDOmain==ComputationalNodeNumber) THEN
-
-
-    !    CALL cmfe_BoundaryConditions_SetNode(all_BoundaryConditions%BoundaryConditions(1),all_DependentField%DependentField(1), &
-    !      & CMFE_FIELD_DELUDELN_VARIABLE_TYPE,1,1,NodeNumber, &
-    !      & ABS(LeftNormalXi), &
-    !      & CMFE_BOUNDARY_CONDITION_PRESSURE,2.1_CMISSRP,Err)
-
-
-  !  END IF
-  !END DO
-  !!__________________________________________________________________________________________________________________________!!!
     CALL cmfe_SolverEquations_BoundaryConditionsCreateFinish(all_SolverEquations(BOundaryConditionIdx)%SolverEquations,Err)
   END DO ! BOundaryConditionIdx
+      !!!!!!
 
 
+
+
+    
+    
   DO ProblemIdx = 1, NumberOfProblem
 
     !Solve problem
+   
     CALL cmfe_Problem_Solve(all_Problem(ProblemIdx)%Problem,Err)
 
   END DO  ! ProblemIdx
@@ -1052,9 +1037,26 @@ PROGRAM GENERICEXAMPLE
 
   END DO ! FieldIdx
 
+   !!!!!!!!!!!!!!!! IN PROCESS OF IMPLEMENTING IDEA !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  CALL cmfe_GeneratedMesh_SurfaceGet(all_GeneratedMesh(1)%GeneratedMesh, &
+   & CMFE_GENERATED_MESH_REGULAR_LEFT_SURFACE,LeftSurfaceNodes,BottomNormalXi,Err)
+
+  CALL cmfe_GeneratedMesh_SurfaceGet(all_GeneratedMesh(1)%GeneratedMesh, &
+    & CMFE_GENERATED_MESH_REGULAR_LEFT_SURFACE,FrontSurfaceNodes,BottomNormalXi,Err)
+
+  
+  !Set z=0 nodes to no z displacementcmgui 
+  DO t=1,SIZE(BottomSurfaceNodes,1)
+    NodeNumber=BottomSurfaceNodes(t)
+  ENDDO
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  
   CALL cmfe_Finalise(Err)
 
   WRITE(*,'(A)') "Program successfully completed."
+
+   
 
   STOP
 

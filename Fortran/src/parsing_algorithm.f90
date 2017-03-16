@@ -163,10 +163,8 @@ ALLOCATE(BoundaryDirichelet(100,NumberOfBoundaryCondition))
 ALLOCATE(BoundaryTractionNeumann(100,NumberOfBoundaryCondition))
 ALLOCATE(BoundaryPressureNeumann(100,NumberOfBoundaryCondition))
 
-! PLease remove it later
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! START PARSING THE INPUT FILE TO STORE THE INPUT ARGUMENTS FORM THE INPUT FILE IN THE RESPECTIVE DATA STRUCTURES !!!!!!!!!!!!!!!
-print *, all_Solver(1)%NewtonRelativeTolerance(1)
 DO WHILE (TRIM(rdline).NE."STOP_PARSING")
 
   READ(12,'(A)',iostat=filestat) rdline

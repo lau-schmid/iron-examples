@@ -1,0 +1,29 @@
+_____________________________________________________________________________________________________________________
+|                                                                                                                   |
+| O V E R V I E W   O F   T H E   E X A M P L E S   I N   T H E   O p e n C M I S S - E x a m p l e s   F O L D E R |
+|___________________________________________________________________________________________________________________|
+
+
+  Thomas Heidlaufs original short description        | -   How 'we' call the models:
+  ----------------------------------------------------------------------------------
+                                                     |
+  1: active strain simple                            | -   ActiveStrain
+  2: multiscale active strain, mechanics only        | -   ActiveStrainMechanics
+( 3: multiscale and multiphysics active strain       | -   MultiPhysStrain          )
+  4: titin                                           | -   Titin
+  5: titin heterogeneous material properties         | -   Titin_hetero
+  3a*: multiscale and multiphysics active strain     | -   cuboid
+      (old mechanics formulation)                    |
+  ----------------------------------------------------------------------------------
+  other test examples | and description:
+
+ # Simple_titin | simplyfied example 4 (titin). Aaron uses this one - for better overview when handling / reconfigureing deeper object structures.
+ # ActiveStrainMechanics_BDF and -GL | versions under construction. Apply different ode methods.
+
+
+_______________________________________________________________________________________________
+*: 3a is similar to 3, However, it works in parallel in contrary to 3. On the other hand, 3 is
+(according to Thomas H.) generally more stable in numerical sense. 3a contains incorrect
+initialisation in parallel executions.
+Example 'cuboid' includes 3a as well as 3. This can be chosen via a constant in line 76 (.TRUE. = 3a, .FALSE. = 3):
+   LOGICAL, PARAMETER :: OLD_TOMO_MECHANICS = .TRUE.

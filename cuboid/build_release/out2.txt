@@ -1,0 +1,1000 @@
+16.03.2017 09:26:30 Program started.
+ Using default values. 
+Usage: program [<input folder> [<X> <Y> <Z> [<F> [<NumberOfElementsInAtomicPortionPerDomain>]]]] or program <f> where (X,Y,Z)=(3*f,4*f,1*f)
+OpenCMISS(Iron) version 0.4.0
+ Warning: NumberOfElementsInAtomicPortionPerDomain=           1  is smaller than X=           3 .
+ Working Directory: "/zhome/academic/HLRS/cbm/icbbnmai/opencmiss/examples/cuboid/build_release".
+ Open file "input/MU_firing_times_10s.txt".
+ File "input/MU_firing_times_10s.txt" contains         9996  firing times.
+ File  "input/innervation_zone_18.txt" contains           18  Entries, NumberOfFibres=           4 .
+ File  "input/MU_fibre_distribution_4050.txt" contains         4050  Entries, NumberOfFibres=           4 .
+ 
+ ---------- Timing parameters -----------------------------------------------
+ The time unit is 1 ms.
+  Main loop, Δt =  1.00, dt =  0.10
+  - stimulation enabled:  Δt =  0.10
+  - stimulation disabled: Δt =  0.90
+ 
+- MAIN_TIME_LOOP,         Δt = 1.00, dt = .10000, # Iter:    10
+  - MONODOMAIN_TIME_LOOP, Δt = .1000, dt = .00500, # Iter:    21
+    - SolverDAE,                      dt = .00010, # Iter:    50
+    - SolverParabolic, (dynamic backward euler)
+  - ELASTICITY_LOOP,                               # Iter:     5
+    - SolverFE,                 # Iter (max):  500, Tol.: 0.1000E-07
+      - LinearSolverFE, (direct solver)
+ 
+ OUTPUT_TIME_STEP_STRIDE:           10
+ 
+ ---------- Problem size parameters ------------------------------------------
+# global FE-elements:           3,      4,      1, Total:           12
+# local nodes per element:     31,      1,      1, Total:           31
+                          (    30)                       (          30)
+                  NumberOfInSeriesFibres:      1
+      NumberOfFibreLinesPerGlobalElement:      1
+              NumberOfGlobalElementLines:      4
+                 NumberOfFibreLinesTotal:      4
+                          NumberOfFibres:      4
+               NumberOfElementsMPerFibre:     90
+           NumberOfElementsMPerFibreLine:     90
+                       NumberOfElementsM:    360
+              NumberOfNodesPerShortFibre:     90
+               NumberOfNodesPerLongFibre:     91
+              NumberOfNodesMPerFibreLine:     91
+                          NumberOfNodesM:    364
+ 
+                         NumberOfDomains:      1
+NumberOfElementsInAtomicPortionPerDomain:      1  (X:     3)
+ 
+ ---------- Physical parameters -----------------------------------------------
+      Dimensions [cm]:  3.00x 3.00x 1.50
+Stimulation [uA/cm^2]:     2000.00
+ ------------------------------------------------------------------------------
+ 
+ Old mechanics formulation that works in parallel.
+ Custom Profiling is disabled. (Enable with -DUSE_CUSTOM_PROFILING)
+ TAU Profiling is disabled.
+ Running with            1  processes.
+uri: "input/slow_TK_2014_12_08.xml"
+C uri = "/zhome/academic/HLRS/cbm/icbbnmai/opencmiss/examples/cuboid/build_release/input/slow_TK_2014_12_08.xml"
+Creating CellMLModelDefinition from the URL: /zhome/academic/HLRS/cbm/icbbnmai/opencmiss/examples/cuboid/build_release/input/slow_TK_2014_12_08.xml
+whoo hoo!
+Model is correctly constrained
+Config file contains library name "./lib/lib.so"
+Output EMG Data ...   done
+ 1.) Start solve before stimulation
+     MemoryConsumption:  0.195 GB (  194723840 B), Resident:   0.045 GB
+     (Resident has no soft limit)
+
+Control loop: MAIN_TIME_LOOP
+  Control loop level = 1
+  Sub loop index     = 0
+
+Time control loop iteration: 0
+  Current time   =    0.0000000000000000
+  Stop time      =   0.10000000001000001
+  Time increment =   0.10000000001000001
+
+Control loop: MONODOMAIN_TIME_LOOP
+  Control loop level = 2
+  Sub loop index     = 1
+
+Time control loop iteration: 0
+  Current time   =    0.0000000000000000
+  Stop time      =   0.10000000001000001
+  Time increment =    5.0000000000000001E-003
+
+Solver: ODE Solver
+  Solver index = 1
+
+Total user time for solve = 2.00000107E-02
+Total System time for solve = 0.00000000
+
+Solver: Parabolic solver
+  Solver index = 2
+
+User time for equations setup and initialisation = 0.00000000
+System time for equations setup and initialisation = 0.00000000
+Finite element stiffness matrices:
+Element number = 1
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :             1             2
+  Column dofs  :             1             2
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :             1             2
+  Column dofs  :             1             2
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :             1             2
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 2
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :             2             3
+  Column dofs  :             2             3
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :             2             3
+  Column dofs  :             2             3
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :             2             3
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 3
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :             3             4
+  Column dofs  :             3             4
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :             3             4
+  Column dofs  :             3             4
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :             3             4
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 4
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :             4             5
+  Column dofs  :             4             5
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :             4             5
+  Column dofs  :             4             5
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :             4             5
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 5
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :             5             6
+  Column dofs  :             5             6
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :             5             6
+  Column dofs  :             5             6
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :             5             6
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 6
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :             6             7
+  Column dofs  :             6             7
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :             6             7
+  Column dofs  :             6             7
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :             6             7
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 7
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :             7             8
+  Column dofs  :             7             8
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :             7             8
+  Column dofs  :             7             8
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :             7             8
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 8
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :             8             9
+  Column dofs  :             8             9
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :             8             9
+  Column dofs  :             8             9
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :             8             9
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 9
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :             9            10
+  Column dofs  :             9            10
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :             9            10
+  Column dofs  :             9            10
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :             9            10
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 10
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            10            11
+  Column dofs  :            10            11
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            10            11
+  Column dofs  :            10            11
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :            10            11
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 11
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            11            12
+  Column dofs  :            11            12
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            11            12
+  Column dofs  :            11            12
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :            11            12
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 12
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            12            13
+  Column dofs  :            12            13
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            12            13
+  Column dofs  :            12            13
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :            12            13
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 13
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            13            14
+  Column dofs  :            13            14
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            13            14
+  Column dofs  :            13            14
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :            13            14
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 14
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            14            15
+  Column dofs  :            14            15
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            14            15
+  Column dofs  :            14            15
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :            14            15
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 15
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            15            16
+  Column dofs  :            15            16
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            15            16
+  Column dofs  :            15            16
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :            15            16
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 16
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            16            17
+  Column dofs  :            16            17
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            16            17
+  Column dofs  :            16            17
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :            16            17
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 17
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            17            18
+  Column dofs  :            17            18
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            17            18
+  Column dofs  :            17            18
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :            17            18
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 18
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            18            19
+  Column dofs  :            18            19
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            18            19
+  Column dofs  :            18            19
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :            18            19
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 19
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            19            20
+  Column dofs  :            19            20
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            19            20
+  Column dofs  :            19            20
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :            19            20
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 20
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            20            21
+  Column dofs  :            20            21
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            20            21
+  Column dofs  :            20            21
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :            20            21
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 21
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            21            22
+  Column dofs  :            21            22
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            21            22
+  Column dofs  :            21            22
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :            21            22
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 22
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            22            23
+  Column dofs  :            22            23
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            22            23
+  Column dofs  :            22            23
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :            22            23
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 23
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            23            24
+  Column dofs  :            23            24
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            23            24
+  Column dofs  :            23            24
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :            23            24
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 24
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            24            25
+  Column dofs  :            24            25
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            24            25
+  Column dofs  :            24            25
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :            24            25
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 25
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            25            26
+  Column dofs  :            25            26
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            25            26
+  Column dofs  :            25            26
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :            25            26
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 26
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            26            27
+  Column dofs  :            26            27
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            26            27
+  Column dofs  :            26            27
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :            26            27
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 27
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            27            28
+  Column dofs  :            27            28
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            27            28
+  Column dofs  :            27            28
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :            27            28
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 28
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            28            29
+  Column dofs  :            28            29
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            28            29
+  Column dofs  :            28            29
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :            28            29
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 29
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            29            30
+  Column dofs  :            29            30
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            29            30
+  Column dofs  :            29            30
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :            29            30
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 30
+Dynamic matrices:
+Number of element matrices = 2
+Element matrix : 1
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            30            31
+  Column dofs  :            30            31
+  Matrix( 1,:) :  0.150000E+02 -0.150000E+02
+  Matrix( 2,:) : -0.150000E+02  0.150000E+02
+Element matrix : 2
+  Update matrix = TRUE
+  Number of rows = 2
+  Number of columns = 2
+  Maximum number of rows = 2
+  Maximum number of columns = 2
+  Row dofs     :            30            31
+  Column dofs  :            30            31
+  Matrix( 1,:) :  0.111111E-01  0.555556E-02
+  Matrix( 2,:) :  0.555556E-02  0.111111E-01
+Element RHS vector :
+  Update vector = TRUE
+  Number of rows = 2
+  Maximum number of rows = 2
+  Row dofs     :            30            31
+  Vector(:):  0.000000E+00  0.000000E+00
+Finite element stiffness matrices:
+Element number = 31
+Dynamic matrices:
+Number of element matrices = 2

@@ -69,10 +69,10 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !--------------------------------------------------------------------------------------------------------------------------------
   !Test program parameters
   LOGICAL, PARAMETER :: DEBUGGING_ONLY_RUN_SHORT_PART_OF_SIMULATION = .FALSE.    ! only run one timestep of MAIN_LOOP with stimulus
-  LOGICAL, PARAMETER :: DEBUGGING_OUTPUT_PROBLEM = .TRUE.    ! output information about problem data structure
+  LOGICAL, PARAMETER :: DEBUGGING_OUTPUT_PROBLEM = .FALSE.    ! output information about problem data structure
   LOGICAL, PARAMETER :: DEBUGGING_PARALLEL_BARRIER = .FALSE.   !
-  INTEGER(CMISSINTg) :: RUN_SCENARIO =2  !0 = default, 1 = short for testing, 2 = medium for testing, 3 = very short, 4 = endless
-  LOGICAL, PARAMETER :: DEBUGGING_OUTPUT = .FALSE.    ! enable information from solvers
+  INTEGER(CMISSINTg) :: RUN_SCENARIO = 1  !0 = default, no extra values set, 1 = short for testing, 2 = medium for testing, 3 = very short, 4 = endless
+  LOGICAL, PARAMETER :: DEBUGGING_OUTPUT = .TRUE.    ! enable information from solvers
   LOGICAL, PARAMETER :: OLD_TOMO_MECHANICS = .TRUE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
 
   REAL(CMISSRP), PARAMETER :: tol=1.0E-8_CMISSRP
@@ -84,22 +84,22 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !all times in [ms]
   REAL(CMISSRP) :: time !=10.00_CMISSRP
   REAL(CMISSRP), PARAMETER :: PERIODD=1.00_CMISSRP
-  REAL(CMISSRP)            :: TIME_STOP=1000.0_CMISSRP
+  REAL(CMISSRP)            :: TIME_STOP=150.0_CMISSRP
 
   REAL(CMISSRP) :: ODE_TIME_STEP = 0.00001_CMISSRP            !0.0001_CMISSRP
   REAL(CMISSRP) :: PDE_TIME_STEP = 0.0005_CMISSRP
   REAL(CMISSRP) :: ELASTICITY_TIME_STEP = 0.10000000001_CMISSRP !0.5_CMISSRP!0.05_CMISSRP!0.8_CMISSRP
 
 !tomo keep ELASTICITY_TIME_STEP and STIM_STOP at the same values
-  REAL(CMISSRP), PARAMETER :: STIM_STOP=0.1_CMISSRP!ELASTICITY_TIME_STEP
+  REAL(CMISSRP), PARAMETER :: STIM_STOP=0.1_CMISSRP!ELASTICITY_TIME_STEP   
 
-  INTEGER(CMISSIntg), PARAMETER :: OUTPUT_FREQUENCY=10
+  INTEGER(CMISSIntg), PARAMETER :: OUTPUT_TIME_STEP_STRIDE=10  ! (10)
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !--------------------------------------------------------------------------------------------------------------------------------
 
   !stimulation current in [uA/cm^2]
-  REAL(CMISSRP) :: STIM_VALUE
+  REAL(CMISSRP) :: STIM_VALUE = 2000.0_CMISSRP
 
   REAL(CMISSRP), PARAMETER :: P_max=7.5_CMISSRP ! N/cm^2
 
@@ -146,18 +146,22 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   INTEGER(CMISSIntg) :: NumberGlobalYElements
   INTEGER(CMISSIntg) :: NumberGlobalZElements
   INTEGER(CMISSLIntg) :: NumberOfElementsFE
-  INTEGER(CMISSIntg) :: NumberOfElementsM
   INTEGER(CMISSIntg) :: NumberOfNodesM
+  INTEGER(CMISSIntg) :: NumberOfElementsM
   INTEGER(CMISSIntg) :: NumberOfFibres
-  INTEGER(CMISSIntg) :: NumberOfNodesPerFibre
+  INTEGER(CMISSIntg) :: NumberOfNodesPerLongFibre   ! fibre that touches right boundary has one additional electricity node
+  INTEGER(CMISSIntg) :: NumberOfNodesPerShortFibre  ! the number of nodes on ordinary fibres not lying on the rightt boundary
   INTEGER(CMISSIntg) :: NumberOfInSeriesFibres
   INTEGER(CMISSIntg) :: NumberOfElementsInAtomicPortionPerDomain
   INTEGER(CMISSIntg) :: NumberOfElementsMInXi1
+  INTEGER(CMISSIntg) :: NumberOfNodesMInXi1Big   ! the high number for elements that touch the right boundary
+  INTEGER(CMISSIntg) :: NumberOfNodesMInXi1Small ! the by 1 lower number of all other elements
   INTEGER(CMISSINTg) :: NumberOfFibreLinesPerGlobalElement
   INTEGER(CMISSIntg) :: NumberOfGlobalElementLines
   INTEGER(CMISSIntg) :: NumberOfFibreLinesTotal
   INTEGER(CMISSIntg) :: NumberOfElementsMPerFibre
   INTEGER(CMISSIntg) :: NumberOfElementsMPerFibreLine
+  INTEGER(CMISSIntg) :: NumberOfNodesMPerFibreLine
 
   INTEGER(CMISSIntg) :: Stat
   CHARACTER(len=256) :: CellMLModelFilename
@@ -166,13 +170,19 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   CHARACTER(len=1024) :: InnervationZoneFile = "innervation_zone_18.txt"
   CHARACTER(len=1024) :: FibreDistributionFile = "MU_fibre_distribution_4050.txt"
   CHARACTER(len=256) :: MemoryConsumption1StTimeStep = "", MemoryConsumptionBeforeSim, Temp
+  CHARACTER(len=10000) :: WorkingDirectory
+  
+  LOGICAL :: CustomProfilingEnabled !< If custom profiling is compiled in
+  LOGICAL :: TauProfilingEnabled !< If TAU profiling is compiled in
 
   INTEGER(CMISSIntg) :: Ftype,fibre_nr,NearestGP,InElement
 
-  logical :: less_info,fast_twitch
+  LOGICAL :: less_info,fast_twitch
 
   REAL(CMISSRP) :: TimeStart, TimeInitFinshed, TimeStretchSimFinished, TimeMainSimulationStart, TimeMainSimulationFinished
-
+  REAL(CMISSSP), DIMENSION(2) :: DurationSystemUser     ! For receiving user and system time
+  REAL(CMISSSP) :: DurationTotal
+  
   INTEGER(CMISSIntg) :: CustomSolverConvergenceReasonParabolic = 0
   INTEGER(CMISSIntg) :: CustomSolverConvergenceReasonNewton = 0
   INTEGER(CMISSIntg) :: CustomSolverNumberIterationsParabolic = 0
@@ -189,7 +199,12 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   INTEGER(CMISSIntg) :: MotorUnitFires, MotorUnitRank
 
   INTEGER(CMISSIntg), ALLOCATABLE :: MuDistribution(:)
-  REAL(CMISSRP) :: CustomTimingOdeSolver, CustomTimingParabolicSolver, CustomTimingFESolver, CustomTimingFESolverBeforeMainSim
+  REAL(CMISSRP) :: CustomTimingOdeSolver, CustomTimingParabolicSolver, CustomTimingFESolver, CustomTimingFileOutputUser, &
+    & CustomTimingFileOutputSystem
+  REAL(CMISSRP) :: CustomTimingOdeSolverPreLoad, CustomTimingParabolicSolverPreLoad, CustomTimingFESolverPreLoad, &
+    & CustomTimingFileOutputUserPreLoad, CustomTimingFileOutputSystemPreLoad
+  REAL(CMISSRP) :: TimingExportEMGUser = 0_CMISSRP
+  REAL(CMISSRP) :: TimingExportEMGSystem = 0_CMISSRP
 
   !--------------------------------------------------------------------------------------------------------------------------------
   INTEGER(CMISSIntg), PARAMETER :: CoordinateSystemUserNumberFE=1
@@ -357,7 +372,8 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   WRITE(*,'(A,A)') TRIM(GetTimeStamp()), " Program started."
 
-  CALL CPU_Time(TimeStart)
+  CALL ETIME(DurationSystemUser, DurationTotal)
+  TimeStart = DurationSystemUser(2)
   CALL ParseParameters()
 
   !================================================================================================================================
@@ -416,7 +432,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   IF (DEBUGGING_OUTPUT_PROBLEM .AND. ComputationalNodeNumber == 0) THEN
     PRINT*, ""
     PRINT*, ""
-    !CALL cmfe_PrintProblem(Problem,6,30,Err)
+    CALL cmfe_PrintProblem(Problem,6,30,Err)
     PRINT*, ""
     PRINT*, ""
     !PRINT*, "End the program after output of problem datastructure"
@@ -436,12 +452,16 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   CALL cmfe_CustomSolverInfoReset(Err)
   IF (DEBUGGING_PARALLEL_BARRIER) CALL gdbParallelDebuggingBarrier()
 
-
-  CALL CPU_Time(TimeInitFinshed)
+  ! store duration
+  CALL ETIME(DurationSystemUser, DurationTotal)
+  TimeInitFinshed = DurationSystemUser(2)
 
   CALL cmfe_Problem_Solve(Problem,Err)
 
-  CALL CPU_Time(TimeStretchSimFinished)
+  ! store duration
+  CALL ETIME(DurationSystemUser, DurationTotal)
+  TimeStretchSimFinished = DurationSystemUser(2)
+  
   CALL HandleSolverInfo(-1.0_CMISSRP)
 
   !reset the relative contraction velocity to 0
@@ -474,10 +494,13 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   IF (ComputationalNodeNumber == 0) PRINT*, "2.) Simulate with stimulation"
   MemoryConsumptionBeforeSim = GetMemoryConsumption()
 
-  CALL cmfe_CustomTimingGet(CustomTimingOdeSolver, CustomTimingParabolicSolver, CustomTimingFESolverBeforeMainSim, Err)
-  IF (ComputationalNodeNumber == 0) PRINT*, "    Nonliner Solver duration: ", CustomTimingFESolverBeforeMainSim, " s"
+  CALL cmfe_CustomTimingGet(CustomTimingOdeSolverPreLoad, CustomTimingParabolicSolverPreLoad, &
+    & CustomTimingFESolverPreLoad, CustomTimingFileOutputUserPreLoad, CustomTimingFileOutputSystemPreLoad, Err)
   CALL cmfe_CustomTimingReset(Err)
-  CALL CPU_Time(TimeMainSimulationStart)
+  
+  ! store duration
+  CALL ETIME(DurationSystemUser, DurationTotal)
+  TimeMainSimulationStart = DurationSystemUser(2)
 
   time = 0.0_CMISSRP
   VALUE = 0.0_CMISSRP
@@ -523,7 +546,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !  ENDDO
 
 
-    NodeNumber = (NumberOfNodesPerFibre+1)/2
+    NodeNumber = (NumberOfNodesPerShortFibre+1)/2
 
     !loop over all neuromuscular junctions (middle point of the fibres)
     DO WHILE(NodeNumber < NumberOfNodesM)
@@ -550,7 +573,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
           ENDIF
         ENDIF
       ENDIF
-      NodeNumber = NodeNumber + NumberOfNodesPerFibre
+      NodeNumber = NodeNumber + NumberOfNodesPerShortFibre
       m = m+1
     ENDDO
     m = m - NumberOfFibres
@@ -570,7 +593,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
     !-------------------------------------------------------------------------------------------------------------------------------
     !Now turn the stimulus off
-    NodeNumber = (NumberOfNodesPerFibre+1)/2
+    NodeNumber = (NumberOfNodesPerShortFibre+1)/2
     DO WHILE (NodeNumber < NumberOfNodesM)
 
       JunctionNodeNo = NodeNumber + InnervationZoneOffset(m)
@@ -580,7 +603,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
         CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, CMFE_FIELD_U_VARIABLE_TYPE, CMFE_FIELD_VALUES_SET_TYPE,1,1, &
           & JunctionNodeNo, StimComponent,0.0_CMISSRP,Err)
       ENDIF
-      NodeNumber = NodeNumber + NumberOfNodesPerFibre
+      NodeNumber = NodeNumber + NumberOfNodesPerShortFibre
       m = m + 1
     ENDDO
     m = m - NumberOfFibres
@@ -605,7 +628,9 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   ENDDO
 
-  CALL CPU_Time(TimeMainSimulationFinished)
+  ! store duration
+  CALL ETIME(DurationSystemUser, DurationTotal)
+  TimeMainSimulationFinished = DurationSystemUser(2)
   !--------------------------------------------------------------------------------------------------------------------------------
   !--------------------------------------------------------------------------------------------------------------------------------
 
@@ -618,25 +643,29 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !Finialise CMISS
   CALL cmfe_Finalise(Err)
 
-  CALL cmfe_CustomTimingGet(CustomTimingOdeSolver, CustomTimingParabolicSolver, CustomTimingFESolver, Err)
+  CALL cmfe_CustomTimingGet(CustomTimingOdeSolver, CustomTimingParabolicSolver, CustomTimingFESolver, CustomTimingFileOutputUser, &
+    & CustomTimingFileOutputSystem, Err)
 
   CALL WriteTimingFile()
 
   CALL WriteCustomProfilingFile()
 
-  IF (ComputationalNodeNumber == 0) THEN
+  IF (ComputationalNodeNumber == 0 .AND. CustomProfilingEnabled) THEN
     PRINT*, TRIM(cmfe_CustomProfilingGetInfo(Err))
   ENDIF
 
   PRINT*, ""
   PRINT*, "--------------------------------------------------"
   PRINT*, "Process ", ComputationalNodeNumber
-  PRINT*, "Timing:"
-  PRINT*, "   Ode Solver:          ", CustomTimingOdeSolver, " s"
-  PRINT*, "   Parabolic Solver:    ", CustomTimingParabolicSolver, " s"
-  PRINT*, "   Nonlinear FE Solver  "
-  PRINT*, "     before Simulation: ", CustomTimingFESolverBeforeMainSim, " s"
-  PRINT*, "   Nonlinear FE Solver: ", CustomTimingFESolver, " s"
+  PRINT*, "Timing (user time):"
+  PRINT*, "   Ode Solver:       preload: ", CustomTimingOdeSolverPreLoad, " s, main: ", CustomTimingOdeSolver, " s"
+  PRINT*, "   Parabolic Solver: preload: ", CustomTimingParabolicSolverPreLoad, " s, main: ", CustomTimingParabolicSolver, " s"
+  PRINT*, "   3D FE Solver:     preload: ", CustomTimingFESolverPreLoad, " s, main: ", CustomTimingFESolver, " s"
+  PRINT*, "   Node File Output: preload: ", CustomTimingFileOutputUserPreLoad, " s, main: ", CustomTimingFileOutputUser, " s"
+  PRINT*, "           (system): preload: ", CustomTimingFileOutputSystemPreLoad, " s, main: ", CustomTimingFileOutputSystem, " s"
+  PRINT*, "   Total Simulation: preload: ", (TimeStretchSimFinished - TimeInitFinshed), " s, main: ", &
+    & (TimeMainSimulationFinished-TimeMainSimulationStart), " s"
+  PRINT*, "   EMG Output: user: ", TimingExportEMGUser, " s, system: ", TimingExportEMGSystem, " s"
   PRINT*, ""
 
   WRITE(*,'(A,A)') TRIM(GetTimeStamp()), " Program successfully completed."
@@ -652,7 +681,7 @@ FUNCTION CheckGeometry()
 
   ! NumberOfElementsMPerFibre = NumberOfElementsMPerFibreLine / NumberOfInSeriesFibres
 
-  IF (NumberGlobalXElements <= 0 .OR. NumberGlobalYElements <= 0 .OR. NUmberGlobalZElements <= 0 &
+  IF (NumberGlobalXElements <= 0 .OR. NumberGlobalYElements <= 0 .OR. NumberGlobalZElements <= 0 &
     & .OR. NumberOfInSeriesFibres <= 0) THEN
     IF (ComputationalNodeNumber == 0) THEN
       PRINT*, "Error: Number of elements (", NumberGlobalXElements, ", ",NumberGlobalYElements, ", ", &
@@ -701,7 +730,7 @@ FUNCTION CheckGeometry()
     IF (ComputationalNodeNumber == 0) THEN
       PRINT*, "Warning: NumberOfElementsInAtomicPortionPerDomain=",NumberOfElementsInAtomicPortionPerDomain, &
         & " is smaller than X=",NumberGlobalXElements,"."
-      PRINT*, "Therefore fibres will be subdivided."
+      !PRINT*, "Therefore fibres will be subdivided."
     ENDIF
   ELSE IF ((NumberOfElementsInAtomicPortionPerDomain / NumberGlobalXElements) * NumberGlobalXElements &
     & /= NumberOfElementsInAtomicPortionPerDomain) THEN
@@ -711,10 +740,6 @@ FUNCTION CheckGeometry()
       PRINT*, "Therefore fibres will be subdivided."
     ENDIF
   ENDIF
-
-
-
-
 
 END FUNCTION CheckGeometry
 
@@ -842,11 +867,9 @@ END SUBROUTINE ReadInputFiles
 SUBROUTINE ParseParameters()
 
   INTEGER(CMISSLINTg) :: Factor, NumberArguments
-  INTEGER(CMISSINTg) :: Length
+  INTEGER(CMISSINTg) :: StringLength
   CHARACTER(LEN=256) :: Arg
   LOGICAL :: GeometryIsValid, FileExists
-  LOGICAL :: CustomProfilingEnabled !< If custom profiling is compiled in
-  LOGICAL :: TauProfilingEnabled !< If TAU profiling is compiled in
 
   NumberGlobalXElements = 3 !6
   NumberGlobalYElements = 4 !4
@@ -868,10 +891,10 @@ SUBROUTINE ParseParameters()
   IF (NumberArguments >= 1) THEN
     CALL GETARG(1, InputDirectory)    ! first argument is input directory
     ! Append slash to input directory if necessary
-    Length = LEN_TRIM(InputDirectory)
+    StringLength = LEN_TRIM(InputDirectory)
 
-    IF (.NOT. InputDirectory(Length:Length) == "/") THEN
-      InputDirectory(Length+1:Length+1) = "/"
+    IF (.NOT. InputDirectory(StringLength:StringLength) == "/") THEN
+      InputDirectory(StringLength+1:StringLength+1) = "/"
     ENDIF
     InputDirectory = TRIM(InputDirectory)
   ENDIF
@@ -915,6 +938,10 @@ SUBROUTINE ParseParameters()
   SELECT CASE (RUN_SCENARIO)
   CASE(1)     ! short
     TIME_STOP = 1
+    
+    ODE_TIME_STEP = 0.0001_CMISSRP
+    PDE_TIME_STEP = 0.005_CMISSRP
+    ELASTICITY_TIME_STEP = 0.10000000001_CMISSRP
   CASE(2)     ! medium
     TIME_STOP = 10
   CASE(3)     ! very short
@@ -950,6 +977,10 @@ SUBROUTINE ParseParameters()
     endif
     NumberOfNodesInXi2=2!30
     NumberOfNodesInXi3=3!45
+    
+    ! only 1 fibre per 3D element
+    NumberOfNodesInXi2=1
+    NumberOfNodesInXi3=1
   endif
 !  NumberOfNodesPerFibre=(NumberOfNodesInXi1-1)*NumberGlobalXElements+1
 !  NumberOfNodesM=NumberOfNodesPerFibre*NumberGlobalYElements*NumberGlobalZElements*NumberOfNodesInXi2*NumberOfNodesInXi3
@@ -967,14 +998,18 @@ SUBROUTINE ParseParameters()
   NumberOfGlobalElementLines = NumberGlobalYElements * NumberGlobalZElements
   NumberOfFibreLinesTotal = NumberOfFibreLinesPerGlobalElement * NumberOfGlobalElementLines
   NumberOfFibres = NumberOfFibreLinesTotal * NumberOfInSeriesFibres
-  NumberOfElementsMInXi1 = NumberOfNodesInXi1-1
-  NumberOfElementsMPerFibreLine = NumberOfElementsMInXi1*NumberGlobalXElements   ! nodes on inner boundaries of elements are doubled
+  NumberOfNodesMInXi1Big = NumberOfNodesInXi1
+  NumberOfNodesMInXi1Small = NumberOfNodesInXi1-1
+  NumberOfElementsMInXi1 = NumberOfNodesMInXi1Small
+  NumberOfElementsMPerFibreLine = NumberOfElementsMInXi1*NumberGlobalXElements
   NumberOfElementsMPerFibre = NumberOfElementsMPerFibreLine / NumberOfInSeriesFibres
-  NumberOfNodesPerFibre = NumberOfElementsMPerFibre + 1
-  ! the end point nodes of fibres are shared between different fibres
+  NumberOfNodesPerShortFibre = NumberOfElementsMPerFibre
+  NumberOfNodesPerLongFibre = NumberOfElementsMPerFibre + 1
+  ! the end point nodes of fibres can not be shared between different fibres, therefore some fibres have 1 more node (the ones at the right)
 
   ! total number of 1D nodes
-  NumberOfNodesM = NumberOfNodesPerFibre * NumberOfFibres
+  NumberOfNodesMPerFibreLine = NumberOfNodesPerShortFibre * (NumberOfInSeriesFibres-1) + NumberOfNodesPerLongFibre
+  NumberOfNodesM = NumberOfNodesMPerFibreLine * NumberOfFibreLinesTotal
   NumberOfElementsM = NumberOfElementsMPerFibre * NumberOfFibres
 
 !##################################################################################################################################
@@ -984,7 +1019,7 @@ SUBROUTINE ParseParameters()
 !  CellMLModelFilename=trim(pathname)//"fast_2014_03_25_no_Fl_no_Fv.xml" !FAST
   IF (OLD_TOMO_MECHANICS) THEN
     CellMLModelFilename = TRIM(inputDirectory) // "slow_TK_2014_12_08.xml"
-    STIM_VALUE = 2000.0_CMISSRP !700.0_CMISSRP!700.0_CMISSRP
+    !STIM_VALUE = 20000.0_CMISSRP !700.0_CMISSRP!700.0_CMISSRP
   ELSE
     CellMLModelFilename = TRIM(inputDirectory) // "Aliev_Panfilov_Razumova_2016_08_22.cellml"
     STIM_VALUE = 90.0_CMISSRP !90.0_CMISSRP
@@ -1040,13 +1075,17 @@ SUBROUTINE ParseParameters()
 
   GeometryIsValid = CheckGeometry()
 
+  ! print the current directory from which the program was launched
+  CALL PrintWorkingDirectory()
+
   ! Read in input files, stops execution if files do not exist
   CALL ReadInputFiles()
 
   ! output time step information
   IF (ComputationalNodeNumber == 0) THEN
     PRINT *, ""
-    PRINT *, "---------- Timing parameters -------------"
+    PRINT *, "---------- Timing parameters -----------------------------------------------"
+    PRINT *, "The time unit is 1 ms."
     PRINT "(A,F5.2,A,F5.2,A,F5.2)", "  Main loop, Δt = ", TIME_STOP, ", dt = ", ELASTICITY_TIME_STEP
     PRINT "(A,F5.2)", "  - stimulation enabled:  Δt = ", STIM_STOP
     PRINT "(A,F5.2)", "  - stimulation disabled: Δt = ", (PERIODD - STIM_STOP)
@@ -1063,6 +1102,8 @@ SUBROUTINE ParseParameters()
     PRINT "(A,I4,A,E10.4)", "    - SolverFE,                 # Iter (max): ", NewtonMaximumNumberOfIterations, &
       & ", Tol.: ",NewtonTolerance
     PRINT "(A,I4)", "      - LinearSolverFE, (direct solver)"
+    PRINT *, ""
+    PRINT *, "OUTPUT_TIME_STEP_STRIDE: ", OUTPUT_TIME_STEP_STRIDE
 
     ! It should be ELASTICITY_TIME_STEP = STIM_STOP
 
@@ -1075,19 +1116,28 @@ SUBROUTINE ParseParameters()
       & ", Total: ", NumberOfElementsFE
     PRINT "(A,3(I6,A),I12)", "# local nodes per element: ", NumberOfNodesInXi1, ", ", NumberOfNodesInXi2, ", ", NumberOfNodesInXi3,&
       & ", Total: ", NumberOfNodesInXi1*NumberOfNodesInXi2*NumberOfNodesInXi3
+    PRINT "(A,I6,A,I12,A)", "                          (", NumberOfNodesMInXi1Small,&
+      & ")                       (",NumberOfNodesMInXi1Small*NumberOfNodesInXi2*NumberOfNodesInXi3,")"
     PRINT "(A,I6)", "                  NumberOfInSeriesFibres: ", NumberOfInSeriesFibres
     PRINT "(A,I6)", "      NumberOfFibreLinesPerGlobalElement: ", NumberOfFibreLinesPerGlobalElement
     PRINT "(A,I6)", "              NumberOfGlobalElementLines: ", NumberOfGlobalElementLines
     PRINT "(A,I6)", "                 NumberOfFibreLinesTotal: ", NumberOfFibreLinesTotal
     PRINT "(A,I6)", "                          NumberOfFibres: ", NumberOfFibres
     PRINT "(A,I6)", "               NumberOfElementsMPerFibre: ", NumberOfElementsMPerFibre
-    PRINT "(A,I6)", "                   NumberOfNodesPerFibre: ", NumberOfNodesPerFibre
-    PRINT "(A,I6)", "                          NumberOfNodesM: ", NumberOfNodesM
+    PRINT "(A,I6)", "           NumberOfElementsMPerFibreLine: ", NumberOfElementsMPerFibreLine
     PRINT "(A,I6)", "                       NumberOfElementsM: ", NumberOfElementsM
+    PRINT "(A,I6)", "              NumberOfNodesPerShortFibre: ", NumberOfNodesPerShortFibre
+    PRINT "(A,I6)", "               NumberOfNodesPerLongFibre: ", NumberOfNodesPerLongFibre
+    PRINT "(A,I6)", "              NumberOfNodesMPerFibreLine: ", NumberOfNodesMPerFibreLine
+    PRINT "(A,I6)", "                          NumberOfNodesM: ", NumberOfNodesM
     PRINT *,""
     PRINT "(A,I6)", "                         NumberOfDomains: ", NumberOfDomains
     PRINT "(A,I6,A,I6,A)", "NumberOfElementsInAtomicPortionPerDomain: ", NumberOfElementsInAtomicPortionPerDomain, &
       & "  (X:", NumberGlobalXElements, ")"
+    PRINT *, ""
+    PRINT *, "---------- Physical parameters -----------------------------------------------"
+    PRINT "(A,F5.2,A,F5.2,A,F5.2)", "      Dimensions [cm]: ",LENGTH,"x",WIDTH,"x",HEIGHT
+    PRINT "(A,F11.2)", "Stimulation [uA/cm^2]: ",STIM_VALUE
     PRINT *, "------------------------------------------------------------------------------"
     PRINT *, ""
 
@@ -1122,6 +1172,29 @@ SUBROUTINE ParseParameters()
   ENDIF
 
 END SUBROUTINE ParseParameters
+
+SUBROUTINE PrintWorkingDirectory()
+
+  IF (ComputationalNodeNumber == 0) THEN
+    CALL SYSTEM("pwd > pwd.txt", Stat)
+    IF (Stat == 0) THEN
+      OPEN(UNIT=100, FILE="pwd.txt", ACTION="read", IOSTAT=Stat)
+      IF (Stat == 0) THEN
+        READ(100,"(A)", IOSTAT=Stat) WorkingDirectory
+        CLOSE(UNIT=100)
+        IF (Stat == 0) THEN
+          PRINT*, "Working Directory: """ // TRIM(WorkingDirectory) // """."
+        ELSE
+          PRINT*, "Error reading pwd.txt"
+        ENDIF
+      ELSE
+        PRINT*, "Error opening pwd.txt"
+      ENDIF
+    ELSE
+      PRINT*, "Error calling 'pwd'"
+    ENDIF
+  ENDIF
+END SUBROUTINE PrintWorkingDirectory
 
 SUBROUTINE CreateRegionMesh()
   INTEGER(CMISSIntg) :: NodeNo
@@ -1240,6 +1313,9 @@ SUBROUTINE CreateRegionMesh()
 
   ! Set adjacent nodes for each element
   NodeNo = 1
+  ElementNo = 1
+  !DO FibreLineNo = 1,NumberOfFibreLinesTotal
+    !DO ElementInFibreLine = 1,NumberOfElementsMPerFibre*NumberOfInSeriesFibres
   DO ElementNo = 1,NumberOfElementsM
     CALL cmfe_MeshElements_NodesSet(ElementsM, ElementNo, [NodeNo,NodeNo+1], Err)
 
@@ -1247,6 +1323,8 @@ SUBROUTINE CreateRegionMesh()
     !  & "a ", ComputationalNodeNumber, ": 1D el. no. ", ElementNo, " has nodes ", NodeNo, ", ", NodeNo+1
 
     NodeNo = NodeNo+1
+    
+    
     ! If at the end of a fibre line, increment node to starting node of next fibre line
     IF (MOD(ElementNo, NumberOfElementsMPerFibreLine) == 0) THEN
       NodeNo = NodeNo+1
@@ -1631,6 +1709,7 @@ SUBROUTINE CreateFieldMonodomain()
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !Create the dependent field for monodomain with 3 variables. [U: 1 component, DelUdelN: 1 component, V: 3]
+  !DependentFieldM: FIELD_U_VARIABLE_TYPE: 1) Vm, FIELD_DELUDELN_VARIABLE_TYPE: 1)dVm/dn, FIELD_V_VARIABLE_TYPE: 1),2),3): GeometryM3D, 3D-position of geometry
   CALL cmfe_Field_Initialise(DependentFieldM,Err)
   CALL cmfe_Field_CreateStart(FieldDependentUserNumberM,RegionM,DependentFieldM,Err)
   CALL cmfe_Field_TypeSet(DependentFieldM,CMFE_FIELD_GENERAL_TYPE,Err)
@@ -1836,7 +1915,7 @@ SUBROUTINE InitializeFieldMonodomain()
 
       ! get rank of fibre
       MotorUnitRank = MUDistribution(MOD(FibreNo, 4050)+1)
-      DO j = 1, NumberOfNodesPerFibre
+      DO j = 1, NumberOfNodesPerShortFibre
 
         !CALL MPI_BARRIER(MPI_COMM_WORLD, Err)
         !print*, ComputationalNodeNumber, ": mu_nr=",mu_nr,", k=",k
@@ -1848,14 +1927,35 @@ SUBROUTINE InitializeFieldMonodomain()
 
           !                                      FIELD,             VARIABLE_TYPE               FIELD_SET_TYPE
           CALL cmfe_Field_ParameterSetUpdateNode(IndependentFieldM, CMFE_FIELD_V_VARIABLE_TYPE, CMFE_FIELD_VALUES_SET_TYPE,&
-      !     VERSION_NO, DERIVATIVE_NO,  USER_NODE_NUMBER, COMPONENT_NUMBER, VALUE
-          & 1,          1,              NodeNumber,       1,                MotorUnitRank, Err)
+            ! VERSION_NO, DERIVATIVE_NO,  USER_NODE_NUMBER, COMPONENT_NUMBER, VALUE
+            & 1,          1,              NodeNumber,       1,                MotorUnitRank, Err)
+          
+          
+          !Print*, "FibreLineNo=",FibreLineNo,", FibreInLineNo=",FibreInLineNo,", MotorUnitRank=",MotorUnitRank,", j=",j,&
+          !  &", NodeNumber=",NodeNumber,", FibreNo=",FibreNo
         ENDIF
+        
         NodeNumber = NodeNumber + 1
       ENDDO
       FibreNo = FibreNo + 1
     ENDDO
+  
+    ! last node on fibre line
+    CALL cmfe_Decomposition_NodeDomainGet(DecompositionM, NodeNumber,       1,                     NodeDomain, Err)
+    IF (NodeDomain == ComputationalNodeNumber) THEN
+      !                                      FIELD,             VARIABLE_TYPE               FIELD_SET_TYPE
+      CALL cmfe_Field_ParameterSetUpdateNode(IndependentFieldM, CMFE_FIELD_V_VARIABLE_TYPE, CMFE_FIELD_VALUES_SET_TYPE,&
+        ! VERSION_NO, DERIVATIVE_NO,  USER_NODE_NUMBER, COMPONENT_NUMBER, VALUE
+        & 1,          1,              NodeNumber,       1,                MotorUnitRank, Err)
+      
+      !Print*, "FibreLineNo=",FibreLineNo,", FibreInLineNo=",FibreInLineNo,", MotorUnitRank=",MotorUnitRank,", j=",j,&
+      !  &", NodeNumber=",NodeNumber,", FibreNo=",FibreNo-1,"(last)"
+    ENDIF
+    NodeNumber = NodeNumber + 1
   ENDDO
+  
+  !PRINT *,"done"
+  
 
   !init the fibre type to 1
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2,1,Err) !Ftype=1
@@ -1916,10 +2016,18 @@ SUBROUTINE InitializeFieldFiniteElasticity()
       CALL cmfe_Field_ParameterSetUpdateElement(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
       !  USER_ELEMENT_NUMBER, COMPONENT_NUMBER, VALUE
        & ElementNo,           4,                1,     Err)
-      CALL cmfe_Field_ParameterSetUpdateElement(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
-       & ElementNo,           1,                NumberOfNodesInXi1, Err)
-
       !PRINT "(A,I3.3,A,I5.5,A)", "x ", ComputationalNodeNumber, ": 3D el. no. ", ElementNo, " has beginning fibre "
+    ENDIF
+  ENDDO
+  
+  ! Set number of elements for each elements on the right of the domain
+  ! Elements at the right have one additional bioelectricity node (on the right boundary)
+  DO ElementNo=NumberGlobalXElements,NumberOfElementsFE,NumberGlobalXElements
+    ! only if element is assigned to own domain
+    CALL cmfe_Decomposition_ElementDomainGet(DecompositionFE, ElementNo, ElementDomain,Err)
+    IF (ElementDomain == ComputationalNodeNumber) THEN
+      CALL cmfe_Field_ParameterSetUpdateElement(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
+        & ElementNo,           1,                NumberOfNodesInXi1, Err)
     ENDIF
   ENDDO
 
@@ -1934,15 +2042,16 @@ SUBROUTINE CreateEquations()
   CALL cmfe_Equations_OutputTypeSet(EquationsM,CMFE_EQUATIONS_NO_OUTPUT,Err)
   !CALL cmfe_Equations_OutputTypeSet(Equations,CMFE_EQUATIONS_TIMING_OUTPUT,Err)
   !CALL cmfe_Equations_OutputTypeSet(Equations,CMFE_EQUATIONS_MATRIX_OUTPUT,Err)
-  !CALL cmfe_Equations_OutputTypeSet(Equations,CMFE_EQUATIONS_ELEMENT_MATRIX_OUTPUT,Err)
+  !CALL cmfe_Equations_OutputTypeSet(EquationsM,CMFE_EQUATIONS_ELEMENT_MATRIX_OUTPUT,Err)
   CALL cmfe_EquationsSet_EquationsCreateFinish(EquationsSetM,Err)
 
   !Create the equations set equations for Finite Elasticity
   CALL cmfe_Equations_Initialise(EquationsFE,Err)
   CALL cmfe_EquationsSet_EquationsCreateStart(EquationsSetFE,EquationsFE,Err)
-  CALL cmfe_Equations_SparsityTypeSet(EquationsFE,CMFE_EQUATIONS_SPARSE_MATRICES,Err)
+  !CALL cmfe_Equations_SparsityTypeSet(EquationsFE,CMFE_EQUATIONS_SPARSE_MATRICES,Err)
   !CALL cmfe_Equations_OutputTypeSet(EquationsFE,CMFE_EQUATIONS_NO_OUTPUT,Err)
   !CALL cmfe_Equations_OutputTypeSet(EquationsFE,CMFE_EQUATIONS_MATRIX_OUTPUT,Err)
+  CALL cmfe_Equations_OutputTypeSet(EquationsFE,CMFE_EQUATIONS_ELEMENT_MATRIX_OUTPUT,Err)
   CALL cmfe_EquationsSet_EquationsCreateFinish(EquationsSetFE,Err)
 
 END SUBROUTINE CreateEquations
@@ -2116,17 +2225,18 @@ SUBROUTINE CreateControlLoops()
   !Loop in time for STIM_STOP with the Stimulus applied.
   CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,0.0_CMISSRP,ELASTICITY_TIME_STEP,ELASTICITY_TIME_STEP,Err)
 
-  CALL cmfe_ControlLoop_TimeOutputSet(ControlLoopMain,OUTPUT_FREQUENCY,Err)
+  CALL cmfe_ControlLoop_TimeOutputSet(ControlLoopMain,OUTPUT_TIME_STEP_STRIDE,Err)
   IF (DEBUGGING_OUTPUT) THEN
     CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,cmfe_CONTROL_LOOP_TIMING_OUTPUT,Err)
   ELSE
     ! output types:
     ! CONTROL_LOOP_NO_OUTPUT = 0 !<No output from the control loop (no output of MainTime_* files)
     ! CONTROL_LOOP_PROGRESS_OUTPUT = 1 !<Progress output from control loop (also output MainTime_* files)
-    ! CONTROL_LOOP_TIMING_OUTPUT = 2 !<Timing output from the control loop
-    ! CONTROL_LOOP_FILE_OUTPUT = -1
+    ! CONTROL_LOOP_TIMING_OUTPUT = 2 !<Timing output from the control loop (also output MainTime_* files)
+    ! CONTROL_LOOP_FILE_OUTPUT = -1 <Only MainTime_* files output
+    CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,cmfe_CONTROL_LOOP_TIMING_OUTPUT,Err)
     !CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,cmfe_CONTROL_LOOP_FILE_OUTPUT,Err)
-    CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,-1,Err)
+    !CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,-1,Err)
   ENDIF
 
 
@@ -2138,6 +2248,7 @@ SUBROUTINE CreateControlLoops()
 
   IF (DEBUGGING_OUTPUT) THEN
     CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopM,CMFE_CONTROL_LOOP_TIMING_OUTPUT,Err)
+    !CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopM,CMFE_CONTROL_LOOP_NO_OUTPUT,Err)
   ELSE
     CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopM,CMFE_CONTROL_LOOP_NO_OUTPUT,Err)
   ENDIF
@@ -2160,9 +2271,11 @@ SUBROUTINE CreateControlLoops()
 END SUBROUTINE CreateControlLoops
 
 SUBROUTINE CreateSolvers()
+  TYPE(cmfe_SolverType) :: linearSolver
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !Create the problem solvers
+  ! create parabolic and ode solver, create subsolver structure
   CALL cmfe_Problem_SolversCreateStart(Problem,Err)
 
   !Create the DAE solver
@@ -2175,8 +2288,9 @@ SUBROUTINE CreateSolvers()
   !CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_EXTERNAL,Err)
 
   IF (DEBUGGING_OUTPUT) THEN
-    CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
-    CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_TIMING_OUTPUT,Err)
+    CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_NO_OUTPUT,Err)
+    !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
+    !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_TIMING_OUTPUT,Err)
     !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_SOLVER_OUTPUT,Err)
     !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_MATRIX_OUTPUT,Err)
   ELSE
@@ -2187,10 +2301,38 @@ SUBROUTINE CreateSolvers()
   CALL cmfe_Solver_Initialise(SolverParabolic,Err)
   CALL cmfe_Problem_SolverGet(Problem,[ControlLoopMonodomainNumber,CMFE_CONTROL_LOOP_NODE], &
    & SolverParabolicIndex,SolverParabolic,Err)
+  
   CALL cmfe_Solver_DynamicSchemeSet(SolverParabolic,CMFE_SOLVER_DYNAMIC_BACKWARD_EULER_SCHEME,Err)
+  
+  ! data structure is as follows:
+  ! SolverParabolic
+  !   LinearSolver
+  !      IterativeSolver
+  !   LinkedSolver(1) -> LinearSolver
+  ! Retrieve linear solver
+  NULLIFY(linearSolver%solver)
+  CALL cmfe_Solver_DynamicLinearSolverGet(SolverParabolic, linearSolver, Err)
+  
+  PRINT*, ""
+  PRINT*, "before cmfe_Solver_LinearTypeSet"
+  CALL cmfe_PrintSolver(SolverParabolic, 5, 10, Err)
+  
+  ! Recreate linearSolver subtype as direct solver (instead of iterative solver)
+  CALL cmfe_Solver_LinearTypeSet(linearSolver, CMFE_SOLVER_LINEAR_DIRECT_SOLVE_TYPE, Err)
+  
+  PRINT*, ""
+  PRINT*, "========================================================================="
+  PRINT*, "After cmfe_Solver_LinearTypeSet"
+  CALL cmfe_PrintSolver(SolverParabolic, 5, 10, Err)
+  
+  !SOLVER_LINEAR_DIRECT_TYPE_SET
+  
+  !CALL cmfe_SOLVER_DYNAMICLINEARITYTYPESET(SolverParabolic, CMFE_SOLVER_DYNAMIC_LINEAR, Err)
+  !CALL cmfe_Solver_NonlinearTypeSet(SolverParabolic,CMFE_SOLVER_NONLINEAR_NEWTON,Err)
 
   IF (DEBUGGING_OUTPUT) THEN
-    CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
+    CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_NO_OUTPUT,Err)
+    !CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
     !CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_TIMING_OUTPUT,Err)
     !CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_SOLVER_OUTPUT,Err)
     !CALL cmfe_Solver_OutputTypeSet(SolverParabolic,CMFE_SOLVER_MATRIX_OUTPUT,Err)
@@ -2208,9 +2350,9 @@ SUBROUTINE CreateSolvers()
   IF (DEBUGGING_OUTPUT) THEN
     IF (ComputationalNodeNumber == 0) THEN
       !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_NO_OUTPUT,Err)
-      CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
+      !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
       !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_TIMING_OUTPUT,Err)
-      !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_SOLVER_OUTPUT,Err)
+      CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_SOLVER_OUTPUT,Err)
       !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_MATRIX_OUTPUT,Err)
     ELSE
       CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_NO_OUTPUT,Err)
@@ -2230,6 +2372,7 @@ SUBROUTINE CreateSolvers()
 !  CALL cmfe_Solver_LinearTypeSet(LinearSolverFE,CMFE_SOLVER_LINEAR_ITERATIVE_SOLVE_TYPE,Err)
 
   CALL cmfe_Problem_SolversCreateFinish(Problem,Err)
+  
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !Create the problem solver CellML equations
@@ -2250,12 +2393,35 @@ SUBROUTINE CreateSolvers()
   !Create the problem solver parabolic equations (Monodomain)
   CALL cmfe_Solver_Initialise(SolverParabolic,Err)
   CALL cmfe_SolverEquations_Initialise(SolverEquationsM,Err)
+  
   CALL cmfe_Problem_SolverGet(Problem,[ControlLoopMonodomainNumber,CMFE_CONTROL_LOOP_NODE], &
    & SolverParabolicIndex,SolverParabolic,Err)
+   
+   
   CALL cmfe_Solver_SolverEquationsGet(SolverParabolic,SolverEquationsM,Err)
+  
+  
+  
+  !PRINT*, ""
+  !PRINT*, "After cmfe_Solver_SolverEquationsGet"
+  !CALL cmfe_PrintSolverEquationsM(SolverEquationsM, 5, 10, Err)
+  
+  
+  
   CALL cmfe_SolverEquations_SparsityTypeSet(SolverEquationsM,CMFE_SOLVER_SPARSE_MATRICES,Err)
+  
+  
+  !PRINT*, ""
+  !PRINT*, "After cmfe_SolverEquations_SparsityTypeSet"
+  !CALL cmfe_PrintSolverEquationsM(SolverEquationsM, 5, 10, Err)
+  
   !CALL cmfe_SolverEquations_SparsityTypeSet(SolverEquationsM,CMFE_SOLVER_FULL_MATRICES,Err)
   CALL cmfe_SolverEquations_EquationsSetAdd(SolverEquationsM,EquationsSetM,EquationsSetIndexM,Err)
+  
+  
+  !PRINT*, ""
+  !PRINT*, "After cmfe_SolverEquations_EquationsSetAdd"
+  !CALL cmfe_PrintSolverEquationsM(SolverEquationsM, 5, 10, Err)
 
   !Create the problem solver Finite Elasticity equations
   CALL cmfe_Solver_Initialise(SolverFE,Err)
@@ -2268,12 +2434,36 @@ SUBROUTINE CreateSolvers()
 
   CALL cmfe_Problem_SolverEquationsCreateFinish(Problem,Err)
 
+  PRINT*, "==========================="
+  PRINT*, "SolverFE"
+  CALL cmfe_PrintSolver(SolverFE, 6, 3, Err)
+  
+  !STOP
+  
 END SUBROUTINE CreateSolvers
 
 SUBROUTINE SetBoundaryConditions()
+
   !Prescribe boundary conditions for monodomain
   CALL cmfe_BoundaryConditions_Initialise(BoundaryConditionsM,Err)
   CALL cmfe_SolverEquations_BoundaryConditionsCreateStart(SolverEquationsM,BoundaryConditionsM,Err)
+  
+  !PRINT*, "Print SolverEquationsM Solver"
+  
+  !CALL cmfe_PrintSolver(SolverEquationsM, 5, 10, Err)
+  !CALL cmfe_PrintSolverEquationsM(SolverEquationsM, 5, 10, Err)
+  
+  
+  !SolverEquationsM
+  !SolverEquationsM%solverEquations%SOLVER%SOLVERS%SOLVERS(2)% &
+  !  & PTR%LINKED_SOLVERS(1)%PTR%LINEAR_SOLVER%ITERATIVE_SOLVER%ABSOLUTE_TOLERANCE = 1e-5 
+
+
+  !PRINT*, "After changing tolerance"
+  !CALL cmfe_PrintSolverEquationsM(SolverEquationsM, 5, 10, Err)
+  
+  ! Finalize solver, set PETSC parameters, such as tolerances, solver type etc.
+  ! The parameters are already set in the data structure SolverEquations
   CALL cmfe_SolverEquations_BoundaryConditionsCreateFinish(SolverEquationsM,Err)
 
   !Prescribe boundary conditions for Finite Elasticity (absolute nodal parameters)
@@ -2346,7 +2536,12 @@ SUBROUTINE CalculateBioelectrics()
 END SUBROUTINE CalculateBioelectrics
 
 SUBROUTINE ExportEMG()
+  REAL(CMISSSP), DIMENSION(2) :: TimeStart, TimeStop
+  REAL(CMISSSP) :: Total
+  
   IF (ComputationalNodeNumber == 0) WRITE(*,'(A)',advance='no') "Output EMG Data ... "
+  CALL ETIME(TimeStart, Total)
+  
   EXPORT_FIELD=.TRUE.
   IF(EXPORT_FIELD) THEN
     CALL cmfe_Fields_Initialise(Fields,Err)
@@ -2361,6 +2556,11 @@ SUBROUTINE ExportEMG()
     CALL cmfe_Fields_ElementsExport(Fields,"EMGExample_FE","FORTRAN",Err)
     CALL cmfe_Fields_Finalise(Fields,Err)
   ENDIF
+  
+  CALL ETIME(TimeStop, Total)
+  TimingExportEMGUser = TimingExportEMGUser + (TimeStop(1) - TimeStart(1))
+  TimingExportEMGSystem = TimingExportEMGSystem + (TimeStop(2) - TimeStart(2))
+  
   IF (ComputationalNodeNumber == 0) PRINT*, " done"
 
 END SUBROUTINE ExportEMG
@@ -2511,8 +2711,8 @@ SUBROUTINE WriteTimingFile()
     WRITE(123,'(A)') '# Stamp; Host; NProc; X; Y; Z; F; Total FE; Total M; End Time; ' // &
       & 'Dur. Init; Stretch Sim; Int. Init; Main Sim; Total; Total (User); Total (System); ' // &
       & 'ODE; Parabolic; FE; FE before Main Sim; Mem. Consumption after 1st timestep; Memory Consumption At End; ' // &
-      & 'Parabolic reason; Newton reason; parabolic n. iter; min; max; newton n. iter; min; max; '
-    WRITE(123,'(A)') '# 1. problem solve; 1.1/2 pre solve; problem_solver_pre_solve; 1.1. problem cellml solve; ' // &
+      & 'Parabolic reason; Newton reason; parabolic n. iter; min; max; newton n. iter; min; max; ' // &
+      & '1. problem solve; 1.1/2 pre solve; problem_solver_pre_solve; 1.1. problem cellml solve; ' // &
       & 'cellml solve (*); 1.1.1. cellml field2cellml update; 1.1.2. cellml field var get; 1.1.3. cellml data get; ' // &
       & '1.1.4. cellml integrate; cellml call rhs; 1.1.5. cellml data restore; 1.1.6. cellml field update; ' // &
       & 'problem_solver_post_solve; 1.2. dynamic linear solve (*); 1.2.1 assemble equations; 1.2.2 get loop time; ' // &
@@ -2520,13 +2720,17 @@ SUBROUTINE WriteTimingFile()
       & '1.2.3.2 dynamic assemble; 1.2.3.3 solve linear system; 1.2.3.4 update dependent field; 1.3.1 pre solve; ' // &
       & '1.3.2 apply incremented BC; 1.3.3 solve; 1.3.3.1 static nonlinear solve (*); 1.3.3.1.1 apply BC, assemble; ' // &
       & '1.3.3.1.2 assemble interface conditions; 1.3.3.1.3 solve; 1.3.3.1.3.1 newton update solution vector; ' // &
-      & '1.3.3.1.3.2 newton Petsc solve; 1.3.3.1.3.3 newton diagnostics; 1.3.3.1.4 update residual; 1.3.4 post solve;  '
-    WRITE(123,'(A)') '# (memory consumption, size 1 el., n. objects): distributed vector cmiss DP;;; ' // &
+      & '1.3.3.1.3.2 newton Petsc solve; 1.3.3.1.3.3 newton diagnostics; 1.3.3.1.4 update residual; 1.3.4 post solve; ' // & 
+      & '(memory consumption, size 1 el., n. objects): distributed vector cmiss DP;;; ' // &
       & 'distributed vector cmiss INTG;;; distributed matrix petsc, compr. row storage diag;;; ' // &
       & 'distributed matrix petsc, compr. row storage, offdiag;;; distributed matrix petsc, compr. row storage, row ind.;;; ' // &
       & 'distributed matrix petsc, compr. row storage, col. ind.;;; ' // &
       & 'distributed matrix petsc, compr. row storage (local to global mapping);;; ' // &
-      & 'distributed vector petsc'
+      & 'distributed vector petsc;;; ' // &
+      & 'duration FESolverPreLoad; duration OdeSolverPreLoad; duration ParabolicSolverPreLoad; ' // &
+      & 'duration FileOutputPreLoad (user); duration export EMG user; duration export EMG system; duration FileOutput (user); ' // &
+      & 'duration FileOutput (system); duration FileOutputPreload (system);'
+      
     CLOSE(unit=123)
   ENDIF
 
@@ -2545,99 +2749,155 @@ SUBROUTINE WriteTimingFile()
 
   TimeStampStr = GetTimeStamp()
 
-  WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),35(F25.13,A),8(I17,A,I5,A,I7,A))") &
-    & TRIM(TimeStampStr), ';', &
-    & TRIM(Hostname(1:22)), ';', &
-    & NumberOfComputationalNodes, ';', &
-    & NumberGlobalXElements, ';', &
-    & NumberGlobalYElements, ';', &
-    & NumberGlobalZElements, ';', &
-    & NumberOfInSeriesFibres, ';', &
-    & NumberOfElementsFE, ';', &
-    & NumberOfElementsM, ';', &
-    & TIME_STOP, ';', &
-    & DurationInit, ';', &
-    & DurationStretchSim, ';', &
-    & DurationIntInit, ';', &
-    & DurationMainSim,';',  &
-    & DurationTotal, ';', &
-    & Elapsed(1), ';', &
-    & Elapsed(2), ';', &
-    & CustomTimingOdeSolver, ';', &
-    & CustomTimingParabolicSolver, ';', &
-    & CustomTimingFESolver, ';', &
-    & CustomTimingFESolverBeforeMainSim, ';', &
-    & TRIM(ADJUSTL(MemoryConsumption1StTimeStep)), ';', &
-    & TRIM(ADJUSTL(MemoryConsumptionEnd)), ';', &
-    & CustomSolverConvergenceReasonParabolic, ';', &
-    & CustomSolverConvergenceReasonNewton, ';', &
-    & CustomSolverNumberIterationsParabolic, ';', &
-    & CustomSolverNumberIterationsParabolicMin,';',  &
-    & CustomSolverNumberIterationsParabolicMax, ';', &
-    & CustomSolverNumberIterationsNewton, ';', &
-    & CustomSolverNumberIterationsNewtonMin, ';', &
-    & CustomSolverNumberIterationsNewtonMax, ';', &
-    ! Custom Profiling durations
-    & cmfe_CustomProfilingGetDuration("1. problem solve", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.1/2 pre solve", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("problem_solver_pre_solve", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.1. problem cellml solve", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("cellml solve (*)", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.1.1. cellml field2cellml update", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.1.2. cellml field var get", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.1.3. cellml data get", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.1.4. cellml integrate", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("cellml call rhs", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.1.5. cellml data restore", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.1.6. cellml field update", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("problem_solver_post_solve", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.2. dynamic linear solve (*)", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.2.1 assemble equations", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.2.2 get loop time", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.2.3 solve", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.2.4 back-substitute", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.1/2 post solve", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.2.3.1 dynamic mean predicted calculate", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.2.3.2 dynamic assemble", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.2.3.3 solve linear system", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.2.3.4 update dependent field", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.3.1 pre solve", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.3.2 apply incremented BC", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.3.3 solve", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.3.3.1 static nonlinear solve (*)", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.3.3.1.1 apply BC, assemble", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.3.3.1.2 assemble interface conditions", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.3.3.1.3 solve", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.3.3.1.3.1 newton update solution vector", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.3.3.1.3.2 newton Petsc solve", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.3.3.1.3.3 newton diagnostics", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.3.3.1.4 update residual", Err), ';', &
-    & cmfe_CustomProfilingGetDuration("1.3.4 post solve", Err), ';', &
-    ! custom profiling memory consumption
-    & cmfe_CustomProfilingGetMemory("distributed vector cmiss DP", Err), ';', &
-    & cmfe_CustomProfilingGetSizePerElement("distributed vector cmiss DP", Err), ';', &
-    & cmfe_CustomProfilingGetNumberObjects("distributed vector cmiss DP", Err), ';', &
-    & cmfe_CustomProfilingGetMemory("distributed vector cmiss INTG", Err), ';', &
-    & cmfe_CustomProfilingGetSizePerElement("distributed vector cmiss INTG", Err), ';', &
-    & cmfe_CustomProfilingGetNumberObjects("distributed vector cmiss INTG", Err), ';', &
-    & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage diag", Err), ';', &
-    & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage diag", Err), ';', &
-    & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage diag", Err), ';', &
-    & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage, offdiag", Err), ';', &
-    & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage, offdiag", Err), ';', &
-    & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage, offdiag", Err), ';', &
-    & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage, row ind.", Err), ';', &
-    & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage, row ind.", Err), ';', &
-    & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage, row ind.", Err), ';', &
-    & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage, col. ind.", Err), ';', &
-    & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage, col. ind.", Err), ';', &
-    & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage, col. ind.", Err), ';', &
-    & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage (local to global mapping)", Err), ';', &
-    & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage (local to global mapping)", Err), ';', &
-    & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage (local to global mapping)", Err), ';', &
-    & cmfe_CustomProfilingGetMemory("distributed vector petsc", Err), ';', &
-    & cmfe_CustomProfilingGetSizePerElement("distributed vector petsc", Err), ';', &
-    & cmfe_CustomProfilingGetNumberObjects("distributed vector petsc", Err), ';'
+  IF (CustomProfilingEnabled) THEN
+
+    WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),35(F25.13,A),8(I17,A,I5,A,I7,A),9(F8.3,A))") &
+      & TRIM(TimeStampStr), ';', &
+      & TRIM(Hostname(1:22)), ';', &
+      & NumberOfComputationalNodes, ';', &
+      & NumberGlobalXElements, ';', &
+      & NumberGlobalYElements, ';', &
+      & NumberGlobalZElements, ';', &
+      & NumberOfInSeriesFibres, ';', &
+      & NumberOfElementsFE, ';', &
+      & NumberOfElementsM, ';', &
+      & TIME_STOP, ';', &
+      & DurationInit, ';', &
+      & DurationStretchSim, ';', &
+      & DurationIntInit, ';', &
+      & DurationMainSim,';',  &
+      & DurationTotal, ';', &
+      & Elapsed(1), ';', &
+      & Elapsed(2), ';', &
+      & CustomTimingOdeSolver, ';', &
+      & CustomTimingParabolicSolver, ';', &
+      & CustomTimingFESolver, ';', &
+      & CustomTimingFESolverPreLoad, ';', &
+      & TRIM(ADJUSTL(MemoryConsumption1StTimeStep)), ';', &
+      & TRIM(ADJUSTL(MemoryConsumptionEnd)), ';', &
+      & CustomSolverConvergenceReasonParabolic, ';', &
+      & CustomSolverConvergenceReasonNewton, ';', &
+      & CustomSolverNumberIterationsParabolic, ';', &
+      & CustomSolverNumberIterationsParabolicMin,';',  &
+      & CustomSolverNumberIterationsParabolicMax, ';', &
+      & CustomSolverNumberIterationsNewton, ';', &
+      & CustomSolverNumberIterationsNewtonMin, ';', &
+      & CustomSolverNumberIterationsNewtonMax, ';', &
+      ! Custom Profiling durations
+      & cmfe_CustomProfilingGetDuration("1. problem solve", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.1/2 pre solve", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("problem_solver_pre_solve", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.1. problem cellml solve", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("cellml solve (*)", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.1.1. cellml field2cellml update", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.1.2. cellml field var get", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.1.3. cellml data get", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.1.4. cellml integrate", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("cellml call rhs", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.1.5. cellml data restore", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.1.6. cellml field update", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("problem_solver_post_solve", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.2. dynamic linear solve (*)", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.2.1 assemble equations", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.2.2 get loop time", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.2.3 solve", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.2.4 back-substitute", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.1/2 post solve", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.2.3.1 dynamic mean predicted calculate", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.2.3.2 dynamic assemble", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.2.3.3 solve linear system", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.2.3.4 update dependent field", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.3.1 pre solve", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.3.2 apply incremented BC", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.3.3 solve", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.3.3.1 static nonlinear solve (*)", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.3.3.1.1 apply BC, assemble", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.3.3.1.2 assemble interface conditions", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.3.3.1.3 solve", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.3.3.1.3.1 newton update solution vector", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.3.3.1.3.2 newton Petsc solve", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.3.3.1.3.3 newton diagnostics", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.3.3.1.4 update residual", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.3.4 post solve", Err), ';', &
+      ! custom profiling memory consumption
+      & cmfe_CustomProfilingGetMemory("distributed vector cmiss DP", Err), ';', &
+      & cmfe_CustomProfilingGetSizePerElement("distributed vector cmiss DP", Err), ';', &
+      & cmfe_CustomProfilingGetNumberObjects("distributed vector cmiss DP", Err), ';', &
+      & cmfe_CustomProfilingGetMemory("distributed vector cmiss INTG", Err), ';', &
+      & cmfe_CustomProfilingGetSizePerElement("distributed vector cmiss INTG", Err), ';', &
+      & cmfe_CustomProfilingGetNumberObjects("distributed vector cmiss INTG", Err), ';', &
+      & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage diag", Err), ';', &
+      & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage diag", Err), ';', &
+      & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage diag", Err), ';', &
+      & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage, offdiag", Err), ';', &
+      & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage, offdiag", Err), ';', &
+      & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage, offdiag", Err), ';', &
+      & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage, row ind.", Err), ';', &
+      & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage, row ind.", Err), ';', &
+      & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage, row ind.", Err), ';', &
+      & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage, col. ind.", Err), ';', &
+      & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage, col. ind.", Err), ';', &
+      & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage, col. ind.", Err), ';', &
+      & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage (local to global mapping)", Err), ';', &
+      & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage (local to global mapping)", Err), ';', &
+      & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage (local to global mapping)", Err), ';', &
+      & cmfe_CustomProfilingGetMemory("distributed vector petsc", Err), ';', &
+      & cmfe_CustomProfilingGetSizePerElement("distributed vector petsc", Err), ';', &
+      & cmfe_CustomProfilingGetNumberObjects("distributed vector petsc", Err), ';', &
+      & CustomTimingFESolverPreLoad, ';', &
+      & CustomTimingOdeSolverPreLoad, ';', &
+      & CustomTimingParabolicSolverPreLoad, ';', &
+      & CustomTimingFileOutputUserPreLoad, ';', &
+      & TimingExportEMGUser, ';', &
+      & TimingExportEMGSystem, ';', &
+      & CustomTimingFileOutputUser, ';', &
+      & CustomTimingFileOutputSystem, ';', &
+      & CustomTimingFileOutputSystemPreLoad, ';'
+
+  ELSE  ! custom profiling is disabled
+    
+    WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),9(F8.3,A))") &
+      & TRIM(TimeStampStr), ';', &
+      & TRIM(Hostname(1:22)), ';', &
+      & NumberOfComputationalNodes, ';', &
+      & NumberGlobalXElements, ';', &
+      & NumberGlobalYElements, ';', &
+      & NumberGlobalZElements, ';', &
+      & NumberOfInSeriesFibres, ';', &
+      & NumberOfElementsFE, ';', &
+      & NumberOfElementsM, ';', &
+      & TIME_STOP, ';', &
+      & DurationInit, ';', &
+      & DurationStretchSim, ';', &
+      & DurationIntInit, ';', &
+      & DurationMainSim,';',  &
+      & DurationTotal, ';', &
+      & Elapsed(1), ';', &
+      & Elapsed(2), ';', &
+      & CustomTimingOdeSolver, ';', &
+      & CustomTimingParabolicSolver, ';', &
+      & CustomTimingFESolver, ';', &
+      & CustomTimingFESolverPreLoad, ';', &
+      & TRIM(ADJUSTL(MemoryConsumption1StTimeStep)), ';', &
+      & TRIM(ADJUSTL(MemoryConsumptionEnd)), ';', &
+      & CustomSolverConvergenceReasonParabolic, ';', &
+      & CustomSolverConvergenceReasonNewton, ';', &
+      & CustomSolverNumberIterationsParabolic, ';', &
+      & CustomSolverNumberIterationsParabolicMin,';',  &
+      & CustomSolverNumberIterationsParabolicMax, ';', &
+      & CustomSolverNumberIterationsNewton, ';', &
+      & CustomSolverNumberIterationsNewtonMin, ';', &
+      & CustomSolverNumberIterationsNewtonMax, ';;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;', &
+      & CustomTimingFESolverPreLoad, ';', &
+      & CustomTimingOdeSolverPreLoad, ';', &
+      & CustomTimingParabolicSolverPreLoad, ';', &
+      & CustomTimingFileOutputUserPreLoad, ';', &
+      & TimingExportEMGUser, ';', &
+      & TimingExportEMGSystem, ';', &
+      & CustomTimingFileOutputUser, ';', &
+      & CustomTimingFileOutputSystem, ';', &
+      & CustomTimingFileOutputSystemPreLoad, ';'
+  ENDIF
 
   CLOSE(unit=123)
 END SUBROUTINE WriteTimingFile

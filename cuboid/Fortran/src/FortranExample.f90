@@ -69,9 +69,9 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !--------------------------------------------------------------------------------------------------------------------------------
   !Test program parameters
   LOGICAL, PARAMETER :: DEBUGGING_ONLY_RUN_SHORT_PART_OF_SIMULATION = .FALSE.    ! only run one timestep of MAIN_LOOP with stimulus
-  LOGICAL, PARAMETER :: DEBUGGING_OUTPUT_PROBLEM = .FALSE.    ! output information about problem data structure
+  LOGICAL, PARAMETER :: DEBUGGING_OUTPUT_PROBLEM = .TRUE.    ! output information about problem data structure
   LOGICAL, PARAMETER :: DEBUGGING_PARALLEL_BARRIER = .FALSE.   !
-  INTEGER(CMISSINTg) :: RUN_SCENARIO = 0  !0 = default, no extra values set, 1 = short for testing, 2 = medium for testing, 3 = very short, 4 = endless
+  INTEGER(CMISSINTg) :: RUN_SCENARIO =2  !0 = default, 1 = short for testing, 2 = medium for testing, 3 = very short, 4 = endless
   LOGICAL, PARAMETER :: DEBUGGING_OUTPUT = .FALSE.    ! enable information from solvers
   LOGICAL, PARAMETER :: OLD_TOMO_MECHANICS = .TRUE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
 
@@ -84,16 +84,16 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !all times in [ms]
   REAL(CMISSRP) :: time !=10.00_CMISSRP
   REAL(CMISSRP), PARAMETER :: PERIODD=1.00_CMISSRP
-  REAL(CMISSRP)            :: TIME_STOP=5.0_CMISSRP
+  REAL(CMISSRP)            :: TIME_STOP=1000.0_CMISSRP
 
-  REAL(CMISSRP) :: ODE_TIME_STEP = 0.0001_CMISSRP            !0.0001_CMISSRP
+  REAL(CMISSRP) :: ODE_TIME_STEP = 0.00001_CMISSRP            !0.0001_CMISSRP
   REAL(CMISSRP) :: PDE_TIME_STEP = 0.0005_CMISSRP
   REAL(CMISSRP) :: ELASTICITY_TIME_STEP = 0.10000000001_CMISSRP !0.5_CMISSRP!0.05_CMISSRP!0.8_CMISSRP
 
 !tomo keep ELASTICITY_TIME_STEP and STIM_STOP at the same values
-  REAL(CMISSRP), PARAMETER :: STIM_STOP=0.1_CMISSRP!ELASTICITY_TIME_STEP   
+  REAL(CMISSRP), PARAMETER :: STIM_STOP=0.1_CMISSRP!ELASTICITY_TIME_STEP
 
-  INTEGER(CMISSIntg), PARAMETER :: OUTPUT_FREQUENCY=1  ! (10)
+  INTEGER(CMISSIntg), PARAMETER :: OUTPUT_FREQUENCY=10
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !--------------------------------------------------------------------------------------------------------------------------------
@@ -166,9 +166,6 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   CHARACTER(len=1024) :: InnervationZoneFile = "innervation_zone_18.txt"
   CHARACTER(len=1024) :: FibreDistributionFile = "MU_fibre_distribution_4050.txt"
   CHARACTER(len=256) :: MemoryConsumption1StTimeStep = "", MemoryConsumptionBeforeSim, Temp
-  
-  LOGICAL :: CustomProfilingEnabled !< If custom profiling is compiled in
-  LOGICAL :: TauProfilingEnabled !< If TAU profiling is compiled in
 
   INTEGER(CMISSIntg) :: Ftype,fibre_nr,NearestGP,InElement
 
@@ -848,6 +845,8 @@ SUBROUTINE ParseParameters()
   INTEGER(CMISSINTg) :: Length
   CHARACTER(LEN=256) :: Arg
   LOGICAL :: GeometryIsValid, FileExists
+  LOGICAL :: CustomProfilingEnabled !< If custom profiling is compiled in
+  LOGICAL :: TauProfilingEnabled !< If TAU profiling is compiled in
 
   NumberGlobalXElements = 3 !6
   NumberGlobalYElements = 4 !4
@@ -951,10 +950,6 @@ SUBROUTINE ParseParameters()
     endif
     NumberOfNodesInXi2=2!30
     NumberOfNodesInXi3=3!45
-    
-    ! only 1 fibre per 3D element
-    NumberOfNodesInXi2=1
-    NumberOfNodesInXi3=1
   endif
 !  NumberOfNodesPerFibre=(NumberOfNodesInXi1-1)*NumberGlobalXElements+1
 !  NumberOfNodesM=NumberOfNodesPerFibre*NumberGlobalYElements*NumberGlobalZElements*NumberOfNodesInXi2*NumberOfNodesInXi3
@@ -989,7 +984,7 @@ SUBROUTINE ParseParameters()
 !  CellMLModelFilename=trim(pathname)//"fast_2014_03_25_no_Fl_no_Fv.xml" !FAST
   IF (OLD_TOMO_MECHANICS) THEN
     CellMLModelFilename = TRIM(inputDirectory) // "slow_TK_2014_12_08.xml"
-    STIM_VALUE = 20000.0_CMISSRP !700.0_CMISSRP!700.0_CMISSRP
+    STIM_VALUE = 2000.0_CMISSRP !700.0_CMISSRP!700.0_CMISSRP
   ELSE
     CellMLModelFilename = TRIM(inputDirectory) // "Aliev_Panfilov_Razumova_2016_08_22.cellml"
     STIM_VALUE = 90.0_CMISSRP !90.0_CMISSRP
@@ -2130,9 +2125,8 @@ SUBROUTINE CreateControlLoops()
     ! CONTROL_LOOP_PROGRESS_OUTPUT = 1 !<Progress output from control loop (also output MainTime_* files)
     ! CONTROL_LOOP_TIMING_OUTPUT = 2 !<Timing output from the control loop
     ! CONTROL_LOOP_FILE_OUTPUT = -1
-    CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,cmfe_CONTROL_LOOP_TIMING_OUTPUT,Err)
     !CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,cmfe_CONTROL_LOOP_FILE_OUTPUT,Err)
-    !CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,-1,Err)
+    CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,-1,Err)
   ENDIF
 
 
@@ -2551,137 +2545,99 @@ SUBROUTINE WriteTimingFile()
 
   TimeStampStr = GetTimeStamp()
 
-  IF (CustomProfilingEnabled) THEN
-
-    WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),35(F25.13,A),8(I17,A,I5,A,I7,A))") &
-      & TRIM(TimeStampStr), ';', &
-      & TRIM(Hostname(1:22)), ';', &
-      & NumberOfComputationalNodes, ';', &
-      & NumberGlobalXElements, ';', &
-      & NumberGlobalYElements, ';', &
-      & NumberGlobalZElements, ';', &
-      & NumberOfInSeriesFibres, ';', &
-      & NumberOfElementsFE, ';', &
-      & NumberOfElementsM, ';', &
-      & TIME_STOP, ';', &
-      & DurationInit, ';', &
-      & DurationStretchSim, ';', &
-      & DurationIntInit, ';', &
-      & DurationMainSim,';',  &
-      & DurationTotal, ';', &
-      & Elapsed(1), ';', &
-      & Elapsed(2), ';', &
-      & CustomTimingOdeSolver, ';', &
-      & CustomTimingParabolicSolver, ';', &
-      & CustomTimingFESolver, ';', &
-      & CustomTimingFESolverBeforeMainSim, ';', &
-      & TRIM(ADJUSTL(MemoryConsumption1StTimeStep)), ';', &
-      & TRIM(ADJUSTL(MemoryConsumptionEnd)), ';', &
-      & CustomSolverConvergenceReasonParabolic, ';', &
-      & CustomSolverConvergenceReasonNewton, ';', &
-      & CustomSolverNumberIterationsParabolic, ';', &
-      & CustomSolverNumberIterationsParabolicMin,';',  &
-      & CustomSolverNumberIterationsParabolicMax, ';', &
-      & CustomSolverNumberIterationsNewton, ';', &
-      & CustomSolverNumberIterationsNewtonMin, ';', &
-      & CustomSolverNumberIterationsNewtonMax, ';', &
-      ! Custom Profiling durations
-      & cmfe_CustomProfilingGetDuration("1. problem solve", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.1/2 pre solve", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("problem_solver_pre_solve", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.1. problem cellml solve", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("cellml solve (*)", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.1.1. cellml field2cellml update", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.1.2. cellml field var get", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.1.3. cellml data get", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.1.4. cellml integrate", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("cellml call rhs", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.1.5. cellml data restore", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.1.6. cellml field update", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("problem_solver_post_solve", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.2. dynamic linear solve (*)", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.2.1 assemble equations", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.2.2 get loop time", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.2.3 solve", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.2.4 back-substitute", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.1/2 post solve", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.2.3.1 dynamic mean predicted calculate", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.2.3.2 dynamic assemble", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.2.3.3 solve linear system", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.2.3.4 update dependent field", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.3.1 pre solve", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.3.2 apply incremented BC", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.3.3 solve", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.3.3.1 static nonlinear solve (*)", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.3.3.1.1 apply BC, assemble", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.3.3.1.2 assemble interface conditions", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.3.3.1.3 solve", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.3.3.1.3.1 newton update solution vector", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.3.3.1.3.2 newton Petsc solve", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.3.3.1.3.3 newton diagnostics", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.3.3.1.4 update residual", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.3.4 post solve", Err), ';', &
-      ! custom profiling memory consumption
-      & cmfe_CustomProfilingGetMemory("distributed vector cmiss DP", Err), ';', &
-      & cmfe_CustomProfilingGetSizePerElement("distributed vector cmiss DP", Err), ';', &
-      & cmfe_CustomProfilingGetNumberObjects("distributed vector cmiss DP", Err), ';', &
-      & cmfe_CustomProfilingGetMemory("distributed vector cmiss INTG", Err), ';', &
-      & cmfe_CustomProfilingGetSizePerElement("distributed vector cmiss INTG", Err), ';', &
-      & cmfe_CustomProfilingGetNumberObjects("distributed vector cmiss INTG", Err), ';', &
-      & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage diag", Err), ';', &
-      & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage diag", Err), ';', &
-      & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage diag", Err), ';', &
-      & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage, offdiag", Err), ';', &
-      & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage, offdiag", Err), ';', &
-      & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage, offdiag", Err), ';', &
-      & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage, row ind.", Err), ';', &
-      & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage, row ind.", Err), ';', &
-      & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage, row ind.", Err), ';', &
-      & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage, col. ind.", Err), ';', &
-      & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage, col. ind.", Err), ';', &
-      & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage, col. ind.", Err), ';', &
-      & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage (local to global mapping)", Err), ';', &
-      & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage (local to global mapping)", Err), ';', &
-      & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage (local to global mapping)", Err), ';', &
-      & cmfe_CustomProfilingGetMemory("distributed vector petsc", Err), ';', &
-      & cmfe_CustomProfilingGetSizePerElement("distributed vector petsc", Err), ';', &
-      & cmfe_CustomProfilingGetNumberObjects("distributed vector petsc", Err), ';'
-
-  ELSE  ! custom profiling is disabled
-    
-    WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A))") &
-      & TRIM(TimeStampStr), ';', &
-      & TRIM(Hostname(1:22)), ';', &
-      & NumberOfComputationalNodes, ';', &
-      & NumberGlobalXElements, ';', &
-      & NumberGlobalYElements, ';', &
-      & NumberGlobalZElements, ';', &
-      & NumberOfInSeriesFibres, ';', &
-      & NumberOfElementsFE, ';', &
-      & NumberOfElementsM, ';', &
-      & TIME_STOP, ';', &
-      & DurationInit, ';', &
-      & DurationStretchSim, ';', &
-      & DurationIntInit, ';', &
-      & DurationMainSim,';',  &
-      & DurationTotal, ';', &
-      & Elapsed(1), ';', &
-      & Elapsed(2), ';', &
-      & CustomTimingOdeSolver, ';', &
-      & CustomTimingParabolicSolver, ';', &
-      & CustomTimingFESolver, ';', &
-      & CustomTimingFESolverBeforeMainSim, ';', &
-      & TRIM(ADJUSTL(MemoryConsumption1StTimeStep)), ';', &
-      & TRIM(ADJUSTL(MemoryConsumptionEnd)), ';', &
-      & CustomSolverConvergenceReasonParabolic, ';', &
-      & CustomSolverConvergenceReasonNewton, ';', &
-      & CustomSolverNumberIterationsParabolic, ';', &
-      & CustomSolverNumberIterationsParabolicMin,';',  &
-      & CustomSolverNumberIterationsParabolicMax, ';', &
-      & CustomSolverNumberIterationsNewton, ';', &
-      & CustomSolverNumberIterationsNewtonMin, ';', &
-      & CustomSolverNumberIterationsNewtonMax, ';'
-  ENDIF
+  WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),35(F25.13,A),8(I17,A,I5,A,I7,A))") &
+    & TRIM(TimeStampStr), ';', &
+    & TRIM(Hostname(1:22)), ';', &
+    & NumberOfComputationalNodes, ';', &
+    & NumberGlobalXElements, ';', &
+    & NumberGlobalYElements, ';', &
+    & NumberGlobalZElements, ';', &
+    & NumberOfInSeriesFibres, ';', &
+    & NumberOfElementsFE, ';', &
+    & NumberOfElementsM, ';', &
+    & TIME_STOP, ';', &
+    & DurationInit, ';', &
+    & DurationStretchSim, ';', &
+    & DurationIntInit, ';', &
+    & DurationMainSim,';',  &
+    & DurationTotal, ';', &
+    & Elapsed(1), ';', &
+    & Elapsed(2), ';', &
+    & CustomTimingOdeSolver, ';', &
+    & CustomTimingParabolicSolver, ';', &
+    & CustomTimingFESolver, ';', &
+    & CustomTimingFESolverBeforeMainSim, ';', &
+    & TRIM(ADJUSTL(MemoryConsumption1StTimeStep)), ';', &
+    & TRIM(ADJUSTL(MemoryConsumptionEnd)), ';', &
+    & CustomSolverConvergenceReasonParabolic, ';', &
+    & CustomSolverConvergenceReasonNewton, ';', &
+    & CustomSolverNumberIterationsParabolic, ';', &
+    & CustomSolverNumberIterationsParabolicMin,';',  &
+    & CustomSolverNumberIterationsParabolicMax, ';', &
+    & CustomSolverNumberIterationsNewton, ';', &
+    & CustomSolverNumberIterationsNewtonMin, ';', &
+    & CustomSolverNumberIterationsNewtonMax, ';', &
+    ! Custom Profiling durations
+    & cmfe_CustomProfilingGetDuration("1. problem solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.1/2 pre solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("problem_solver_pre_solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.1. problem cellml solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("cellml solve (*)", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.1.1. cellml field2cellml update", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.1.2. cellml field var get", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.1.3. cellml data get", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.1.4. cellml integrate", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("cellml call rhs", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.1.5. cellml data restore", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.1.6. cellml field update", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("problem_solver_post_solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.2. dynamic linear solve (*)", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.2.1 assemble equations", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.2.2 get loop time", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.2.3 solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.2.4 back-substitute", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.1/2 post solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.2.3.1 dynamic mean predicted calculate", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.2.3.2 dynamic assemble", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.2.3.3 solve linear system", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.2.3.4 update dependent field", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.1 pre solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.2 apply incremented BC", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.3 solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.3.1 static nonlinear solve (*)", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.3.1.1 apply BC, assemble", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.3.1.2 assemble interface conditions", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.3.1.3 solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.3.1.3.1 newton update solution vector", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.3.1.3.2 newton Petsc solve", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.3.1.3.3 newton diagnostics", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.3.1.4 update residual", Err), ';', &
+    & cmfe_CustomProfilingGetDuration("1.3.4 post solve", Err), ';', &
+    ! custom profiling memory consumption
+    & cmfe_CustomProfilingGetMemory("distributed vector cmiss DP", Err), ';', &
+    & cmfe_CustomProfilingGetSizePerElement("distributed vector cmiss DP", Err), ';', &
+    & cmfe_CustomProfilingGetNumberObjects("distributed vector cmiss DP", Err), ';', &
+    & cmfe_CustomProfilingGetMemory("distributed vector cmiss INTG", Err), ';', &
+    & cmfe_CustomProfilingGetSizePerElement("distributed vector cmiss INTG", Err), ';', &
+    & cmfe_CustomProfilingGetNumberObjects("distributed vector cmiss INTG", Err), ';', &
+    & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage diag", Err), ';', &
+    & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage diag", Err), ';', &
+    & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage diag", Err), ';', &
+    & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage, offdiag", Err), ';', &
+    & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage, offdiag", Err), ';', &
+    & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage, offdiag", Err), ';', &
+    & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage, row ind.", Err), ';', &
+    & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage, row ind.", Err), ';', &
+    & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage, row ind.", Err), ';', &
+    & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage, col. ind.", Err), ';', &
+    & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage, col. ind.", Err), ';', &
+    & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage, col. ind.", Err), ';', &
+    & cmfe_CustomProfilingGetMemory("distributed matrix petsc, compr. row storage (local to global mapping)", Err), ';', &
+    & cmfe_CustomProfilingGetSizePerElement("distributed matrix petsc, compr. row storage (local to global mapping)", Err), ';', &
+    & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage (local to global mapping)", Err), ';', &
+    & cmfe_CustomProfilingGetMemory("distributed vector petsc", Err), ';', &
+    & cmfe_CustomProfilingGetSizePerElement("distributed vector petsc", Err), ';', &
+    & cmfe_CustomProfilingGetNumberObjects("distributed vector petsc", Err), ';'
 
   CLOSE(unit=123)
 END SUBROUTINE WriteTimingFile

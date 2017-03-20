@@ -71,7 +71,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   LOGICAL, PARAMETER :: DEBUGGING_ONLY_RUN_SHORT_PART_OF_SIMULATION = .FALSE.    ! only run one timestep of MAIN_LOOP with stimulus
   LOGICAL, PARAMETER :: DEBUGGING_OUTPUT_PROBLEM = .FALSE.    ! output information about problem data structure
   LOGICAL, PARAMETER :: DEBUGGING_PARALLEL_BARRIER = .FALSE.   !
-  INTEGER(CMISSINTg) :: RUN_SCENARIO = 1  !0 = default, no extra values set, 1 = short for testing, 2 = medium for testing, 3 = very short, 4 = endless
+  INTEGER(CMISSINTg) :: RUN_SCENARIO = 2  !0 = default, no extra values set, 1 = short for testing, 2 = medium for testing, 3 = very short, 4 = endless
   LOGICAL, PARAMETER :: DEBUGGING_OUTPUT = .FALSE.    ! enable information from solvers
   LOGICAL, PARAMETER :: OLD_TOMO_MECHANICS = .TRUE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
 
@@ -86,8 +86,8 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   REAL(CMISSRP), PARAMETER :: PERIODD=1.00_CMISSRP
   REAL(CMISSRP)            :: TIME_STOP=150.0_CMISSRP
 
-  REAL(CMISSRP) :: ODE_TIME_STEP = 0.00001_CMISSRP            !0.0001_CMISSRP
-  REAL(CMISSRP) :: PDE_TIME_STEP = 0.0005_CMISSRP
+  REAL(CMISSRP) :: ODE_TIME_STEP = 0.0001_CMISSRP            !0.0001_CMISSRP
+  REAL(CMISSRP) :: PDE_TIME_STEP = 0.005_CMISSRP
   REAL(CMISSRP) :: ELASTICITY_TIME_STEP = 0.10000000001_CMISSRP !0.5_CMISSRP!0.05_CMISSRP!0.8_CMISSRP
 
 !tomo keep ELASTICITY_TIME_STEP and STIM_STOP at the same values

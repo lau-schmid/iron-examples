@@ -93,7 +93,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 !tomo keep ELASTICITY_TIME_STEP and STIM_STOP at the same values
   REAL(CMISSRP), PARAMETER :: STIM_STOP=0.1_CMISSRP!ELASTICITY_TIME_STEP   
 
-  INTEGER(CMISSIntg), PARAMETER :: OUTPUT_TIME_STEP_STRIDE=1  ! (10)
+  INTEGER(CMISSIntg), PARAMETER :: OUTPUT_TIME_STEP_STRIDE=10  ! (10)
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !--------------------------------------------------------------------------------------------------------------------------------

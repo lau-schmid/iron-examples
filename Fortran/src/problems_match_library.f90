@@ -1056,7 +1056,7 @@ FUNCTION MATCH_MATERIAL_PARAMETERS(type_string) RESULT (type_number)
     integer                 :: type_number
     IF (type_string == "EQUATIONS_SET_TRANSVERSE_ISOTROPIC_ACTIVE_SUBTYPE") THEN
       type_number = 5
-    ELSE IF (type_string == "EQUATIONS_SET_MOONEY_RIVLIN_SUBTYPE") THEN
+    ELSE IF (type_string == "EQUATIONS_SET_INCOMPRESSIBLE_MOONEY_RIVLIN_SUBTYPE") THEN
        type_number =2
     ELSEIF (type_string == "EQUATIONS_SET_TRANSIENT_NAVIER_STOKES_SUBTYPE")  THEN
       type_number = 2

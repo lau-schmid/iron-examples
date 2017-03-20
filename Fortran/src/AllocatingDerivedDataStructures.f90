@@ -64,30 +64,56 @@
   !!!NumberOfGeneratedMesh = NumberOfMesh    	     !! PLEASE IGNORE IT, I WILL FIX IT AFTER OUR MEETING
   !!!!!!!!!!!!!!!!!		ALLOCATE DATA STRUCTURES BASED ON THE PARAMETERS INITIALIZED ABOVE.  !!!!!!!!!!!!!!!!!
 
-  ALLOCATE(all_Basis(NumberOfBasis))
-  ALLOCATE(all_BoundaryConditions(NumberOfBoundaryCondition))
-  ALLOCATE(all_CoordinateSystem(NumberOfCoordinateSystem))
-  ALLOCATE(all_WorldCoordinateSystem%WorldCoordinateSystem(NumberOfWorldCoordinateSystem))
-  ALLOCATE(all_Mesh(NumberOfMesh))
-  ALLOCATE(all_Decomposition(NumberOfDecomposition))
-  ALLOCATE(all_Equations%Equations(NumberOfEquationsSet))
-  ALLOCATE(all_EquationsSet(NumberOfEquationsSet))
-  ALLOCATE(all_GeometricField(NumberOfGeometricField))
-  ALLOCATE(all_FibreField(NumberOfFiberField))
-  ALLOCATE(all_MaterialField(NumberOfMaterialField))
-  ALLOCATE(all_EquationsSetField(NumberOfEquationsSet))
-  ALLOCATE(all_Fields(NumberOfFields))
-  ALLOCATE(all_Problem(NumberOfProblem))
-  ALLOCATE(all_Region(NumberOfRegion))
-  ALLOCATE(all_WorldRegion%WorldRegion(NumberOfWorldRegion))
-  ALLOCATE(all_Solver(NumberOfSolver))
-  ALLOCATE(all_LinearSolver(NumberOfSolver))
-  ALLOCATE(all_NonLinearSolver(NumberOfSolver))
-  ALLOCATE(all_SolverEquations(NumberOfSolver))
-  ALLOCATE(all_ControlLoop(NumberOfControlLoop))
-  ALLOCATE(all_GeneratedMesh(NumberOfGeneratedMesh))
-  ALLOCATE(all_DependentField(NumberOfDependentField))
-  ALLOCATE(all_SourceField(NumberOfSourceField))
-  ALLOCATE(all_Output(NumberOfOutput))
-  ALLOCATE(all_Function(NumberOfFunction))
+  IF (NumberOfBasis .GT. 0 )   ALLOCATE(all_Basis(NumberOfBasis))
+
+  IF (NumberOfBoundaryCondition .GT. 0 )   ALLOCATE(all_BoundaryConditions(NumberOfBoundaryCondition))
+
+  IF (NumberOfCoordinateSystem .GT. 0 )   ALLOCATE(all_CoordinateSystem(NumberOfCoordinateSystem))
+
+  IF (NumberOfWorldCoordinateSystem .GT. 0 )    &
+    & ALLOCATE(all_WorldCoordinateSystem%WorldCoordinateSystem(NumberOfWorldCoordinateSystem))
+
+  IF (NumberOfMesh .GT. 0 )   ALLOCATE(all_Mesh(NumberOfMesh))
+
+  IF (NumberOfDecomposition .GT. 0 )   ALLOCATE(all_Decomposition(NumberOfDecomposition))
+
+  IF (NumberOfEquationsSet .GT. 0 )   ALLOCATE(all_Equations%Equations(NumberOfEquationsSet))
+
+  IF (NumberOfEquationsSet .GT. 0 )   ALLOCATE(all_EquationsSet(NumberOfEquationsSet))
+
+  IF (NumberOfGeometricField .GT. 0 )   ALLOCATE(all_GeometricField(NumberOfGeometricField))
+
+  IF (NumberOfFiberField .GT. 0 )   ALLOCATE(all_FibreField(NumberOfFiberField))
+
+  IF (NumberOfMaterialField .GT. 0 )   ALLOCATE(all_MaterialField(NumberOfMaterialField))
+
+  IF (NumberOfEquationsSet .GT. 0 )   ALLOCATE(all_EquationsSetField(NumberOfEquationsSet))
+
+  IF (NumberOfFields .GT. 0 )   ALLOCATE(all_Fields(NumberOfFields))
+
+  IF (NumberOfProblem .GT. 0 )   ALLOCATE(all_Problem(NumberOfProblem))
+
+  IF (NumberOfRegion .GT. 0 )   ALLOCATE(all_Region(NumberOfRegion))
+
+  IF (NumberOfWorldRegion .GT. 0 )   ALLOCATE(all_WorldRegion%WorldRegion(NumberOfWorldRegion))
+
+  IF (NumberOfSolver .GT. 0 )   ALLOCATE(all_Solver(NumberOfSolver))
+
+  IF (NumberOfSolver .GT. 0 )   ALLOCATE(all_LinearSolver(NumberOfSolver))
+
+  IF (NumberOfSolver .GT. 0 )   ALLOCATE(all_NonLinearSolver(NumberOfSolver))
+
+  IF (NumberOfSolver .GT. 0 )   ALLOCATE(all_SolverEquations(NumberOfSolver))
+
+  IF (NumberOfControlLoop .GT. 0 )   ALLOCATE(all_ControlLoop(NumberOfControlLoop))
+
+  IF (NumberOfGeneratedMesh .GT. 0 )   ALLOCATE(all_GeneratedMesh(NumberOfGeneratedMesh))
+
+  IF (NumberOfDependentField .GT. 0 )   ALLOCATE(all_DependentField(NumberOfDependentField))
+
+  IF (NumberOfSourceField .GT. 0 )   ALLOCATE(all_SourceField(NumberOfSourceField))
+
+  IF (NumberOfOutput .GT. 0 )   ALLOCATE(all_Output(NumberOfOutput))
+
+  IF (NumberOfFunction .GT. 0 )   ALLOCATE(all_Function(NumberOfFunction))
 

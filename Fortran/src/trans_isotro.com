@@ -41,24 +41,26 @@ gfx create spectrum displacement_spectrum autorange
 
 ######## Creating surface ########
 
-gfx modify g_element "/" surfaces coordinate DeformedGeometry tessellation default LOCAL select_on material default spectrum displacement_spectrum selected_material default_selected render_wireframe;
+gfx modify g_element "/" surfaces coordinate DeformedGeometry tessellation default LOCAL select_on material black spectrum displacement_spectrum selected_material default_selected render_wireframe;
 
 gfx modify spectrum displacement_spectrum autorange
 
 ########creating nodes with labels########
 
-gfx modify g_element "/" node_points subgroup REGION coordinate DeformedGeometry LOCAL glyph point general size "1*1*1" centre 0,0,0 font default label DeformedGeometry select_on material default selected_material default_selected;
+gfx modify g_element "/" node_points subgroup REGION coordinate DeformedGeometry LOCAL glyph point general size "1*1*1" centre 0,0,0 font default label DeformedGeometry select_on material black selected_material default_selected;
 
 ######## Creating another surface to show undeformed GEOMETRY ########
 
-gfx modify g_element "/" surfaces coordinate GEOMETRY tessellation default LOCAL select_on material default data disp_xx spectrum displacement_spectrum selected_material default_selected render_shaded;
+gfx modify g_element "/" surfaces coordinate GEOMETRY tessellation default LOCAL select_on material black data disp_xx spectrum displacement_spectrum selected_material default_selected render_shaded;
 
 ########displaying color bar on the visualization window. ##########
 
-gfx create colour_bar spectrum displacement_spectrum
+gfx create colour_bar spectrum displacement_spectrum label_material black
 
 gfx modify g_element "/" point glyph colour_bar general size "1*1*1" centre 0,0,0 select_on  normalised_window_fit_left;
 
 
 gfx modify window 1 image view_all
+
+gfx modify window 1 background colour 1 1 1
 

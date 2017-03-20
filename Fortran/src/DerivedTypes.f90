@@ -63,7 +63,7 @@
     TYPE(CMFE_FieldType)                               :: GeometricField,MaterialField,EquationsSetField,FibreField
     TYPE(CHARACTER(LEN=100))                           :: GeometricFieldId(1),GeometricFieldLabel(1), EquationsSetFieldId(1)
     TYPE(CHARACTER(LEN=100))                           :: FibreFieldId(1),FibreFieldParameters(3),FiberFieldLabel(1)
-    TYPE(CHARACTER(LEN=100))                           :: MaterialFieldId(1),MaterialFieldParameters(3),MaterialFieldLabel(1)
+    TYPE(CHARACTER(LEN=100))                           :: MaterialFieldId(1),MaterialFieldParameters(10),MaterialFieldLabel(1)
 
   END TYPE  FieldTypeStructure
 

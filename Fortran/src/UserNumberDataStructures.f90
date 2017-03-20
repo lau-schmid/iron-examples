@@ -7,7 +7,6 @@
   ALLOCATE (CoordinateSystemUserNumber(NumberOfCoordinateSystem))
   ALLOCATE (RegionUserNumber(NumberOfRegion))
   ALLOCATE (BasisUserNumber(NumberOfBasis))
-  ALLOCATE (PressureBasisUserNumber(NumberOfPressureBasis))
   ALLOCATE (GeneratedMeshUserNumber(NumberOfGeneratedMesh))
   ALLOCATE (MeshUserNumber(NumberOfMesh))
   ALLOCATE (DecompositionUserNumber(NumberOfDecomposition))
@@ -16,7 +15,7 @@
   ALLOCATE (FieldMaterialUserNumber(NumberOfMaterialField))
   ALLOCATE (FieldDependentUserNumber(NumberOfDependentField))
   ALLOCATE (EquationSetUserNumber(NumberOfEquationsSet))
-  ALLOCATE (EquationsSetFieldUserNumber(NumberOfEquationSetField ))
+  ALLOCATE (EquationsSetFieldUserNumber(NumberOfEquationsSet))
   ALLOCATE (ProblemUserNumber(NumberOfProblem))
   ALLOCATE (FieldUserNumber(NumberOfProblem))
 
@@ -44,12 +43,6 @@
         UserNumberLabel = UserNumberLabel + 1
  END DO
 
-
- DO i = 1, NumberOfPressureBasis
-
-        PressureBasisUserNumber(i)  = UserNumberLabel
-        UserNumberLabel = UserNumberLabel + 1
- END DO
 
  DO i = 1,NumberOfGeneratedMesh
 

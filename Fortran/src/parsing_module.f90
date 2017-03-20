@@ -110,34 +110,56 @@ MODULE parsing
          StoreArguments(15,:) =  Argument15
        END IF
 
-    Rdline = to_upper(Rdline)                                         !! converting the string to upper case
+    Rdline = to_upper(Rdline)
+                                        !! converting the string to upper case
     IF (TRIM(Rdline)== "START_" // TRIM(BlockToBeParsed)) THEN        !! Start of parsing the  block in the input file.
 
        Id = Id + 1
+
        Readline:DO
 
           counter=0
+
           Flag = .TRUE.
+
           READ(12,'(A)',IOSTAT=FileStat), Rdline
           Rdline = to_upper(Rdline)
+
           Rdline =  strip_space(Rdline)
+
           CALL remove_CHARACTER(Rdline,"!")
+
           IF (TRIM(Rdline)=="END_"//TRIM(BlockToBeParsed)) THEN
+
             EXIT
+
           END IF
 
           DO WHILE (Flag .EQV. .TRUE. .AND. counter .LE. NumOfArguments)
+
             counter = counter + 1
+
+            IF (counter ==  NumOfArguments) FLAG = .FALSE.  ! to stop memory leakage
             IF (Rdline.EQ.KeywordArray(counter)) THEN
+
               Flag = .FALSE.
+
               READ(12,'(A)',IOSTAT=FileStat), Rdline
+
               Rdline = to_upper(Rdline)
+
               CALL skip_blank_lines(Rdline)
+
               CALL remove_CHARACTER(Rdline,"!")
+
               Rdline =  strip_space(Rdline)
+
               CALL split_inline_argument_new(Rdline,StoreArguments(counter,:))
-              !print *, KeywordArray(counter) , StoreArguments(counter,1)
+
+
+
             END IF
+
           END DO
 
        !! storing new values

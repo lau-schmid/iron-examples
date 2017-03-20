@@ -109,7 +109,7 @@ TYPE
 PROBLEM_CONTROL_TIME_LOOP_TYPE
 
 TIME_INCREMENTS
-0,0.1,0.001   !! initial_time,final_time,increment
+0,0.1,0.01   !! initial_time,final_time,increment
 
 
 END_CONTROL_LOOP

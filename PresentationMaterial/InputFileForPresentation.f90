@@ -1,4 +1,14 @@
 
+
+
+
+
+                        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                        !!!!!!!!!                  LAPLACE CASE STUDY              !!!!!!!!!!!!!!!!!!!make
+
+                        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!! EQUATION_SET block defines the governing equation!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!! It creates an object of derived type CMFE_EquationsSetType !!!!!!!
@@ -7,45 +17,57 @@
 START_EQUATIONS_SET
 
 MODEL_ID
-FLUID
+SOLID
 
-EQUATIONS_SET_CLASS
-EQUATIONS_SET_FLUID_MECHANICS_CLASS
+CLASS
+EQUATIONS_SET_CLASSICAL_FIELD_CLASS
 
-EQUATIONS_SET_TYPE
-EQUATIONS_SET_NAVIER_STOKES_EQUATION_TYPE
+TYPE
+EQUATIONS_SET_LAPLACE_EQUATION_TYPE
 
 
-EQUATIONS_SET_SUBTYPE
-EQUATIONS_SET_TRANSIENT_NAVIER_STOKES_SUBTYPE
-
+SUBTYPE
+EQUATIONS_SET_STANDARD_LAPLACE_SUBTYPE
 
 EQUATIONS_OUTPUT_TYPE_SET
 EQUATIONS_NO_OUTPUT
 
-
 END_EQUATIONS_SET
+
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!! PROBLEM block defines the governing equation!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!! It creates an object of derived type CMFE_ProblemType !!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+
 START_PROBLEM
 
 PROBLEM_ID
-FLUID
+SOLID
 
-PROBLEM_CLASS
-PROBLEM_FLUID_MECHANICS_CLASS
+CLASS
+PROBLEM_CLASSICAL_FIELD_CLASS
 
-PROBLEM_TYPE
-PROBLEM_NAVIER_STOKES_EQUATION_TYPE
+TYPE
+PROBLEM_LAPLACE_EQUATION_TYPE
 
-PROBLEM_SUBTYPE
-PROBLEM_TRANSIENT_NAVIER_STOKES_SUBTYPE
+SUBTYPE
+PROBLEM_STANDARD_LAPLACE_SUBTYPE
 
 END_PROBLEM
+
+
+!!!!!!!!!!!!! Define Region !!!!!!!!!!!!!!!!!!!!!!!
+START_REGION
+
+REGION_ID
+SOLID
+
+REGION_LABEL_SET
+REGION
+
+END_REGION
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -54,55 +76,18 @@ END_PROBLEM
 !!!!!!!!!!It creates an object of derived type CMFE_RegionType!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-START_REGION
-
-REGION_ID
-FLUID
-
-REGION_LABEL_SET   ! THis is the group name that appreas in the .exelem ad .exnode file
-Region
-
-END_REGION
-
-
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!! Creates a Material Field !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!It creates an object of derived type CMFE_FieldType!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-START_MATERIAL_FIELD
-
-MATERIAL_FIELD_ID
-FLUID
-
-MATERIAL_FIELD_LABEL_SET  ! THis is the field name that appreas in the .exelem ad .exnode file
-Material
-
-
-MATERIAL_FIELD_PARAMETERS !! viscosity and density in this case
-1,1                       !! user is supposed to know the order.
-
-
-END_MATERIAL_FIELD
-
-
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!! Creates a Geometric Field !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!It creates an object of derived type CMFE_FieldType!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 START_GEOMETRIC_FIELD
 
 GEOMETRIC_FIELD_ID
-FLUID
+SOLID
 
-GEOMETRIC_FIELD_LABEL_SET  ! THis is the field name that appreas in the .exelem ad .exnode file
-Geometry
+GEOMETRIC_FIELD_LABEL_SET
+GEOMETRY
 
+!!!! rest functionailites will be added later
 
 END_GEOMETRIC_FIELD
+
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!! The following block defines an incremental loop!!!!!!!!!!!!!!!!!!!!!
@@ -112,17 +97,13 @@ END_GEOMETRIC_FIELD
 START_CONTROL_LOOP
 
 CONTROL_LOOP_ID
-FLUID
+SOLID
 
-CONTROL_LOOP_TYPE
-PROBLEM_CONTROL_TIME_LOOP_TYPE
+TYPE
+PROBLEM_CONTROL_LOAD_INCREMENT_LOOP_TYPE
 
-CONTROL_LOOP_TIME_INCREMENTS           !! initial_time,final_time,increment
-0,0.1,0.001
-
-! CONTROL_LOOP_LOAD_INCREMENTS         !!  THis option is used if the control loop type is
-! 50                                   !!  PROBLEM_CONTROL_LOAD_LOOP_TYPE
-
+INCREMENTS
+1
 
 END_CONTROL_LOOP
 
@@ -134,7 +115,7 @@ END_CONTROL_LOOP
 START_SOLVER_SETTINGS
 
 SOLVER_ID
-FLUID
+SOLID
 
 LINEAR_SOLVER_TYPE                     !! type of linear solver , direct or iterative
 SOLVER_LINEAR_DIRECT_SOLVE_TYPE
@@ -201,7 +182,7 @@ COORDINATE_SYSTEM_TYPE                 !! type cooridnate system
 COORDINATE_RECTANGULAR_CARTESIAN_TYPE
 
 COORDINATE_SYSTEM_DIMENSION            !! dimensions of the coordinate system
-COORDINATE_SYSTEM_2D
+COORDINATE_SYSTEM_3D
 
 END_COORDINATE_SYSTEM
 
@@ -213,22 +194,20 @@ END_COORDINATE_SYSTEM
 START_DEPENDENT_FIELD
 
 DEPENDENT_FIELD_ID
-FLUID
+SOLID
 
 
-NUM_OF_COMPONENTS                      !! No. of state variables Vx, Vy and Pressure
-3
+NUM_OF_COMPONENTS
+1
 
-INITIAL_VALUE_OF_VECTOR_STATE_VARIABLE !! Initial values for guess velocity for the first increment of Newton Raphson solver
-0.0,0.0                                !! "undeformed" for an derformed eometry
+INITIAL_VALUE_OF_STATE_VARIABLE
+0.5
 
-INITIAL_VALUE_OF_SCALAR_STATE_VARIABLE !! Initial value of pressure state variable
-0.0
-
-DEPENDENT_FIELD_LABEL_SET              ! THis is the field name that appreas in the .exelem ad .exnode file
-DependentField
+DEPENDENT_FIELD_LABEL_SET
+DEPENDENT
 
 END_DEPENDENT_FIELD
+
 
 
 
@@ -241,23 +220,24 @@ END_DEPENDENT_FIELD
 START_GENERATED_MESH
 
 GENERATED_MESH_ID
-FLUID
+SOLID
 
 
 GENERATED_MESH_TYPE
 GENERATED_REGULAR_MESH_TYPE
 
-GENERATED_MESH_GEOMETRIC_EXTENTS    !! length of sides of rectangles
-10,	2
+GENERATED_MESH_GEOMETRIC_EXTENTS
+1,	1, 1
 
-GENERATED_MESH_ORIGIN_SET           !! location of left lower corner of the rectangle
-0,0
+GENERATED_MESH_ORIGIN_SET
+0,0,0
 
-GENERATED_MESH_NUMBER_OF_ELEMENTS   !!  no. of elements along each dimension
-10,  10, 0                          !!  In a 2D case make sure to specify 0 elements in the third direction
+GENERATED_MESH_NUMBER_OF_ELEMENTS
+2,  2, 2
 
 
 END_GENERATED_MESH
+
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!! The following block defines a  mesh !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -267,47 +247,22 @@ END_GENERATED_MESH
 START_MESH
 
 MESH_ID
-FLUID
+SOLID
 
 END_MESH
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!! The following block defines a velocity basis !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!It creates an object of derived type CMFE_BASIS !!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+!!!!!!!!!!!!!!!!!!!! DEFINE BASIS !!!!!!!!!!!!!!!!!!!!!!!!!!!!
 START_BASIS
 
 BASIS_ID
-FLUID
-
-BASIS_INTERPOLATION_TYPE
-QUADRATIC_LAGRANGE_INTERPOLATION
-
-NumberOfGaussXi                                 !! no. of gauss point along each direction
-3,3
-
-END_BASIS
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!! The following block defines a pressure basis !!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!It creates an object of derived type CMFE_BASIS !!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-START_BASIS
-
-
-BASIS_ID
-FLUID
-
-
-NumberOfGaussXi
-2  ,   2
-
+SOLID
 
 BASIS_INTERPOLATION_TYPE
 LINEAR_LAGRANGE_INTERPOLATION
 
+NumberOfGaussXi
+2,2,2
 
 END_BASIS
 
@@ -316,36 +271,35 @@ END_BASIS
 !!!!!!!!!!It creates an object of derived type CMFE_BoundaryCOnditionType!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+
 START_BOUNDARY_CONDITIONS
 
 BOUNDARY_CONDITIONS_ID
-FLUID
+SOLID
 
-DIRICHELET  !!!! [ TYPE , LOCATION , COMPONENTS , VALUE ]
-
-SURFACE,	MESH_REGULAR_LEFT_SURFACE,	100,		QUADRATIC_1  , BOUNDARY_CONDITION_FIXED
-SURFACE,	MESH_REGULAR_LEFT_SURFACE,	010,		QUADRATIC_2  , BOUNDARY_CONDITION_FIXED
-SURFACE,	MESH_REGULAR_FRONT_SURFACE,	110,		0            , BOUNDARY_CONDITION_FIXED
-SURFACE,	MESH_REGULAR_BACK_SURFACE,	110,		0            , BOUNDARY_CONDITION_FIXED
-SURFACE,	MESH_REGULAR_RIGHT_SURFACE,	001,		0            , BOUNDARY_CONDITION_FIXED
+DIRICHILET  !!!! [ TYPE , LOCATION , COMPONENTS , VALUE ]
+SURFACE,	MESH_REGULAR_LEFT_SURFACE,	100,		1.0 ,  BOUNDARY_CONDITION_FIXED
+SURFACE,	MESH_REGULAR_RIGHT_SURFACE,	100,		0.0 ,  BOUNDARY_CONDITION_FIXED
 
 
 
 END_BOUNDARY_CONDITIONS
 
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!! FOLLOWING BLOCK DEFINES EXPORT PREFIX !!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 START_OUTPUT
 
 OUTPUT_ID
-FLUID
+SOLID
 
-NODE_EXPORT                     ! Name of .exnode file
-Node_Data_fluid_flow
+NODE_EXPORT
+NODE_DATA_LAPLACE
 
-ELEMENT_EXPORT                  ! Name of exelem file
-Element_Data_fluid_flow
+ELEMENT_EXPORT
+ELEMENT_DATA_LAPLACE
 
 
 END_OUTPUT
@@ -355,25 +309,30 @@ END_OUTPUT
 !!!!!!!!! The following block defines boundary condition!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!It creates an object of derived type CMFE_DecompositionType!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 START_DECOMPOSITION
 
 DECOMPOSITION_ID
-FLUID
+SOLID
 
 CALCULATE_ELEMENT_FACES
-TRUE
+FALSE
 
 END_DECOMPOSITION
+
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!! FIELDS BLOCK initilize object of a data type CMFE_FIELDS !!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 START_FIELDS
 
 FIELDS_ID
-FLUID
+SOLID
 
 END_FIELDS
+
+
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!! DEFINING Functions that are prescribed in BC block !!!!!!!!!!!!!!!!!!!!!
@@ -390,20 +349,6 @@ FUNCTION_CONSTANTS                               !!! A,B,C,E,F,G,H,I,J in equati
                                                  !!! ... + G*x + H*y + I*z + J
                                                  !!! The given constants correpond to a parabolic profile of ...
                                                  !! .. shape V = 4*V_max * (y/h)(1-(y/h)) , where V_max = 4 units and h is 2 units
-
-END_FUNCTION
-
-START_FUNCTION
-
-FUNCTION_ID
-QUADRATIC_2
-
-FUNCTION_CONSTANTS                               !!! A,B,C,E,F,G,H,I,J in equation ....
-0,0,0,0,0,0,0,0,0,0
-                                                 !!! f(x,y,z) = A*x^2 + B*y^2 + C*z^2 + D*x*y + E*x*z + F*y*z ...
-                                                 !!! ... + G*x + H*y + I*z + J
-                                                 !!! The given constants correpond to zero BC
-
 
 END_FUNCTION
 

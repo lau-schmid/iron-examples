@@ -341,7 +341,8 @@ PROGRAM GENERICEXAMPLE
         CALL cmfe_Basis_NumberOfXiSet(all_Basis(BasisIdx)%Basis,2,Err)
         CALL cmfe_Basis_InterpolationXiSet(all_Basis(BasisIdx)%Basis,[InterpolationType,InterpolationType],Err)
 
-        IF(NumberOfGaussXi(1)>0 .AND. NumberOfGaussXi(2)>0  ) THEN
+        IF (STR2INT(all_Basis(BasisIdx)%BasisNumberOfGaussPoints(1))>0  &
+          .AND. STR2INT(all_Basis(BasisIdx)%BasisNumberOfGaussPoints(2))>0 ) THEN
 
           CALL cmfe_Basis_QuadratureNumberOfGaussXiSet(all_Basis(BasisIdx)%Basis, &
             & [STR2INT(all_Basis(BasisIdx)%BasisNumberOfGaussPoints(1)), &
@@ -353,7 +354,10 @@ PROGRAM GENERICEXAMPLE
         CALL cmfe_Basis_NumberOfXiSet(all_Basis(BasisIdx)%Basis,3,Err)
         CALL cmfe_Basis_InterpolationXiSet(all_Basis(BasisIdx)%Basis,[InterpolationType,InterpolationType,InterpolationType],Err)
 
-        IF(NumberOfGaussXi(1)>0 .AND. NumberOfGaussXi(2)>0 .AND. NumberOfGaussXi(3)>0 ) THEN
+        IF(  STR2INT(all_Basis(BasisIdx)%BasisNumberOfGaussPoints(1))>0  &
+          & .AND.  STR2INT(all_Basis(BasisIdx)%BasisNumberOfGaussPoints(2))>0  &
+            & .AND. STR2INT(all_Basis(BasisIdx)%BasisNumberOfGaussPoints(3))>0 ) THEN
+
           CALL cmfe_Basis_QuadratureNumberOfGaussXiSet(all_Basis(BasisIdx)%Basis, &
             & [STR2INT(all_Basis(BasisIdx)%BasisNumberOfGaussPoints(1)), &
               &  STR2INT(all_Basis(BasisIdx)%BasisNumberOfGaussPoints(2)), &
@@ -595,7 +599,8 @@ PROGRAM GENERICEXAMPLE
                 & EquationsSetFieldUserNumber(EquationSetIdx),all_EquationsSetField(EquationSetIdx)%EquationsSetField, &
                   & all_EquationsSet(EquationSetIdx)%EquationsSet,Err)
 
-    ELSE
+
+     ELSE
 
       CALL MATCH_IDs(all_EquationsSet(EquationSetIdx)%EquationSetID(1), &
         all_GeometricField(:)%GeometricFieldID(1),GeometricFieldIdx,"all_EquationsSet(:)", "all_GeometricField(:)" )
@@ -607,6 +612,7 @@ PROGRAM GENERICEXAMPLE
               & MATCH_EQUATION_SET(all_EquationsSet(EquationSetIdx)%EquationSetSubType(1))], &
                 & EquationsSetFieldUserNumber(EquationSetIdx),all_EquationsSetField(EquationSetIdx)%EquationsSetField, &
                   & all_EquationsSet(EquationSetIdx)%EquationsSet,Err)
+
 
     END IF
 
@@ -718,7 +724,6 @@ PROGRAM GENERICEXAMPLE
       CALL  cmfe_Field_ComponentValuesInitialise(all_MaterialField(MaterialFieldIdx)%MaterialField, &
         & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, MaterialParametersIdx , &
           & STR2REAL(all_MaterialField(MaterialFieldIdx)%MaterialFieldParameters(MaterialParametersIdx)),Err)
-
     END DO
 
   END DO  ! MaterialFieldIdx
@@ -787,6 +792,7 @@ PROGRAM GENERICEXAMPLE
 
         CALL cmfe_ControlLoop_MaximumIterationsSet(all_ControlLoop(ControlLoopIdx)%ControlLoop, &
           & STR2INT(all_ControlLoop(ControlLoopIdx)%ControlLoopLoadIncrement(1)),Err)
+        print *, STR2INT(all_ControlLoop(ControlLoopIdx)%ControlLoopLoadIncrement(1))
         CALL cmfe_ControlLoop_LoaDOutputSet(all_ControlLoop(ControlLoopIdx)%ControlLoop,1,Err)
 
       CASE (CMFE_PROBLEM_CONTROL_TIME_LOOP_TYPE)
@@ -811,8 +817,6 @@ PROGRAM GENERICEXAMPLE
     !Create the problem solvers
     CALL cmfe_Solver_Initialise(all_Solver(solverIdx)%Solver,Err)
     CALL cmfe_Solver_Initialise(all_LinearSolver(solverIdx)%LinearSolver,Err)
-
-
     CALL cmfe_Problem_SolversCreateStart(all_Problem(solverIdx)%Problem,Err)
     CALL cmfe_Problem_SolverGet(all_Problem(solverIdx)%Problem,CMFE_CONTROL_LOOP_NODE,1,all_Solver(solverIdx)%Solver,Err)
     CALL cmfe_Solver_OutputTypeSet(all_Solver(solverIdx)%Solver,MATCH_OUTPUT(all_Solver(solverIdx)%OutputTypeSet(1)),Err)
@@ -1029,6 +1033,7 @@ PROGRAM GENERICEXAMPLE
 
   !Output solution
   DO FieldIdx = 1,NumberOfFields
+
     CALL cmfe_Fields_Initialise(all_Fields(FieldIdx)%Fields,Err)
     CALL cmfe_Fields_Create(all_Region(FieldIdx)%Region,all_Fields(FieldIdx)%Fields,Err)
     CALL cmfe_Fields_NodesExport(all_Fields(FieldIdx)%Fields,all_Output(FieldIdx)%NodeExport(1) ,"FORTRAN",Err)
@@ -1039,17 +1044,17 @@ PROGRAM GENERICEXAMPLE
 
    !!!!!!!!!!!!!!!! IN PROCESS OF IMPLEMENTING IDEA !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  CALL cmfe_GeneratedMesh_SurfaceGet(all_GeneratedMesh(1)%GeneratedMesh, &
-   & CMFE_GENERATED_MESH_REGULAR_LEFT_SURFACE,LeftSurfaceNodes,BottomNormalXi,Err)
+!  CALL cmfe_GeneratedMesh_SurfaceGet(all_GeneratedMesh(1)%GeneratedMesh, &
+!   & CMFE_GENERATED_MESH_REGULAR_LEFT_SURFACE,LeftSurfaceNodes,BottomNormalXi,Err)
 
-  CALL cmfe_GeneratedMesh_SurfaceGet(all_GeneratedMesh(1)%GeneratedMesh, &
-    & CMFE_GENERATED_MESH_REGULAR_LEFT_SURFACE,FrontSurfaceNodes,BottomNormalXi,Err)
+!  CALL cmfe_GeneratedMesh_SurfaceGet(all_GeneratedMesh(1)%GeneratedMesh, &
+!    & CMFE_GENERATED_MESH_REGULAR_LEFT_SURFACE,FrontSurfaceNodes,BottomNormalXi,Err)
 
   
-  !Set z=0 nodes to no z displacementcmgui 
-  DO t=1,SIZE(BottomSurfaceNodes,1)
-    NodeNumber=BottomSurfaceNodes(t)
-  ENDDO
+!  !Set z=0 nodes to no z displacementcmgui 
+!  DO t=1,SIZE(BottomSurfaceNodes,1)
+!    NodeNumber=BottomSurfaceNodes(t)
+!  ENDDO
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
   CALL cmfe_Finalise(Err)

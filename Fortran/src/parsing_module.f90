@@ -261,6 +261,7 @@ MODULE parsing
         CALL remove_CHARACTER(Rdline,"!")
         IF (trim(Rdline)=="END_BOUNDARY_CONDITIONS") EXIT
 
+          ! parse ID
           IF (Rdline.EQ.String1(1)) then
              READ(12,'(A)',IOSTAT=FileStat), Rdline
              Rdline = to_upper(Rdline)
@@ -269,14 +270,16 @@ MODULE parsing
              Rdline =  strip_space(Rdline)
              boundary_conditions_arg1(:,1) = Rdline
           END IF
-
+          ! parse Dirichlet BC
           IF (Rdline.EQ.String1(2)) then
-
+            ! get the complete line
             READ(12,'(A)',IOSTAT=FileStat), Rdline
+            ! skip it if the line is empty
             CALL skip_blank_lines(Rdline)
             Rdline = to_upper(Rdline)
             Rdline =  strip_space(Rdline)
             CALL remove_CHARACTER(Rdline,"!")
+            ! get: [ TYPE , LOCATION , COMPONENTS , VALUE, ADD|SET]
             CALL split_inline_argument(Rdline,boundary_conditions_arg2,num_of_dirichelet)
           ENDIF
 

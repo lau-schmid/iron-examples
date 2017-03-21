@@ -938,7 +938,7 @@ PROGRAM GENERICEXAMPLE
     DO i = 1,NumberOfDirichelet
 
       CALL cmfe_GeneratedMesh_SurfaceGet(all_GeneratedMesh(1)%GeneratedMesh, &
-        & MATCH_BC(BoundaryDirichelet(2+5*(i-1),BOundaryConditionIdx)),SurfaceNodes,LeftNormalXi,Err)
+        & MATCH_BC(BoundaryDirichelet(2+6*(i-1),BOundaryConditionIdx)),SurfaceNodes,LeftNormalXi,Err)
       if (i == 5) THEN  !!! the following lines are hard coded and will be removed later upon discussion with Andreas
         h = 2
       else
@@ -968,7 +968,7 @@ PROGRAM GENERICEXAMPLE
           & 1,1,NodeNumber,3,z,Err)      
       END IF
 
-      FunctionName = BoundaryDirichelet(4+5*(i-1),BOundaryConditionIdx)
+      FunctionName = BoundaryDirichelet(4+6*(i-1),BOundaryConditionIdx)
       IF (FunctionName(1:9) == "QUADRATIC") THEN
 
         !! FunctionName is the function ID
@@ -987,7 +987,7 @@ PROGRAM GENERICEXAMPLE
                             & BOundaryConditionValue)
       ELSE
 
-        BOundaryConditionValue = STR2REAL(BoundaryDirichelet(4+5*(i-1),BOundaryConditionIdx)) !! for uniform BC
+        BOundaryConditionValue = STR2REAL(BoundaryDirichelet(4+6*(i-1),BOundaryConditionIdx)) !! for uniform BC
       END IF
 
 
@@ -997,15 +997,29 @@ PROGRAM GENERICEXAMPLE
       IF(NodeDOmain==ComputationalNodeNumber) THEN
 
         DO ComponentIdx=1,NumberOfComponents
-          Constraint =  BoundaryDirichelet(3+5*(i-1),BoundaryConditionIdx)
+          Constraint =  BoundaryDirichelet(3+6*(i-1),BoundaryConditionIdx)
 
-              IF (TRIM(Constraint(ComponentIdx:ComponentIdx)) == "1") THEN             
-              CALL cmfe_BoundaryConditions_SetNode(all_BoundaryConditions(BOundaryConditionIdx)%BoundaryConditions, &
+          IF (TRIM(Constraint(ComponentIdx:ComponentIdx)) == "1") THEN
+            ! decide whether we add to the nodal value or set it to a given value
+            IF (TRIM(BoundaryDirichelet(6+6*(i-1),BOundaryConditionIdx)) == "SET") THEN
+              CALL cmfe_BoundaryConditions_SetNode( &
+                & all_BoundaryConditions(BOundaryConditionIdx)%BoundaryConditions, &
                 & all_DependentField(BOundaryConditionIdx)%DependentField, &
-                  & CMFE_FIELD_U_VARIABLE_TYPE,1,1,NodeNumber, ComponentIdx, &
-                    & MATCH_BC(BoundaryDirichelet(5+5*(i-1),BOundaryConditionIdx)), &
-                      & BOundaryConditionValue ,Err)
-
+                & CMFE_FIELD_U_VARIABLE_TYPE,1,1,NodeNumber, ComponentIdx, &
+                & MATCH_BC(BoundaryDirichelet(5+6*(i-1),BOundaryConditionIdx)), &
+                & BOundaryConditionValue ,Err)
+            ELSEIF (TRIM(BoundaryDirichelet(6+6*(i-1),BOundaryConditionIdx)) == "ADD") THEN
+              CALL cmfe_BoundaryConditions_AddNode( &
+                & all_BoundaryConditions(BOundaryConditionIdx)%BoundaryConditions, &
+                & all_DependentField(BOundaryConditionIdx)%DependentField, &
+                & CMFE_FIELD_U_VARIABLE_TYPE,1,1,NodeNumber, ComponentIdx, &
+                & MATCH_BC(BoundaryDirichelet(5+6*(i-1),BOundaryConditionIdx)), &
+                & BOundaryConditionValue ,Err)
+            ELSE
+              CALL HANDLE_ERROR("Invalid specifier " &
+                & //TRIM(BoundaryDirichelet(6+6*(i-1),BOundaryConditionIdx)) &
+                & //" in input file. Expected ADD or SET!")
+            END IF
             END IF  ! (TRIM(Constraint(ComponentIdx:ComponentIdx)) == "1")
           END DO  ! ComponentIdx=1,3
         END IF ! NodeDOmain==ComputationalNodeNumber

@@ -244,20 +244,6 @@ FLUID
 
 END_MESH
 
-!!!!!!!!!!!!!!!!!!!! DEFINE BASIS !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-START_BASIS
-
-BASIS_ID
-FLUID
-
-BASIS_INTERPOLATION_TYPE
-QUADRATIC_LAGRANGE_INTERPOLATION
-
-NumberOfGaussXi
-3,3
-
-END_BASIS
-
 !!!!!!!!!!!!!!!!!!!! DEFINE PRESSURE BASIS !!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 START_BASIS
@@ -276,6 +262,22 @@ LINEAR_LAGRANGE_INTERPOLATION
 
 
 END_BASIS
+
+!!!!!!!!!!!!!!!!!!!! DEFINE BASIS !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+START_BASIS
+
+BASIS_ID
+FLUID
+
+BASIS_INTERPOLATION_TYPE
+QUADRATIC_LAGRANGE_INTERPOLATION
+
+NumberOfGaussXi
+3,3
+
+END_BASIS
+
+
 
 !!!!!!!!!!!!!!!!!!! START BOUNDARY CONDITIONS !!!!!!!!!!!!!!!!
 

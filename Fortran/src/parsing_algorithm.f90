@@ -47,7 +47,7 @@ EquationSetKeyWords(5) ="EQUATIONS_OUTPUT_TYPE_SET"
 
 
 ALLOCATE(CHARACTER(100)  :: ProblemKeywords(5))                                                                   !! Allocation of "PROBLEM"related Data Structures.
-ProblemKeywords(1) ="MODEL_ID"
+ProblemKeywords(1) ="PROBLEM_ID"
 ProblemKeywords(2) ="CLASS"
 ProblemKeywords(3) ="TYPE"
 ProblemKeywords(4) ="SUBTYPE"
@@ -223,7 +223,6 @@ DO WHILE (TRIM(rdline).NE."STOP_PARSING")
 
   END IF
 
-
   IF (MeshId .LE. NumberOfMesh .AND. MeshId .GT. 0) THEN !! if statement is used to prevent memory leakage
 
     CALL GenericParsing(MeshKeyWords,"MESH",1,MeshId,rdline,all_Mesh(MeshId)%MeshId(:))
@@ -323,3 +322,5 @@ DO WHILE (TRIM(rdline).NE."STOP_PARSING")
   END IF
 
 END DO
+
+print *, all_Problem(1)%ProblemId(:)

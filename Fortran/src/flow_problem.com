@@ -40,14 +40,12 @@ gfx modify spectrum vel_spectrum autorange
 
 ########displaying color bar on the visualization window. ##########
 
-gfx create colour_bar spectrum vel_spectrum label_material black
+gfx create colour_bar spectrum vel_spectrum
 
 gfx modify g_element "/" point glyph colour_bar general size "1*1*1" centre 0,0,0 select_on material copper selected_material copper normalised_window_fit_left;
 
 
 gfx modify window 1 image view_all
-
-gfx modify window 1 background colour 1 1 1
 
 
 

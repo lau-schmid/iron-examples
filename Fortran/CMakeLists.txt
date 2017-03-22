@@ -1,5 +1,5 @@
 # Add example executable
-add_executable(large_uniaxial src/FortranExample.f90)
+add_executable(iron_ge src/FortranExample.f90)
 
 # Turn on Fortran preprocessing (#include directives)
 if (MSVC)
@@ -7,7 +7,7 @@ if (MSVC)
 else()
     set(PROC_OPT "-cpp")
 endif()
-target_compile_options(large_uniaxial PRIVATE ${PROC_OPT})
+target_compile_options(iron_ge PRIVATE ${PROC_OPT})
 
 # Link to opencmiss
 # -----------------
@@ -24,11 +24,11 @@ target_compile_options(large_uniaxial PRIVATE ${PROC_OPT})
 #     target_link_libraries(${EXAMPLE_BINARY} PRIVATE petsc)
 #
 # All the OpenCMISS dependencies provide a target you can link against corresponding to the (lowercase) component name.
-target_link_libraries(large_uniaxial PRIVATE opencmiss)
+target_link_libraries(iron_ge PRIVATE opencmiss)
 
 # Add a simple test that runs the executable
-add_test(NAME Cantilever_Fortran COMMAND large_uniaxial)
-add_opencmiss_environment(Cantilever_Fortran)
+add_test(NAME Iron_GE COMMAND iron_ge)
+add_opencmiss_environment(Iron_GE)
 
 ###################
 # Developer notice!

@@ -1,8 +1,8 @@
 ########reading nodes and elements########
 
-gfx read nodes GENERICEXAMPLE NODE_DATA_TRANS_ISOTR.part0.exnode
+gfx read nodes GENERICEXAMPLE NODE_DATA_MOONEY_RIVLIN.part0.exnode
 
-gfx read elements GENERICEXAMPLE ELEMENT_DATA_TRANS_ISOTR.part0.exelem
+gfx read elements GENERICEXAMPLE ELEMENT_DATA_MOONEY_RIVLIN.part0.exelem
 
 ########defining faces########
 

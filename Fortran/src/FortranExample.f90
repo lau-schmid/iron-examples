@@ -636,20 +636,6 @@ PROGRAM GENERICEXAMPLE
           & STR2REAL(all_FibreField(FiberFieldIdx)%FibreFieldParameters(ComponentIdx)),Err)
     END DO ! ComponentIdx
 
-    !IF  (NumberGlobalYElements .NE. 0) THEN
-    !  CALL cmfe_Field_ComponentValuesInitialise(all_FibreField(FiberFieldIdx)%FibreField, &
-    !    & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
-    !      & STR2REAL(FibreField(NumberOfFiberField)%FibreFieldParameters(2)),Err)
-
-    !END IF
-
-    !IF ( NumberGlobalZElements .NE. 0) THEN
-     ! CALL cmfe_Field_ComponentValuesInitialise(all_FibreField(FiberFieldIdx)%FibreField, &
-     !   & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3, &
-     !     & STR2REAL(all_FibreField((FiberFieldIdx))%FibreFieldParameters(3)),Err)
-
-    !END IF
-
   END DO   !!!!! END LOOP FOR Fiber FIELD
 
   DO EquationSetIdx  = 1,NumberOfEquationsSet            !!!! loop for eqaution set
@@ -1134,7 +1120,7 @@ PROGRAM GENERICEXAMPLE
       !!!!!!
 
 
-
+  
 
     
     
@@ -1170,8 +1156,8 @@ PROGRAM GENERICEXAMPLE
 !  DO t=1,SIZE(BottomSurfaceNodes,1)
 !    NodeNumber=BottomSurfaceNodes(t)
 !  ENDDO
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  
+  !!!!!!!!!!!!!!!!!!! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
   CALL cmfe_Finalise(Err)
 
   WRITE(*,'(A)') "Program successfully completed."
@@ -1183,7 +1169,7 @@ PROGRAM GENERICEXAMPLE
   CONTAINS
 
   INCLUDE "problems_match_library.f90"
-
+  
 
   !!!!!!!!!!!!!!!! THE FOLLOWING SUBROUTINE IS  USED FOR PRESCRIBING QUADRATIC BOUDARY CONDITIONS !!!!!!!!!!!!!
   SUBROUTINE QUADRATIC(x,y,z, A, B,C,D,E,F,G,H,I,J, BoundaryCOnditionValue)

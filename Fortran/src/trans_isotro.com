@@ -25,23 +25,22 @@ gfx define field disp_zz add fields DEPENDENT_FIELD.3 GEOMETRY.z scale_factors 1
 gfx define field DeformedGeometry component DEPENDENT_FIELD.1 DEPENDENT_FIELD.2 DEPENDENT_FIELD.3;
 
 
-######## opening window to visualize results##########
+######## opening window to visualize results and introducing coordinate axis##########
 
 gfx cre win 1 ;
 
-gfx cre mat copper ambient 1 0.2 0 diffuse 0.6 0.3 0 specular 0.7 0.7 0.5 shininess 0.3
 
+gfx modify g_element "/" point glyph axes_xyz font BIG general size "2*2*2" select_on material black selected_material black ;
 
-gfx modify g_element "/" general clear;
 
 ########creating creating a spectrum to display DEPENDENT_FIELD fields ##########
 
-gfx create spectrum displacement_spectrum autorange
+gfx create spectrum displacement_spectrum
 
 
 ######## Creating surface ########
 
-gfx modify g_element "/" surfaces coordinate DeformedGeometry tessellation default LOCAL select_on material black spectrum displacement_spectrum selected_material default_selected render_wireframe;
+gfx modify g_element "/" surfaces coordinate DeformedGeometry tessellation default LOCAL select_on material black data disp_xx spectrum displacement_spectrum selected_material default_selected render_shaded;
 
 gfx modify spectrum displacement_spectrum autorange
 
@@ -51,13 +50,13 @@ gfx modify g_element "/" node_points subgroup REGION coordinate DeformedGeometry
 
 ######## Creating another surface to show undeformed GEOMETRY ########
 
-gfx modify g_element "/" surfaces coordinate GEOMETRY tessellation default LOCAL select_on material black data disp_xx spectrum displacement_spectrum selected_material default_selected render_shaded;
+gfx modify g_element "/" surfaces coordinate GEOMETRY tessellation default LOCAL select_on material black  spectrum displacement_spectrum selected_material default_selected render_wireframe;
 
 ########displaying color bar on the visualization window. ##########
 
 gfx create colour_bar spectrum displacement_spectrum label_material black
 
-gfx modify g_element "/" point glyph colour_bar general size "1*1*1" centre 0,0,0 select_on  normalised_window_fit_left;
+gfx modify g_element "/" point glyph colour_bar general size "1*1*1" centre 0,0,0 select_on normalised_window_fit_left;
 
 
 gfx modify window 1 image view_all

@@ -31,7 +31,7 @@ END_EQUATIONS_SET
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 START_PROBLEM
 
-MODEL_ID
+PROBLEM_ID
 SOLID
 
 CLASS

@@ -19,7 +19,8 @@ ________________________________________________________________________________
 
  # Simple_titin | simplyfied example 4 (titin). Aaron uses this one - for better overview when handling / reconfigureing deeper object structures.
  # ActiveStrainMechanics_BDF and -GL | versions under construction. Apply different ode methods.
-
+ # flow_channel | 2D Navier-Stokes flow in channel with parabolic inflow
+ # coupled_laplace | Laplace equations on two regions coupled via interface with Lagrange multiplier / continuity operator
 
 _______________________________________________________________________________________________
 *: 3a is similar to 3, However, it works in parallel in contrary to 3. On the other hand, 3 is

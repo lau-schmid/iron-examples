@@ -1,0 +1,74 @@
+
+              fibre_idx=0
+              CALL FIELD_VARIABLE_GET(DEPENDENT_FIELD_MONODOMAIN,FIELD_V_VARIABLE_TYPE,FIELD_VAR_DEP_M,ERR,ERROR,*999)
+              CALL FIELD_VARIABLE_GET(GEOMETRIC_FIELD_MONODOMAIN,FIELD_U_VARIABLE_TYPE,FIELD_VAR_GEO_M,ERR,ERROR,*999)
+              CALL FIELD_VARIABLE_GET(INDEPENDENT_FIELD_ELASTICITY,FIELD_V_VARIABLE_TYPE,FIELD_VAR_IND_FE,ERR,ERROR,*999)
+              CALL FIELD_VARIABLE_GET(INDEPENDENT_FIELD_MONODOMAIN,FIELD_U1_VARIABLE_TYPE,FIELD_VAR_IND_M,ERR,ERROR,*999)
+              CALL FIELD_VARIABLE_GET(INDEPENDENT_FIELD_MONODOMAIN,FIELD_U2_VARIABLE_TYPE,FIELD_VAR_IND_M_2,ERR,ERROR,*999)
+             
+----------------------- monodomain --------------------------------------            
+GeometricFieldM
+  FIELD_U_VARIABLE_TYPE: 1) GeometryM
+
+MaterialFieldM
+  FIELD_U_VARIABLE_TYPE: 1) Am,   2) Cm,   3) Conductivity
+
+DependentFieldM
+  FIELD_U_VARIABLE_TYPE: 1) Vm
+  FIELD_DELUDELN_VARIABLE_TYPE: 1)dVm/dn
+  FIELD_V_VARIABLE_TYPE: 1),2),3): GeometryM3D, 3D-position of geometry
+ 
+IndependentFieldM
+  CMFE_FIELD_U_VARIABLE_TYPE: 1) Active_Stress_M
+  CMFE_FIELD_V_VARIABLE_TYPE: ("fibre_info") 
+    1) motor unit number,   
+    2) fibre type,   
+    3) fibre number,   
+    4) nearest Gauss point number,   
+    5) local element number (LOCAL NODE NUMBERING!!!)
+  CMFE_FIELD_U1_VARIABLE_TYPE: 
+    1) half-sarcomere length   
+    2) inital half-sarcomere length
+    3) initial node distance
+  CMFE_FIELD_U2_VARIABLE_TYPE: 
+    1) node distance to previous node
+    2) maximum contraction velocity   
+    3) relative contraction velocity   
+    4) node distance to previous node before 1 time step   
+    5) node distance to previous node before 2 time steps
+    6) node distance to previous node before 3 time steps
+    
+------------------ finite elasticity ----------------------    
+GeometricFieldFE
+  CMFE_FIELD_U_VARIABLE_TYPE: 1) 2) 3) Geometry
+  
+FibreField
+  CMFE_FIELD_U_VARIABLE_TYPE: 1) 2) 3) Fibre
+  
+MaterialFieldFE
+  CMFE_FIELD_U_VARIABLE_TYPE ("MaterialFE")  //Mooney-Rivlin constants c10 and c01.
+    1) MAT_FE(1)  // c10
+    2) MAT_FE(2)  // c01
+    3) MAT_FE(3)
+    4) MAT_FE(4)
+    5) 0.0 
+  CMFE_FIELD_V_VARIABLE_TYPE ("Gravity")
+
+DependentFieldFE
+  CMFE_FIELD_U_VARIABLE_TYPE ("DependentFE")
+    1) displacement
+    2) displacement
+    3) displacement
+    4) pressure
+  CMFE_FIELD_DELUDELN_VARIABLE_TYPE ("Reaction_Force")
+    1) - 4)
+  
+IndependentFieldFE  // Eingabevariablen, kommen von anderem Modell oder sind konstant
+  CMFE_FIELD_U_VARIABLE_TYPE ("Active_Stress_FE")
+    1)  Active_Stress_FE
+  CMFE_FIELD_V_VARIABLE_TYPE
+    1)  number of nodes in Xi(1) direction per element
+    2)  number of nodes in Xi(2) direction per element
+    3)  number of nodes in Xi(3) direction per element
+    4)  1=fibre starts in this element (0=does not)
+  

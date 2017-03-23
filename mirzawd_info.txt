@@ -1,0 +1,34 @@
+This is how Waleed Mirza's GenericCaseStudy was merged in:
+
+$ git remote add mirzawd_generic_example https://bitbucket.org/mirzawd/genericcasestudy
+$
+$ git fetch mirzawd_generic_example
+Username for 'https://bitbucket.org': hessenthaler
+Password for 'https://hessenthaler@bitbucket.org': 
+warning: no common commits
+remote: Counting objects: 554, done.
+remote: Compressing objects: 100% (471/471), done.
+remote: Total 554 (delta 330), reused 154 (delta 79)
+Receiving objects: 100% (554/554), 4.63 MiB | 2.42 MiB/s, done.
+Resolving deltas: 100% (330/330), done.
+From https://bitbucket.org/mirzawd/genericcasestudy
+ * [new branch]      master     -> mirzawd_generic_example/master
+$
+$ git merge -s ours --no-commit mirzawd_generic_example/master
+Automatic merge went well; stopped before committing as requested
+$
+$ git read-tree --prefix=generic_example/ -u mirzawd_generic_example/master
+$
+$ git add mirzawd_info.txt
+
+
+Upstream changes can be tracked by using the command:
+
+$ git pull -s subtree mirzawd_generic_example master
+
+
+
+Note: mirzawd and hessenthaler have read/write access for the repository at https://bitbucket.org/mirzawd/genericcasestudy.git
+
+
+Note for GIT 2.9+: The merge command will require the option: --allow-unrelated-histories

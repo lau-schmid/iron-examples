@@ -71,7 +71,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   LOGICAL, PARAMETER :: DEBUGGING_ONLY_RUN_SHORT_PART_OF_SIMULATION = .FALSE.    ! only run one timestep of MAIN_LOOP with stimulus
   LOGICAL, PARAMETER :: DEBUGGING_OUTPUT_PROBLEM = .FALSE.    ! output information about problem data structure
   LOGICAL, PARAMETER :: DEBUGGING_PARALLEL_BARRIER = .FALSE.   !
-  INTEGER(CMISSINTg) :: RUN_SCENARIO = 1  !0 = default, no extra values set, 1 = short for testing, 2 = for scaling tests (10s), 3 = very short, 4 = endless
+  INTEGER(CMISSINTg) :: RUN_SCENARIO = 0  !0 = default, no extra values set, 1 = short for testing, 2 = for scaling tests (10s), 3 = very short, 4 = endless
   LOGICAL, PARAMETER :: DEBUGGING_OUTPUT = .FALSE.    ! enable information from solvers
   LOGICAL, PARAMETER :: OLD_TOMO_MECHANICS = .TRUE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
 
@@ -84,7 +84,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !all times in [ms]
   REAL(CMISSRP) :: time !=10.00_CMISSRP
   REAL(CMISSRP), PARAMETER :: PERIODD=1.00_CMISSRP
-  REAL(CMISSRP)            :: TIME_STOP=150.0_CMISSRP
+  REAL(CMISSRP)            :: TIME_STOP=10.0_CMISSRP
 
   REAL(CMISSRP) :: ODE_TIME_STEP = 0.0001_CMISSRP            !0.0001_CMISSRP
   REAL(CMISSRP) :: PDE_TIME_STEP = 0.005_CMISSRP              ! 0.005_CMISSRP
@@ -99,7 +99,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !--------------------------------------------------------------------------------------------------------------------------------
 
   !stimulation current in [uA/cm^2]
-  REAL(CMISSRP) :: STIM_VALUE = 20000.0_CMISSRP     ! 20000.0_CMISSRP
+  REAL(CMISSRP) :: STIM_VALUE = 2000.0_CMISSRP     ! 20000.0_CMISSRP
 
   REAL(CMISSRP), PARAMETER :: P_max=7.5_CMISSRP ! N/cm^2
 
@@ -439,6 +439,8 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
     !STOP
   !ENDIF
 
+
+  !IF (DEBUGGING_PARALLEL_BARRIER) CALL gdbParallelDebuggingBarrier()
   !--------------------------------------------------------------------------------------------------------------------------------
   !Calculate the bioelectrics geometric field
   CALL CalculateBioelectrics()
@@ -506,6 +508,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   VALUE = 0.0_CMISSRP
   k = 1       ! row in firing_times input (time)
   m = 1
+  ! main time loop
   DO WHILE(time < TIME_STOP-1e-10)
 
     IF (ComputationalNodeNumber == 0) PRINT "(A,F0.5,A)","t = ",time," s"
@@ -551,7 +554,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
     !loop over all neuromuscular junctions (middle point of the fibres)
     DO WHILE(NodeNumber < NumberOfNodesM)
 
-      JunctionNodeNo = NodeNumber + InnervationZoneOffset(m)
+      JunctionNodeNo = NodeNumber + InnervationZoneOffset(m)-10
 
       CALL cmfe_Decomposition_NodeDomainGet(DecompositionM, JunctionNodeNo, 1, NodeDomain, Err)
       IF (NodeDomain == ComputationalNodeNumber) THEN
@@ -581,7 +584,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
     !-------------------------------------------------------------------------------------------------------------------------------
     !Solve the problem for the stimulation time
-    IF (ComputationalNodeNumber == 0) print*, "  Solve with stimulation,    time span: ", time, " to ",time+STIM_STOP
+    IF (ComputationalNodeNumber == 0) Print*, "  Solve with stimulation,    time span: ", time, " to ",time+STIM_STOP
     CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time,time+STIM_STOP,ELASTICITY_TIME_STEP,Err)
 
     CALL cmfe_CustomSolverInfoReset(Err)
@@ -599,7 +602,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
       JunctionNodeNo = NodeNumber + InnervationZoneOffset(m)
 
       CALL cmfe_Decomposition_NodeDomainGet(DecompositionM, JunctionNodeNo ,1,NodeDomain,Err)
-      IF(NodeDomain==ComputationalNodeNumber) THEN
+      IF(NodeDomain == ComputationalNodeNumber) THEN
         CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, CMFE_FIELD_U_VARIABLE_TYPE, CMFE_FIELD_VALUES_SET_TYPE,1,1, &
           & JunctionNodeNo, StimComponent,0.0_CMISSRP,Err)
       ENDIF
@@ -3005,11 +3008,18 @@ END SUBROUTINE HandleSolverInfo
 
 SUBROUTINE gdbParallelDebuggingBarrier()
   INTEGER(CMISSIntg) :: Gdb_Resume
+  INTEGER(CMISSIntg) :: MPI_IERROR, MPI_COMM_WORLD
+  INTEGER(CMISSIntg) :: ComputationalNodeNumber, NumberOfComputationalNodes
   Gdb_Resume = 0
 
+  CALL MPI_COMM_RANK(MPI_COMM_WORLD,ComputationalNodeNumber,MPI_IERROR)
+  CALL MPI_COMM_SIZE(MPI_COMM_WORLD,NumberOfComputationalNodes,MPI_IERROR)
+
   IF (NumberOfComputationalNodes > 1) THEN
-    PRINT*, "Node ", ComputationalNodeNumber, " is waiting for Gdb_Resume=", Gdb_Resume &
-      & , " to become 1 (gdb: set var gdb_resume = 1)!"
+    PRINT*, "Node ", ComputationalNodeNumber, ", UID ",GETPID()," is waiting for Gdb_Resume=", Gdb_Resume &
+      & , " to become 1 " // NEW_LINE('A') // "sudo gdb cuboid ",GETPID(), NEW_LINE('A') //"select-frame 2" // &
+      & NEW_LINE('A') // "set var gdb_resume = 1" // NEW_LINE('A') // &
+      & "info locals" // NEW_LINE('A') // "next"
     DO WHILE (Gdb_Resume == 0)
       CALL Sleep(1)
     ENDDO

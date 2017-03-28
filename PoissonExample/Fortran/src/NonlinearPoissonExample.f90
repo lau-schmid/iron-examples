@@ -96,7 +96,8 @@ PROGRAM NONLINEARPOISSONEXAMPLE
   INTEGER(CMISSIntg) :: LeftNormalXi,RightNormalXi
 
   !INTEGER(CMISSIntg) :: FirstNodeNumber,LastNodeNumber,FirstNodeDomain,LastNodeDomain
-  INTEGER(CMISSIntg) :: node_idx,NodeNumber,NodeDomain
+  INTEGER(CMISSIntg) :: node_idx,NodeNumber,NodeDomain,i,j,elemx,elemy,blocksizeX,blocksizeY,lastBlocksizeX,elem_idx, &
+                        & lastBlocksizeY,numberOfBlocks,numberOfBlocksX,numberOfBlocksY
 
   LOGICAL :: EXPORT_FIELD
 
@@ -273,10 +274,52 @@ PROGRAM NONLINEARPOISSONEXAMPLE
   CALL cmfe_Decomposition_Initialise(Decomposition,Err)
   CALL cmfe_Decomposition_CreateStart(DecompositionUserNumber,Mesh,Decomposition,Err)
   !Set the decomposition to be a general decomposition with the specified number of domains
-  CALL cmfe_Decomposition_TypeSet(Decomposition,CMFE_DECOMPOSITION_CALCULATED_TYPE,Err)
-  CALL cmfe_Decomposition_NumberOfDomainsSet(Decomposition,NumberOfComputationalNodes,Err)
-  !Finish the decomposition
+  CALL cmfe_Decomposition_TypeSet(Decomposition,CMFE_DECOMPOSITION_USER_DEFINED_TYPE,Err)
+  
+  !if (NumberOfComputationalNodes)
+  numberOfBlocks=NumberOfComputationalNodes
+  numberOfBlocksX=INT(SQRT(REAL(numberOfBlocks)))
+  numberOfBlocksY=numberOfBlocksX
+  blocksizeX = NUMBER_GLOBAL_X_ELEMENTS/numberOfBlocksX
+  blocksizeY = NUMBER_GLOBAL_Y_ELEMENTS/numberOfBlocksY
+  
+  DO i=1,numberOfBlocksY
+    DO j=1,numberOfBlocksX
+      DO elemx=1,blocksizeX
+        DO elemy=1,blocksizeY
+          elem_idx = (i-1) * blocksizeY*NUMBER_GLOBAL_X_ELEMENTS + (elemy-1) * NUMBER_GLOBAL_X_ELEMENTS + elemx + (j-1)*blocksizeX
+          CALL cmfe_Decomposition_ElementDomainSet(Decomposition,elem_idx,(i-1)*numberOfBlocksX + j - 1,Err)
+          WRITE(*,*) 'Assign element ', elem_idx, ' to domain (x,y):', j,i,'. Domain number: ',(i-1)*numberOfBlocksX+j-1
+        ENDDO
+      ENDDO
+    ENDDO
+  ENDDO
+  CALL cmfe_Decomposition_NumberOfDomainsSet(Decomposition,numberOfBlocks,Err)
   CALL cmfe_Decomposition_CreateFinish(Decomposition,Err)
+                                  !   IF(N_Doms>1) THEN           ! Actual decomposition CASE *****
+                                  !   CALL cmfe_Decomposition_TypeSet(DecompFE,CMFE_DECOMPOSITION_USER_DEFINED_TYPE,Err)
+                                  !   elem_idx=0                      ! e=0         (e.g.: N_Doms=4, N_ElementsFE=16)
+                                  !   DO domain_idx=0,N_Doms-1        ! d=0      |1      |2         |3
+                                  !     DO iter=1,N_ElementsFE/N_Doms ! i=1,2,3,4|1,2,3,4|1, 2, 3, 4| 1, 2, 3, 4
+                                  !       elem_idx=elem_idx+1         ! e=1,2,3,4|5,6,7,8|9,10,11,12|13,14,15,16
+                                  !       ! assign a domain to each element: (e.g. elements 5 to 8 are in domain 1)
+                                  !       CALL cmfe_Decomposition_ElementDomainSet(DecompFE,elem_idx,domain_idx,Err)
+                                  !     ENDDO
+                                  !   ENDDO
+                                  ! ELSE                        ! Trivial decomposition CASE *****
+                                  !   CALL cmfe_Decomposition_TypeSet(DecompFE,CMFE_DECOMPOSITION_CALCULATED_TYPE,Err) 
+                                  ! ENDIF
+                                  ! CALL cmfe_Decomposition_NumberOfDomainsSet(DecompFE,N_Doms,Err)
+                                  ! CALL cmfe_Decomposition_CalculateFacesSet(DecompFE,.TRUE.,Err)
+                                  ! CALL cmfe_Decomposition_CreateFinish(DecompFE,Err)
+  
+  
+  
+  
+  !CALL cmfe_Decomposition_TypeSet(Decomposition,CMFE_DECOMPOSITION_CALCULATED_TYPE,Err)
+  !CALL cmfe_Decomposition_NumberOfDomainsSet(Decomposition,NumberOfComputationalNodes,Err)
+  !Finish the decomposition
+  !CALL cmfe_Decomposition_CreateFinish(Decomposition,Err)
 
   !Start to create a default (geometric) field on the region
   CALL cmfe_Field_Initialise(GeometricField,Err)

@@ -71,8 +71,8 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   LOGICAL, PARAMETER :: DEBUGGING_ONLY_RUN_SHORT_PART_OF_SIMULATION = .FALSE.    ! only run one timestep of MAIN_LOOP with stimulus
   LOGICAL, PARAMETER :: DEBUGGING_OUTPUT_PROBLEM = .FALSE.    ! output information about problem data structure
   LOGICAL, PARAMETER :: DEBUGGING_PARALLEL_BARRIER = .FALSE.   !
-  INTEGER(CMISSINTg) :: RUN_SCENARIO = 1  !0 = default, no extra values set, 1 = short for testing, 2 = medium for testing, 3 = very short, 4 = endless
-  LOGICAL, PARAMETER :: DEBUGGING_OUTPUT = .TRUE.    ! enable information from solvers
+  INTEGER(CMISSINTg) :: RUN_SCENARIO = 1  !0 = default, no extra values set, 1 = short for testing, 2 = for scaling tests (10s), 3 = very short, 4 = endless
+  LOGICAL, PARAMETER :: DEBUGGING_OUTPUT = .FALSE.    ! enable information from solvers
   LOGICAL, PARAMETER :: OLD_TOMO_MECHANICS = .TRUE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
 
   REAL(CMISSRP), PARAMETER :: tol=1.0E-8_CMISSRP
@@ -86,20 +86,20 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   REAL(CMISSRP), PARAMETER :: PERIODD=1.00_CMISSRP
   REAL(CMISSRP)            :: TIME_STOP=150.0_CMISSRP
 
-  REAL(CMISSRP) :: ODE_TIME_STEP = 0.00001_CMISSRP            !0.0001_CMISSRP
-  REAL(CMISSRP) :: PDE_TIME_STEP = 0.0005_CMISSRP
+  REAL(CMISSRP) :: ODE_TIME_STEP = 0.0001_CMISSRP            !0.0001_CMISSRP
+  REAL(CMISSRP) :: PDE_TIME_STEP = 0.005_CMISSRP              ! 0.005_CMISSRP
   REAL(CMISSRP) :: ELASTICITY_TIME_STEP = 0.10000000001_CMISSRP !0.5_CMISSRP!0.05_CMISSRP!0.8_CMISSRP
 
 !tomo keep ELASTICITY_TIME_STEP and STIM_STOP at the same values
   REAL(CMISSRP), PARAMETER :: STIM_STOP=0.1_CMISSRP!ELASTICITY_TIME_STEP   
 
-  INTEGER(CMISSIntg), PARAMETER :: OUTPUT_TIME_STEP_STRIDE=10  ! (10)
+  INTEGER(CMISSIntg)  :: OUTPUT_TIME_STEP_STRIDE=10  ! (10)
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !--------------------------------------------------------------------------------------------------------------------------------
 
   !stimulation current in [uA/cm^2]
-  REAL(CMISSRP) :: STIM_VALUE = 2000.0_CMISSRP
+  REAL(CMISSRP) :: STIM_VALUE = 20000.0_CMISSRP     ! 20000.0_CMISSRP
 
   REAL(CMISSRP), PARAMETER :: P_max=7.5_CMISSRP ! N/cm^2
 
@@ -429,15 +429,15 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   CALL SetBoundaryConditions()
 
   ! Output the data structure Problem
-  IF (DEBUGGING_OUTPUT_PROBLEM .AND. ComputationalNodeNumber == 0) THEN
-    PRINT*, ""
-    PRINT*, ""
-    CALL cmfe_PrintProblem(Problem,6,30,Err)
-    PRINT*, ""
-    PRINT*, ""
+  !IF (DEBUGGING_OUTPUT_PROBLEM .AND. ComputationalNodeNumber == 0) THEN
+  !  PRINT*, ""
+  !  PRINT*, ""
+  !  CALL cmfe_PrintProblem(Problem,6,30,Err)
+  !  PRINT*, ""
+  !  PRINT*, ""
     !PRINT*, "End the program after output of problem datastructure"
     !STOP
-  ENDIF
+  !ENDIF
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !Calculate the bioelectrics geometric field
@@ -942,8 +942,16 @@ SUBROUTINE ParseParameters()
     ODE_TIME_STEP = 0.0001_CMISSRP
     PDE_TIME_STEP = 0.005_CMISSRP
     ELASTICITY_TIME_STEP = 0.10000000001_CMISSRP
-  CASE(2)     ! medium
+    
+  CASE(2)     ! medium, used for scaling tests
     TIME_STOP = 10
+    
+    ODE_TIME_STEP = 0.0001_CMISSRP
+    PDE_TIME_STEP = 0.005_CMISSRP
+    ELASTICITY_TIME_STEP = 0.10000000001_CMISSRP
+    STIM_VALUE = 20000.0_CMISSRP
+    OUTPUT_TIME_STEP_STRIDE = 10
+
   CASE(3)     ! very short
     TIME_STOP = 0.1
 
@@ -2049,9 +2057,12 @@ SUBROUTINE CreateEquations()
   CALL cmfe_Equations_Initialise(EquationsFE,Err)
   CALL cmfe_EquationsSet_EquationsCreateStart(EquationsSetFE,EquationsFE,Err)
   !CALL cmfe_Equations_SparsityTypeSet(EquationsFE,CMFE_EQUATIONS_SPARSE_MATRICES,Err)
-  !CALL cmfe_Equations_OutputTypeSet(EquationsFE,CMFE_EQUATIONS_NO_OUTPUT,Err)
+  CALL cmfe_Equations_OutputTypeSet(EquationsFE,CMFE_EQUATIONS_NO_OUTPUT,Err)
   !CALL cmfe_Equations_OutputTypeSet(EquationsFE,CMFE_EQUATIONS_MATRIX_OUTPUT,Err)
-  CALL cmfe_Equations_OutputTypeSet(EquationsFE,CMFE_EQUATIONS_ELEMENT_MATRIX_OUTPUT,Err)
+  IF (DEBUGGING_OUTPUT) THEN
+    CALL cmfe_Equations_OutputTypeSet(EquationsFE,CMFE_EQUATIONS_ELEMENT_MATRIX_OUTPUT,Err)
+  ENDIF
+  
   CALL cmfe_EquationsSet_EquationsCreateFinish(EquationsSetFE,Err)
 
 END SUBROUTINE CreateEquations
@@ -2313,17 +2324,21 @@ SUBROUTINE CreateSolvers()
   NULLIFY(linearSolver%solver)
   CALL cmfe_Solver_DynamicLinearSolverGet(SolverParabolic, linearSolver, Err)
   
-  PRINT*, ""
-  PRINT*, "before cmfe_Solver_LinearTypeSet"
-  CALL cmfe_PrintSolver(SolverParabolic, 5, 10, Err)
+  IF (DEBUGGING_OUTPUT_PROBLEM) THEN
+    PRINT*, ""
+    PRINT*, "before cmfe_Solver_LinearTypeSet"
+    CALL cmfe_PrintSolver(SolverParabolic, 5, 10, Err)
+  ENDIF
   
   ! Recreate linearSolver subtype as direct solver (instead of iterative solver)
-  CALL cmfe_Solver_LinearTypeSet(linearSolver, CMFE_SOLVER_LINEAR_DIRECT_SOLVE_TYPE, Err)
+  !CALL cmfe_Solver_LinearTypeSet(linearSolver, CMFE_SOLVER_LINEAR_DIRECT_SOLVE_TYPE, Err)
   
-  PRINT*, ""
-  PRINT*, "========================================================================="
-  PRINT*, "After cmfe_Solver_LinearTypeSet"
-  CALL cmfe_PrintSolver(SolverParabolic, 5, 10, Err)
+  IF (DEBUGGING_OUTPUT_PROBLEM) THEN
+    PRINT*, ""
+    PRINT*, "========================================================================="
+    PRINT*, "After cmfe_Solver_LinearTypeSet"
+    CALL cmfe_PrintSolver(SolverParabolic, 5, 10, Err)
+  ENDIF
   
   !SOLVER_LINEAR_DIRECT_TYPE_SET
   
@@ -2372,6 +2387,7 @@ SUBROUTINE CreateSolvers()
 !  CALL cmfe_Solver_LinearTypeSet(LinearSolverFE,CMFE_SOLVER_LINEAR_ITERATIVE_SOLVE_TYPE,Err)
 
   CALL cmfe_Problem_SolversCreateFinish(Problem,Err)
+  
   
 
   !--------------------------------------------------------------------------------------------------------------------------------
@@ -2434,9 +2450,13 @@ SUBROUTINE CreateSolvers()
 
   CALL cmfe_Problem_SolverEquationsCreateFinish(Problem,Err)
 
-  PRINT*, "==========================="
-  PRINT*, "SolverFE"
-  CALL cmfe_PrintSolver(SolverFE, 6, 3, Err)
+  IF (DEBUGGING_OUTPUT_PROBLEM) THEN
+    PRINT*, "==========================="
+    PRINT*, "SolverFE"
+    CALL cmfe_PrintSolver(SolverFE, 6, 3, Err)
+  ENDIF
+  
+  !SolverFE%solver%NONLINEAR_SOLVER%NEWTON_SOLVER%LINEAR_SOLVER%OUTPUT_TYPE = SOLVER_MATRIX_OUTPUT
   
   !STOP
   

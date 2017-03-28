@@ -13,3 +13,5 @@ duration*
 profil*
 fort.*
 .project
+*/*.exnode
+*/*.exelem

@@ -15,3 +15,5 @@ fort.*
 .project
 */*.exnode
 */*.exelem
+PoissonExample/release_build
+PoissonExample/release_build/*

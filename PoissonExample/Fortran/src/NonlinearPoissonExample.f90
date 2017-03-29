@@ -289,7 +289,7 @@ PROGRAM NONLINEARPOISSONEXAMPLE
         DO elemy=1,blocksizeY
           elem_idx = (i-1) * blocksizeY*NUMBER_GLOBAL_X_ELEMENTS + (elemy-1) * NUMBER_GLOBAL_X_ELEMENTS + elemx + (j-1)*blocksizeX
           CALL cmfe_Decomposition_ElementDomainSet(Decomposition,elem_idx,(i-1)*numberOfBlocksX + j - 1,Err)
-          WRITE(*,*) 'Assign element ', elem_idx, ' to domain (x,y):', j,i,'. Domain number: ',(i-1)*numberOfBlocksX+j-1
+          !WRITE(*,*) 'Assign element ', elem_idx, ' to domain (x,y):', j,i,'. Domain number: ',(i-1)*numberOfBlocksX+j-1
         ENDDO
       ENDDO
     ENDDO

@@ -260,7 +260,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   INTEGER(CMISSIntg), PARAMETER :: FieldIndependentUserNumberM=9
   INTEGER(CMISSIntg), PARAMETER :: FieldIndependentNumberOfComponentsM1=1
-  INTEGER(CMISSIntg), PARAMETER :: FieldIndependentNumberOfComponentsM2=5
+  INTEGER(CMISSIntg), PARAMETER :: FieldIndependentNumberOfComponentsM2=6 !5
 
   INTEGER(CMISSIntg), PARAMETER :: EquationsSetFieldUserNumberM=10
   INTEGER(CMISSIntg), PARAMETER :: EquationsSetFieldUserNumberFE=11
@@ -383,7 +383,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   CALL CreateDecomposition()
 
   !================================================================================================================================
-  !  F I N I T E   E L A S T C I T Y
+  !  F I N I T E   E L A S T I C I T Y
   !================================================================================================================================
   CALL CreateFieldFiniteElasticity()
 
@@ -422,12 +422,13 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   CALL cmfe_Problem_CreateFinish(Problem,Err)
 
+
   CALL CreateControlLoops()
   CALL CreateSolvers()
   !--------------------------------------------------------------------------------------------------------------------------------
   !boundary conditions
   CALL SetBoundaryConditions()
-
+  
   ! Output the data structure Problem
   !IF (DEBUGGING_OUTPUT_PROBLEM .AND. ComputationalNodeNumber == 0) THEN
   !  PRINT*, ""
@@ -444,7 +445,15 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !--------------------------------------------------------------------------------------------------------------------------------
   !Calculate the bioelectrics geometric field
   CALL CalculateBioelectrics()
+  
+   PRINT*, "Size IndependentFieldFE:",cmfe_getFieldSize(IndependentFieldFE, Err),"Bytes"
+   PRINT*, "Size IndependentFieldM: ",cmfe_getFieldSize(IndependentFieldM, Err),"Bytes"
+  
+  PRINT*, "Abort program in FortranExample.f90:456"
+  CALL MPI_BARRIER(MPI_COMM_WORLD, Err)
+  STOP
   CALL ExportEMG()
+  
   !--------------------------------------------------------------------------------------------------------------------------------
   !Solve the problem
 
@@ -1346,6 +1355,34 @@ SUBROUTINE CreateRegionMesh()
 
   CALL cmfe_MeshElements_CreateFinish(ElementsM,Err)
   CALL cmfe_Mesh_CreateFinish(MeshM,Err)
+  
+  
+
+                 
+  !PRINT*, "internal elements ", ELEMENTS_MAPPING%INTERNAL_START,"to",ELEMENTS_MAPPING%INTERNAL_FINISH
+  !PRINT*, "element parameters:"
+  
+  !PRINT*, "index        element_no      interpolation_parameters"
+  !DO element_idx=ELEMENTS_MAPPING%INTERNAL_START, ELEMENTS_MAPPING%INTERNAL_FINISH
+  
+  !  ne = ELEMENTS_MAPPING%DOMAIN_LIST(element_idx)
+    
+    ! get interpolation parameters of element
+    ! version which is used with real preallocated variable names:
+  !  CALL FIELD_INTERPOLATION_PARAMETERS_ELEMENT_GET(FIELD_VALUES_SET_TYPE,ne,&
+  !    & EQUATIONS%INTERPOLATION%GEOMETRIC_INTERP_PARAMETERS(FIELD_U_VARIABLE_TYPE)%PTR,ERR,ERROR,*999)
+
+  !  INTERPOLATION_PARAMETERS=> &
+  !    & EQUATIONS%INTERPOLATION%GEOMETRIC_INTERP_POINT(FIELD_U_VARIABLE_TYPE)%PTR%INTERPOLATION_PARAMETERS                
+    
+    ! direct version
+  !  CALL FIELD_INTERPOLATION_PARAMETERS_ELEMENT_GET(FIELD_VALUES_SET_TYPE,ne,INTERPOLATION_PARAMETERS,ERR,ERROR,*999)
+    
+  !  DO component_idx = 1,INTERPOLATION_PARAMETERS%FIELD_VARIABLE%NUMBER_OF_COMPONENTS
+  !    PRINT*, element_idx, ne, INTERPOLATION_PARAMETERS%PARAMETERS(:,component_idx)
+  !  ENDDO
+  !ENDDO
+  
 
 
 END SUBROUTINE CreateRegionMesh
@@ -1416,7 +1453,7 @@ SUBROUTINE CreateDecomposition()
       CALL cmfe_Decomposition_ElementDomainSet(DecompositionFE, ElementFENo,            DomainNo, Err)
       LastDomainNo = DomainNo
 
-      !PRINT "(I3.3,A,I5.5,A,I2)", ComputationalNodeNumber, ": 3D el. no. ", ElementFENo, " to domain no. ", DomainNo
+      PRINT "(I3.3,A,I5.5,A,I2)", ComputationalNodeNumber, ": 3D el. no. ", ElementFENo, " to domain no. ", DomainNo
 
       !PRINT*, "ElementFENo=",ElementFENo, ", ElementInAtomicPortionNo=", ElementInAtomicPortionNo,", DomainNo: ", DomainNo
 
@@ -1779,7 +1816,7 @@ SUBROUTINE CreateFieldMonodomain()
     CALL cmfe_Field_VariableLabelSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,"XB_state_variables_M",Err)
   ENDIF
 
-  !second variable:   CMFE_FIELD_V_VARIABLE_TYPE -- 1) motor unit number   2) fibre type   3) fibre number   4) nearest Gauss point   5) in element number (LOCAL NODE NUMBERING!!!)
+  !second variable:   CMFE_FIELD_V_VARIABLE_TYPE -- 1) motor unit number   2) fibre type   3) fibre number   4) nearest Gauss point   5) in element number (LOCAL NODE NUMBERING!!!) 6) in-fibre contiguous node number
   CALL cmfe_Field_DataTypeSet(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_INTG_TYPE,Err)
   CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,FieldIndependentNumberOfComponentsM2,Err)
   CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,1, &
@@ -1791,6 +1828,8 @@ SUBROUTINE CreateFieldMonodomain()
   CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,4, &
    & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
   CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,5, &
+   & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
+  CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,6, &
    & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
   CALL cmfe_Field_VariableLabelSet(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,"fibre_info",Err)
 
@@ -1914,6 +1953,7 @@ SUBROUTINE InitializeFieldMonodomain()
   !    3) fibre number
   !    4) nearest Gauss point
   !    5) in element number (LOCAL NODE NUMBERING!!!)
+  !    6) velocity before 3 time steps
   !
   !init the motor unit number to 101
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,101,Err) !
@@ -1936,11 +1976,16 @@ SUBROUTINE InitializeFieldMonodomain()
         IF (NodeDomain == ComputationalNodeNumber) THEN
 	  !PRINT*, "Node ", NodeNumber, ", Fibre ", FibreNo, ", MotorUnitRank: ", MotorUnitRank
 
+          ! set motor unit number
           !                                      FIELD,             VARIABLE_TYPE               FIELD_SET_TYPE
           CALL cmfe_Field_ParameterSetUpdateNode(IndependentFieldM, CMFE_FIELD_V_VARIABLE_TYPE, CMFE_FIELD_VALUES_SET_TYPE,&
             ! VERSION_NO, DERIVATIVE_NO,  USER_NODE_NUMBER, COMPONENT_NUMBER, VALUE
             & 1,          1,              NodeNumber,       1,                MotorUnitRank, Err)
           
+          ! set fibre node number
+          CALL cmfe_Field_ParameterSetUpdateNode(IndependentFieldM, CMFE_FIELD_V_VARIABLE_TYPE, CMFE_FIELD_VALUES_SET_TYPE,&
+            ! VERSION_NO, DERIVATIVE_NO,  USER_NODE_NUMBER, COMPONENT_NUMBER, VALUE
+            & 1,          1,              123,       6,                j, Err)
           
           !Print*, "FibreLineNo=",FibreLineNo,", FibreInLineNo=",FibreInLineNo,", MotorUnitRank=",MotorUnitRank,", j=",j,&
           !  &", NodeNumber=",NodeNumber,", FibreNo=",FibreNo
@@ -2551,8 +2596,15 @@ SUBROUTINE CalculateBioelectrics()
   !Calculate the bioelectrics geometric field
   CALL cmfe_ControlLoop_Initialise(ControlLoopM,Err)
   CALL cmfe_Problem_ControlLoopGet(Problem,[ControlLoopMonodomainNumber,CMFE_CONTROL_LOOP_NODE],ControlLoopM,Err)
+
+  PRINT*, "before cmfe_BioelectricsFiniteElasticity_UpdateGeometricField"
+  CALL cmfe_OutputInterpolationParameters(Problem,DependentFieldM, SolverParabolic,Err)
+  
   CALL cmfe_BioelectricsFiniteElasticity_UpdateGeometricField(ControlLoopM,.TRUE.,Err)
 
+  PRINT*, "after cmfe_BioelectricsFiniteElasticity_UpdateGeometricField"
+  CALL cmfe_OutputInterpolationParameters(Problem,DependentFieldM, SolverParabolic,Err)
+  
   !reset the relative contraction velocity to 0
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3, &
    & 0.0_CMISSRP,Err)

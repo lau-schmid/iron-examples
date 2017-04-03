@@ -296,30 +296,6 @@ PROGRAM NONLINEARPOISSONEXAMPLE
   ENDDO
   CALL cmfe_Decomposition_NumberOfDomainsSet(Decomposition,numberOfBlocks,Err)
   CALL cmfe_Decomposition_CreateFinish(Decomposition,Err)
-                                  !   IF(N_Doms>1) THEN           ! Actual decomposition CASE *****
-                                  !   CALL cmfe_Decomposition_TypeSet(DecompFE,CMFE_DECOMPOSITION_USER_DEFINED_TYPE,Err)
-                                  !   elem_idx=0                      ! e=0         (e.g.: N_Doms=4, N_ElementsFE=16)
-                                  !   DO domain_idx=0,N_Doms-1        ! d=0      |1      |2         |3
-                                  !     DO iter=1,N_ElementsFE/N_Doms ! i=1,2,3,4|1,2,3,4|1, 2, 3, 4| 1, 2, 3, 4
-                                  !       elem_idx=elem_idx+1         ! e=1,2,3,4|5,6,7,8|9,10,11,12|13,14,15,16
-                                  !       ! assign a domain to each element: (e.g. elements 5 to 8 are in domain 1)
-                                  !       CALL cmfe_Decomposition_ElementDomainSet(DecompFE,elem_idx,domain_idx,Err)
-                                  !     ENDDO
-                                  !   ENDDO
-                                  ! ELSE                        ! Trivial decomposition CASE *****
-                                  !   CALL cmfe_Decomposition_TypeSet(DecompFE,CMFE_DECOMPOSITION_CALCULATED_TYPE,Err) 
-                                  ! ENDIF
-                                  ! CALL cmfe_Decomposition_NumberOfDomainsSet(DecompFE,N_Doms,Err)
-                                  ! CALL cmfe_Decomposition_CalculateFacesSet(DecompFE,.TRUE.,Err)
-                                  ! CALL cmfe_Decomposition_CreateFinish(DecompFE,Err)
-  
-  
-  
-  
-  !CALL cmfe_Decomposition_TypeSet(Decomposition,CMFE_DECOMPOSITION_CALCULATED_TYPE,Err)
-  !CALL cmfe_Decomposition_NumberOfDomainsSet(Decomposition,NumberOfComputationalNodes,Err)
-  !Finish the decomposition
-  !CALL cmfe_Decomposition_CreateFinish(Decomposition,Err)
 
   !Start to create a default (geometric) field on the region
   CALL cmfe_Field_Initialise(GeometricField,Err)
@@ -439,7 +415,7 @@ PROGRAM NONLINEARPOISSONEXAMPLE
   CALL cmfe_SolverEquations_BoundaryConditionsCreateStart(SolverEquations,BoundaryConditions,Err)
   CALL cmfe_GeneratedMesh_SurfaceGet(GeneratedMesh,CMFE_GENERATED_MESH_REGULAR_LEFT_SURFACE,LeftSurfaceNodes,LeftNormalXi,Err)
   CALL cmfe_GeneratedMesh_SurfaceGet(GeneratedMesh,CMFE_GENERATED_MESH_REGULAR_RIGHT_SURFACE,RightSurfaceNodes,RightNormalXi,Err)
-  !Set the fixed boundary conditions on opposide sides
+  !Set the fixed boundary conditions on opposite sides
   DO node_idx=1,SIZE(LeftSurfaceNodes,1)
     NodeNumber=LeftSurfaceNodes(node_idx)
     CALL cmfe_Decomposition_NodeDomainGet(Decomposition,NodeNumber,1,NodeDomain,Err)

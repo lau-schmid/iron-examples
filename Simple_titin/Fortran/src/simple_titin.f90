@@ -108,7 +108,7 @@ PROGRAM TITINEXAMPLE
   REAL(CMISSRP), PARAMETER :: HEIGHT=1.0_CMISSRP ! Z-direction
   
   !all times in [ms]
-  REAL(CMISSRP) :: time !=10.00_CMISSRP 
+  REAL(CMISSRP) :: time=0.0_CMISSRP !=10.00_CMISSRP 
 !  REAL(CMISSRP), PARAMETER :: PERIODD=10.00_CMISSRP
 !  REAL(CMISSRP), PARAMETER :: PERIODD=10.0_CMISSRP !20.00_CMISSRP
 !  REAL(CMISSRP), PARAMETER :: TIME_STOP=300.0_CMISSRP
@@ -375,7 +375,7 @@ PROGRAM TITINEXAMPLE
     & NumberOfNodesInXi2*NumberOfNodesInXi3
 
 !##################################################################################################################################
-    pathname = "input/"
+    pathname = "./"
 !    filename = trim(pathname)//"Shorten_Titin_w_Fv_2016_08_23.cellml"
     filename = trim(pathname)//"Aliev_Panfilov_Razumova_Titin_2016_10_10_b.cellml"
      STIM_VALUE=0.0_CMISSRP

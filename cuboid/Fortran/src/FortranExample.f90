@@ -71,7 +71,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   LOGICAL, PARAMETER :: DEBUGGING_ONLY_RUN_SHORT_PART_OF_SIMULATION = .FALSE.    ! only run one timestep of MAIN_LOOP with stimulus
   LOGICAL, PARAMETER :: DEBUGGING_OUTPUT_PROBLEM = .FALSE.    ! output information about problem data structure
   LOGICAL, PARAMETER :: DEBUGGING_PARALLEL_BARRIER = .FALSE.   !
-  INTEGER(CMISSINTg) :: RUN_SCENARIO = 0  !0 = default, no extra values set, 1 = short for testing, 2 = for scaling tests (10s), 3 = very short, 4 = endless
+  INTEGER(CMISSINTg) :: RUN_SCENARIO = 2  !0 = default, no extra values set, 1 = short for testing, 2 = for scaling tests (10s), 3 = very short, 4 = endless
   LOGICAL, PARAMETER :: DEBUGGING_OUTPUT = .FALSE.    ! enable information from solvers
   LOGICAL, PARAMETER :: OLD_TOMO_MECHANICS = .TRUE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
 
@@ -191,6 +191,9 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   INTEGER(CMISSIntg) :: CustomSolverNumberIterationsNewton = 0
   INTEGER(CMISSIntg) :: CustomSolverNumberIterationsNewtonMin = 0
   INTEGER(CMISSIntg) :: CustomSolverNumberIterationsNewtonMax = 0
+  INTEGER(CMISSIntg) :: MonodomainSolverId = 1
+  INTEGER(CMISSIntg) :: MonodomainPreconditionerId = 1
+  INTEGER(CMISSIntg) :: ODESolverId = 1
 
 
   INTEGER(CMISSIntg), DIMENSION(10000,100) :: MotorUnitFiringTimes
@@ -927,11 +930,27 @@ SUBROUTINE ParseParameters()
       CALL GETARG(6, arg)
       read(arg,*,iostat=stat)  NumberOfElementsInAtomicPortionPerDomain
     ENDIF
+	
+    IF (NumberArguments >= 7) THEN
+      CALL GETARG(7, arg)
+      read(arg,*,iostat=stat) ODESolverId
+    ENDIF
+
+    IF (NumberArguments >= 8) THEN
+      CALL GETARG(8, arg)
+      read(arg,*,iostat=stat)  MonodomainSolverId
+    ENDIF
+	
+    IF (NumberArguments >= 9) THEN
+      CALL GETARG(9, arg)
+      read(arg,*,iostat=stat) MonodomainPreconditionerId
+    ENDIF
 
   ELSE
     PRINT*, "Using default values. " // NEW_LINE('A') &
-    // "Usage: program [<input folder> [<X> <Y> <Z> [<F> [<NumberOfElementsInAtomicPortionPerDomain>]]]] " // &
-      & "or program <f> where (X,Y,Z)=(3*f,4*f,1*f)";
+     & // "Usage: program [<input folder> [<X> <Y> <Z> [<F> [<NumberOfElementsInAtomicPortionPerDomain> " // &
+     & "[<ODEsolver> [<Msolver> [<Mprecond> ]]]]]]] " // &
+     & "or program <f> where (X,Y,Z)=(3*f,4*f,1*f)";
   ENDIF
 
   NumberOfElementsFE = NumberGlobalXElements*NumberGlobalYElements*NumberGlobalZElements
@@ -1149,8 +1168,56 @@ SUBROUTINE ParseParameters()
     PRINT *, "---------- Physical parameters -----------------------------------------------"
     PRINT "(A,F5.2,A,F5.2,A,F5.2)", "      Dimensions [cm]: ",LENGTH,"x",WIDTH,"x",HEIGHT
     PRINT "(A,F11.2)", "Stimulation [uA/cm^2]: ",STIM_VALUE
+    PRINT *, ""
+    PRINT *, "---------- Solvers -----------------------------------------------------------"
+  
+    SELECT CASE(ODESolverId)
+      CASE(1)
+        PRINT *, "(0D) ODE:        1 explicit Euler"
+      CASE(2)
+        PRINT *, "(0D) ODE:        2 BDF"
+      CASE DEFAULT
+        PRINT *, "(0D) ODE:        SOLVER_ITERATIVE_GMRES (default)" 
+    END SELECT
+
+    SELECT CASE(MonodomainSolverId)
+      CASE(1)
+        PRINT *, "(1D) Monodomain: 1 SOLVER_DIRECT_LU"
+      CASE(2)
+        PRINT *, "(1D) Monodomain: 2 SOLVER_DIRECT_CHOLESKY"
+      CASE(3)
+        PRINT *, "(1D) Monodomain: 3 SOLVER_DIRECT_SVD"
+      CASE(4)
+        PRINT *, "(1D) Monodomain: 4 SOLVER_ITERATIVE_GMRES"
+      CASE(5)
+        PRINT *, "(1D) Monodomain: 5 SOLVER_ITERATIVE_CONJUGATE_GRADIENT"
+      CASE(6)
+        PRINT *, "(1D) Monodomain: 6 SOLVER_ITERATIVE_CONJGRAD_SQUARED"
+      CASE DEFAULT
+        PRINT *, "(1D) Monodomain: SOLVER_ITERATIVE_GMRES (default)" 
+    END SELECT
+    
+    SELECT CASE(MonodomainPreconditionerId)
+      CASE(1)
+        PRINT *, "                 1 NO_PRECONDITIONER"
+      CASE(2)
+        PRINT *, "                 2 JACOBI_PRECONDITIONER"
+      CASE(3)
+        PRINT *, "                 3 BLOCK_JACOBI_PRECONDITIONER"
+      CASE(4)
+        PRINT *, "                 4 SOR_PRECONDITIONER"
+      CASE(5)
+        PRINT *, "                 5 INCOMPLETE_CHOLESKY_PRECONDITIONER"
+      CASE(6)
+        PRINT *, "                 6 INCOMPLETE_LU_PRECONDITIONER"
+      CASE(7)
+        PRINT *, "                 7 ADDITIVE_SCHWARZ_PRECONDITIONER"
+      CASE DEFAULT
+        PRINT *, "                 NO_PRECONDITIONER (default)"
+    END SELECT
     PRINT *, "------------------------------------------------------------------------------"
     PRINT *, ""
+
 
     ! Output some static (compile-time) settings
     IF (OLD_TOMO_MECHANICS) THEN
@@ -2326,6 +2393,89 @@ SUBROUTINE CreateSolvers()
   ! Retrieve linear solver
   NULLIFY(linearSolver%solver)
   CALL cmfe_Solver_DynamicLinearSolverGet(SolverParabolic, linearSolver, Err)
+  
+  ! direct:
+  ! CALL cmfe_Solver_LinearTypeSet(linearSolver, CMFE_SOLVER_LINEAR_DIRECT_SOLVE_TYPE, Err)
+  ! CALL cmfe_Solver_LinearDirectTypeSet(linearSolver, CMFE_SOLVER_ITERATIVE_CONJUGATE_GRADIENT, Err)
+  ! CMFE_SOLVER_DIRECT_LU
+  ! CMFE_SOLVER_DIRECT_CHOLESKY
+  ! CMFE_SOLVER_DIRECT_SVD
+  !
+  ! iterative:
+  ! CALL cmfe_Solver_LinearTypeSet(linearSolver, CMFE_SOLVER_LINEAR_ITERATIVE_SOLVE_TYPE, Err)
+  ! CALL cmfe_Solver_LinearIterativeTypeSet(linearSolver, CMFE_SOLVER_ITERATIVE_CONJUGATE_GRADIENT, Err)
+  ! CALL cmfe_Solver_LinearIterativePreconditionerTypeSet(linearSolver, CMFE_SOLVER_ITERATIVE_INCOMPLETE_LU_PRECONDITIONER, Err)
+  ! solver:
+  ! CMFE_SOLVER_ITERATIVE_GMRES
+  ! CMFE_SOLVER_ITERATIVE_CONJUGATE_GRADIENT
+  ! CMFE_SOLVER_ITERATIVE_CONJGRAD_SQUARED
+  ! preconditioner:
+  ! CMFE_SOLVER_ITERATIVE_NO_PRECONDITIONER
+  ! CMFE_SOLVER_ITERATIVE_JACOBI_PRECONDITIONER
+  ! CMFE_SOLVER_ITERATIVE_BLOCK_JACOBI_PRECONDITIONER
+  ! CMFE_SOLVER_ITERATIVE_SOR_PRECONDITIONER
+  ! CMFE_SOLVER_ITERATIVE_INCOMPLETE_CHOLESKY_PRECONDITIONER
+  ! CMFE_SOLVER_ITERATIVE_INCOMPLETE_LU_PRECONDITIONER
+  ! CMFE_SOLVER_ITERATIVE_ADDITIVE_SCHWARZ_PRECONDITIONER
+  
+  !MonodomainSolverId, MonodomainPreconditionerId, ODESolverId
+  IF (MonodomainSolverId <= 3) THEN    ! direct solver
+    
+    CALL cmfe_Solver_LinearTypeSet(linearSolver, CMFE_SOLVER_LINEAR_DIRECT_SOLVE_TYPE, Err)
+  
+    SELECT CASE(MonodomainSolverId)
+      CASE(1)
+        CALL cmfe_Solver_LinearDirectTypeSet(linearSolver, CMFE_SOLVER_DIRECT_LU, Err)
+      CASE(2)
+        CALL cmfe_Solver_LinearDirectTypeSet(linearSolver, CMFE_SOLVER_DIRECT_CHOLESKY, Err)
+      CASE(3)
+        CALL cmfe_Solver_LinearDirectTypeSet(linearSolver, CMFE_SOLVER_DIRECT_SVD, Err)
+      CASE DEFAULT
+        PRINT*, "Warning: Wrong MonodomainSolverId ",MonodomainSolverId
+        CALL cmfe_Solver_LinearDirectTypeSet(linearSolver, CMFE_SOLVER_DIRECT_LU, Err)
+    END SELECT
+  ELSE ! iterative solver
+    
+    CALL cmfe_Solver_LinearTypeSet(linearSolver, CMFE_SOLVER_LINEAR_ITERATIVE_SOLVE_TYPE, Err)
+    
+    SELECT CASE(MonodomainSolverId)
+      CASE(4)
+        CALL cmfe_Solver_LinearDirectTypeSet(linearSolver, CMFE_SOLVER_ITERATIVE_GMRES, Err)
+      CASE(5)
+        CALL cmfe_Solver_LinearDirectTypeSet(linearSolver, CMFE_SOLVER_ITERATIVE_CONJUGATE_GRADIENT, Err)
+      CASE(6)
+        CALL cmfe_Solver_LinearDirectTypeSet(linearSolver, CMFE_SOLVER_ITERATIVE_CONJGRAD_SQUARED, Err)
+      CASE DEFAULT
+        PRINT*, "Warning: Wrong MonodomainSolverId ",MonodomainSolverId
+        CALL cmfe_Solver_LinearDirectTypeSet(linearSolver, CMFE_SOLVER_ITERATIVE_GMRES, Err)
+    END SELECT
+    
+    SELECT CASE(MonodomainPreconditionerId)
+      CASE(1)
+        CALL cmfe_Solver_LinearIterativePreconditionerTypeSet(linearSolver, CMFE_SOLVER_ITERATIVE_NO_PRECONDITIONER, Err)
+      CASE(2)
+        CALL cmfe_Solver_LinearIterativePreconditionerTypeSet(linearSolver, CMFE_SOLVER_ITERATIVE_JACOBI_PRECONDITIONER, Err)
+      CASE(3)
+        CALL cmfe_Solver_LinearIterativePreconditionerTypeSet(linearSolver, CMFE_SOLVER_ITERATIVE_BLOCK_JACOBI_PRECONDITIONER, Err)
+      CASE(4)
+        CALL cmfe_Solver_LinearIterativePreconditionerTypeSet(linearSolver, CMFE_SOLVER_ITERATIVE_SOR_PRECONDITIONER, Err)
+      CASE(5)
+        CALL cmfe_Solver_LinearIterativePreconditionerTypeSet(linearSolver, &
+         & CMFE_SOLVER_ITERATIVE_INCOMPLETE_CHOLESKY_PRECONDITIONER, Err)
+      CASE(6)
+        CALL cmfe_Solver_LinearIterativePreconditionerTypeSet(linearSolver, CMFE_SOLVER_ITERATIVE_INCOMPLETE_LU_PRECONDITIONER, Err)
+      CASE(7)
+        CALL cmfe_Solver_LinearIterativePreconditionerTypeSet(linearSolver, & 
+         & CMFE_SOLVER_ITERATIVE_ADDITIVE_SCHWARZ_PRECONDITIONER, Err)
+      CASE DEFAULT
+        PRINT *, "Warning: Wrong MonodomainPreconditionerId, ", MonodomainPreconditionerId
+        CALL cmfe_Solver_LinearIterativePreconditionerTypeSet(linearSolver, CMFE_SOLVER_ITERATIVE_NO_PRECONDITIONER, Err)
+    END SELECT
+    
+  ENDIF
+  CALL cmfe_Solver_LinearTypeSet(linearSolver, CMFE_SOLVER_LINEAR_ITERATIVE_SOLVE_TYPE, Err)
+  CALL cmfe_Solver_LinearIterativeTypeSet(linearSolver, CMFE_SOLVER_ITERATIVE_CONJUGATE_GRADIENT, Err)
+  CALL cmfe_Solver_LinearIterativePreconditionerTypeSet(linearSolver, CMFE_SOLVER_ITERATIVE_INCOMPLETE_LU_PRECONDITIONER, Err)
   
   IF (DEBUGGING_OUTPUT_PROBLEM) THEN
     PRINT*, ""

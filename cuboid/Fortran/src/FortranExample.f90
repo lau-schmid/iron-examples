@@ -2924,7 +2924,7 @@ SUBROUTINE WriteTimingFile()
 
   IF (CustomProfilingEnabled) THEN
 
-    WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),35(F25.13,A),8(I17,A,I5,A,I7,A),9(F8.3,A))") &
+    WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),35(F25.13,A),8(I17,A,I5,A,I7,A),9(F8.3,A),3(I2,A))") &
       & TRIM(TimeStampStr), ';', &
       & TRIM(Hostname(1:22)), ';', &
       & NumberOfComputationalNodes, ';', &
@@ -3025,11 +3025,14 @@ SUBROUTINE WriteTimingFile()
       & TimingExportEMGSystem, ';', &
       & CustomTimingFileOutputUser, ';', &
       & CustomTimingFileOutputSystem, ';', &
-      & CustomTimingFileOutputSystemPreLoad, ';'
+      & CustomTimingFileOutputSystemPreLoad, ';', &
+      & MonodomainSolverId, ';', &
+      & MonodomainPreconditionerId, ';', &
+      & ODESolverId, ';'
 
   ELSE  ! custom profiling is disabled
     
-    WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),9(F8.3,A))") &
+    WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),9(F8.3,A),3(I2,A))") &
       & TRIM(TimeStampStr), ';', &
       & TRIM(Hostname(1:22)), ';', &
       & NumberOfComputationalNodes, ';', &
@@ -3069,7 +3072,10 @@ SUBROUTINE WriteTimingFile()
       & TimingExportEMGSystem, ';', &
       & CustomTimingFileOutputUser, ';', &
       & CustomTimingFileOutputSystem, ';', &
-      & CustomTimingFileOutputSystemPreLoad, ';'
+      & CustomTimingFileOutputSystemPreLoad, ';', &
+      & MonodomainSolverId, ';', &
+      & MonodomainPreconditionerId, ';', &
+      & ODESolverId, ';'
   ENDIF
 
   CLOSE(unit=123)

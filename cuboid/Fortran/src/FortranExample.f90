@@ -459,7 +459,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !Calculate the bioelectrics geometric field
   CALL CalculateBioelectrics()
   
-   PRINT*, "Size IndependentFieldFE:",cmfe_getFieldSize(IndependentFieldFE, Err),"Bytes"
+  !PRINT*, "Size IndependentFieldFE:",cmfe_getFieldSize(IndependentFieldFE, Err),"Bytes"
   
   !PRINT*, "Abort program in FortranExample.f90:450"
   CALL MPI_BARRIER(MPI_COMM_WORLD, Err)

@@ -22,7 +22,7 @@
 				<Option object_output="obj/Release/" />
 				<Option type="1" />
 				<Option compiler="gfortran" />
-				<Option parameters="/store/DiHu/software/opencmiss/examples/cuboid/input 2 2 1 2" />
+				<Option parameters="/store/DiHu/software/opencmiss/examples/cuboid/input 2 1 1 2" />
 				<Compiler>
 					<Add option="-O2" />
 				</Compiler>

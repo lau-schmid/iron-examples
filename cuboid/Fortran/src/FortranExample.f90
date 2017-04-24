@@ -884,10 +884,127 @@ SUBROUTINE ToLower(Str)
   ENDDO
 END SUBROUTINE ToLower
 
+SUBROUTINE ParseAssignment(Line, LineNumber, ScenarioInputFile)
+  CHARACTER(LEN=*), INTENT(IN) :: Line
+  INTEGER(CMISSIntg), INTENT(IN) :: LineNumber
+  CHARACTER(LEN=*), INTENT(IN) :: ScenarioInputFile
+  CHARACTER(LEN=1024) :: VariableName, StrValue
+  INTEGER(CMISSIntg) :: StringLength
+
+  !PRINT *, "Read line """//TRIM(Line)//"""."
+  
+  ! Extract variable name and value
+  IF (INDEX(Line, "=") /= 0) THEN
+    VariableName = Line(1:INDEX(Line, "=")-1)
+    CALL ToLower(VariableName)
+    StrValue = TRIM(Line(INDEX(Line, "=")+1:))
+    
+    !PRINT *, "VariableName=["//TRIM(VariableName)//"], Value=["//TRIM(StrValue)//"]."
+  ELSE
+    RETURN
+  ENDIF
+  
+  ! Parse variables
+  SELECT CASE(VariableName)
+    CASE ("x","numberglobalxelements")
+      READ(StrValue, *, IOSTAT=Stat) NumberGlobalXElements
+    CASE ("y","numberglobalyelements")
+      READ(StrValue, *, IOSTAT=Stat) NumberGlobalYElements
+    CASE ("z","numberglobalzelements")
+      READ(StrValue, *, IOSTAT=Stat) NumberGlobalZElements
+    CASE ("f","numberofinseriesfibres")
+      READ(StrValue, *, IOSTAT=Stat) NumberOfInSeriesFibres
+    CASE ("a","numberofelementsinatomicportionperdomain")
+      READ(StrValue, *, IOSTAT=Stat) NumberOfElementsInAtomicPortionPerDomain  
+    CASE ("odesolverid")
+      READ(StrValue, *, IOSTAT=Stat) ODESolverId
+    CASE ("monodomainsolverid")
+      READ(StrValue, *, IOSTAT=Stat) MonodomainSolverId
+    CASE ("monodomainpreconditionerid")
+      READ(StrValue, *, IOSTAT=Stat) MonodomainPreconditionerId
+    CASE ("timestop")
+      READ(StrValue, *, IOSTAT=Stat) TimeStop
+    CASE ("odetimestep")
+      READ(StrValue, *, IOSTAT=Stat) ODETimeStep
+    CASE ("pdetimestep")
+      READ(StrValue, *, IOSTAT=Stat) PDETimeStep
+    CASE ("elasticitytimestep")
+      READ(StrValue, *, IOSTAT=Stat) ElasticityTimeStep
+    CASE ("stimvalue")
+      READ(StrValue, *, IOSTAT=Stat) StimValue
+    CASE ("outputtimestepstride")
+      READ(StrValue, *, IOSTAT=Stat) OutputTimeStepStride
+    CASE ("numberofnodesinxi1")
+      READ(StrValue, *, IOSTAT=Stat) NumberOfNodesInXi1
+    CASE ("numberofnodesinxi2")
+      READ(StrValue, *, IOSTAT=Stat) NumberOfNodesInXi2
+    CASE ("numberofnodesinxi3")
+      READ(StrValue, *, IOSTAT=Stat) NumberOfNodesInXi3
+    CASE ("newtonmaximumnumberofiterations")
+      READ(StrValue, *, IOSTAT=Stat) NewtonMaximumNumberOfIterations
+    CASE ("newtontolerance")
+      READ(StrValue, *, IOSTAT=Stat) NewtonTolerance
+    CASE ("elasticityloopmaximumnumberofiterations")
+      READ(StrValue, *, IOSTAT=Stat) ElasticityLoopMaximumNumberOfIterations
+    CASE ("enableexportemg")
+      READ(StrValue, *, IOSTAT=Stat) EnableExportEMG
+    CASE ("oldtomomechanics")
+      READ(StrValue, *, IOSTAT=Stat) OldTomoMechanics
+    CASE ("debuggingoutput")
+      READ(StrValue, *, IOSTAT=Stat) DebuggingOutput
+    CASE ("debuggingonlyrunshortpartofsimulation")
+      READ(StrValue, *, IOSTAT=Stat) DebuggingOnlyRunShortPartOfSimulation
+    CASE ("physicallength")
+      READ(StrValue, *, IOSTAT=Stat) PhysicalLength
+    CASE ("physicalwidth")
+      READ(StrValue, *, IOSTAT=Stat) PhysicalWidth
+    CASE ("physicalheight")
+      READ(StrValue, *, IOSTAT=Stat) PhysicalHeight
+    CASE ("pmax")
+      READ(StrValue, *, IOSTAT=Stat) PMax
+    CASE ("conductivity")
+      READ(StrValue, *, IOSTAT=Stat) Conductivity
+    CASE ("am")
+      READ(StrValue, *, IOSTAT=Stat) Am
+    CASE ("cmfast")
+      READ(StrValue, *, IOSTAT=Stat) CmFast
+    CASE ("cmslow")
+      READ(StrValue, *, IOSTAT=Stat) CmSlow
+    CASE ("vmax")
+      READ(StrValue, *, IOSTAT=Stat) Vmax
+    CASE ("initialstretch")
+      READ(StrValue, *, IOSTAT=Stat) InitialStretch
+    CASE ("inputdirectory")
+      InputDirectory = TRIM(ADJUSTL(StrValue))
+      
+      ! Append slash to input directory if necessary
+      StringLength = LEN_TRIM(InputDirectory)
+
+      IF (.NOT. InputDirectory(StringLength:StringLength) == "/") THEN
+        InputDirectory(StringLength+1:StringLength+1) = "/"
+      ENDIF
+      InputDirectory = TRIM(InputDirectory)
+    CASE ("firingtimesfile")
+      FiringTimesFile = TRIM(ADJUSTL(StrValue))
+    CASE ("innervationzonefile")
+      InnervationZoneFile = TRIM(ADJUSTL(StrValue))
+    CASE ("fibredistributionfile")
+      FibreDistributionFile = TRIM(ADJUSTL(StrValue))
+    CASE ("cellmlmodelfilename")
+      CellMLModelFilename = TRIM(ADJUSTL(StrValue))
+    CASE DEFAULT
+      PRINT*, TRIM(ScenarioInputFile) // ":", LineNumber, "Unrecognized variable """ // TRIM(VariableName) // """."
+  END SELECT
+  IF (Stat /= 0) THEN
+    PRINT *, TRIM(ScenarioInputFile) // ":", &
+     &  "Could not parse value """ // TRIM(StrValue) // """ for variable """//TRIM(VariableName)//"""."            
+  ENDIF
+  
+END SUBROUTINE ParseAssignment
+
 SUBROUTINE ParseScenarioInputFile(ScenarioInputFile)
   CHARACTER(LEN=1024), INTENT(IN) :: ScenarioInputFile
   CHARACTER(LEN=10000) :: Line
-  CHARACTER(LEN=1024) :: VariableName, StrValue
   INTEGER(CMISSIntg) :: LineNumber, StringLength
   LineNumber = 0  
   
@@ -912,114 +1029,7 @@ SUBROUTINE ParseScenarioInputFile(ScenarioInputFile)
       Line = Line(1:INDEX(Line, "!")-1)
     ENDIF
     
-    !PRINT *, "Read line """//TRIM(Line)//"""."
-    
-    ! Extract variable name and value
-    IF (INDEX(Line, "=") /= 0) THEN
-      VariableName = Line(1:INDEX(Line, "=")-1)
-      CALL ToLower(VariableName)
-      StrValue = TRIM(Line(INDEX(Line, "=")+1:))
-      
-      !PRINT *, "VariableName=["//TRIM(VariableName)//"], Value=["//TRIM(StrValue)//"]."
-    ELSE
-      CYCLE
-    ENDIF
-    
-    ! Parse variables
-    SELECT CASE(VariableName)
-      CASE ("x","numberglobalxelements")
-        READ(StrValue, *, IOSTAT=Stat) NumberGlobalXElements
-      CASE ("y","numberglobalyelements")
-        READ(StrValue, *, IOSTAT=Stat) NumberGlobalYElements
-      CASE ("z","numberglobalzelements")
-        READ(StrValue, *, IOSTAT=Stat) NumberGlobalZElements
-      CASE ("f","numberofinseriesfibres")
-        READ(StrValue, *, IOSTAT=Stat) NumberOfInSeriesFibres
-      CASE ("a","numberofelementsinatomicportionperdomain")
-        READ(StrValue, *, IOSTAT=Stat) NumberOfElementsInAtomicPortionPerDomain  
-      CASE ("odesolverid")
-        READ(StrValue, *, IOSTAT=Stat) ODESolverId
-      CASE ("monodomainsolverid")
-        READ(StrValue, *, IOSTAT=Stat) MonodomainSolverId
-      CASE ("monodomainpreconditionerid")
-        READ(StrValue, *, IOSTAT=Stat) MonodomainPreconditionerId
-      CASE ("timestop")
-        READ(StrValue, *, IOSTAT=Stat) TimeStop
-      CASE ("odetimestep")
-        READ(StrValue, *, IOSTAT=Stat) ODETimeStep
-      CASE ("pdetimestep")
-        READ(StrValue, *, IOSTAT=Stat) PDETimeStep
-      CASE ("elasticitytimestep")
-        READ(StrValue, *, IOSTAT=Stat) ElasticityTimeStep
-      CASE ("stimvalue")
-        READ(StrValue, *, IOSTAT=Stat) StimValue
-      CASE ("outputtimestepstride")
-        READ(StrValue, *, IOSTAT=Stat) OutputTimeStepStride
-      CASE ("numberofnodesinxi1")
-        READ(StrValue, *, IOSTAT=Stat) NumberOfNodesInXi1
-      CASE ("numberofnodesinxi2")
-        READ(StrValue, *, IOSTAT=Stat) NumberOfNodesInXi2
-      CASE ("numberofnodesinxi3")
-        READ(StrValue, *, IOSTAT=Stat) NumberOfNodesInXi3
-      CASE ("newtonmaximumnumberofiterations")
-        READ(StrValue, *, IOSTAT=Stat) NewtonMaximumNumberOfIterations
-      CASE ("newtontolerance")
-        READ(StrValue, *, IOSTAT=Stat) NewtonTolerance
-      CASE ("elasticityloopmaximumnumberofiterations")
-        READ(StrValue, *, IOSTAT=Stat) ElasticityLoopMaximumNumberOfIterations
-      CASE ("enableexportemg")
-        READ(StrValue, *, IOSTAT=Stat) EnableExportEMG
-      CASE ("oldtomomechanics")
-        READ(StrValue, *, IOSTAT=Stat) OldTomoMechanics
-      CASE ("debuggingoutput")
-        READ(StrValue, *, IOSTAT=Stat) DebuggingOutput
-      CASE ("debuggingonlyrunshortpartofsimulation")
-        READ(StrValue, *, IOSTAT=Stat) DebuggingOnlyRunShortPartOfSimulation
-      CASE ("physicallength")
-        READ(StrValue, *, IOSTAT=Stat) PhysicalLength
-      CASE ("physicalwidth")
-        READ(StrValue, *, IOSTAT=Stat) PhysicalWidth
-      CASE ("physicalheight")
-        READ(StrValue, *, IOSTAT=Stat) PhysicalHeight
-      CASE ("pmax")
-        READ(StrValue, *, IOSTAT=Stat) PMax
-      CASE ("conductivity")
-        READ(StrValue, *, IOSTAT=Stat) Conductivity
-      CASE ("am")
-        READ(StrValue, *, IOSTAT=Stat) Am
-      CASE ("cmfast")
-        READ(StrValue, *, IOSTAT=Stat) CmFast
-      CASE ("cmslow")
-        READ(StrValue, *, IOSTAT=Stat) CmSlow
-      CASE ("vmax")
-        READ(StrValue, *, IOSTAT=Stat) Vmax
-      CASE ("initialstretch")
-        READ(StrValue, *, IOSTAT=Stat) InitialStretch
-      CASE ("inputdirectory")
-        InputDirectory = TRIM(ADJUSTL(StrValue))
-        
-        ! Append slash to input directory if necessary
-        StringLength = LEN_TRIM(InputDirectory)
-
-        IF (.NOT. InputDirectory(StringLength:StringLength) == "/") THEN
-          InputDirectory(StringLength+1:StringLength+1) = "/"
-        ENDIF
-        InputDirectory = TRIM(InputDirectory)
-      CASE ("firingtimesfile")
-        FiringTimesFile = TRIM(ADJUSTL(StrValue))
-      CASE ("innervationzonefile")
-        InnervationZoneFile = TRIM(ADJUSTL(StrValue))
-      CASE ("fibredistributionfile")
-        FibreDistributionFile = TRIM(ADJUSTL(StrValue))
-      CASE ("cellmlmodelfilename")
-        CellMLModelFilename = TRIM(ADJUSTL(StrValue))
-      CASE DEFAULT
-        PRINT*, TRIM(ScenarioInputFile) // ":", LineNumber, "Unrecognized variable """ // TRIM(VariableName) // """."
-    END SELECT
-    IF (Stat /= 0) THEN
-      PRINT *, TRIM(ScenarioInputFile) // ":", &
-       &  "Could not parse value """ // TRIM(StrValue) // """ for variable """//TRIM(VariableName)//"""."            
-    ENDIF
+    CALL ParseAssignment(Line, LineNumber, ScenarioInputFile)
     
   ENDDO
   
@@ -1030,7 +1040,7 @@ SUBROUTINE ParseParameters()
 
   INTEGER(CMISSLINTg) :: Factor, NumberArguments, ValueArgumentCount
   INTEGER(CMISSINTg) :: StringLength
-  CHARACTER(LEN=1024) :: Arg
+  CHARACTER(LEN=10000) :: Arg
   CHARACTER(LEN=1024) :: ScenarioInputFile
   LOGICAL :: GeometryIsValid, FileExists
 
@@ -1048,9 +1058,13 @@ SUBROUTINE ParseParameters()
     CALL GETARG(I, Arg)   ! get argument
     
     ! if argument ends in .sce, consider this as a scenario input file
-    IF (INDEX(Arg, ".sce", .TRUE.) == LEN_TRIM(Arg)-3) THEN
+    IF (INDEX(Arg, ".sce", .TRUE.) /= 0 .AND. INDEX(Arg, ".sce", .TRUE.) == LEN_TRIM(Arg)-3) THEN
       ScenarioInputFile = TRIM(Arg)
       CALL ParseScenarioInputFile(ScenarioInputFile)
+      
+    ! if argument contains '=' consider it as assignment
+    ElSEIF (INDEX(Arg, "=") /= 0) THEN
+      CALL ParseAssignment(Arg, I, "command line argument")
     ELSE
       SELECT CASE (ValueArgumentCount)     ! Input directory
       CASE(1)

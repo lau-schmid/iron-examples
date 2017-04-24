@@ -459,7 +459,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !Calculate the bioelectrics geometric field
   CALL CalculateBioelectrics()
   
-   PRINT*, "Size IndependentFieldFE:",cmfe_getFieldSize(IndependentFieldFE, Err),"Bytes"
+ !PRINT*, "Size IndependentFieldFE:",cmfe_getFieldSize(IndependentFieldFE, Err),"Bytes"
   
   !PRINT*, "Abort program in FortranExample.f90:450"
   CALL MPI_BARRIER(MPI_COMM_WORLD, Err)
@@ -2672,6 +2672,7 @@ SUBROUTINE CreateSolvers()
   
   CALL cmfe_Solver_DynamicSchemeSet(SolverParabolic,CMFE_SOLVER_DYNAMIC_BACKWARD_EULER_SCHEME,Err)
   
+  
   ! data structure is as follows:
   ! SolverParabolic
   !   LinearSolver
@@ -2680,6 +2681,34 @@ SUBROUTINE CreateSolvers()
   ! Retrieve linear solver
   NULLIFY(linearSolver%solver)
   CALL cmfe_Solver_DynamicLinearSolverGet(SolverParabolic, linearSolver, Err)
+  
+  CALL cmfe_Solver_LinearTypeSet(linearSolver, CMFE_SOLVER_LINEAR_ITERATIVE_SOLVE_TYPE, Err)
+  CALL cmfe_Solver_LinearIterativeTypeSet(linearSolver, CMFE_SOLVER_ITERATIVE_CONJUGATE_GRADIENT, Err)
+  CALL cmfe_Solver_LinearIterativePreconditionerTypeSet(linearSolver, CMFE_SOLVER_ITERATIVE_INCOMPLETE_LU_PRECONDITIONER, Err)
+  
+  ! iterative:
+  ! CALL cmfe_Solver_LinearTypeSet(linearSolver, CMFE_SOLVER_LINEAR_ITERATIVE_SOLVE_TYPE, Err)
+  ! CALL cmfe_Solver_LinearIterativeTypeSet(linearSolver, CMFE_SOLVER_ITERATIVE_CONJUGATE_GRADIENT, Err)
+  ! CALL cmfe_Solver_LinearIterativePreconditionerTypeSet(linearSolver, CMFE_SOLVER_ITERATIVE_INCOMPLETE_LU_PRECONDITIONER, Err)
+  ! solver:
+  ! CMFE_SOLVER_ITERATIVE_GMRES
+  ! CMFE_SOLVER_ITERATIVE_CONJUGATE_GRADIENT
+  ! CMFE_SOLVER_ITERATIVE_CONJGRAD_SQUARED
+  ! preconditioner:
+  ! CMFE_SOLVER_ITERATIVE_NO_PRECONDITIONER
+  ! CMFE_SOLVER_ITERATIVE_JACOBI_PRECONDITIONER
+  ! CMFE_SOLVER_ITERATIVE_BLOCK_JACOBI_PRECONDITIONER
+  ! CMFE_SOLVER_ITERATIVE_SOR_PRECONDITIONER
+  ! CMFE_SOLVER_ITERATIVE_INCOMPLETE_CHOLESKY_PRECONDITIONER
+  ! CMFE_SOLVER_ITERATIVE_INCOMPLETE_LU_PRECONDITIONER
+  ! CMFE_SOLVER_ITERATIVE_ADDITIVE_SCHWARZ_PRECONDITIONER
+  ! direct:
+  ! CALL cmfe_Solver_LinearTypeSet(linearSolver, CMFE_SOLVER_LINEAR_DIRECT_SOLVE_TYPE, Err)
+  ! CALL cmfe_Solver_LinearDirectTypeSet(linearSolver, CMFE_SOLVER_ITERATIVE_CONJUGATE_GRADIENT, Err)
+  ! CMFE_SOLVER_DIRECT_LU
+  ! CMFE_SOLVER_DIRECT_CHOLESKY
+  ! CMFE_SOLVER_DIRECT_SVD
+  
   
   IF (DEBUGGING_OUTPUT_PROBLEM) THEN
     PRINT*, ""
@@ -2927,8 +2956,8 @@ SUBROUTINE CalculateBioelectrics()
 
   CALL SLEEP(2)
   
-  PRINT*, "after cmfe_BioelectricsFiniteElasticity_UpdateGeometricField"
-  CALL cmfe_OutputInterpolationParameters(Problem,DependentFieldM(FibreNo), SolverParabolic,Err)
+  !PRINT*, "after cmfe_BioelectricsFiniteElasticity_UpdateGeometricField"
+  !CALL cmfe_OutputInterpolationParameters(Problem,DependentFieldM(FibreNo), SolverParabolic,Err)
   
   !reset the relative contraction velocity to 0
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM(FibreNo),CMFE_FIELD_U2_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3, &

@@ -966,10 +966,10 @@ SUBROUTINE ParseParameters()
     ELASTICITY_TIME_STEP = 0.10000000001_CMISSRP
     
   CASE(2)     ! medium, used for scaling tests
-    TIME_STOP = 10
+    TIME_STOP = 3
     
     ODE_TIME_STEP = 0.0001_CMISSRP
-    PDE_TIME_STEP = 0.005_CMISSRP
+    PDE_TIME_STEP = 0.0005_CMISSRP
     ELASTICITY_TIME_STEP = 0.10000000001_CMISSRP
     STIM_VALUE = 20000.0_CMISSRP
     OUTPUT_TIME_STEP_STRIDE = 10
@@ -1000,17 +1000,17 @@ SUBROUTINE ParseParameters()
     NumberOfNodesInXi2=2
     NumberOfNodesInXi3=1
   else
-    if(NumberGlobalXElements*NumberGlobalYElements*NumberGlobalZElements==1) then
-      NumberOfNodesInXi1=51
-    else
+    !if(NumberGlobalXElements*NumberGlobalYElements*NumberGlobalZElements==1) then
+    !  NumberOfNodesInXi1=51
+    !else
       NumberOfNodesInXi1=31!500
-    endif
+    !endif
     NumberOfNodesInXi2=2!30
     NumberOfNodesInXi3=3!45
     
     ! only 1 fibre per 3D element
-    NumberOfNodesInXi2=1
-    NumberOfNodesInXi3=1
+    !NumberOfNodesInXi2=1
+    !NumberOfNodesInXi3=1
   endif
 !  NumberOfNodesPerFibre=(NumberOfNodesInXi1-1)*NumberGlobalXElements+1
 !  NumberOfNodesM=NumberOfNodesPerFibre*NumberGlobalYElements*NumberGlobalZElements*NumberOfNodesInXi2*NumberOfNodesInXi3
@@ -1184,15 +1184,11 @@ SUBROUTINE ParseParameters()
       CASE(1)
         PRINT *, "(1D) Monodomain: 1 SOLVER_DIRECT_LU"
       CASE(2)
-        PRINT *, "(1D) Monodomain: 2 SOLVER_DIRECT_CHOLESKY"
+        PRINT *, "(1D) Monodomain: 2 SOLVER_ITERATIVE_GMRES"
       CASE(3)
-        PRINT *, "(1D) Monodomain: 3 SOLVER_DIRECT_SVD"
+        PRINT *, "(1D) Monodomain: 3 SOLVER_ITERATIVE_CONJUGATE_GRADIENT"
       CASE(4)
-        PRINT *, "(1D) Monodomain: 4 SOLVER_ITERATIVE_GMRES"
-      CASE(5)
-        PRINT *, "(1D) Monodomain: 5 SOLVER_ITERATIVE_CONJUGATE_GRADIENT"
-      CASE(6)
-        PRINT *, "(1D) Monodomain: 6 SOLVER_ITERATIVE_CONJGRAD_SQUARED"
+        PRINT *, "(1D) Monodomain: 4 SOLVER_ITERATIVE_CONJGRAD_SQUARED"
       CASE DEFAULT
         PRINT *, "(1D) Monodomain: SOLVER_ITERATIVE_GMRES (default)" 
     END SELECT
@@ -2419,17 +2415,13 @@ SUBROUTINE CreateSolvers()
   ! CMFE_SOLVER_ITERATIVE_ADDITIVE_SCHWARZ_PRECONDITIONER
   
   !MonodomainSolverId, MonodomainPreconditionerId, ODESolverId
-  IF (MonodomainSolverId <= 3) THEN    ! direct solver
+  IF (MonodomainSolverId <= 1) THEN    ! direct solver
     
     CALL cmfe_Solver_LinearTypeSet(linearSolver, CMFE_SOLVER_LINEAR_DIRECT_SOLVE_TYPE, Err)
   
     SELECT CASE(MonodomainSolverId)
       CASE(1)
         CALL cmfe_Solver_LinearDirectTypeSet(linearSolver, CMFE_SOLVER_DIRECT_LU, Err)
-      CASE(2)
-        CALL cmfe_Solver_LinearDirectTypeSet(linearSolver, CMFE_SOLVER_DIRECT_CHOLESKY, Err)
-      CASE(3)
-        CALL cmfe_Solver_LinearDirectTypeSet(linearSolver, CMFE_SOLVER_DIRECT_SVD, Err)
       CASE DEFAULT
         PRINT*, "Warning: Wrong MonodomainSolverId ",MonodomainSolverId
         CALL cmfe_Solver_LinearDirectTypeSet(linearSolver, CMFE_SOLVER_DIRECT_LU, Err)
@@ -2439,15 +2431,15 @@ SUBROUTINE CreateSolvers()
     CALL cmfe_Solver_LinearTypeSet(linearSolver, CMFE_SOLVER_LINEAR_ITERATIVE_SOLVE_TYPE, Err)
     
     SELECT CASE(MonodomainSolverId)
+      CASE(2)
+        CALL cmfe_Solver_LinearIterativeTypeSet(linearSolver, CMFE_SOLVER_ITERATIVE_GMRES, Err)
+      CASE(3)
+        CALL cmfe_Solver_LinearIterativeTypeSet(linearSolver, CMFE_SOLVER_ITERATIVE_CONJUGATE_GRADIENT, Err)
       CASE(4)
-        CALL cmfe_Solver_LinearDirectTypeSet(linearSolver, CMFE_SOLVER_ITERATIVE_GMRES, Err)
-      CASE(5)
-        CALL cmfe_Solver_LinearDirectTypeSet(linearSolver, CMFE_SOLVER_ITERATIVE_CONJUGATE_GRADIENT, Err)
-      CASE(6)
-        CALL cmfe_Solver_LinearDirectTypeSet(linearSolver, CMFE_SOLVER_ITERATIVE_CONJGRAD_SQUARED, Err)
+        CALL cmfe_Solver_LinearIterativeTypeSet(linearSolver, CMFE_SOLVER_ITERATIVE_CONJGRAD_SQUARED, Err)
       CASE DEFAULT
         PRINT*, "Warning: Wrong MonodomainSolverId ",MonodomainSolverId
-        CALL cmfe_Solver_LinearDirectTypeSet(linearSolver, CMFE_SOLVER_ITERATIVE_GMRES, Err)
+        CALL cmfe_Solver_LinearIterativeTypeSet(linearSolver, CMFE_SOLVER_ITERATIVE_GMRES, Err)
     END SELECT
     
     SELECT CASE(MonodomainPreconditionerId)
@@ -2711,7 +2703,9 @@ END SUBROUTINE CalculateBioelectrics
 SUBROUTINE ExportEMG()
   REAL(CMISSSP), DIMENSION(2) :: TimeStart, TimeStop
   REAL(CMISSSP) :: Total
-  
+ 
+  RETURN
+ 
   IF (ComputationalNodeNumber == 0) WRITE(*,'(A)',advance='no') "Output EMG Data ... "
   CALL ETIME(TimeStart, Total)
   

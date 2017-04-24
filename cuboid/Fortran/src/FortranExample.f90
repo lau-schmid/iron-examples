@@ -191,7 +191,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   INTEGER(CMISSIntg) :: CustomSolverNumberIterationsNewton = 0
   INTEGER(CMISSIntg) :: CustomSolverNumberIterationsNewtonMin = 0
   INTEGER(CMISSIntg) :: CustomSolverNumberIterationsNewtonMax = 0
-  INTEGER(CMISSIntg) :: MonodomainSolverId = 1
+  INTEGER(CMISSIntg) :: MonodomainSolverId = 2
   INTEGER(CMISSIntg) :: MonodomainPreconditionerId = 1
   INTEGER(CMISSIntg) :: ODESolverId = 1
 

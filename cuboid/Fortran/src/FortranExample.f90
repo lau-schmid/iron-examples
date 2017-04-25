@@ -1440,7 +1440,7 @@ END SUBROUTINE CreateRegionMesh
 SUBROUTINE CreateDecomposition()
 
   INTEGER(CMISSIntg) :: NumberOfElementsInDomain
-  INTEGER(CMISSIntg) :: DomainNo
+  INTEGER(CMISSIntg) :: DomainNo, NodeNo
   INTEGER(CMISSIntg) :: ElementMNo, ElementFENo
   INTEGER(CMISSIntg) :: ElementInFibreLineNo
   INTEGER(CMISSIntg) :: I
@@ -1454,6 +1454,8 @@ SUBROUTINE CreateDecomposition()
   INTEGER(CMISSintg) :: NumberOfActualElementsInDomain
   INTEGER(CMISSIntg) :: FibreNo
   INTEGER(CMISSIntg) :: DecompositionUserNumberM
+  INTEGER(CMISSIntg) :: FEElementLocalNumber
+  INTEGER(CMISSIntg) :: FEElementXIdx, FEElementYIdx, FEElementZIdx
   
   !--------------------------------------------------------------------------------------------------------------------------------
   ! Create a decomposition for global FE elements
@@ -1499,7 +1501,6 @@ SUBROUTINE CreateDecomposition()
     !  & ", Size of Portion: ", NumberOfElementsInAtomicPortionPerDomain
     !PRINT*, "NumberOfElementsAdditionallyForLastProcess: ", NumberOfElementsAdditionallyForLastProcess
     DO ElementFENo = 1, NumberOfElementsFE        ! loop over global ElementFE's
-
 
       !                                        DECOMPOSITION,  GLOBAL_ELEMENT_NUMBER, DOMAIN_NUMBER
       CALL cmfe_Decomposition_ElementDomainSet(DecompositionFE, ElementFENo,            DomainNo, Err)
@@ -1613,6 +1614,30 @@ SUBROUTINE CreateDecomposition()
     PRINT*, "--------------- ElementsMapping for fibre ",FibreNo," of ", NumberOfFibres, "--------------------------"
     CALL cmfe_PrintElementsMapping(DecompositionM(FibreNo),Err)
   ENDDO
+  
+  ! Store containing FE element local numbers for bioelectric nodes
+  DO FibreNo = 1, NumberOfFibres
+    DO NodeNo = 1, NumberOfNodesPerFibre
+  
+      !                                     decomposition,           nodeUserNumber, meshComponentNumber, domain
+      CALL cmfe_Decomposition_NodeDomainGet(DecompositionM(FibreNo), NodeNo,         1,                   NodeDomain, Err)
+      IF (NodeDomain == ComputationalNodeNumber) THEN
+      
+        FEElementZIdx = INT((FibreNo-1) / (NumberOfNodesInXi2 * NumberGlobalYElements))
+        FEElementYIdx = MOD((FibreNo-1), (NumberOfNodesInXi2 * NumberGlobalYElements))
+        FEElementXIdx = (NodeNo-1) / NumberOfNodesInXi1
+      
+        FEElementLocalNumber = FEElementZIdx * NumberGlobalYElements * NumberGlobalXElements &
+         & + FEElementYIdx * NumberGlobalXElements + FEElementXIdx + 1
+      
+        !                                     FIELD,
+        CALL cmfe_Field_ParameterSetUpdateNode(IndependentFieldM(FibreNo), &
+        !   VARIABLE_TYPE,              FIELD_SET_TYPE, VERSION_NUMBER, DERIVATIVE_NUMBER, USER_NODE_NUMBER, COMPONENT_NUMBER, VALUE, ERR
+          & CMFE_FIELD_V_VARIABLE_TYPE, CMFE_FIELD_VALUES_SET_TYPE, 1, 1, NodeNo, 5, FEElementLocalNumber, Err)
+      ENDIF
+    ENDDO
+  ENDDO
+  
   
   !PRINT*, "Print nodes mapping in FortranExample.f90:1549"
   !CALL cmfe_PrintNodesMapping(DecompositionM(FibreNo),Err)

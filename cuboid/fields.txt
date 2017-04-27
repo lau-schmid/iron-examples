@@ -25,7 +25,7 @@ IndependentFieldM
     2) fibre type,   
     3) fibre number,   
     4) nearest Gauss point number,   
-    5) local element number (LOCAL NODE NUMBERING!!!)
+    5) FE element global number that contains bioelectric node
   CMFE_FIELD_U1_VARIABLE_TYPE: 
     1) half-sarcomere length   
     2) inital half-sarcomere length

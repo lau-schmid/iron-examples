@@ -154,6 +154,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   INTEGER(CMISSIntg) :: NumberOfInSeriesFibres
   INTEGER(CMISSIntg) :: NumberOfElementsInAtomicPortionPerDomain
   INTEGER(CMISSIntg) :: NumberOfElementsMInXi1
+  INTEGER(CMISSIntg) :: NumberGlobalYFibres
   INTEGER(CMISSINTg) :: NumberOfFibreLinesPerGlobalElement
   INTEGER(CMISSIntg) :: NumberOfGlobalElementLines
   INTEGER(CMISSIntg) :: NumberOfFibreLinesTotal
@@ -345,7 +346,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   TYPE(cmfe_FieldType), DIMENSION(:), ALLOCATABLE :: CellMLIntermediateField
   TYPE(cmfe_FieldType), DIMENSION(:), ALLOCATABLE :: CellMLParametersField
   TYPE(cmfe_FieldsType) :: Fields
-  TYPE(cmfe_GeneratedMeshType) :: GeneratedMesh
+  TYPE(cmfe_GeneratedMeshType) :: GeneratedMeshFE
   TYPE(cmfe_MeshType) :: MeshFE
   TYPE(cmfe_MeshType), DIMENSION(:), ALLOCATABLE :: MeshM
   TYPE(cmfe_ProblemType) :: Problem
@@ -684,6 +685,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   WRITE(*,'(A,A)') TRIM(GetTimeStamp()), " Program successfully completed."
   STOP
+  
 CONTAINS
 
 ! Test whether parametrization and number of processes matches and is valid
@@ -999,17 +1001,13 @@ SUBROUTINE ParseParameters()
     if(NumberGlobalXElements*NumberGlobalYElements*NumberGlobalZElements==1) then
       NumberOfNodesInXi1=50
     else
-      NumberOfNodesInXi1=30!500
+      NumberOfNodesInXi1=2!500
     endif
     NumberOfNodesInXi2=2!30
     NumberOfNodesInXi3=3!45
     
     ! only 1 fibre per 3D element
     NumberOfNodesInXi2=1
-    NumberOfNodesInXi3=1
-    
-    ! 2 fibres per 3D element
-    NumberOfNodesInXi2=2
     NumberOfNodesInXi3=1
     
   endif
@@ -1024,13 +1022,13 @@ SUBROUTINE ParseParameters()
 !    & NumberGlobalXElements
 
   ! direction of fibres is in Xi1=Global X direction
-
+  NumberGlobalYFibres = NumberOfNodesInXi2 * NumberGlobalYElements
   NumberOfFibreLinesPerGlobalElement = NumberOfNodesInXi2 * NumberOfNodesInXi3
   NumberOfGlobalElementLines = NumberGlobalYElements * NumberGlobalZElements
   NumberOfFibreLinesTotal = NumberOfFibreLinesPerGlobalElement * NumberOfGlobalElementLines
   NumberOfFibres = NumberOfFibreLinesTotal * NumberOfInSeriesFibres
   NumberOfElementsMInXi1 = NumberOfNodesInXi1
-  NumberOfElementsMPerFibreLine = NumberOfElementsMInXi1*NumberGlobalXElements
+  NumberOfElementsMPerFibreLine = NumberOfElementsMInXi1 * NumberGlobalXElements
   NumberOfElementsMPerFibre = NumberOfElementsMPerFibreLine / NumberOfInSeriesFibres
   NumberOfNodesPerShortFibre = NumberOfElementsMPerFibre
   NumberOfNodesPerLongFibre = NumberOfElementsMPerFibre + 1
@@ -1125,12 +1123,12 @@ SUBROUTINE ParseParameters()
       & ", # Iter: ", CEILING(ELASTICITY_TIME_STEP/PDE_TIME_STEP)
     PRINT "(A,F0.5,A,I5)", "    - SolverDAE,                      dt = ", ODE_TIME_STEP, &
       & ", # Iter: ", CEILING(PDE_TIME_STEP/ODE_TIME_STEP)
-    PRINT "(A,F0.4)", "    - SolverParabolic, (dynamic backward euler)"
+    PRINT "(A,F0.4)", "    - SolverParabolic"
     PRINT "(A,I5)",               "  - ELASTICITY_LOOP,                               # Iter: ",&
       & ElasticityLoopMaximumNumberOfIterations
     PRINT "(A,I4,A,E10.4)", "    - SolverFE,                 # Iter (max): ", NewtonMaximumNumberOfIterations, &
       & ", Tol.: ",NewtonTolerance
-    PRINT "(A,I4)", "      - LinearSolverFE, (direct solver)"
+    PRINT "(A,I4)", "      - LinearSolverFE"
     PRINT *, ""
     PRINT *, "OUTPUT_TIME_STEP_STRIDE: ", OUTPUT_TIME_STEP_STRIDE
 
@@ -1224,10 +1222,9 @@ SUBROUTINE PrintWorkingDirectory()
 END SUBROUTINE PrintWorkingDirectory
 
 SUBROUTINE CreateRegionMesh()
-  INTEGER(CMISSIntg) :: NodeNo
-  INTEGER(CMISSIntg) :: ElementNo
   INTEGER(CMISSIntg) :: ElementInFibreNo
   INTEGER(CMISSIntg) :: FibreNo
+  INTEGER(CMISSIntg) :: NodeUserNumber
   !-------------------------------------------------------------------------------------------------------------------------------
 
   !Broadcast the number of elements in the X & Y directions and the number of partitions to the other computational nodes
@@ -1237,7 +1234,11 @@ SUBROUTINE CreateRegionMesh()
   CALL MPI_BCAST(NumberOfDomains,1,MPI_INTEGER,0,MPI_COMM_WORLD,MPI_IERROR)
 
   IF (ComputationalNodeNumber == 0) THEN
-    print*, "Running with ",NumberOfComputationalNodes," processes."
+    IF (NumberOfComputationalNodes == 1) THEN
+      PRINT "(A)", "Running with 1 process."
+    ELSE 
+      PRINT "(A,I6,A)", "Running with ",NumberOfComputationalNodes," processes."
+    ENDIF
   ENDIF
 
   !--------------------------------------------------------------------------------------------------------------------------------
@@ -1311,25 +1312,23 @@ SUBROUTINE CreateRegionMesh()
   !--------------------------------------------------------------------------------------------------------------------------------
   !Create a mesh with 8 three-dimensional elements
   !Start the creation of a generated mesh in the region
-  CALL cmfe_GeneratedMesh_Initialise(GeneratedMesh,Err)
-  CALL cmfe_GeneratedMesh_CreateStart(GeneratedMeshUserNumber,RegionFE,GeneratedMesh,Err)
+  CALL cmfe_GeneratedMesh_Initialise(GeneratedMeshFE,Err)
+  CALL cmfe_GeneratedMesh_CreateStart(GeneratedMeshUserNumber,RegionFE,GeneratedMeshFE,Err)
   !Set up a regular x*y*z mesh
-  CALL cmfe_GeneratedMesh_TypeSet(GeneratedMesh,CMFE_GENERATED_MESH_REGULAR_MESH_TYPE,Err)
+  CALL cmfe_GeneratedMesh_TypeSet(GeneratedMeshFE,CMFE_GENERATED_MESH_REGULAR_MESH_TYPE,Err)
   !Set the default basis
-  CALL cmfe_GeneratedMesh_BasisSet(GeneratedMesh,[QuadraticBasis,LinearBasis],Err)
+  CALL cmfe_GeneratedMesh_BasisSet(GeneratedMeshFE,[QuadraticBasis,LinearBasis],Err)
   !Define the mesh on the region
-  CALL cmfe_GeneratedMesh_ExtentSet(GeneratedMesh,[LENGTH,WIDTH,HEIGHT],Err)
-  CALL cmfe_GeneratedMesh_NumberOfElementsSet(GeneratedMesh,[NumberGlobalXElements,NumberGlobalYElements, &
+  CALL cmfe_GeneratedMesh_ExtentSet(GeneratedMeshFE,[LENGTH,WIDTH,HEIGHT],Err)
+  CALL cmfe_GeneratedMesh_NumberOfElementsSet(GeneratedMeshFE,[NumberGlobalXElements,NumberGlobalYElements, &
     & NumberGlobalZElements],Err)
   !Finish the creation of a generated mesh in the region
   CALL cmfe_Mesh_Initialise(MeshFE,Err)
-  CALL cmfe_GeneratedMesh_CreateFinish(GeneratedMesh,MeshUserNumberFE,MeshFE,Err)
-
+  CALL cmfe_GeneratedMesh_CreateFinish(GeneratedMeshFE,MeshUserNumberFE,MeshFE,Err)
   
   !--------------------------------------------------------------------------------------------------------------------------------
   ! create the monodomain mesh
   !Create a mesh in the region
-  
   
   ! involved variables to be shared by meshes
   ! TYPE(cmfe_RegionType) :: RegionM
@@ -1340,6 +1339,10 @@ SUBROUTINE CreateRegionMesh()
   ! TYPE(cmfe_MeshType) :: MeshM
   ! INTEGER(CMISSIntg) :: MeshUserNumberM
   ! TYPE(cmfe_MeshElementsType) :: ElementsM
+  
+  ! By sharing the Nodes object, node user numbers are /= global numbers!
+  ! Global node numbering is 1 to NumberOfElementsMPerFibre (poss. +1)
+  ! User Numbering is contiguous through fibres
   
   ! every muscle fibre has its own 1D mesh
   ALLOCATE(MeshM(NumberOfFibres), Stat=stat)
@@ -1367,7 +1370,7 @@ SUBROUTINE CreateRegionMesh()
     CALL cmfe_Mesh_NumberOfElementsSet(MeshM(FibreNo),NumberOfElementsMPerFibre,Err)
 
     CALL cmfe_MeshElements_Initialise(ElementsM(FibreNo),Err)   
-    !                                  mesh,          meshComponentNumber,           basis,        meshElements
+    !                                  mesh,           meshComponentNumber,           basis,        meshElements
     CALL cmfe_MeshElements_CreateStart(MeshM(FibreNo), MonodomainMeshComponentNumber, LinearBasisM, ElementsM(FibreNo), Err)
   ENDDO
   
@@ -1376,27 +1379,26 @@ SUBROUTINE CreateRegionMesh()
   CALL cmfe_Nodes_CreateStart(RegionM, NumberOfNodesM, Nodes, Err)
   CALL cmfe_Nodes_CreateFinish(Nodes,Err)
 
-  ! Set adjacent nodes for each element
-  NodeNo = 1
-  ElementNo = 1
   
+  ! Set adjacent nodes for each element
+  NodeUserNumber = 1
   DO FibreNo = 1, NumberOfFibres
     PRINT *, "Fibre ", FibreNo
-    ElementNo = 1
     DO ElementInFibreNo = 1,NumberOfElementsMPerFibre
       
-      CALL cmfe_MeshElements_NodesSet(ElementsM(FibreNo), ElementNo, [NodeNo,NodeNo+1], Err)
+      !                               meshElements,       globalElementNumber, elementUserNodes (user numbers)
+      CALL cmfe_MeshElements_NodesSet(ElementsM(FibreNo), ElementInFibreNo,    [NodeUserNumber,NodeUserNumber+1], Err)
 
       PRINT "(A,I3.3,A,I3.3,A,I5.5,A,I7.7,A,I7.7)", &
-        & "a ", ComputationalNodeNumber, ": fibre ", FibreNo, " 1D el. no. ", ElementNo, " has nodes ", NodeNo, ", ", NodeNo+1
+        & "a ", ComputationalNodeNumber, ": fibre ", FibreNo, " 1D el. no. ", ElementInFibreNo, " has nodes ", &
+        & NodeUserNumber, ", ", NodeUserNumber+1
 
       ! If at the end of a fibre line, increment node to starting node of next fibre line
-      IF (MOD(ElementNo, NumberOfElementsMPerFibreLine) == 0) THEN
-        NodeNo = NodeNo+1
+      IF (MOD(ElementInFibreNo, NumberOfElementsMPerFibreLine) == 0) THEN
+        NodeUserNumber = NodeUserNumber+1
       ENDIF
      
-      NodeNo = NodeNo+1
-      ElementNo = ElementNo+1    
+      NodeUserNumber = NodeUserNumber+1
     ENDDO
   ENDDO
   !write(*,*) "Finished setting up 1D elements"
@@ -1405,9 +1407,6 @@ SUBROUTINE CreateRegionMesh()
     CALL cmfe_MeshElements_CreateFinish(ElementsM(FibreNo), Err)
     CALL cmfe_Mesh_CreateFinish(MeshM(FibreNo), Err)
   ENDDO
-  
-  
-
                  
   !PRINT*, "internal elements ", ELEMENTS_MAPPING%INTERNAL_START,"to",ELEMENTS_MAPPING%INTERNAL_FINISH
   !PRINT*, "element parameters:"
@@ -1440,13 +1439,9 @@ END SUBROUTINE CreateRegionMesh
 SUBROUTINE CreateDecomposition()
 
   INTEGER(CMISSIntg) :: NumberOfElementsInDomain
-  INTEGER(CMISSIntg) :: DomainNo, NodeNo
-  INTEGER(CMISSIntg) :: ElementMNo, ElementFENo
+  INTEGER(CMISSIntg) :: DomainNo
+  INTEGER(CMISSIntg) :: ElementMNo, ElementFENo, ElementMInFibreNo
   INTEGER(CMISSIntg) :: ElementInFibreLineNo
-  INTEGER(CMISSIntg) :: I
-  INTEGER(CMISSIntg) :: FibreLineNo
-  INTEGER(CMISSIntg) :: GlobalElementLineNo
-  INTEGER(CMISSIntg) :: FirstElementInCurrentGlobalElementLineNo
   REAL(CMISSDP) :: NumberOfAtomicElementPortions
   INTEGER(CMISSIntg) :: NumberOfAtomicPortionsPerDomain
   INTEGER(CMISSIntg) :: AtomicPortionNo, ElementInAtomicPortionNo, LastDomainNo
@@ -1454,7 +1449,7 @@ SUBROUTINE CreateDecomposition()
   INTEGER(CMISSintg) :: NumberOfActualElementsInDomain
   INTEGER(CMISSIntg) :: FibreNo
   INTEGER(CMISSIntg) :: DecompositionUserNumberM
-  INTEGER(CMISSIntg) :: FEElementLocalNumber
+  INTEGER(CMISSIntg) :: FEElementGlobalNumber
   INTEGER(CMISSIntg) :: FEElementXIdx, FEElementYIdx, FEElementZIdx
   
   !--------------------------------------------------------------------------------------------------------------------------------
@@ -1465,7 +1460,6 @@ SUBROUTINE CreateDecomposition()
 
   IF(NumberOfDomains > 1) THEN
     CALL cmfe_Decomposition_TypeSet(DecompositionFE, CMFE_DECOMPOSITION_USER_DEFINED_TYPE, Err)
-
 
     ! compute number of elements per domain
     NumberOfElementsInDomain = NumberOfElementsFE / NumberOfDomains
@@ -1480,7 +1474,7 @@ SUBROUTINE CreateDecomposition()
 
     IF (NumberOfElementsAdditionallyForLastProcess /= 0) THEN
       IF (ComputationalNodeNumber == 0) THEN
-        PRINT*, "Notice: Due to discretization size and Atomic size, the last process gets ", &
+        PRINT "(3(A,I6),A)", "Notice: Due to discretization size and Atomic size, the last process gets ", &
           & NumberOfElementsAdditionallyForLastProcess, " 3D elements more (", &
           & (NumberOfActualElementsInDomain+NumberOfElementsAdditionallyForLastProcess), " instead of ", &
           & NumberOfActualElementsInDomain, ")!"
@@ -1502,8 +1496,8 @@ SUBROUTINE CreateDecomposition()
     !PRINT*, "NumberOfElementsAdditionallyForLastProcess: ", NumberOfElementsAdditionallyForLastProcess
     DO ElementFENo = 1, NumberOfElementsFE        ! loop over global ElementFE's
 
-      !                                        DECOMPOSITION,  GLOBAL_ELEMENT_NUMBER, DOMAIN_NUMBER
-      CALL cmfe_Decomposition_ElementDomainSet(DecompositionFE, ElementFENo,            DomainNo, Err)
+      !                                        DECOMPOSITION,   GLOBAL_ELEMENT_NUMBER, DOMAIN_NUMBER
+      CALL cmfe_Decomposition_ElementDomainSet(DecompositionFE, ElementFENo,           DomainNo, Err)
       LastDomainNo = DomainNo
 
       PRINT "(I3.3,A,I5.5,A,I2)", ComputationalNodeNumber, ": 3D el. no. ", ElementFENo, " to domain no. ", DomainNo
@@ -1546,9 +1540,9 @@ SUBROUTINE CreateDecomposition()
   CALL cmfe_Decomposition_NumberOfDomainsSet(DecompositionFE,NumberOfDomains,Err)
   CALL cmfe_Decomposition_CreateFinish(DecompositionFE,Err)
 
-  ! ---------------------------------------------------
+  !--------------------------------------------------------------------------------------------------------------------------------
   ! Create a decompositions for monodomain elements on fibres
-  
+  PRINT "(I3.3,A)", ComputationalNodeNumber, ": Create decomposition for monodomain elements"
   ALLOCATE(DecompositionM(NumberOfFibres), Stat=stat)
   IF (stat /= 0) THEN
     PRINT*, "Error allocating ",NumberOfFibres," Decomposition objects"
@@ -1563,38 +1557,45 @@ SUBROUTINE CreateDecomposition()
   ENDDO
          
   IF(NumberOfDomains > 1) THEN
-    CALL cmfe_Decomposition_TypeSet(DecompositionM(FibreNo), CMFE_DECOMPOSITION_USER_DEFINED_TYPE, Err)
-
-    ! set domains of ElementMs
+    ! set all decompositions to be of user defined type
+    DO FibreNo = 1, NumberOfFibres
+      CALL cmfe_Decomposition_TypeSet(DecompositionM(FibreNo), CMFE_DECOMPOSITION_USER_DEFINED_TYPE, Err)
+    ENDDO
+    
+    ! TODO: you can only create decompositions across all processes
+    
+    ! assign the same domains to bioelectric nodes as the containing FE elements
+    ! loop over elementsM
     ElementMNo = 1
-    FirstElementInCurrentGlobalElementLineNo = 1
-    DO GlobalElementLineNo = 1, NumberOfGlobalElementLines    ! loop over lines in X direction of global elements
-
-      DO FibreLineNo = 1, NumberOfFibreLinesPerGlobalElement    ! loop over fibre lines in a global element line
-        ElementFENo = FirstElementInCurrentGlobalElementLineNo
-        FibreNo = (GlobalElementLineNo-1) * NumberOfInSeriesFibres * NumberOfFibreLinesPerGlobalElement &
-          & + FibreLineNo
+    DO FibreNo = 1, NumberOfFibres
+      PRINT *, "Fibre ",FibreNo
+    
+      DO ElementMInFibreNo = 1,NumberOfElementsMPerFibre
         
-        DO ElementInFibreLineNo = 1, NumberGlobalXElements      ! loop over the global elements that are pierced by that fibre line
-          DO I = 1, NumberOfElementsMInXi1                      ! loop over the ElementsM in the global element
+        ! compute global ElementFE that contains the current elementM
+        FEElementZIdx = INT(INT((FibreNo-1) / NumberGlobalYFibres) / NumberOfNodesInXi3)
+        FEElementYIdx = INT(MOD((FibreNo-1), NumberGlobalYFibres)  / NumberOfNodesInXi2)
+        FEElementXIdx = (ElementMInFibreNo-1) / NumberOfNodesInXi1
+        
+        FEElementGlobalNumber = FEElementZIdx * NumberGlobalYElements * NumberGlobalXElements &
+         & + FEElementYIdx * NumberGlobalXElements + FEElementXIdx + 1
+        
+        PRINT "(I1.1,2(A,I2.2),4(A,I3.3))", ComputationalNodeNumber,": Fibre", FibreNo, ", ElementM ", ElementMNo, &
+          & ", Element (",FEElementXIdx,",",FEElementYIdx,",",FEElementZIdx, &
+          & ")=", FEElementGlobalNumber
+      
+        ! get the domain of the global ElementFE
+        !                                        DECOMPOSITION,   USER_ELEMENT_NUMBER,   DOMAIN_NUMBER
+        CALL cmfe_Decomposition_ElementDomainGet(DecompositionFE, FEElementGlobalNumber, DomainNo, Err)
 
-            ! get the domain of the global ElementFE
-            CALL cmfe_Decomposition_ElementDomainGet(DecompositionFE, ElementFENo, DomainNo, Err)
-
-            ! set the domain of the ElementM to the same domain as the containing global element
-            !                                        DECOMPOSITION,            GLOBAL_ELEMENT_NUMBER, DOMAIN_NUMBER
-            CALL cmfe_Decomposition_ElementDomainSet(DecompositionM(FibreNo),  ElementMNo,            DomainNo, Err)
-            PRINT "(I3.3,A,I5.5,A,I2)", ComputationalNodeNumber, ": fibre ", FibreNo, ", 1D el. no. ", ElementMNo, &
-              & " to domain no. ", DomainNo
-
-            ElementMNo = ElementMNo + 1
-          ENDDO
-
-          ElementFENo = ElementFENo + 1
-        ENDDO
+        ! set the domain of the ElementM to the same domain as the containing global element
+        !                                        DECOMPOSITION,            GLOBAL_ELEMENT_NUMBER, DOMAIN_NUMBER
+        CALL cmfe_Decomposition_ElementDomainSet(DecompositionM(FibreNo),  ElementMInFibreNo,     DomainNo, Err)
+        PRINT "(I1.1,A,I5.5,A,I2,A,I2)", ComputationalNodeNumber, ": fibre ", FibreNo, ", 1D el. no. ", ElementMNo, &
+          & " to domain no. ", DomainNo
+          
+        ElementMNo = ElementMNo + 1
       ENDDO
-
-      FirstElementInCurrentGlobalElementLineNo = FirstElementInCurrentGlobalElementLineNo + NumberGlobalXElements
     ENDDO
   ELSE
     ! single process
@@ -1606,38 +1607,18 @@ SUBROUTINE CreateDecomposition()
   ! finish decomposition
   DO FibreNo = 1, NumberOfFibres
     CALL cmfe_Decomposition_NumberOfDomainsSet(DecompositionM(FibreNo),NumberOfDomains,Err)
+    
+    ! In this call it is checked whether all processes have at least one node. This is not the case for current decomposition of fibres.
     CALL cmfe_Decomposition_CreateFinish(DecompositionM(FibreNo),Err)
   ENDDO
 
-  PRINT*, "Print elements mapping in FortranExample.f90:1603"
-  DO FibreNo = 1, NumberOfFibres
-    PRINT*, "--------------- ElementsMapping for fibre ",FibreNo," of ", NumberOfFibres, "--------------------------"
-    CALL cmfe_PrintElementsMapping(DecompositionM(FibreNo),Err)
-  ENDDO
-  
-  ! Store containing FE element local numbers for bioelectric nodes
-  DO FibreNo = 1, NumberOfFibres
-    DO NodeNo = 1, NumberOfNodesPerFibre
-  
-      !                                     decomposition,           nodeUserNumber, meshComponentNumber, domain
-      CALL cmfe_Decomposition_NodeDomainGet(DecompositionM(FibreNo), NodeNo,         1,                   NodeDomain, Err)
-      IF (NodeDomain == ComputationalNodeNumber) THEN
-      
-        FEElementZIdx = INT((FibreNo-1) / (NumberOfNodesInXi2 * NumberGlobalYElements))
-        FEElementYIdx = MOD((FibreNo-1), (NumberOfNodesInXi2 * NumberGlobalYElements))
-        FEElementXIdx = (NodeNo-1) / NumberOfNodesInXi1
-      
-        FEElementLocalNumber = FEElementZIdx * NumberGlobalYElements * NumberGlobalXElements &
-         & + FEElementYIdx * NumberGlobalXElements + FEElementXIdx + 1
-      
-        !                                     FIELD,
-        CALL cmfe_Field_ParameterSetUpdateNode(IndependentFieldM(FibreNo), &
-        !   VARIABLE_TYPE,              FIELD_SET_TYPE, VERSION_NUMBER, DERIVATIVE_NUMBER, USER_NODE_NUMBER, COMPONENT_NUMBER, VALUE, ERR
-          & CMFE_FIELD_V_VARIABLE_TYPE, CMFE_FIELD_VALUES_SET_TYPE, 1, 1, NodeNo, 5, FEElementLocalNumber, Err)
-      ENDIF
+  IF (.FALSE.) THEN
+    PRINT*, "Print elements mapping in FortranExample.f90:1603"
+    DO FibreNo = 1, NumberOfFibres
+      PRINT*, "--------------- ElementsMapping for fibre ",FibreNo," of ", NumberOfFibres, "--------------------------"
+      CALL cmfe_PrintElementsMapping(DecompositionM(FibreNo),Err)
     ENDDO
-  ENDDO
-  
+  ENDIF
   
   !PRINT*, "Print nodes mapping in FortranExample.f90:1549"
   !CALL cmfe_PrintNodesMapping(DecompositionM(FibreNo),Err)
@@ -1662,7 +1643,7 @@ SUBROUTINE CreateFieldFiniteElasticity()
 
 !  CALL cmfe_Field_ParameterSetUpdateStart(GeometricFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,Err)
 !  CALL cmfe_Field_ParameterSetUpdateFinish(GeometricFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,Err)
-  CALL cmfe_GeneratedMesh_GeometricParametersCalculate(GeneratedMesh,GeometricFieldFE,Err)
+  CALL cmfe_GeneratedMesh_GeometricParametersCalculate(GeneratedMeshFE,GeometricFieldFE,Err)
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !Create a fibre field and attach it to the geometric field - quadratic interpolation
@@ -2004,7 +1985,6 @@ SUBROUTINE CreateFieldMonodomain()
     CALL cmfe_Field_VariableLabelSet(DependentFieldM(FibreNo),CMFE_FIELD_V_VARIABLE_TYPE,"GeometryM3D",Err)
     CALL cmfe_Field_CreateFinish(DependentFieldM(FibreNo),Err)
 
-
     !--------------------------------------------------------------------------------------------------------------------------------
     !Create the independent field for the active stress in the bioelectrics mesh
     CALL cmfe_Field_Initialise(IndependentFieldM(FibreNo),Err)
@@ -2039,7 +2019,7 @@ SUBROUTINE CreateFieldMonodomain()
       CALL cmfe_Field_VariableLabelSet(IndependentFieldM(FibreNo),CMFE_FIELD_U_VARIABLE_TYPE,"XB_state_variables_M",Err)
     ENDIF
 
-    !second variable:   CMFE_FIELD_V_VARIABLE_TYPE -- 1) motor unit number   2) fibre type   3) fibre number   4) nearest Gauss point   5) in element number (LOCAL NODE NUMBERING!!!) 6) in-fibre contiguous node number
+    !second variable:   CMFE_FIELD_V_VARIABLE_TYPE -- 1) motor unit number   2) fibre type   3) fibre number   4) nearest Gauss point   5) containing element global element 6) in-fibre contiguous node number
     CALL cmfe_Field_DataTypeSet(IndependentFieldM(FibreNo),CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_INTG_TYPE,Err)
     CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldM(FibreNo), & 
       & CMFE_FIELD_V_VARIABLE_TYPE,FieldIndependentNumberOfComponentsM2,Err)
@@ -2184,8 +2164,11 @@ END SUBROUTINE CreateEquationsSet
 SUBROUTINE InitializeFieldMonodomain()
   INTEGER(CMISSIntg) :: FibreLineNo
   INTEGER(CMISSIntg) :: FibreInLineNo
-  INTEGER(CMISSIntg) :: FibreNo
+  INTEGER(CMISSIntg) :: FibreNo, NodeNo, NodeIdx
   INTEGER(CMISSIntg) :: MotorUnitRank
+  INTEGER(CMISSIntg) :: FEElementGlobalNumber, FEElementLocalNumber
+  INTEGER(CMISSIntg) :: FEElementXIdx, FEElementYIdx, FEElementZIdx
+  INTEGER(CMISSIntg) :: NodeMUserNumber
 
   !UPDATE THE INDEPENDENT FIELD IndependentFieldM(FibreNo)
   ! OLD_TOMO_MECHANICS
@@ -2207,8 +2190,7 @@ SUBROUTINE InitializeFieldMonodomain()
   !    2) fibre type
   !    3) fibre number
   !    4) nearest Gauss point
-  !    5) in element number (LOCAL NODE NUMBERING!!!)
-  !    6) velocity before 3 time steps
+  !    5) FE element local number that contains bioelectric node
   !
   !init the motor unit number to 101
   DO FibreNo = 1, NumberOfFibreLinesTotal
@@ -2216,60 +2198,7 @@ SUBROUTINE InitializeFieldMonodomain()
       & CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,101,Err) !
   ENDDO
 
-  NodeNumber = 1
-  FibreNo = 1
-  ! loop over fibres
-  DO FibreLineNo = 1, NumberOfFibreLinesTotal
-    DO FibreInLineNo = 1, NumberOfInSeriesFibres
-      
-      ! get rank of fibre
-      MotorUnitRank = MUDistribution(MOD(FibreNo-1, 4050)+1)
-      DO j = 1, NumberOfNodesPerShortFibre
-
-        !CALL MPI_BARRIER(MPI_COMM_WORLD, Err)
-        !print*, ComputationalNodeNumber, ": mu_nr=",mu_nr,", k=",k
-                                             !DECOMPOSITION,           USER_NODE_NUMBER, MESH_COMPONENT_NUMBER, DOMAIN_NUMBER
-        CALL cmfe_Decomposition_NodeDomainGet(DecompositionM(FibreNo), NodeNumber,       1,                     NodeDomain, Err)
-
-        IF (NodeDomain == ComputationalNodeNumber) THEN
-	  !PRINT*, "Node ", NodeNumber, ", Fibre ", FibreNo, ", MotorUnitRank: ", MotorUnitRank
-
-          ! set motor unit number
-          !                                      FIELD,                      VARIABLE_TYPE               
-          CALL cmfe_Field_ParameterSetUpdateNode(IndependentFieldM(FibreNo), CMFE_FIELD_V_VARIABLE_TYPE, &
-            ! FIELD_SET_TYPE              VERSION_NO,     DERIVATIVE_NO,  USER_NODE_NUMBER, COMPONENT_NUMBER, VALUE
-            & CMFE_FIELD_VALUES_SET_TYPE, 1,          1,              NodeNumber,       1,                MotorUnitRank, Err)
-          
-          ! set fibre node number
-          CALL cmfe_Field_ParameterSetUpdateNode(IndependentFieldM(FibreNo), CMFE_FIELD_V_VARIABLE_TYPE, &
-            ! FIELD_SET_TYPE              VERSION_NO, DERIVATIVE_NO,  USER_NODE_NUMBER, COMPONENT_NUMBER, VALUE
-            & CMFE_FIELD_VALUES_SET_TYPE, 1,          1,              NodeNumber,       3,                FibreNo+1, Err)
-          
-          !Print*, "FibreLineNo=",FibreLineNo,", FibreInLineNo=",FibreInLineNo,", MotorUnitRank=",MotorUnitRank,", j=",j,&
-          !  &", NodeNumber=",NodeNumber,", FibreNo=",FibreNo
-        ENDIF
-        
-        NodeNumber = NodeNumber + 1
-      ENDDO   ! j
-      FibreNo = FibreNo + 1
-    ENDDO ! FibreInLineNo
-  
-    ! last node on fibre line
-    CALL cmfe_Decomposition_NodeDomainGet(DecompositionM(FibreNo-1), NodeNumber,       1,                     NodeDomain, Err)
-    IF (NodeDomain == ComputationalNodeNumber) THEN
-      !                                      FIELD,             VARIABLE_TYPE               FIELD_SET_TYPE
-      CALL cmfe_Field_ParameterSetUpdateNode(IndependentFieldM(FibreNo-1), CMFE_FIELD_V_VARIABLE_TYPE, CMFE_FIELD_VALUES_SET_TYPE,&
-        ! VERSION_NO, DERIVATIVE_NO,  USER_NODE_NUMBER, COMPONENT_NUMBER, VALUE
-        & 1,          1,              NodeNumber,       1,                MotorUnitRank, Err)
-      
-      !Print*, "FibreLineNo=",FibreLineNo,", FibreInLineNo=",FibreInLineNo,", MotorUnitRank=",MotorUnitRank,", j=",j,&
-      !  &", NodeNumber=",NodeNumber,", FibreNo=",FibreNo-1,"(last)"
-    ENDIF
-    NodeNumber = NodeNumber + 1
-  ENDDO
-  
-  !PRINT *,"done"
-  
+  ! initialize values
   DO FibreNo = 1, NumberOfFibres
     !init the fibre type to 1
     CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM(FibreNo), & 
@@ -2280,7 +2209,7 @@ SUBROUTINE InitializeFieldMonodomain()
     CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM(FibreNo), &
       & CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,4,0,Err)
     CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM(FibreNo), & 
-      & CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,5,0,Err) !(LOCAL NODE NUMBERING!!!)
+      & CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,5,0,Err)  ! local element number
     !third variable (U1):
     !  components:
     !    1) half-sarcomere length
@@ -2303,12 +2232,66 @@ SUBROUTINE InitializeFieldMonodomain()
      & 0.0_CMISSRP,Err)    !velocity in the cell model is in /micro/meters/per/millisecond!!!
   ENDDO 
      
-     
+  ! Store containing FE element local numbers for bioelectric nodes in IndependentFieldM V comp. 5
+  ! loop over fibres and bioelectric nodes
+  DO FibreNo = 1, NumberOfFibres
+    
+    ! get rank of fibre
+    MotorUnitRank = MUDistribution(MOD(FibreNo-1, 4050)+1)
+    
+    DO NodeIdx = 1, NumberOfNodesPerLongFibre
+  
+      NodeMUserNumber = (FibreNo-1) * NumberOfNodesPerLongFibre + NodeIdx
+  
+      !                                     decomposition,           nodeUserNumber,  meshComponentNumber, domain
+      CALL cmfe_Decomposition_NodeDomainGet(DecompositionM(FibreNo), NodeMUserNumber, 1,                   NodeDomain, Err)
+      IF (NodeDomain == ComputationalNodeNumber) THEN
+      
+        ! compute number of containing FE element
+        FEElementZIdx = INT(INT((FibreNo-1) / NumberGlobalYFibres) / NumberOfNodesInXi3)
+        FEElementYIdx = INT(MOD((FibreNo-1), NumberGlobalYFibres)  / NumberOfNodesInXi2)
+        FEElementXIdx = (NodeIdx-1) / NumberOfNodesInXi1
+        IF (NodeIdx == NumberOfNodesPerLongFibre) THEN   ! last node of fibre belongs to previous element (lies on the right border of the element)
+          FEElementXIdx = FEElementXIdx - 1
+        ENDIF
+      
+        FEElementGlobalNumber = FEElementZIdx * NumberGlobalYElements * NumberGlobalXElements &
+         & + FEElementYIdx * NumberGlobalXElements + FEElementXIdx + 1
+      
+        ! get local FEElementLocalNumber from FEElementGlobalNumber
+        CALL cmfe_BioelectricFiniteElasticity_GetLocalElementNumber(GeometricFieldFE, FEElementGlobalNumber, FEElementLocalNumber, &
+          & Err)
+      
+        PRINT "(I1.1,2(A,I2.2),6(A,I3.3))", ComputationalNodeNumber,": Fibre", FibreNo, ", Node ", NodeIdx, &
+          & ", Element (",FEElementXIdx,",",FEElementYIdx,",",FEElementZIdx, &
+          & ")=", FEElementGlobalNumber, ", MU ",MotorUnitRank, ", local ", FEElementLocalNumber
+      
+        ! set number of containing FE element
+        !                                     FIELD,                       VARIABLE_TYPE,              
+        CALL cmfe_Field_ParameterSetUpdateNode(IndependentFieldM(FibreNo), CMFE_FIELD_V_VARIABLE_TYPE, &
+        !   FIELD_SET_TYPE,             VERSION_NO, DERIVATIVE_NO, USER_NODE_NUMBER, COMPONENT_NUMBER, VALUE, ERR
+          & CMFE_FIELD_VALUES_SET_TYPE, 1,          1,             NodeMUserNumber,  5,                FEElementLocalNumber, Err)
+          
+      
+        ! set motor unit number
+        !                                      FIELD,                      VARIABLE_TYPE               
+        CALL cmfe_Field_ParameterSetUpdateNode(IndependentFieldM(FibreNo), CMFE_FIELD_V_VARIABLE_TYPE, &
+          ! FIELD_SET_TYPE              VERSION_NO, DERIVATIVE_NO, USER_NODE_NUMBER, COMPONENT_NUMBER, VALUE
+          & CMFE_FIELD_VALUES_SET_TYPE, 1,          1,             NodeMUserNumber,  1,                MotorUnitRank, Err)
+        
+        ! set fibre node number
+        CALL cmfe_Field_ParameterSetUpdateNode(IndependentFieldM(FibreNo), CMFE_FIELD_V_VARIABLE_TYPE, &
+          ! FIELD_SET_TYPE              VERSION_NO, DERIVATIVE_NO, USER_NODE_NUMBER, COMPONENT_NUMBER, VALUE
+          & CMFE_FIELD_VALUES_SET_TYPE, 1,          1,             NodeMUserNumber,  3,                FibreNo, Err)
+        
+      ENDIF
+    ENDDO
+  ENDDO
+  
 END SUBROUTINE InitializeFieldMonodomain
 
 SUBROUTINE InitializeFieldFiniteElasticity()
-  INTEGER(CMISSIntg) :: ElementIdx
-  INTEGER(CMISSIntg) :: LocalElementNumber
+  INTEGER(CMISSIntg) :: ElementUserNumber
   !UPDATE THE INDEPENDENT FIELD IndependentFieldFE
   !second variable of IndependentFieldFE
   !  components:
@@ -2331,41 +2314,20 @@ SUBROUTINE InitializeFieldFiniteElasticity()
    & NumberOfInSeriesFibres,Err)
 
   ! Set V component 4) to 1 if fibre starts in element
-  DO ElementIdx=1, NumberOfElementsFE, NumberGlobalXElements/NumberOfInSeriesFibres
-    ! get local element number from user number
-    !DecompositionM
-    
-    !DecompositionFE%Decomposition%DOMAIN(GEOMETRIC_FIELD_MONODOMAIN%DECOMPOSITION% &
-    !            & MESH_COMPONENT_NUMBER)%PTR%MAPPINGS
-  
-    ! look up global number
-    !LocalElementNumber = M_NODES_MAPPING%DOMAIN_LIST(BioelectricNodeIdx)
-    !BioelectricNodeGlobalNumber = M_NODES_MAPPING%LOCAL_TO_GLOBAL_MAP(BioelectricNodeLocalNumber)
-                      
-  
+  DO ElementUserNumber=1, NumberOfElementsFE, NumberGlobalXElements/NumberOfInSeriesFibres
+
     ! only if element is assigned to own domain
-    CALL cmfe_Decomposition_ElementDomainGet(DecompositionFE, ElementIdx, ElementDomain,Err)
+    !                                        DECOMPOSITION,   USER_ELEMENT_NUMBER, DOMAIN_NUMBER
+    CALL cmfe_Decomposition_ElementDomainGet(DecompositionFE, ElementUserNumber,   ElementDomain,Err)
     IF (ElementDomain == ComputationalNodeNumber) THEN
       !fibres begin in this element
       !                                        FIELD,              VARIABLE_TYPE,             FIELD_SET_TYPE,
       CALL cmfe_Field_ParameterSetUpdateElement(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
       !  USER_ELEMENT_NUMBER, COMPONENT_NUMBER, VALUE
-       & ElementIdx,           4,                1,     Err)
-      !PRINT "(A,I3.3,A,I5.5,A)", "x ", ComputationalNodeNumber, ": 3D el. ", ElementIdx, " has beginning fibre "
+       & ElementUserNumber,   4,                1,     Err)
+      !PRINT "(A,I3.3,A,I5.5,A)", "x ", ComputationalNodeNumber, ": 3D el. ", ElementUserNumber, " has beginning fibre "
     ENDIF
   ENDDO
-  
-  ! this is not used any longer
-  ! Set number of elements for each elements on the right of the domain
-  ! Elements at the right have one additional bioelectricity node (on the right boundary)
-  !DO ElementIdx = NumberGlobalXElements,NumberOfElementsFE,NumberGlobalXElements
-    ! only if element is assigned to own domain
-  !  CALL cmfe_Decomposition_ElementDomainGet(DecompositionFE, ElementIdx, ElementDomain,Err)
-  !  IF (ElementDomain == ComputationalNodeNumber) THEN
-  !    CALL cmfe_Field_ParameterSetUpdateElement(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
-  !      & ElementIdx,           1,                NumberOfNodesInXi1, Err)
-  !  ENDIF
-  !ENDDO
 
 END SUBROUTINE InitializeFieldFiniteElasticity
 
@@ -2888,6 +2850,7 @@ SUBROUTINE CreateSolvers()
 END SUBROUTINE CreateSolvers
 
 SUBROUTINE SetBoundaryConditions()
+  INTEGER(CMISSIntg) :: NodeMUserNumber
 
   !Prescribe boundary conditions for monodomain
   CALL cmfe_BoundaryConditions_Initialise(BoundaryConditionsM,Err)
@@ -2915,11 +2878,11 @@ SUBROUTINE SetBoundaryConditions()
   CALL cmfe_BoundaryConditions_Initialise(BoundaryConditionsFE,Err)
   CALL cmfe_SolverEquations_BoundaryConditionsCreateStart(SolverEquationsFE,BoundaryConditionsFE,Err)
 
-  CALL cmfe_GeneratedMesh_SurfaceGet(GeneratedMesh,CMFE_GENERATED_MESH_REGULAR_BOTTOM_SURFACE,BottomSurfaceNodes,BottomNormalXi, &
+  CALL cmfe_GeneratedMesh_SurfaceGet(GeneratedMeshFE,CMFE_GENERATED_MESH_REGULAR_BOTTOM_SURFACE,BottomSurfaceNodes,BottomNormalXi, &
     & Err)
-  CALL cmfe_GeneratedMesh_SurfaceGet(GeneratedMesh,CMFE_GENERATED_MESH_REGULAR_LEFT_SURFACE,LeftSurfaceNodes,LeftNormalXi,Err)
-  CALL cmfe_GeneratedMesh_SurfaceGet(GeneratedMesh,CMFE_GENERATED_MESH_REGULAR_RIGHT_SURFACE,RightSurfaceNodes,RightNormalXi,Err)
-  CALL cmfe_GeneratedMesh_SurfaceGet(GeneratedMesh,CMFE_GENERATED_MESH_REGULAR_FRONT_SURFACE,FrontSurfaceNodes,FrontNormalXi,Err)
+  CALL cmfe_GeneratedMesh_SurfaceGet(GeneratedMeshFE,CMFE_GENERATED_MESH_REGULAR_LEFT_SURFACE,LeftSurfaceNodes,LeftNormalXi,Err)
+  CALL cmfe_GeneratedMesh_SurfaceGet(GeneratedMeshFE,CMFE_GENERATED_MESH_REGULAR_RIGHT_SURFACE,RightSurfaceNodes,RightNormalXi,Err)
+  CALL cmfe_GeneratedMesh_SurfaceGet(GeneratedMeshFE,CMFE_GENERATED_MESH_REGULAR_FRONT_SURFACE,FrontSurfaceNodes,FrontNormalXi,Err)
 
   !Set x=0 nodes to no x displacment in x.
   DO node_idx = 1, SIZE(LeftSurfaceNodes, 1)

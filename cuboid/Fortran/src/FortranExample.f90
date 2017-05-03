@@ -73,8 +73,9 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   LOGICAL, PARAMETER :: DEBUGGING_PARALLEL_BARRIER = .FALSE.   !
   !INTEGER(CMISSINTg) :: RUN_SCENARIO = 2  !0 = default, no extra values set, 1 = short for testing, 2 = for scaling tests (10s), 3 = very short, 4 = endless
   LOGICAL :: DebuggingOutput = .FALSE.    ! enable information from solvers
-  LOGICAL :: OldTomoMechanics = .TRUE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
+  LOGICAL :: OldTomoMechanics = .FALSE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
   LOGICAL :: EnableExportEMG = .FALSE.
+  LOGICAL :: BDFIntegrator = .TRUE. ! Whether or not to use the bdf integration scheme for the DAE cellml problem. otherwise euler explicit
   
   ! physical dimensions in [cm]
   REAL(CMISSRP) :: PhysicalLength=3.0_CMISSRP ! (6)     X-direction
@@ -2277,6 +2278,13 @@ SUBROUTINE InitializeCellML()
   !,- and override constant parameters without needing to set up fields
   !> \todo Need to allow parameter values to be overridden for the case when user has non-spatially varying parameter value.
   !Finish the CellML environment
+  
+  IF (BDFIntegrator) THEN
+  ! To initialize the BDF solver, OpenCMISS requires to have set CELLML%MAX_NUMBER_OF_INTERMEDIATE.
+  ! For now, we can manipulate it here:
+    CALL cmfe_CellML_IntermediateMaxNumberSet(CellML,3,Err) ! todo: exact number required or just something > 0?
+  ENDIF
+  
   CALL cmfe_CellML_CreateFinish(CellML,Err)
 
   !--------------------------------------------------------------------------------------------------------------------------------
@@ -2380,7 +2388,7 @@ SUBROUTINE InitializeCellML()
   CALL cmfe_CellML_StateFieldCreateStart(CellML,CellMLStateFieldUserNumber,CellMLStateField,Err)
   CALL cmfe_CellML_StateFieldCreateFinish(CellML,Err)
 
-  IF (OldTomoMechanics) THEN
+  IF (OldTomoMechanics .OR. BDFIntegrator) THEN
     !Create the CellML intermediate field
     CALL cmfe_Field_Initialise(CellMLIntermediateField,Err)
     CALL cmfe_CellML_IntermediateFieldCreateStart(CellML,CellMLIntermediateFieldUserNumber,CellMLIntermediateField,Err)
@@ -2465,8 +2473,15 @@ SUBROUTINE CreateSolvers()
   CALL cmfe_Problem_SolverGet(Problem,[ControlLoopMonodomainNumber,CMFE_CONTROL_LOOP_NODE], &
    & SolverDAEIndex,SolverDAE,Err)
   CALL cmfe_Solver_DAETimeStepSet(SolverDAE,ODETimeStep,Err)
-
-  !> \todo - solve the CellML equations on the GPU for efficiency (later)
+  
+  ! might be handy some day:
+  ! CALL cmfe_Solver_DAETimesSet(SolverDAE,?0.0_CMISSRP?,?0.001_CMISSRP?,Err)
+  
+  IF (BDFIntegrator) THEN !use bdf instead of default-explicitEuler
+    CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_BDF,Err)
+  ENDIF
+  
+  !> \todo or not-todo... solve the CellML equations on the GPU for efficiency (later)
   !CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_EXTERNAL,Err)
 
   IF (DebuggingOutput) THEN

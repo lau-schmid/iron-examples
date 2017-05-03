@@ -168,6 +168,8 @@ PROGRAM TITINEXAMPLE
 ! ----  N U M E R I C A L   S E T T I N G S  -----:| - Under reconsideration. (Aaron Krämer)
 ! =================================================*
 
+  LOGICAL :: useBDF, useGL
+
 ! only time discretisation. space later, since variable. ---------------.
 ! numerical time step sizes -------------------------------------------.|
   REAL(CMISSRP), PARAMETER      :: TIME_STEP           = time_default  !|
@@ -517,6 +519,8 @@ PROGRAM TITINEXAMPLE
 !################################### SET DISCRETISATION STUFF ################################
 !#############################################################################################
 
+useBDF = .TRUE. !(if conflicting, than useBDF is "stronger" than useGL)
+useGL = .FALSE. ! if none of them, than euler fwd.
 
 !======================================================================================||
 !============================== Build up the cmfe structs =============================||
@@ -1229,7 +1233,7 @@ PROGRAM TITINEXAMPLE
   !Import the Shorten et al. 2007 model from a file
   CALL cmfe_CellML_ModelImport(Cml,filename,idx_CmlSH,Err)
   ! Now we have imported all the models we are able to specify which variables from the model we want:
-  !,- to set from this side
+  !,- to set from this (OpenCMISS) side
   CALL cmfe_CellML_VariableSetAsKnown(Cml,idx_CmlSH,"Aliev_Panfilov/I_HH",Err)
   CALL cmfe_CellML_VariableSetAsKnown(Cml,idx_CmlSH,"Razumova/l_hs",Err)
   CALL cmfe_CellML_VariableSetAsKnown(Cml,idx_CmlSH,"Razumova/rel_velo",Err)
@@ -1250,6 +1254,7 @@ PROGRAM TITINEXAMPLE
 !  CALL cmfe_CellML_VariableSetAsWanted(Cml,shortenModelIndex2,"razumova/stress",Err)
   !,- and override constant parameters without needing to set up fields
   !> \todo Need to allow parameter values to be overridden for the case when user has non-spatially varying parameter value.
+  !CALL cmfe_CellML_IntermediateMaxNumberSet(Cml,0,Err)
   !Finish the CellML environment
   CALL cmfe_CellML_CreateFinish(Cml,Err)
 
@@ -1391,11 +1396,17 @@ PROGRAM TITINEXAMPLE
   CALL cmfe_Problem_SolverGet(Problem,[k_ControlLoopM,CMFE_CONTROL_LOOP_NODE], &
    & idx_SolDAE,SolverDAE,Err)
   CALL cmfe_Solver_DAETimeStepSet(SolverDAE,ODE_TIME_STEP,Err)
-  !> \todo - solve the CellML equations on the GPU for efficiency (later)
-  !CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_EXTERNAL,Err) 
-  CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_NO_OUTPUT,Err)
+
+  IF (useBDF) THEN 
+   CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_BDF,Err)
+  ELSEIF (useGL) THEN
+   CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_GL,Err)
+  ENDIF
+  
+  !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_NO_OUTPUT,Err)
+  
   !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
-  !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_TIMING_OUTPUT,Err)
+  CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_TIMING_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_SOLVER_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_MATRIX_OUTPUT,Err)
 
@@ -1438,6 +1449,7 @@ PROGRAM TITINEXAMPLE
   CALL cmfe_CellMLEquations_Initialise(EqusCml,Err)
   CALL cmfe_Problem_SolverGet(Problem,[k_ControlLoopM,CMFE_CONTROL_LOOP_NODE],idx_SolDAE,SolverDAE,Err)
   CALL cmfe_Solver_CellMLEquationsGet(SolverDAE,EqusCml,Err)
+  
   ! adds cellML environment to cellMLequations and sets index of environment:
   CALL cmfe_CellMLEquations_CellMLAdd(EqusCml,Cml,idx_Cml,Err)
 
@@ -1576,8 +1588,6 @@ PROGRAM TITINEXAMPLE
 
 
 ! no change for BCs -- fix at this length!!!
-
-
 
 
   !Set the Stimulus for monodomain at the middle of the fibres

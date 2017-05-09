@@ -71,5 +71,4 @@ IndependentFieldFE  // Eingabevariablen, kommen von anderem Modell oder sind kon
     2)  number of nodes in Xi(2) direction per element
     3)  number of nodes in Xi(3) direction per element
     4)  1=fibre starts in this element (0=does not)
-    5)  number of in series fibres
   

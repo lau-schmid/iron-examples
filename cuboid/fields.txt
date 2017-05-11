@@ -19,24 +19,32 @@ DependentFieldM
   FIELD_V_VARIABLE_TYPE: 1),2),3): GeometryM3D, 3D-position of geometry
  
 IndependentFieldM
-  CMFE_FIELD_U_VARIABLE_TYPE: 1) Active_Stress_M
-  CMFE_FIELD_V_VARIABLE_TYPE: ("fibre_info") 
-    1) motor unit number,   
-    2) fibre type,   
-    3) fibre number,   
-    4) nearest Gauss point number,   
-    5) FE element global number that contains bioelectric node
+  CMFE_FIELD_U_VARIABLE_TYPE:
+    1) Active_Stress_M
+   *2) titin stress unbound
+   *3) titin stress bound
+   *4) titin XF-stress (cross-fibre directions) unbound
+   *5) titin XF-stress (cross-fibre directions) bound
+   *6) titin activation
+  CMFE_FIELD_V_VARIABLE_TYPE: ("fibre_info")
+    1) motor unit number,
+    2) fibre type,
+    3) fibre number,
+    4) nearest Gauss point number,
+    5) FE element local number that contains bioelectric node
   CMFE_FIELD_U1_VARIABLE_TYPE: 
     1) half-sarcomere length   
     2) inital half-sarcomere length
     3) initial node distance
   CMFE_FIELD_U2_VARIABLE_TYPE: 
     1) node distance to previous node
-    2) maximum contraction velocity   
-    3) relative contraction velocity   
+    2) maximum contraction velocity  
+    3) relative contraction velocity 
     4) node distance to previous node before 1 time step   
     5) node distance to previous node before 2 time steps
     6) node distance to previous node before 3 time steps
+    
+* only PROBLEM_MONODOMAIN_ELASTICITY_W_TITIN_SUBTYPE
     
 ------------------ finite elasticity ----------------------    
 GeometricFieldFE
@@ -67,7 +75,7 @@ IndependentFieldFE  // Eingabevariablen, kommen von anderem Modell oder sind kon
   CMFE_FIELD_U_VARIABLE_TYPE ("Active_Stress_FE")
     1)  Active_Stress_FE
   CMFE_FIELD_V_VARIABLE_TYPE
-    1)  number of nodes in Xi(1) direction per element
+    1)  number of elements in Xi(1) direction per element
     2)  number of nodes in Xi(2) direction per element
     3)  number of nodes in Xi(3) direction per element
     4)  1=fibre starts in this element (0=does not)

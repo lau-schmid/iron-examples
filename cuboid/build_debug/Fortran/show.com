@@ -1,6 +1,6 @@
 
 
-for ($i = 0 ; $i < 50 ; $i=$i+1)
+for ($i = 0 ; $i < 100 ; $i=$i+1)
   {
     gfx read node MainTime_1_$i.part0.exnode time $i
     gfx read node MainTime_M_2_$i.part0.exnode time $i node_offset 10000

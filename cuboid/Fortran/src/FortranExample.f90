@@ -926,9 +926,9 @@ SUBROUTINE ParseAssignment(Line, LineNumber, ScenarioInputFile)
   
   ! Extract variable name and value
   IF (INDEX(Line, "=") /= 0) THEN
-    VariableName = Line(1:INDEX(Line, "=")-1)
+    VariableName = TRIM(ADJUSTL(Line(1:INDEX(Line, "=")-1)))
     CALL ToLower(VariableName)
-    StrValue = TRIM(Line(INDEX(Line, "=")+1:))
+    StrValue = TRIM(ADJUSTL(Line(INDEX(Line, "=")+1:)))
     
     !PRINT *, "VariableName=["//TRIM(VariableName)//"], Value=["//TRIM(StrValue)//"]."
   ELSE
@@ -953,7 +953,7 @@ SUBROUTINE ParseAssignment(Line, LineNumber, ScenarioInputFile)
       READ(StrValue, *, IOSTAT=Stat) MonodomainSolverId
     CASE ("monodomainpreconditionerid")
       READ(StrValue, *, IOSTAT=Stat) MonodomainPreconditionerId
-    CASE ("timestop")
+    CASE ("t","tend","timestop")
       READ(StrValue, *, IOSTAT=Stat) TimeStop
     CASE ("odetimestep")
       READ(StrValue, *, IOSTAT=Stat) ODETimeStep
@@ -965,11 +965,11 @@ SUBROUTINE ParseAssignment(Line, LineNumber, ScenarioInputFile)
       READ(StrValue, *, IOSTAT=Stat) StimValue
     CASE ("outputtimestepstride")
       READ(StrValue, *, IOSTAT=Stat) OutputTimeStepStride
-    CASE ("numberofnodesinxi1")
+    CASE ("xi1", "numberofnodesinxi1")
       READ(StrValue, *, IOSTAT=Stat) NumberOfNodesInXi1
-    CASE ("numberofnodesinxi2")
+    CASE ("xi2", "numberofnodesinxi2")
       READ(StrValue, *, IOSTAT=Stat) NumberOfNodesInXi2
-    CASE ("numberofnodesinxi3")
+    CASE ("xi3", "numberofnodesinxi3")
       READ(StrValue, *, IOSTAT=Stat) NumberOfNodesInXi3
     CASE ("newtonmaximumnumberofiterations")
       READ(StrValue, *, IOSTAT=Stat) NewtonMaximumNumberOfIterations
@@ -1245,12 +1245,12 @@ SUBROUTINE ParseParameters()
     PRINT *, ""
     PRINT *, "---------- Timing parameters -----------------------------------------------"
     PRINT *, "The time unit is 1 ms."
-    PRINT "(A,F5.2,A,F5.2,A,F5.2)", "  Main loop, Δt = ", TimeStop, ", dt = ", ElasticityTimeStep
+    PRINT "(A,F7.2,A,F5.2,A,F5.2)", "  Main loop, Δt = ", TimeStop, ", dt = ", ElasticityTimeStep
     PRINT "(A,F5.2)", "  - stimulation enabled:  Δt = ", STIM_STOP
     PRINT "(A,F5.2)", "  - stimulation disabled: Δt = ", (PERIODD - STIM_STOP)
     PRINT *, ""
 
-    PRINT "(A,F0.2,A,F0.5,A,I5)", "- MAIN_TIME_LOOP,         Δt = ", TimeStop, ", dt = ", ElasticityTimeStep, &
+    PRINT "(A,F7.2,A,F0.5,A,I5)", "- MAIN_TIME_LOOP,         Δt = ", TimeStop, ", dt = ", ElasticityTimeStep, &
       & ", # Iter: ", CEILING(TimeStop/ElasticityTimeStep)
     PRINT "(A,F0.4,A,F0.5,A,I5)", "  - MONODOMAIN_TIME_LOOP, Δt = ", ElasticityTimeStep, ", dt = ", PDETimeStep,&
       & ", # Iter: ", CEILING(ElasticityTimeStep/PDETimeStep)
@@ -1277,16 +1277,16 @@ SUBROUTINE ParseParameters()
       & ", Total: ", NumberOfElementsFE
     PRINT "(A,3(I6,A),I12)", "# local nodes per element: ", NumberOfNodesInXi1, ", ", NumberOfNodesInXi2, ", ", NumberOfNodesInXi3,&
       & ", Total: ", NumberOfNodesInXi1*NumberOfNodesInXi2*NumberOfNodesInXi3
-    PRINT "(A,I6)", "                  NumberOfInSeriesFibres: ", NumberOfInSeriesFibres
+    !PRINT "(A,I6)", "                  NumberOfInSeriesFibres: ", NumberOfInSeriesFibres
     PRINT "(A,I6)", "      NumberOfFibreLinesPerGlobalElement: ", NumberOfFibreLinesPerGlobalElement
     PRINT "(A,I6)", "              NumberOfGlobalElementLines: ", NumberOfGlobalElementLines
     !PRINT "(A,I6)", "                 NumberOfFibreLinesTotal: ", NumberOfFibreLinesTotal
     PRINT "(A,I6)", "                          NumberOfFibres: ", NumberOfFibres
     PRINT "(A,I6)", "               NumberOfElementsMPerFibre: ", NumberOfElementsMPerFibre
+    PRINT "(A,I6)", "               NumberOfNodesPerLongFibre: ", NumberOfNodesPerLongFibre
     !PRINT "(A,I6)", "           NumberOfElementsMPerFibreLine: ", NumberOfElementsMPerFibreLine
     PRINT "(A,I6)", "                       NumberOfElementsM: ", NumberOfElementsM
     !PRINT "(A,I6)", "              NumberOfNodesPerShortFibre: ", NumberOfNodesPerShortFibre
-    PRINT "(A,I6)", "               NumberOfNodesPerLongFibre: ", NumberOfNodesPerLongFibre
     !PRINT "(A,I6)", "              NumberOfNodesMPerFibreLine: ", NumberOfNodesMPerFibreLine
     PRINT "(A,I6)", "                          NumberOfNodesM: ", NumberOfNodesM
     PRINT *,""
@@ -2165,6 +2165,7 @@ SUBROUTINE InitializeFieldMonodomain()
   INTEGER(CMISSIntg) :: MElementUserNumber, ElementIdx
   INTEGER(CMISSIntg) :: ElementDomain, NodeDomain
   INTEGER(CMISSIntg), DIMENSION(2) :: ElementUserNodes
+  REAL(CMISSDP) :: InitialBioelectricNodeDistance
 
   !UPDATE THE INDEPENDENT FIELD IndependentFieldM
   ! OldTomoMechanics
@@ -2208,21 +2209,29 @@ SUBROUTINE InitializeFieldMonodomain()
   !    1) half-sarcomere length
   !    2) initial half-sarcomere length
   !    3) initial node distance
+  InitialBioelectricNodeDistance = PhysicalLength / (NumberOfElementsMPerFibreLine)
+  PRINT *, "InitialBioelectricNodeDistance = ", InitialBioelectricNodeDistance
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
    & 1.0_CMISSRP,Err) ! lengths in the cell model are in /micro/meters!!!
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3, &
-   & PhysicalLength / (NumberOfElementsMPerFibreLine), Err)  !lengths in the cell model are in /micro/meters!!!
+   & InitialBioelectricNodeDistance, Err)  !lengths in the cell model are in /micro/meters!!!
   !fourth variable (U2):
   !  components:
   !    1) old node distance
   !    2) maximum contraction velocity
   !    3) relative contraction velocity
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1, &
-   & PhysicalLength / (NumberOfElementsMPerFibreLine),Err)  !lengths in the cell model are in /micro/meters!!!
+   & InitialBioelectricNodeDistance,Err)  !lengths in the cell model are in /micro/meters!!!
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
    & Vmax / (NumberOfElementsMPerFibreLine),Err)    !velocity in the cell model is in micro/meters/millisecond!!!
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3, &
    & 0.0_CMISSRP,Err)    !velocity in the cell model is in /micro/meters/per/millisecond!!!
+  CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,4, &
+   & InitialBioelectricNodeDistance,Err)
+  CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,5, &
+   & InitialBioelectricNodeDistance,Err)
+  CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,6, &
+   & InitialBioelectricNodeDistance,Err)
      
   ! Store containing FE element local numbers for bioelectric nodes in IndependentFieldM V comp. 5
   ! loop over fibres and bioelectric nodes
@@ -2558,7 +2567,8 @@ SUBROUTINE CreateControlLoops()
     ! CONTROL_LOOP_PROGRESS_OUTPUT = 1 !<Progress output from control loop (also output MainTime_* files)
     ! CONTROL_LOOP_TIMING_OUTPUT = 2 !<Timing output from the control loop (also output MainTime_* files)
     ! CONTROL_LOOP_FILE_OUTPUT = -1 <Only MainTime_* files output
-    CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,cmfe_CONTROL_LOOP_TIMING_OUTPUT,Err)
+    CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,cmfe_CONTROL_LOOP_PROGRESS_OUTPUT,Err)
+    !CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,cmfe_CONTROL_LOOP_TIMING_OUTPUT,Err)
     !CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,cmfe_CONTROL_LOOP_FILE_OUTPUT,Err)
     !CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopMain,-1,Err)
   ENDIF

@@ -8,7 +8,16 @@ if (MSVC)
 else()
     set(PROC_OPT "-cpp")
 endif()
-target_compile_options(cuboid PRIVATE ${PROC_OPT})
+
+# in debug mode, add flag that make Floating point exceptions fatal
+set(OPT "")
+if (FALSE)
+    if(CMAKE_BUILD_TYPE MATCHES DEBUG)
+        set(OPT "-ffpe-trap=invalid,zero")
+    endif()
+endif()
+
+target_compile_options(cuboid PRIVATE ${PROC_OPT} ${OPT})
 
 # Link to opencmiss
 # -----------------

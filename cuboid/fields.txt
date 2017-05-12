@@ -36,8 +36,8 @@ IndependentFieldM
     1) half-sarcomere length   
     2) inital half-sarcomere length
     3) initial node distance
-  CMFE_FIELD_U2_VARIABLE_TYPE: 
-    1) node distance to previous node
+  CMFE_FIELD_U2_VARIABLE_TYPE: ("contraction_velocity")
+    1) node distance to left node
     2) maximum contraction velocity  
     3) relative contraction velocity 
     4) node distance to previous node before 1 time step   

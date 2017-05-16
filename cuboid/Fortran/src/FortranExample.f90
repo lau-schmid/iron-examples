@@ -2069,9 +2069,9 @@ SUBROUTINE CreateFieldMonodomain()
    & CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
   CALL cmfe_Field_VariableLabelSet(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,"half-sarcomere_length",Err)
 
-  !fourth variable:   FIELD_U2_VARIABLE_TYPE -- 1) old node distance   2) maximum contraction velocity   3) relative contraction velocity   4) velocity before 1 time step   5) velocity before 2 time step   6) velocity before 3 time steps
+  !fourth variable:   FIELD_U2_VARIABLE_TYPE -- 1) old node distance   2) maximum contraction velocity   3) relative contraction velocity   4) velocity before 1 time step   5) velocity before 2 time step   6) velocity before 3 time steps   7) node distance to right node (only computed on some nodes)
   CALL cmfe_Field_DataTypeSet(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,CMFE_FIELD_DP_TYPE,Err)
-  CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,6,Err)
+  CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,7,Err)
   CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,1, &
    & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
   CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,2, &
@@ -2083,6 +2083,8 @@ SUBROUTINE CreateFieldMonodomain()
   CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,5, &
    & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
   CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,6, &
+   & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
+  CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,7, &
    & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
   CALL cmfe_Field_VariableLabelSet(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,"contraction_velocity",Err)
 
@@ -2220,6 +2222,10 @@ SUBROUTINE InitializeFieldMonodomain()
   !    1) old node distance
   !    2) maximum contraction velocity
   !    3) relative contraction velocity
+  !    4) node distance to previous node before 1 time step   
+  !    5) node distance to previous node before 2 time steps
+  !    6) node distance to previous node before 3 time steps
+  !    7) node distance to right node (only computed on some nodes)
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1, &
    & InitialBioelectricNodeDistance,Err)  !lengths in the cell model are in /micro/meters!!!
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
@@ -2232,6 +2238,8 @@ SUBROUTINE InitializeFieldMonodomain()
    & InitialBioelectricNodeDistance,Err)
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,6, &
    & InitialBioelectricNodeDistance,Err)
+  CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,7, &
+   & 0.0_CMISSRP,Err)
      
   ! Store containing FE element local numbers for bioelectric nodes in IndependentFieldM V comp. 5
   ! loop over fibres and bioelectric nodes
@@ -2243,7 +2251,7 @@ SUBROUTINE InitializeFieldMonodomain()
     ! loop over elements of fibre, for each element, the right node is considered, except for the first element (on ElementIdx=0), then the left node of the first element is considered
     DO ElementIdx = 0, NumberOfElementsMPerFibre
       
-      ! compute the bioelectric element user number      
+      ! compute the bioelectricfcmfe element user number      
       IF (ElementIdx == 0) THEN   ! index 0 and 1 are both for the first element, but first for the left node, then for the right node
         MElementUserNumber = (FibreNo-1) * NumberOfElementsMPerFibre + 1
       ELSE

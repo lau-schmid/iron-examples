@@ -43,6 +43,8 @@ IndependentFieldM
     4) node distance to previous node before 1 time step   
     5) node distance to previous node before 2 time steps
     6) node distance to previous node before 3 time steps
+    7) node distance to right node (only computed on some nodes)
+    
     
 * only PROBLEM_MONODOMAIN_ELASTICITY_W_TITIN_SUBTYPE
     

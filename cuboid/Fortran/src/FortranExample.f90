@@ -394,6 +394,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   CALL ETIME(DurationSystemUser, DurationTotal)
   TimeStart = DurationSystemUser(2)
+    
   CALL ParseParameters()
 
   !================================================================================================================================
@@ -1219,6 +1220,16 @@ SUBROUTINE ParseParameters()
   !CALL cmfe_DiagnosticsSetOn(cmfe_CALL_STACK_DIAG_TYPE, [5], "diagnostics", ["FIELD_MAPPINGS_CALCULATE"], Err)
 
   !CALL cmfe_OutputSetOn("output.txt", Err)
+  
+  !CMFE_ALL_DIAG_TYPE    !<Type for setting diagnostic output in all routines \see OPENCMISS_DiagnosticTypes,OPENCMISS
+  !CMFE_IN_DIAG_TYPE     !<Type for setting diagnostic output in one routine \see OPENCMISS_DiagnosticTypes,OPENCMISS
+  !CMFE_FROM_DIAG_TYPE   !<Type for setting diagnostic output in one routine downwards \see OPENCMISS_DiagnosticTypes,OPENCMISS
+  !                          in which routine,   levelList(:), diagFilename
+  !CALL cmfe_DiagnosticsSetOn(CMFE_FROM_DIAG_TYPE, [1,2,3,4,5],          "",&
+  ! routine list
+  !  & ["DOMAIN_MAPPINGS_LOCAL_FROM_GLOBAL_CALCULATE"], Err)
+  
+  
   !                     type                  not output directly, filename
   ! cmfe_IN_TIMING_TYPE, cmfe_FROM_TIMING_TYPE, cmfe_ALL_TIMING_TYPE
   !CALL cmfe_TimingSetOn(cmfe_ALL_TIMING_TYPE, .TRUE.,             "", ["cmfe_Problem_Solve", "PROBLEM_SOLVE     "], Err)

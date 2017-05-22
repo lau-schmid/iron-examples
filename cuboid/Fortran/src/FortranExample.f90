@@ -1225,9 +1225,10 @@ SUBROUTINE ParseParameters()
   !CMFE_IN_DIAG_TYPE     !<Type for setting diagnostic output in one routine \see OPENCMISS_DiagnosticTypes,OPENCMISS
   !CMFE_FROM_DIAG_TYPE   !<Type for setting diagnostic output in one routine downwards \see OPENCMISS_DiagnosticTypes,OPENCMISS
   !                          in which routine,   levelList(:), diagFilename
-  !CALL cmfe_DiagnosticsSetOn(CMFE_FROM_DIAG_TYPE, [1,2,3,4,5],          "",&
+  CALL cmfe_DiagnosticsSetOn(CMFE_FROM_DIAG_TYPE, [1],          "",&
   ! routine list
   !  & ["DOMAIN_MAPPINGS_LOCAL_FROM_GLOBAL_CALCULATE"], Err)
+    & ["FIELD_MAPPINGS_CALCULATE"], Err)
   
   
   !                     type                  not output directly, filename

@@ -84,12 +84,12 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   !all times in [ms]
   REAL(CMISSRP) :: time !=10.00_CMISSRP
-  REAL(CMISSRP), PARAMETER :: PERIODD=1.00_CMISSRP
-  REAL(CMISSRP)            :: TimeStop=10.0_CMISSRP
-_
-  REAL(CMISSRP) :: ElasticityTimeStep = 0.10000000001_CMISSRP !0.5_CMISSRP!0.05_CMISSRP!0.8_CMISSRP
+  REAL(CMISSRP), PARAMETER :: PERIODD=0.2_CMISSRP ! was 1
+  REAL(CMISSRP)            :: TimeStop=0.2_CMISSRP ! this should be replaced. or PERIODD. one can be computed from the other and they are used in code at different places. provokes errors.
+
+  REAL(CMISSRP) :: ElasticityTimeStep = 0.1000000000_CMISSRP !0.5_CMISSRP!0.05_CMISSRP!0.8_CMISSRP
   REAL(CMISSRP) :: PDETimeStep = 0.005_CMISSRP              ! 0.005_CMISSRP
-  REAL(CMISSRP) :: ODETimeStep = 0.0001CMISSRP!            ! set at '#timestepset'. 50 steps until DiHu - now to be set anew with proper DAE (integration) scheme.
+  REAL(CMISSRP) :: ODETimeStep = 0.0001_CMISSRP!            ! set at '#timestepset'. 50 steps until DiHu - now to be set anew with proper DAE (integration) scheme.
   
  !0.0001000_CMISSRP -> 50  !0.0001020_CMISSRP  !0.0001042_CMISSRP  !0.0001064_CMISSRP  !0.0001087_CMISSRP
  !0.0001111_CMISSRP -> 45  !0.0001136_CMISSRP  !0.0001163_CMISSRP  !0.0001190_CMISSRP  !0.0001220_CMISSRP 

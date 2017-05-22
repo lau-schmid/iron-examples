@@ -72,9 +72,9 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   LOGICAL, PARAMETER :: DEBUGGING_PARALLEL_BARRIER = .FALSE.   ! execute a barrier where all processes wait when running in parallel, this is helpful to only debug the execution of single processes in a parallel scenario with gdb
   LOGICAL, PARAMETER :: DEBUGGING_PROBLEM_OUTPUT = .FALSE.     ! output the 'solver' object after it is created
   LOGICAL :: DebuggingOutput = .FALSE.    ! enable information from solvers
-  LOGICAL :: OldTomoMechanics = .TRUE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
+  LOGICAL :: OldTomoMechanics = .FALSE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
   LOGICAL :: EnableExportEMG = .FALSE.
-  LOGICAL :: BDFIntegrator = .TRUE. ! Whether or not to use the bdf integration scheme for the DAE cellml problem. otherwise euler explicit
+  !LOGICAL :: BDFIntegrator = .TRUE. ! Whether or not to use the bdf integration scheme for the DAE cellml problem. otherwise euler explicit
 
   
   ! physical dimensions in [cm]
@@ -402,9 +402,9 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 !##################################################################################################################################
 !##################################################################################################################################
 
-  IF(BDFIntegrator) THEN
-    ODESolverId = 2
-  ENDIF
+  !IF(BDFIntegrator) THEN
+  !  ODESolverId = 2
+  !ENDIF
 
   WRITE(*,'(A,A)') TRIM(GetTimeStamp()), " Program started."
 
@@ -2446,7 +2446,7 @@ SUBROUTINE InitializeCellML()
   !> \todo Need to allow parameter values to be overridden for the case when user has non-spatially varying parameter value.
   !Finish the CellML environment
   
-  IF (BDFIntegrator) THEN
+  IF (ODESolverId==2) THEN
    ! To initialize the BDF solver, OpenCMISS requires to have set CELLML%MAX_NUMBER_OF_INTERMEDIATE.
    ! For now, we can manipulate it here:
     CALL cmfe_CellML_IntermediateMaxNumberSet(CellML,1,Err) ! todo: exact number required or just something > 0?
@@ -2553,7 +2553,7 @@ SUBROUTINE InitializeCellML()
   CALL cmfe_CellML_StateFieldCreateStart(CellML,CellMLStateFieldUserNumber,CellMLStateField,Err)
   CALL cmfe_CellML_StateFieldCreateFinish(CellML,Err)
 
-  IF (OldTomoMechanics .OR. BDFIntegrator) THEN !
+  IF (OldTomoMechanics .OR. ODESolverId==2) THEN !
     !Create the CellML intermediate field
     CALL cmfe_Field_Initialise(CellMLIntermediateField,Err)
     CALL cmfe_CellML_IntermediateFieldCreateStart(CellML,CellMLIntermediateFieldUserNumber, & 
@@ -2644,7 +2644,7 @@ SUBROUTINE CreateSolvers()
   ! might be handy some day:
   ! CALL cmfe_Solver_DAETimesSet(SolverDAE,?0.0_CMISSRP?,?0.001_CMISSRP?,Err)
   
-  IF (BDFIntegrator) THEN !use bdf instead of default-explicitEuler
+  IF (ODESolverId==2) THEN !use bdf instead of default-explicitEuler
     CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_BDF,Err)
     CALL cmfe_Solver_DAEbdfSetTolerance(SolverDAE,0.0000001_CMISSRP,0.0000001_CMISSRP,err) !default values were both: 1.0E-7
   ! ELSEIF (useGL) THEN !!! not stable yet

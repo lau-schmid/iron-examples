@@ -74,6 +74,8 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   LOGICAL :: DebuggingOutput = .FALSE.    ! enable information from solvers
   LOGICAL :: OldTomoMechanics = .TRUE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
   LOGICAL :: EnableExportEMG = .FALSE.
+  LOGICAL :: BDFIntegrator = .TRUE. ! Whether or not to use the bdf integration scheme for the DAE cellml problem. otherwise euler explicit
+
   
   ! physical dimensions in [cm]
   REAL(CMISSRP) :: PhysicalLength=3.0_CMISSRP ! (6)     X-direction
@@ -84,10 +86,21 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   REAL(CMISSRP) :: time !=10.00_CMISSRP
   REAL(CMISSRP), PARAMETER :: PERIODD=1.00_CMISSRP
   REAL(CMISSRP)            :: TimeStop=10.0_CMISSRP
-
-  REAL(CMISSRP) :: ODETimeStep = 0.0001_CMISSRP            !0.0001_CMISSRP
-  REAL(CMISSRP) :: PDETimeStep = 0.005_CMISSRP              ! 0.005_CMISSRP
+_
   REAL(CMISSRP) :: ElasticityTimeStep = 0.10000000001_CMISSRP !0.5_CMISSRP!0.05_CMISSRP!0.8_CMISSRP
+  REAL(CMISSRP) :: PDETimeStep = 0.005_CMISSRP              ! 0.005_CMISSRP
+  REAL(CMISSRP) :: ODETimeStep = 0.0001CMISSRP!            ! set at '#timestepset'. 50 steps until DiHu - now to be set anew with proper DAE (integration) scheme.
+  
+ !0.0001000_CMISSRP -> 50  !0.0001020_CMISSRP  !0.0001042_CMISSRP  !0.0001064_CMISSRP  !0.0001087_CMISSRP
+ !0.0001111_CMISSRP -> 45  !0.0001136_CMISSRP  !0.0001163_CMISSRP  !0.0001190_CMISSRP  !0.0001220_CMISSRP 
+ !0.0001250_CMISSRP -> 40  !0.0001282_CMISSRP  !0.0001316_CMISSRP  !0.0001351_CMISSRP  !0.0001389_CMISSRP
+ !0.0001429_CMISSRP -> 35  !0.0001471_CMISSRP  !0.0001515_CMISSRP  !0.0001563_CMISSRP  !0.0001613_CMISSRP 
+ !0.0001667_CMISSRP -> 30  !0.0001724_CMISSRP  !0.0001786_CMISSRP  !0.0001852_CMISSRP  !0.0001923_CMISSRP
+ !0.0002_CMISSRP    -> 25  !0.0002083_CMISSRP  !0.0002174_CMISSRP  !0.0002273_CMISSRP  !0.0002381_CMISSRP
+ !0.00025_CMISSRP   -> 20  !0.0002632_CMISSRP  !0.0002778_CMISSRP  !0.0002941_CMISSRP  !0.0003125_CMISSRP
+ !0.0003333_CMISSRP -> 15  !0.0003571_CMISSRP  !0.0003846_CMISSRP  !0.0004167_CMISSRP  !0.0004545_CMISSRP
+ !0.0005_CMISSRP    -> 10  !0.0005556_CMISSRP  !0.000625_CMISSRP   !0.0007143_CMISSRP  !0.0008333_CMISSRP
+ !0.001_CMISSRP     -> 5   !0.00125_CMISSRP    !0.0016667_CMISSRP  !0.0025_CMISSRP     !0.005_CMISSRP     -> 1
 
 !tomo keep ElasticityTimeStep and STIM_STOP at the same values
   REAL(CMISSRP), PARAMETER :: STIM_STOP=0.1_CMISSRP!ElasticityTimeStep   
@@ -196,8 +209,8 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   INTEGER(CMISSIntg) :: CustomSolverNumberIterationsNewtonMax = 0
   INTEGER(CMISSIntg) :: MonodomainSolverId = 2
   INTEGER(CMISSIntg) :: MonodomainPreconditionerId = 1
-  INTEGER(CMISSIntg) :: ODESolverId = 1
 
+  INTEGER(CMISSIntg) :: ODESolverId = 1 ! will be overwritten if BDFIntegrator == .true.
 
   INTEGER(CMISSIntg), DIMENSION(10000,100) :: MotorUnitFiringTimes
   INTEGER(CMISSIntg), ALLOCATABLE :: InnervationZoneOffset(:)
@@ -389,6 +402,9 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 !##################################################################################################################################
 !##################################################################################################################################
 
+  IF(BDFIntegrator) THEN
+    ODESolverId = 2
+  ENDIF
 
   WRITE(*,'(A,A)') TRIM(GetTimeStamp()), " Program started."
 
@@ -2429,6 +2445,13 @@ SUBROUTINE InitializeCellML()
   !,- and override constant parameters without needing to set up fields
   !> \todo Need to allow parameter values to be overridden for the case when user has non-spatially varying parameter value.
   !Finish the CellML environment
+  
+  IF (BDFIntegrator) THEN
+   ! To initialize the BDF solver, OpenCMISS requires to have set CELLML%MAX_NUMBER_OF_INTERMEDIATE.
+   ! For now, we can manipulate it here:
+    CALL cmfe_CellML_IntermediateMaxNumberSet(CellML,1,Err) ! todo: exact number required or just something > 0?
+  ENDIF
+  
   CALL cmfe_CellML_CreateFinish(CellML,Err)
 
   !--------------------------------------------------------------------------------------------------------------------------------
@@ -2530,7 +2553,7 @@ SUBROUTINE InitializeCellML()
   CALL cmfe_CellML_StateFieldCreateStart(CellML,CellMLStateFieldUserNumber,CellMLStateField,Err)
   CALL cmfe_CellML_StateFieldCreateFinish(CellML,Err)
 
-  IF (OldTomoMechanics) THEN
+  IF (OldTomoMechanics .OR. BDFIntegrator) THEN !
     !Create the CellML intermediate field
     CALL cmfe_Field_Initialise(CellMLIntermediateField,Err)
     CALL cmfe_CellML_IntermediateFieldCreateStart(CellML,CellMLIntermediateFieldUserNumber, & 
@@ -2616,9 +2639,18 @@ SUBROUTINE CreateSolvers()
   CALL cmfe_Solver_Initialise(SolverDAE,Err)
   CALL cmfe_Problem_SolverGet(Problem,[ControlLoopMonodomainNumber,CMFE_CONTROL_LOOP_NODE], &
    & SolverDAEIndex,SolverDAE,Err)
-  CALL cmfe_Solver_DAETimeStepSet(SolverDAE,ODETimeStep,Err)
-
-  !> \todo - solve the CellML equations on the GPU for efficiency (later)
+  CALL cmfe_Solver_DAETimeStepSet(SolverDAE,ODETimeStep,Err)  ! #timestepset
+  
+  ! might be handy some day:
+  ! CALL cmfe_Solver_DAETimesSet(SolverDAE,?0.0_CMISSRP?,?0.001_CMISSRP?,Err)
+  
+  IF (BDFIntegrator) THEN !use bdf instead of default-explicitEuler
+    CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_BDF,Err)
+    CALL cmfe_Solver_DAEbdfSetTolerance(SolverDAE,0.0000001_CMISSRP,0.0000001_CMISSRP,err) !default values were both: 1.0E-7
+  ! ELSEIF (useGL) THEN !!! not stable yet
+  ! CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_GL,Err)
+  ENDIF
+  !> \todo or not-todo... solve the CellML equations on the GPU for efficiency (later)
   !CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_EXTERNAL,Err)
 
   IF (DebuggingOutput) THEN

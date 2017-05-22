@@ -519,7 +519,7 @@ PROGRAM TITINEXAMPLE
 !################################### SET DISCRETISATION STUFF ################################
 !#############################################################################################
 
-useBDF = .TRUE. !(if conflicting, than useBDF is "stronger" than useGL)
+useBDF = .TRUE. !(when conflicting, than useBDF is "stronger" than useGL)
 useGL = .FALSE. ! if none of them, than euler fwd.
 
 !======================================================================================||
@@ -1255,6 +1255,12 @@ useGL = .FALSE. ! if none of them, than euler fwd.
   !,- and override constant parameters without needing to set up fields
   !> \todo Need to allow parameter values to be overridden for the case when user has non-spatially varying parameter value.
   !CALL cmfe_CellML_IntermediateMaxNumberSet(Cml,0,Err)
+  
+  ! To initialize the BDF (GL?) solver, OpenCMISS requires to have set CELLML%MAX_NUMBER_OF_INTERMEDIATE.
+  ! For now, we can manipulate it here:
+  IF (useBDF) THEN !.OR. useGL
+    CALL cmfe_CellML_IntermediateMaxNumberSet(Cml,1,Err) ! todo: exact number required or just something > 0?
+  ENDIF
   !Finish the CellML environment
   CALL cmfe_CellML_CreateFinish(Cml,Err)
 
@@ -1398,9 +1404,10 @@ useGL = .FALSE. ! if none of them, than euler fwd.
   CALL cmfe_Solver_DAETimeStepSet(SolverDAE,ODE_TIME_STEP,Err)
 
   IF (useBDF) THEN 
-   CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_BDF,Err)
+    CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_BDF,Err)
+  !  CALL cmfe_Solver_DAEbdfSetTolerance(SolverDAE,0.0000001_CMISSRP,0.0000001_CMISSRP,err) 
   ELSEIF (useGL) THEN
-   CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_GL,Err)
+    CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_GL,Err)
   ENDIF
   
   !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_NO_OUTPUT,Err)

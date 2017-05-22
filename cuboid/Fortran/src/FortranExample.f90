@@ -149,6 +149,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   INTEGER(CMISSIntg) :: ElasticityLoopMaximumNumberOfIterations = 5
   INTEGER(CMISSIntg) :: NewtonMaximumNumberOfIterations = 500
   REAL(CMISSRP) :: NewtonTolerance = 1.E-8_CMISSRP
+  REAL(CMISSRP) :: DAERelativeTolerance = 1.E-7_CMISSRP, DAEAbsoluteTolerance = 1.E-7_CMISSRP
 
 !  REAL(CMISSRP) :: INIT_PRESSURE
 !  REAL(CMISSRP), PARAMETER :: CONTRACTION_VELOCITY=-6.0e-1_CMISSRP ![cm/s]
@@ -989,6 +990,10 @@ SUBROUTINE ParseAssignment(Line, LineNumber, ScenarioInputFile)
       READ(StrValue, *, IOSTAT=Stat) NumberOfNodesInXi3
     CASE ("newtonmaximumnumberofiterations")
       READ(StrValue, *, IOSTAT=Stat) NewtonMaximumNumberOfIterations
+    CASE ("daerelativetolerance")
+      READ(StrValue, *, IOSTAT=Stat) DAERelativeTolerance
+    CASE ("daeabsolutetolerance")
+      READ(StrValue, *, IOSTAT=Stat) DAEAbsoluteTolerance
     CASE ("newtontolerance")
       READ(StrValue, *, IOSTAT=Stat) NewtonTolerance
     CASE ("elasticityloopmaximumnumberofiterations")
@@ -1324,6 +1329,8 @@ SUBROUTINE ParseParameters()
         PRINT *, "(0D) ODE:        1 explicit Euler"
       CASE(2)
         PRINT *, "(0D) ODE:        2 BDF"
+        PRINT *, "                   Absolute Tolerance: ",DAEAbsoluteTolerance
+        PRINT *, "                   Relative Tolerance: ",DAERelativeTolerance
       CASE DEFAULT
         PRINT *, "(0D) ODE:        SOLVER_ITERATIVE_GMRES (default)" 
     END SELECT

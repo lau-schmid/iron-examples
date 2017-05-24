@@ -2407,11 +2407,6 @@ SUBROUTINE CreateEquations()
 END SUBROUTINE CreateEquations
 
 SUBROUTINE InitializeCellML()
-  INTEGER(CMISSIntg) :: CellMLUserNumber
-  INTEGER(CMISSIntg) :: CellMLModelsFieldUserNumber
-  INTEGER(CMISSIntg) :: CellMLStateFieldUserNumber
-  INTEGER(CMISSIntg) :: CellMLIntermediateFieldUserNumber
-  INTEGER(CMISSIntg) :: CellMLParametersFieldUserNumber
   
   !--------------------------------------------------------------------------------------------------------------------------------
   !Create the CellML environment

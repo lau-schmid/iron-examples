@@ -19,8 +19,12 @@ DependentFieldM
   FIELD_V_VARIABLE_TYPE: 1),2),3): GeometryM3D, 3D-position of geometry
  
 IndependentFieldM
-  CMFE_FIELD_U_VARIABLE_TYPE:
+  CMFE_FIELD_U_VARIABLE_TYPE:   ("Active_Stress_M") / ("XB_state_variables_M")
     1) Active_Stress_M
+    2) A_1
+    3) A_2
+    4) x_1
+    5) x_2
    *2) titin stress unbound
    *3) titin stress bound
    *4) titin XF-stress (cross-fibre directions) unbound
@@ -76,7 +80,7 @@ DependentFieldFE
 IndependentFieldFE  // Eingabevariablen, kommen von anderem Modell oder sind konstant
   CMFE_FIELD_U_VARIABLE_TYPE ("Active_Stress_FE")
     1)  Active_Stress_FE
-  CMFE_FIELD_V_VARIABLE_TYPE
+  CMFE_FIELD_V_VARIABLE_TYPE    ("subgrid_info")
     1)  number of elements in Xi(1) direction per element
     2)  number of nodes in Xi(2) direction per element
     3)  number of nodes in Xi(3) direction per element

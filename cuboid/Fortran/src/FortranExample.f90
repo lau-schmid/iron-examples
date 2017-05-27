@@ -1225,10 +1225,10 @@ SUBROUTINE ParseParameters()
   !CMFE_IN_DIAG_TYPE     !<Type for setting diagnostic output in one routine \see OPENCMISS_DiagnosticTypes,OPENCMISS
   !CMFE_FROM_DIAG_TYPE   !<Type for setting diagnostic output in one routine downwards \see OPENCMISS_DiagnosticTypes,OPENCMISS
   !                          in which routine,   levelList(:), diagFilename
-  CALL cmfe_DiagnosticsSetOn(CMFE_FROM_DIAG_TYPE, [1],          "",&
+  !CALL cmfe_DiagnosticsSetOn(CMFE_FROM_DIAG_TYPE, [1],          "",&
   ! routine list
   !  & ["DOMAIN_MAPPINGS_LOCAL_FROM_GLOBAL_CALCULATE"], Err)
-    & ["FIELD_MAPPINGS_CALCULATE"], Err)
+  !  & ["FIELD_MAPPINGS_CALCULATE"], Err)
   
   
   !                     type                  not output directly, filename
@@ -2052,7 +2052,7 @@ SUBROUTINE CreateFieldMonodomain()
     CALL cmfe_Field_VariableLabelSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,"XB_state_variables_M",Err)
   ENDIF
 
-  !second variable:   CMFE_FIELD_V_VARIABLE_TYPE -- 1) motor unit number   2) fibre type   3) fibre number   4) nearest Gauss point   5) containing element global element 6) in-fibre contiguous node number
+  !second variable:   CMFE_FIELD_V_VARIABLE_TYPE -- 1) motor unit number   2) fibre type   3) fibre number   4) nearest Gauss point   5) containing element local number 6) in-fibre contiguous node number
   CALL cmfe_Field_DataTypeSet(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_INTG_TYPE,Err)
   CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldM, & 
     & CMFE_FIELD_V_VARIABLE_TYPE,FieldIndependentNumberOfComponentsM2,Err)
@@ -2260,12 +2260,12 @@ SUBROUTINE InitializeFieldMonodomain()
     ! get rank of fibre
     MotorUnitRank = MUDistribution(MOD(FibreNo-1, 4050)+1)
     
-    ! loop over elements of fibre, for each element, the right node is considered, except for the first element (on ElementIdx=0), then the left node of the first element is considered
-    DO ElementIdx = 0, NumberOfElementsMPerFibre
+    ! loop over elements of fibre, for each element, the left node is considered, except for the last element (on ElementIdx=0), then the left node of the first element is considered
+    DO ElementIdx = 1, NumberOfElementsMPerFibre+1
       
-      ! compute the bioelectricfcmfe element user number      
-      IF (ElementIdx == 0) THEN   ! index 0 and 1 are both for the first element, but first for the left node, then for the right node
-        MElementUserNumber = (FibreNo-1) * NumberOfElementsMPerFibre + 1
+      ! compute the bioelectric element user number      
+      IF (ElementIdx == NumberOfElementsMPerFibre+1) THEN   ! index NumberOfElementsMPerFibre and NumberOfElementsMPerFibre+1 are both for the last element of the fibre, but first for the left node, then for the right node
+        MElementUserNumber = (FibreNo-1) * NumberOfElementsMPerFibre + NumberOfElementsMPerFibre
       ELSE
         MElementUserNumber = (FibreNo-1) * NumberOfElementsMPerFibre + ElementIdx
       ENDIF
@@ -2274,14 +2274,14 @@ SUBROUTINE InitializeFieldMonodomain()
       CALL cmfe_MeshElements_NodesGet(ElementsM, MElementUserNumber, ElementUserNodes, Err)
       ! ElementUserNodes(1:2): node user number
           
-      IF (ElementIdx == 0) THEN
-        NodeMUserNumber = ElementUserNodes(1)   ! take left node of first element in first iteration per fibre
+      IF (ElementIdx == NumberOfElementsMPerFibre+1) THEN
+        NodeMUserNumber = ElementUserNodes(2)   ! take right node of the last element in last iteration per fibre
       ELSE
-        NodeMUserNumber = ElementUserNodes(2)
+        NodeMUserNumber = ElementUserNodes(1)   ! take left node normally
       ENDIF
       
-      !PRINT "(I1.1,3(A,I3))", ComputationalNodeNumber,": Fibre", FibreNo, ", Element in fibre ", ElementIdx, &
-      !  & ", NodeMUserNumber:", NodeMUserNumber        
+      PRINT "(I1.1,3(A,I3))", ComputationalNodeNumber,": Fibre", FibreNo, ", Element in fibre ", ElementIdx, &
+        & ", NodeMUserNumber:", NodeMUserNumber        
       
       ! get domain number of element and node
       !                                        decomposition,  elementUserNumber, domain
@@ -2296,20 +2296,24 @@ SUBROUTINE InitializeFieldMonodomain()
         FEElementZIdx = INT(INT((FibreNo-1) / NumberGlobalYFibres) / NumberOfNodesInXi3)
         FEElementYIdx = INT(MOD((FibreNo-1), NumberGlobalYFibres)  / NumberOfNodesInXi2)
         FEElementXIdx = (ElementIdx-1) / NumberOfNodesInXi1
-        IF (ElementIdx == 0) THEN
-          FEElementXIdx = 0
+        IF (ElementIdx == NumberOfElementsMPerFibre+1) THEN
+          FEElementXIdx = (NumberOfElementsMPerFibre-1) / NumberOfNodesInXi1
         ENDIF
       
         FEElementGlobalNumber = FEElementZIdx * NumberGlobalYElements * NumberGlobalXElements &
          & + FEElementYIdx * NumberGlobalXElements + FEElementXIdx + 1
       
+        PRINT "(I1.1,2(A,I2.2),5(A,I3.3))", ComputationalNodeNumber,": Fibre", FibreNo, ", MElement in fibre ", ElementIdx, &
+          & ", Element (",FEElementXIdx,",",FEElementYIdx,",",FEElementZIdx, &
+          & ")=", FEElementGlobalNumber, ", MU ",MotorUnitRank
+      
         ! get local FEElementLocalNumber from FEElementGlobalNumber
         CALL cmfe_BioelectricFiniteElasticity_GetLocalElementNumber(GeometricFieldFE, FEElementGlobalNumber, FEElementLocalNumber, &
           & Err)
       
-        !PRINT "(I1.1,2(A,I2.2),6(A,I3.3))", ComputationalNodeNumber,": Fibre", FibreNo, ", Element in fibre ", ElementIdx, &
-        !  & ", Element (",FEElementXIdx,",",FEElementYIdx,",",FEElementZIdx, &
-        !  & ")=", FEElementGlobalNumber, ", MU ",MotorUnitRank, ", local FE ", FEElementLocalNumber
+        PRINT "(I1.1,2(A,I2.2),6(A,I3.3))", ComputationalNodeNumber,": Fibre", FibreNo, ", MElement in fibre ", ElementIdx, &
+          & ", Element (",FEElementXIdx,",",FEElementYIdx,",",FEElementZIdx, &
+          & ")=", FEElementGlobalNumber, ", MU ",MotorUnitRank, ", local FE ", FEElementLocalNumber
       
         ! set number of containing FE element
         !                                     FIELD,              VARIABLE_TYPE,              

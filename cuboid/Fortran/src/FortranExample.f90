@@ -2260,12 +2260,12 @@ SUBROUTINE InitializeFieldMonodomain()
     ! get rank of fibre
     MotorUnitRank = MUDistribution(MOD(FibreNo-1, 4050)+1)
     
-    ! loop over elements of fibre, for each element, the left node is considered, except for the last element (on ElementIdx=0), then the left node of the first element is considered
-    DO ElementIdx = 1, NumberOfElementsMPerFibre+1
+    ! loop over elements of fibre, for each element, the right node is considered, except for the first element (on ElementIdx=0), then the left node of the first element is considered
+    DO ElementIdx = 0, NumberOfElementsMPerFibre
       
       ! compute the bioelectric element user number      
-      IF (ElementIdx == NumberOfElementsMPerFibre+1) THEN   ! index NumberOfElementsMPerFibre and NumberOfElementsMPerFibre+1 are both for the last element of the fibre, but first for the left node, then for the right node
-        MElementUserNumber = (FibreNo-1) * NumberOfElementsMPerFibre + NumberOfElementsMPerFibre
+      IF (ElementIdx == 0) THEN   ! index 0 and 1 are both for the first element, but first for the left node, then for the right node
+        MElementUserNumber = (FibreNo-1) * NumberOfElementsMPerFibre + 1
       ELSE
         MElementUserNumber = (FibreNo-1) * NumberOfElementsMPerFibre + ElementIdx
       ENDIF
@@ -2274,14 +2274,14 @@ SUBROUTINE InitializeFieldMonodomain()
       CALL cmfe_MeshElements_NodesGet(ElementsM, MElementUserNumber, ElementUserNodes, Err)
       ! ElementUserNodes(1:2): node user number
           
-      IF (ElementIdx == NumberOfElementsMPerFibre+1) THEN
-        NodeMUserNumber = ElementUserNodes(2)   ! take right node of the last element in last iteration per fibre
+      IF (ElementIdx == 0) THEN
+        NodeMUserNumber = ElementUserNodes(1)   ! take left node of first element in first iteration per fibre
       ELSE
-        NodeMUserNumber = ElementUserNodes(1)   ! take left node normally
+        NodeMUserNumber = ElementUserNodes(2)
       ENDIF
       
-      PRINT "(I1.1,3(A,I3))", ComputationalNodeNumber,": Fibre", FibreNo, ", Element in fibre ", ElementIdx, &
-        & ", NodeMUserNumber:", NodeMUserNumber        
+      !PRINT "(I1.1,3(A,I3))", ComputationalNodeNumber,": Fibre", FibreNo, ", Element in fibre ", ElementIdx, &
+      !  & ", NodeMUserNumber:", NodeMUserNumber        
       
       ! get domain number of element and node
       !                                        decomposition,  elementUserNumber, domain
@@ -2296,24 +2296,20 @@ SUBROUTINE InitializeFieldMonodomain()
         FEElementZIdx = INT(INT((FibreNo-1) / NumberGlobalYFibres) / NumberOfNodesInXi3)
         FEElementYIdx = INT(MOD((FibreNo-1), NumberGlobalYFibres)  / NumberOfNodesInXi2)
         FEElementXIdx = (ElementIdx-1) / NumberOfNodesInXi1
-        IF (ElementIdx == NumberOfElementsMPerFibre+1) THEN
-          FEElementXIdx = (NumberOfElementsMPerFibre-1) / NumberOfNodesInXi1
+        IF (ElementIdx == 0) THEN
+          FEElementXIdx = 0
         ENDIF
       
         FEElementGlobalNumber = FEElementZIdx * NumberGlobalYElements * NumberGlobalXElements &
          & + FEElementYIdx * NumberGlobalXElements + FEElementXIdx + 1
       
-        PRINT "(I1.1,2(A,I2.2),5(A,I3.3))", ComputationalNodeNumber,": Fibre", FibreNo, ", MElement in fibre ", ElementIdx, &
-          & ", Element (",FEElementXIdx,",",FEElementYIdx,",",FEElementZIdx, &
-          & ")=", FEElementGlobalNumber, ", MU ",MotorUnitRank
-      
         ! get local FEElementLocalNumber from FEElementGlobalNumber
         CALL cmfe_BioelectricFiniteElasticity_GetLocalElementNumber(GeometricFieldFE, FEElementGlobalNumber, FEElementLocalNumber, &
           & Err)
       
-        PRINT "(I1.1,2(A,I2.2),6(A,I3.3))", ComputationalNodeNumber,": Fibre", FibreNo, ", MElement in fibre ", ElementIdx, &
-          & ", Element (",FEElementXIdx,",",FEElementYIdx,",",FEElementZIdx, &
-          & ")=", FEElementGlobalNumber, ", MU ",MotorUnitRank, ", local FE ", FEElementLocalNumber
+        !PRINT "(I1.1,2(A,I2.2),6(A,I3.3))", ComputationalNodeNumber,": Fibre", FibreNo, ", Element in fibre ", ElementIdx, &
+        !  & ", Element (",FEElementXIdx,",",FEElementYIdx,",",FEElementZIdx, &
+        !  & ")=", FEElementGlobalNumber, ", MU ",MotorUnitRank, ", local FE ", FEElementLocalNumber
       
         ! set number of containing FE element
         !                                     FIELD,              VARIABLE_TYPE,              

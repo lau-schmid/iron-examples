@@ -11,13 +11,13 @@ endif()
 
 # in debug mode, add flag that make Floating point exceptions fatal
 set(OPT "")
-if (FALSE)
+if (TRUE)
     if(CMAKE_BUILD_TYPE MATCHES DEBUG)
-        set(OPT "-ffpe-trap=invalid,zero")
+        set(OPT "-ffpe-trap=invalid,zero,underflow,overflow,denormal")
     endif()
 endif()
 
-target_compile_options(cuboid PRIVATE ${PROC_OPT} ${OPT})
+target_compile_options(cuboid PRIVATE ${PROC_OPT} ${OPT} "-fbacktrace")
 
 # Link to opencmiss
 # -----------------

@@ -1,5 +1,5 @@
 # Add example executable
-add_executable(Uniaxial_3Dtstep src/3DPlaneStress_tstep.f90)
+add_executable(Uniaxial_2Dtstep src/2DPlaneStress_tstep.f90)
 
 # Turn on Fortran preprocessing (#include directives)
 if (MSVC)
@@ -7,7 +7,7 @@ if (MSVC)
 else()
     set(PROC_OPT "-cpp")
 endif()
-target_compile_options(Uniaxial_3Dtstep PRIVATE ${PROC_OPT})
+target_compile_options(Uniaxial_2Dtstep PRIVATE ${PROC_OPT})
 
 # Link to opencmiss
 # -----------------
@@ -24,11 +24,11 @@ target_compile_options(Uniaxial_3Dtstep PRIVATE ${PROC_OPT})
 #     target_link_libraries(${EXAMPLE_BINARY} PRIVATE petsc)
 #
 # All the OpenCMISS dependencies provide a target you can link against corresponding to the (lowercase) component name.
-target_link_libraries(Uniaxial_3Dtstep PRIVATE opencmiss)
+target_link_libraries(Uniaxial_2Dtstep PRIVATE opencmiss)
 
 # Add a simple test that runs the executable
-add_test(NAME Uniaxial_3Dtstep COMMAND Uniaxial_3Dtstep)
-add_opencmiss_environment(Uniaxial_3Dtstep)
+add_test(NAME Uniaxial_2Dtstep COMMAND Uniaxial_2Dtstep)
+add_opencmiss_environment(Uniaxial_2Dtstep)
 
 ###################
 # Developer notice!

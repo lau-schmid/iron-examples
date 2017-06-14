@@ -1,21 +1,20 @@
 #Read in the sequence of nodal positions.
 for $i (1..5)
   {
-	 $filename = sprintf("LinearElasticity3DPlaneStress_%d.part0.exnode", $i);
+	 $filename = sprintf("LinearElasticity2DPlaneStress_%d.part0.exnode", $i);
 	 
 	 print "Reading $filename time $i\n";
 	 gfx read node "$filename" time $i;
   }
 
-#gfx read node "LinearElasticity3DPlaneStress.part0.exnode" time 1
+#gfx read node "LinearElasticity2DPlaneStress.part0.exnode" time 1
 
 #Read in the element description
-gfx read elements LinearElasticity3DPlaneStress.part0.exelem;
+gfx read elements LinearElasticity2DPlaneStress.part0.exelem;
 
 gfx define field xx add fields Displacement.1 Undeformed.x
 gfx define field yy add fields Displacement.2 Undeformed.y
-gfx define field zz add fields Displacement.3 Undeformed.z
-gfx define field Deformed component xx yy zz
+gfx define field Deformed component xx yy
 
 
 gfx define faces egroup "Region 1"
@@ -46,7 +45,7 @@ gfx create spectrum displacement_spectrum
 
 gfx modify g_element "/" surfaces coordinate Deformed tessellation default LOCAL select_on material black spectrum displacement_spectrum selected_material default_selected render_wireframe;
 
-gfx modify spectrum displacement_spectrum linear reverse range 0 51.2 extend_above extend_below rainbow colour_range 0 1 component 1
+gfx modify spectrum displacement_spectrum linear reverse range 0 12.8 extend_above extend_below rainbow colour_range 0 1 component 1
 
 ########creating nodes with labels########
 

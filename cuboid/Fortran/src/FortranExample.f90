@@ -1661,7 +1661,7 @@ SUBROUTINE CreateDecomposition()
       CALL cmfe_Decomposition_ElementDomainSet(DecompositionFE, ElementFENo,           DomainNo, Err)
       LastDomainNo = DomainNo
 
-      PRINT "(I3.3,A,I5.5,A,I2)", ComputationalNodeNumber, ": 3D el. no. ", ElementFENo, " to domain no. ", DomainNo
+      !PRINT "(I3.3,A,I5.5,A,I2)", ComputationalNodeNumber, ": 3D el. no. ", ElementFENo, " to domain no. ", DomainNo
 
       !PRINT*, "ElementFENo=",ElementFENo, ", ElementInAtomicPortionNo=", ElementInAtomicPortionNo,", DomainNo: ", DomainNo
 
@@ -1703,7 +1703,7 @@ SUBROUTINE CreateDecomposition()
 
   !--------------------------------------------------------------------------------------------------------------------------------
   ! Create a decompositions for monodomain elements on fibres
-  PRINT "(I3.3,A)", ComputationalNodeNumber, ": Create decomposition for monodomain elements"
+  !PRINT "(I3.3,A)", ComputationalNodeNumber, ": Create decomposition for monodomain elements"
   
   CALL cmfe_Decomposition_Initialise(DecompositionM,Err)
   CALL cmfe_Decomposition_CreateStart(DecompositionUserNumberM,MeshM,DecompositionM,Err)
@@ -1716,7 +1716,7 @@ SUBROUTINE CreateDecomposition()
     ! loop over elementsM
     ElementMGlobalNumber = 1
     DO FibreNo = 1, NumberOfFibres
-      PRINT *, "Fibre ",FibreNo
+      !PRINT *, "Fibre ",FibreNo
     
       DO ElementMInFibreNo = 1,NumberOfElementsMPerFibre
         
@@ -1728,9 +1728,9 @@ SUBROUTINE CreateDecomposition()
         FEElementGlobalNumber = FEElementZIdx * NumberGlobalYElements * NumberGlobalXElements &
          & + FEElementYIdx * NumberGlobalXElements + FEElementXIdx + 1
         
-        PRINT "(I1.1,2(A,I2.2),4(A,I3.3))", ComputationalNodeNumber,": Fibre", FibreNo, ", ElementM ", ElementMGlobalNumber, &
-          & ", Element (",FEElementXIdx,",",FEElementYIdx,",",FEElementZIdx, &
-          & ")=", FEElementGlobalNumber
+        !PRINT "(I1.1,2(A,I2.2),4(A,I3.3))", ComputationalNodeNumber,": Fibre", FibreNo, ", ElementM ", ElementMGlobalNumber, &
+        !  & ", Element (",FEElementXIdx,",",FEElementYIdx,",",FEElementZIdx, &
+        !  & ")=", FEElementGlobalNumber
       
         ! get the domain of the global ElementFE
         !                                        DECOMPOSITION,   USER_ELEMENT_NUMBER,   DOMAIN_NUMBER
@@ -1739,8 +1739,8 @@ SUBROUTINE CreateDecomposition()
         ! set the domain of the ElementM to the same domain as the containing global element
         !                                        DECOMPOSITION,   GLOBAL_ELEMENT_NUMBER, DOMAIN_NUMBER
         CALL cmfe_Decomposition_ElementDomainSet(DecompositionM,  ElementMGlobalNumber,  DomainNo, Err)
-        PRINT "(I1.1,A,I5.5,A,I2,A,I2)", ComputationalNodeNumber, ": fibre ", FibreNo, ", 1D el. no. ", ElementMGlobalNumber, &
-          & " to domain no. ", DomainNo
+        !PRINT "(I1.1,A,I5.5,A,I2,A,I2)", ComputationalNodeNumber, ": fibre ", FibreNo, ", 1D el. no. ", ElementMGlobalNumber, &
+        !  & " to domain no. ", DomainNo
           
         ElementMGlobalNumber = ElementMGlobalNumber + 1
       ENDDO
@@ -2224,7 +2224,7 @@ SUBROUTINE InitializeFieldMonodomain()
   !    2) initial half-sarcomere length
   !    3) initial node distance
   InitialBioelectricNodeDistance = PhysicalLength / (NumberOfElementsMPerFibreLine)
-  PRINT *, "InitialBioelectricNodeDistance = ", InitialBioelectricNodeDistance
+  !PRINT *, "InitialBioelectricNodeDistance = ", InitialBioelectricNodeDistance
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
    & 1.0_CMISSRP,Err) ! lengths in the cell model are in /micro/meters!!!
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3, &

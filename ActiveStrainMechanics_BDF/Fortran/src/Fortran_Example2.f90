@@ -65,6 +65,10 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 #include "mpif.h"
 #endif
 
+  REAL :: elapsed(2)                                     !
+! Total time (sum of prev. 2):                           |
+  REAL :: total  
+  
   !Material-Parameters C=[mu_1, mu_2, mu_3, alpha_1, alpha_2, alpha_3, mu_0, XB_stiffness]
   REAL(CMISSRP), PARAMETER, DIMENSION(8) :: C= &
 !    & [1.0_CMISSRP,0.0_CMISSRP,0.0_CMISSRP, & ! Neo-Hook
@@ -115,7 +119,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   INTEGER(CMISSIntg), PARAMETER :: CellMLUserNumber=1
   INTEGER(CMISSIntg), PARAMETER :: CellMLModelsFieldUserNumber=12
   INTEGER(CMISSIntg), PARAMETER :: CellMLStateFieldUserNumber=13
-  INTEGER(CMISSIntg), PARAMETER :: CellMLIntermediateFieldUserNumber=14
+  INTEGER(CMISSIntg), PARAMETER :: CellMLIntermediateFieldUserNumber=14 ! set this up correctly!
   INTEGER(CMISSIntg), PARAMETER :: CellMLParametersFieldUserNumber=15
 
   !Program types
@@ -458,6 +462,10 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !   - to get from the CellML side
 !  CALL cmfe_CellML_VariableSetAsWanted(CellML,shortenModelIndex,"A_1",Err)
 !  CALL cmfe_CellML_VariableSetAsWanted(CellML,shortenModelIndex,"A_2",Err)
+!#################################################################################################################################
+  !need this to be prevent abort when constructing intermediate field (cmfe_CellML_IntermediateFieldCreateStart)
+  CALL cmfe_CellML_IntermediateMaxNumberSet(CellML,5,Err)
+!#################################################################################################################################
   CALL cmfe_CellML_CreateFinish(CellML,Err)
 
   !--------------------------------------------------------------------------------------------------------------------------------
@@ -539,11 +547,13 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   CALL cmfe_CellML_StateFieldCreateStart(CellML,CellMLStateFieldUserNumber,CellMLStateField,Err)
   CALL cmfe_CellML_StateFieldCreateFinish(CellML,Err)
 
+!###################################################################################################
 !  !Create the CellML intermediate field
-!  CALL cmfe_Field_Initialise(CellMLIntermediateField,Err)
-!  CALL cmfe_CellML_IntermediateFieldCreateStart(CellML,CellMLIntermediateFieldUserNumber,CellMLIntermediateField,Err)
-!  CALL cmfe_CellML_IntermediateFieldCreateFinish(CellML,Err)
-  
+  CALL cmfe_Field_Initialise(CellMLIntermediateField,Err)
+  CALL cmfe_CellML_IntermediateFieldCreateStart(CellML,CellMLIntermediateFieldUserNumber,CellMLIntermediateField,Err)
+  CALL cmfe_CellML_IntermediateFieldCreateFinish(CellML,Err)
+!###################################################################################################
+
   !Create the CellML parameters field
   CALL cmfe_Field_Initialise(CellMLParametersField,Err)
   CALL cmfe_Field_CreateStart(CellMLParametersFieldUserNumber,Region,CellMLParametersField,Err)
@@ -587,11 +597,19 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   !Create the DAE solver
   CALL cmfe_Solver_Initialise(SolverDAE,Err)
-  CALL cmfe_Problem_SolverGet(Problem,CMFE_CONTROL_LOOP_NODE,1,SolverDAE,Err)! here? was 1
+  CALL cmfe_Problem_SolverGet(Problem,CMFE_CONTROL_LOOP_NODE,1,SolverDAE,Err)
   CALL cmfe_Solver_DAETimeStepSet(SolverDAE,ODE_TIME_STEP,Err) ! setzt SOLVER%DAE_SOLVER%INITIAL_STEP=TIME_STEP
   CALL cmfe_Solver_DAETimesSet(SolverDAE,0.0_CMISSRP,0.001_CMISSRP,Err)!ELASTICITY_TIME_STEP,Err) ! setzt star und endzeit SOLVER%DAE_SOLVER%START_TIME=START_TIME / und  ...END_TIME
 
-  CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_BDF,Err)  ! wirft fehler in problem_solverdaecellmlrhspetsc in problem_routines.f90, zeile 4704.
+!###################################################################################################
+  CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_BDF,Err) 
+!###################################################################################################
+
+!########################################################################################################################
+! Hallo Benni, ich hab die tatsächlichen Änderungen mit # markiert.
+! 
+! Im Moment kommen noch recht viele Not-Converged-Fehler, Man muss also tatsächlich schauen, ob die Ergebnisse vergleichbar sind.
+!!########################################################################################################################
 
   CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_NO_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
@@ -599,6 +617,10 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_SOLVER_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(SolverDAE,CMFE_SOLVER_MATRIX_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(SolverDAE,0.0_CMISSRP,0.01_CMISSRP,ERR)
+
+
+ ! CALL cmfe_PrintSolver(SolverDAE,5,30,Err)
+
   !Create the mechanics solver
   CALL cmfe_Solver_Initialise(Solver,Err)
   CALL cmfe_Solver_Initialise(LinearSolver,Err)
@@ -801,6 +823,9 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   CALL cmfe_Finalise(Err)
 
+  total = ETIME(elapsed)
+  WRITE(888,*) 'End: total=', total, ' user=', elapsed(1), ' system=', elapsed(2)
+  
   WRITE(*,'(A)') "Program successfully completed."
 
   STOP

@@ -1707,44 +1707,44 @@ PROGRAM TITINEXAMPLE
   k = k+1
 
 
-  NodeNumber=(NumberOfNodesPerFibre+1)/2
-  DO WHILE(NodeNumber<NumberOfNodesM)
-    CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber,1,NodeDomain,Err)
-    IF(NodeDomain==ComputationalNodeNumber) CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
-     & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,NodeNumber,stimcomponent,STIM_VALUE,Err)
-    NodeNumber=NodeNumber+NumberOfNodesPerFibre
-  ENDDO
-  
-  CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time,time+STIM_STOP,ELASTICITY_TIME_STEP,Err)
-
-  !Solve the problem for the stimulation time
-  WRITE(*,'(A)') "Start solve with stimulation"
-  CALL cmfe_Problem_Solve(Problem,Err)
-
-  time = time+STIM_STOP
-
-  !--------------------------------------------------------------------------------------------------------------------------------
-  !Now turn the stimulus off
-  NodeNumber=(NumberOfNodesPerFibre+1)/2
-  DO WHILE(NodeNumber<NumberOfNodesM)
-    CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber,1,NodeDomain,Err)
-    IF(NodeDomain==ComputationalNodeNumber) CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
-     & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,NodeNumber,stimcomponent,0.0_CMISSRP,Err)
-    NodeNumber=NodeNumber+NumberOfNodesPerFibre
-  ENDDO
-
-  WRITE(*,'(A)') "Start solve without stimulation"
-
-  do while(time <= (k+1)*PERIODD)
-
+    NodeNumber=(NumberOfNodesPerFibre+1)/2
+    DO WHILE(NodeNumber<NumberOfNodesM)
+      CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber,1,NodeDomain,Err)
+      IF(NodeDomain==ComputationalNodeNumber) CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
+       & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,NodeNumber,stimcomponent,STIM_VALUE,Err)
+      NodeNumber=NodeNumber+NumberOfNodesPerFibre
+    ENDDO
+    
     CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time,time+STIM_STOP,ELASTICITY_TIME_STEP,Err)
 
-    !Solve the problem for the rest of the period
+    !Solve the problem for the stimulation time
+    WRITE(*,'(A)') "Start solve with stimulation"
     CALL cmfe_Problem_Solve(Problem,Err)
-  
+
     time = time+STIM_STOP
+
+    !--------------------------------------------------------------------------------------------------------------------------------
+    !Now turn the stimulus off
+    NodeNumber=(NumberOfNodesPerFibre+1)/2
+    DO WHILE(NodeNumber<NumberOfNodesM)
+      CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber,1,NodeDomain,Err)
+      IF(NodeDomain==ComputationalNodeNumber) CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
+       & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,NodeNumber,stimcomponent,0.0_CMISSRP,Err)
+      NodeNumber=NodeNumber+NumberOfNodesPerFibre
+    ENDDO
+
+    WRITE(*,'(A)') "Start solve without stimulation"
+
+    do while(time <= (k+1)*PERIODD)
+
+      CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time,time+STIM_STOP,ELASTICITY_TIME_STEP,Err)
+
+      !Solve the problem for the rest of the period
+      CALL cmfe_Problem_Solve(Problem,Err)
     
-  end do !time <= PERIODD
+      time = time+STIM_STOP
+      
+    end do !time <= PERIODD
 
 !  time = time+PERIODD
   end do !time <= TIME_STOP

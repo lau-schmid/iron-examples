@@ -22,7 +22,7 @@
 				<Option object_output="obj/Release/" />
 				<Option type="1" />
 				<Option compiler="gfortran" />
-				<Option parameters="/store/DiHu/software/opencmiss/examples/cuboid/input 1 1 1 1" />
+				<Option parameters="/store/DiHu/software/opencmiss/examples/cuboid/input 2 1 1 2" />
 				<Compiler>
 					<Add option="-O2" />
 				</Compiler>
@@ -93,12 +93,15 @@
 		</Unit>
 		<Unit filename="../../iron_maierbn/src/iron/src/FieldExport.c">
 			<Option compilerVar="CC" />
+			<Option virtualFolder="iron/" />
 			<Option target="all" />
 		</Unit>
 		<Unit filename="../../iron_maierbn/src/iron/src/FieldExport.h">
+			<Option virtualFolder="iron/" />
 			<Option target="all" />
 		</Unit>
 		<Unit filename="../../iron_maierbn/src/iron/src/FieldExportConstants.h">
+			<Option virtualFolder="iron/" />
 			<Option target="all" />
 		</Unit>
 		<Unit filename="../../iron_maierbn/src/iron/src/Hamilton_Jacobi_equations_routines.f90">
@@ -155,6 +158,7 @@
 		</Unit>
 		<Unit filename="../../iron_maierbn/src/iron/src/binary_file_c.c">
 			<Option compilerVar="CC" />
+			<Option virtualFolder="iron/" />
 			<Option target="all" />
 		</Unit>
 		<Unit filename="../../iron_maierbn/src/iron/src/binary_file_f.f90">
@@ -195,6 +199,7 @@
 		</Unit>
 		<Unit filename="../../iron_maierbn/src/iron/src/cmiss_c.c">
 			<Option compilerVar="CC" />
+			<Option virtualFolder="iron/" />
 			<Option target="all" />
 		</Unit>
 		<Unit filename="../../iron_maierbn/src/iron/src/cmiss_cellml.f90">
@@ -269,6 +274,7 @@
 			<Option target="all" />
 		</Unit>
 		<Unit filename="../../iron_maierbn/src/iron/src/dllexport.h">
+			<Option virtualFolder="iron/" />
 			<Option target="all" />
 		</Unit>
 		<Unit filename="../../iron_maierbn/src/iron/src/domain_mappings.f90">
@@ -309,9 +315,11 @@
 		</Unit>
 		<Unit filename="../../iron_maierbn/src/iron/src/external_dae_solver_routines.c">
 			<Option compilerVar="CC" />
+			<Option virtualFolder="iron/" />
 			<Option target="all" />
 		</Unit>
 		<Unit filename="../../iron_maierbn/src/iron/src/external_dae_solver_routines.h">
+			<Option virtualFolder="iron/" />
 			<Option target="all" />
 		</Unit>
 		<Unit filename="../../iron_maierbn/src/iron/src/field_IO_routines.f90">
@@ -455,6 +463,7 @@
 			<Option target="all" />
 		</Unit>
 		<Unit filename="../../iron_maierbn/src/iron/src/macros.h">
+			<Option virtualFolder="iron/" />
 			<Option target="all" />
 		</Unit>
 		<Unit filename="../../iron_maierbn/src/iron/src/maths.f90">
@@ -543,6 +552,7 @@
 		</Unit>
 		<Unit filename="../../iron_maierbn/src/iron/src/timer_c.c">
 			<Option compilerVar="CC" />
+			<Option virtualFolder="iron/" />
 			<Option target="all" />
 		</Unit>
 		<Unit filename="../../iron_maierbn/src/iron/src/timer_f.f90">

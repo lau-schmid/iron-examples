@@ -1,0 +1,442 @@
+ Print TYPE(SOLVER_TYPE), POINTER :: Variable with maximum depth            5 , maximum array length:          10
+   1| .TYPE(SOLVERS_TYPE), POINTER :: SOLVERS (associated):  
+   1| .SOLVERS
+   2| . .TYPE(CONTROL_LOOP_TYPE), POINTER :: CONTROL_LOOP (associated):  (manually (hardcoded) excluded because of potential loop)
+   2| . .LOGICAL :: SOLVERS_FINISHED:                                 F
+   2| . .INTEGER(INTG) :: NUMBER_OF_SOLVERS:                          2
+   2| . .TYPE(SOLVER_PTR_TYPE), ALLOCATABLE :: SOLVERS(:) (allocated, rank= 1, size=    2):  
+   2| . .SOLVERS(1)
+   3| . . .TYPE(SOLVER_TYPE), POINTER :: PTR (associated):  
+   3| . . .PTR
+   4| . . . .TYPE(SOLVERS_TYPE), POINTER :: SOLVERS (associated):  (Pointer loop)
+   4| . . . .INTEGER(INTG) :: GLOBAL_NUMBER:                              1
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: LINKING_SOLVER (NULL)
+   4| . . . .INTEGER(INTG) :: NUMBER_OF_LINKED_SOLVERS:                   0
+   4| . . . .TYPE(SOLVER_PTR_TYPE), ALLOCATABLE :: LINKED_SOLVERS(:) (not allocated)
+   4| . . . .TYPE(SOLVER_PTR_TYPE), ALLOCATABLE :: LINKED_SOLVER_TYPE_MAP(:) (allocated, rank= 1, size=    9):  
+   4| . . . .LINKED_SOLVER_TYPE_MAP(1)
+   5| . . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   4| . . . .LINKED_SOLVER_TYPE_MAP(2)
+   5| . . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   4| . . . .LINKED_SOLVER_TYPE_MAP(3)
+   5| . . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   4| . . . .LINKED_SOLVER_TYPE_MAP(4)
+   5| . . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   4| . . . .LINKED_SOLVER_TYPE_MAP(5)
+   5| . . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   4| . . . .LINKED_SOLVER_TYPE_MAP(6)
+   5| . . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   4| . . . .LINKED_SOLVER_TYPE_MAP(7)
+   5| . . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   4| . . . .LINKED_SOLVER_TYPE_MAP(8)
+   5| . . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   4| . . . .LINKED_SOLVER_TYPE_MAP(9)
+   5| . . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+   4| . . . .LOGICAL :: SOLVER_FINISHED:                                  F
+   4| . . . .INTEGER(INTG) :: OUTPUT_TYPE:                                0  SOLVER_NO_OUTPUT !No output from the solver routines
+   4| . . . .INTEGER(INTG) :: SOLVE_TYPE:                                 4  SOLVER_DAE_TYPE !A differential-algebraic equation solver
+   4| . . . .TYPE(LINEAR_SOLVER_TYPE), POINTER :: LINEAR_SOLVER (NULL)
+   4| . . . .TYPE(NONLINEAR_SOLVER_TYPE), POINTER :: NONLINEAR_SOLVER (NULL)
+   4| . . . .TYPE(DYNAMIC_SOLVER_TYPE), POINTER :: DYNAMIC_SOLVER (NULL)
+   4| . . . .TYPE(DAE_SOLVER_TYPE), POINTER :: DAE_SOLVER (associated):  
+   4| . . . .DAE_SOLVER
+   5| . . . . .TYPE(SOLVER_TYPE), POINTER :: SOLVER (associated):  
+   5| . . . . .SOLVER
+   5| . . . . .INTEGER(INTG) :: DAE_TYPE:                                   0  SOLVER_DAE_DIFFERENTIAL_ONLY !Differential equations only
+   5| . . . . .INTEGER(INTG) :: DAE_SOLVE_TYPE:                             1
+   5| . . . . .REAL(DP) :: START_TIME:                     0.0000000000000000     
+   5| . . . . .REAL(DP) :: END_TIME:                      0.10000000000000001     
+   5| . . . . .REAL(DP) :: INITIAL_STEP:                   1.0000000000000000E-004
+   5| . . . . .TYPE(EULER_DAE_SOLVER_TYPE), POINTER :: EULER_SOLVER (associated):  
+   5| . . . . .EULER_SOLVER
+   5| . . . . .TYPE(CRANK_NICOLSON_DAE_SOLVER_TYPE), POINTER :: CRANK_NICOLSON_SOLVER (NULL)
+   5| . . . . .TYPE(RUNGE_KUTTA_DAE_SOLVER_TYPE), POINTER :: RUNGE_KUTTA_SOLVER (NULL)
+   5| . . . . .TYPE(ADAMS_MOULTON_DAE_SOLVER_TYPE), POINTER :: ADAMS_MOULTON_SOLVER (NULL)
+   5| . . . . .TYPE(BDF_DAE_SOLVER_TYPE), POINTER :: BDF_SOLVER (NULL)
+   5| . . . . .TYPE(RUSH_LARSON_DAE_SOLVER_TYPE), POINTER :: RUSH_LARSON_SOLVER (NULL)
+   5| . . . . .TYPE(EXTERNAL_DAE_SOLVER_TYPE), POINTER :: EXTERNAL_SOLVER (NULL)
+   4| . . . .TYPE(EIGENPROBLEM_SOLVER_TYPE), POINTER :: EIGENPROBLEM_SOLVER (NULL)
+   4| . . . .TYPE(OPTIMISER_SOLVER_TYPE), POINTER :: OPTIMISER_SOLVER (NULL)
+   4| . . . .TYPE(CELLML_EVALUATOR_SOLVER_TYPE), POINTER :: CELLML_EVALUATOR_SOLVER (NULL)
+   4| . . . .TYPE(GeometricTransformationSolverType), POINTER :: geometricTransformationSolver (NULL)
+   4| . . . .TYPE(SOLVER_EQUATIONS_TYPE), POINTER :: SOLVER_EQUATIONS (NULL)
+   4| . . . .TYPE(CELLML_EQUATIONS_TYPE), POINTER :: CELLML_EQUATIONS (NULL)
+ 
+   2| . .SOLVERS(2)
+   3| . . .TYPE(SOLVER_TYPE), POINTER :: PTR (associated):  (Pointer loop)
+   1| .INTEGER(INTG) :: GLOBAL_NUMBER:                              2
+   1| .TYPE(SOLVER_TYPE), POINTER :: LINKING_SOLVER (NULL)
+   1| .INTEGER(INTG) :: NUMBER_OF_LINKED_SOLVERS:                   1
+   1| .TYPE(SOLVER_PTR_TYPE), ALLOCATABLE :: LINKED_SOLVERS(:) (allocated, rank= 1, size=    1):  
+   1| .LINKED_SOLVERS(1)
+   2| . .TYPE(SOLVER_TYPE), POINTER :: PTR (associated):  
+   2| . .PTR
+   3| . . .TYPE(SOLVERS_TYPE), POINTER :: SOLVERS (NULL)
+   3| . . .INTEGER(INTG) :: GLOBAL_NUMBER:                              0
+   3| . . .TYPE(SOLVER_TYPE), POINTER :: LINKING_SOLVER (associated):  (Pointer loop)
+   3| . . .INTEGER(INTG) :: NUMBER_OF_LINKED_SOLVERS:                   0
+   3| . . .TYPE(SOLVER_PTR_TYPE), ALLOCATABLE :: LINKED_SOLVERS(:) (not allocated)
+   3| . . .TYPE(SOLVER_PTR_TYPE), ALLOCATABLE :: LINKED_SOLVER_TYPE_MAP(:) (allocated, rank= 1, size=    9):  
+   3| . . .LINKED_SOLVER_TYPE_MAP(1)
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   3| . . .LINKED_SOLVER_TYPE_MAP(2)
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   3| . . .LINKED_SOLVER_TYPE_MAP(3)
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   3| . . .LINKED_SOLVER_TYPE_MAP(4)
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   3| . . .LINKED_SOLVER_TYPE_MAP(5)
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   3| . . .LINKED_SOLVER_TYPE_MAP(6)
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   3| . . .LINKED_SOLVER_TYPE_MAP(7)
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   3| . . .LINKED_SOLVER_TYPE_MAP(8)
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   3| . . .LINKED_SOLVER_TYPE_MAP(9)
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+   3| . . .LOGICAL :: SOLVER_FINISHED:                                  F
+   3| . . .INTEGER(INTG) :: OUTPUT_TYPE:                                0  SOLVER_NO_OUTPUT !No output from the solver routines
+   3| . . .INTEGER(INTG) :: SOLVE_TYPE:                                 1  SOLVER_LINEAR_TYPE !A linear solver
+   3| . . .TYPE(LINEAR_SOLVER_TYPE), POINTER :: LINEAR_SOLVER (associated):  
+   3| . . .LINEAR_SOLVER
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: SOLVER (associated):  
+   4| . . . .SOLVER
+   5| . . . . .TYPE(SOLVERS_TYPE), POINTER :: SOLVERS (NULL)
+   5| . . . . .INTEGER(INTG) :: GLOBAL_NUMBER:                              0
+   5| . . . . .TYPE(SOLVER_TYPE), POINTER :: LINKING_SOLVER (associated):  (Pointer loop)
+   5| . . . . .INTEGER(INTG) :: NUMBER_OF_LINKED_SOLVERS:                   0
+   5| . . . . .TYPE(SOLVER_PTR_TYPE), ALLOCATABLE :: LINKED_SOLVERS(:) (not allocated)
+   5| . . . . .TYPE(SOLVER_PTR_TYPE), ALLOCATABLE :: LINKED_SOLVER_TYPE_MAP(:) (allocated, rank= 1, size=    9):  
+   5| . . . . .LINKED_SOLVER_TYPE_MAP(1)
+ 
+   5| . . . . .LINKED_SOLVER_TYPE_MAP(2)
+ 
+   5| . . . . .LINKED_SOLVER_TYPE_MAP(3)
+ 
+   5| . . . . .LINKED_SOLVER_TYPE_MAP(4)
+ 
+   5| . . . . .LINKED_SOLVER_TYPE_MAP(5)
+ 
+   5| . . . . .LINKED_SOLVER_TYPE_MAP(6)
+ 
+   5| . . . . .LINKED_SOLVER_TYPE_MAP(7)
+ 
+   5| . . . . .LINKED_SOLVER_TYPE_MAP(8)
+ 
+   5| . . . . .LINKED_SOLVER_TYPE_MAP(9)
+   5| . . . . .LOGICAL :: SOLVER_FINISHED:                                  F
+   5| . . . . .INTEGER(INTG) :: OUTPUT_TYPE:                                0  SOLVER_NO_OUTPUT !No output from the solver routines
+   5| . . . . .INTEGER(INTG) :: SOLVE_TYPE:                                 1  SOLVER_LINEAR_TYPE !A linear solver
+   5| . . . . .TYPE(LINEAR_SOLVER_TYPE), POINTER :: LINEAR_SOLVER (associated):  (Pointer loop)
+   5| . . . . .TYPE(NONLINEAR_SOLVER_TYPE), POINTER :: NONLINEAR_SOLVER (NULL)
+   5| . . . . .TYPE(DYNAMIC_SOLVER_TYPE), POINTER :: DYNAMIC_SOLVER (NULL)
+   5| . . . . .TYPE(DAE_SOLVER_TYPE), POINTER :: DAE_SOLVER (NULL)
+   5| . . . . .TYPE(EIGENPROBLEM_SOLVER_TYPE), POINTER :: EIGENPROBLEM_SOLVER (NULL)
+   5| . . . . .TYPE(OPTIMISER_SOLVER_TYPE), POINTER :: OPTIMISER_SOLVER (NULL)
+   5| . . . . .TYPE(CELLML_EVALUATOR_SOLVER_TYPE), POINTER :: CELLML_EVALUATOR_SOLVER (NULL)
+   5| . . . . .TYPE(GeometricTransformationSolverType), POINTER :: geometricTransformationSolver (NULL)
+   5| . . . . .TYPE(SOLVER_EQUATIONS_TYPE), POINTER :: SOLVER_EQUATIONS (NULL)
+   5| . . . . .TYPE(CELLML_EQUATIONS_TYPE), POINTER :: CELLML_EQUATIONS (NULL)
+   4| . . . .INTEGER(INTG) :: LINEAR_SOLVE_TYPE:                          2  SOLVER_LINEAR_ITERATIVE_SOLVE_TYPE !Iterative linear solver type
+   4| . . . .LOGICAL :: LINKED_NEWTON_PETSC_SOLVER:                       F
+   4| . . . .TYPE(LINEAR_DIRECT_SOLVER_TYPE), POINTER :: DIRECT_SOLVER (NULL)
+   4| . . . .TYPE(LINEAR_ITERATIVE_SOLVER_TYPE), POINTER :: ITERATIVE_SOLVER (associated):  
+   4| . . . .ITERATIVE_SOLVER
+   5| . . . . .TYPE(LINEAR_SOLVER_TYPE), POINTER :: LINEAR_SOLVER (associated):  (Pointer loop)
+   5| . . . . .INTEGER(INTG) :: SOLVER_LIBRARY:                             2  SOLVER_PETSC_LIBRARY !PETSc solver library
+   5| . . . . .INTEGER(INTG) :: SOLVER_MATRICES_LIBRARY:                    2
+   5| . . . . .INTEGER(INTG) :: ITERATIVE_SOLVER_TYPE:                      5  SOLVER_ITERATIVE_GMRES !Generalised minimum residual iterative solver type
+   5| . . . . .INTEGER(INTG) :: ITERATIVE_PRECONDITIONER_TYPE:              1  SOLVER_ITERATIVE_JACOBI_PRECONDITIONER !Jacobi preconditioner type
+   5| . . . . .INTEGER(INTG) :: SOLUTION_INITIALISE_TYPE:                   0  SOLVER_SOLUTION_INITIALISE_ZERO !Initialise the solution by zeroing it before a solve
+   5| . . . . .INTEGER(INTG) :: MAXIMUM_NUMBER_OF_ITERATIONS:          100000  
+   5| . . . . .REAL(DP) :: RELATIVE_TOLERANCE:             1.0000000000000001E-005
+   5| . . . . .REAL(DP) :: ABSOLUTE_TOLERANCE:             1.0000000000000000E-010
+   5| . . . . .REAL(DP) :: DIVERGENCE_TOLERANCE:           100000.00000000000     
+   5| . . . . .INTEGER(INTG) :: GMRES_RESTART:                             30  
+   3| . . .TYPE(NONLINEAR_SOLVER_TYPE), POINTER :: NONLINEAR_SOLVER (NULL)
+   3| . . .TYPE(DYNAMIC_SOLVER_TYPE), POINTER :: DYNAMIC_SOLVER (NULL)
+   3| . . .TYPE(DAE_SOLVER_TYPE), POINTER :: DAE_SOLVER (NULL)
+   3| . . .TYPE(EIGENPROBLEM_SOLVER_TYPE), POINTER :: EIGENPROBLEM_SOLVER (NULL)
+   3| . . .TYPE(OPTIMISER_SOLVER_TYPE), POINTER :: OPTIMISER_SOLVER (NULL)
+   3| . . .TYPE(CELLML_EVALUATOR_SOLVER_TYPE), POINTER :: CELLML_EVALUATOR_SOLVER (NULL)
+   3| . . .TYPE(GeometricTransformationSolverType), POINTER :: geometricTransformationSolver (NULL)
+   3| . . .TYPE(SOLVER_EQUATIONS_TYPE), POINTER :: SOLVER_EQUATIONS (NULL)
+   3| . . .TYPE(CELLML_EQUATIONS_TYPE), POINTER :: CELLML_EQUATIONS (NULL)
+   1| .TYPE(SOLVER_PTR_TYPE), ALLOCATABLE :: LINKED_SOLVER_TYPE_MAP(:) (allocated, rank= 1, size=    9):  
+   1| .LINKED_SOLVER_TYPE_MAP(1)
+   2| . .TYPE(SOLVER_TYPE), POINTER :: PTR (associated):  
+   2| . .PTR
+   3| . . .TYPE(SOLVERS_TYPE), POINTER :: SOLVERS (NULL)
+   3| . . .INTEGER(INTG) :: GLOBAL_NUMBER:                              0
+   3| . . .TYPE(SOLVER_TYPE), POINTER :: LINKING_SOLVER (associated):  (Pointer loop)
+   3| . . .INTEGER(INTG) :: NUMBER_OF_LINKED_SOLVERS:                   0
+   3| . . .TYPE(SOLVER_PTR_TYPE), ALLOCATABLE :: LINKED_SOLVERS(:) (not allocated)
+   3| . . .TYPE(SOLVER_PTR_TYPE), ALLOCATABLE :: LINKED_SOLVER_TYPE_MAP(:) (allocated, rank= 1, size=    9):  
+   3| . . .LINKED_SOLVER_TYPE_MAP(1)
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   3| . . .LINKED_SOLVER_TYPE_MAP(2)
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   3| . . .LINKED_SOLVER_TYPE_MAP(3)
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   3| . . .LINKED_SOLVER_TYPE_MAP(4)
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   3| . . .LINKED_SOLVER_TYPE_MAP(5)
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   3| . . .LINKED_SOLVER_TYPE_MAP(6)
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   3| . . .LINKED_SOLVER_TYPE_MAP(7)
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   3| . . .LINKED_SOLVER_TYPE_MAP(8)
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   3| . . .LINKED_SOLVER_TYPE_MAP(9)
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+   3| . . .LOGICAL :: SOLVER_FINISHED:                                  F
+   3| . . .INTEGER(INTG) :: OUTPUT_TYPE:                                0  SOLVER_NO_OUTPUT !No output from the solver routines
+   3| . . .INTEGER(INTG) :: SOLVE_TYPE:                                 1  SOLVER_LINEAR_TYPE !A linear solver
+   3| . . .TYPE(LINEAR_SOLVER_TYPE), POINTER :: LINEAR_SOLVER (associated):  
+   3| . . .LINEAR_SOLVER
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: SOLVER (associated):  
+   4| . . . .SOLVER
+   5| . . . . .TYPE(SOLVERS_TYPE), POINTER :: SOLVERS (NULL)
+   5| . . . . .INTEGER(INTG) :: GLOBAL_NUMBER:                              0
+   5| . . . . .TYPE(SOLVER_TYPE), POINTER :: LINKING_SOLVER (associated):  (Pointer loop)
+   5| . . . . .INTEGER(INTG) :: NUMBER_OF_LINKED_SOLVERS:                   0
+   5| . . . . .TYPE(SOLVER_PTR_TYPE), ALLOCATABLE :: LINKED_SOLVERS(:) (not allocated)
+   5| . . . . .TYPE(SOLVER_PTR_TYPE), ALLOCATABLE :: LINKED_SOLVER_TYPE_MAP(:) (allocated, rank= 1, size=    9):  
+   5| . . . . .LINKED_SOLVER_TYPE_MAP(1)
+ 
+   5| . . . . .LINKED_SOLVER_TYPE_MAP(2)
+ 
+   5| . . . . .LINKED_SOLVER_TYPE_MAP(3)
+ 
+   5| . . . . .LINKED_SOLVER_TYPE_MAP(4)
+ 
+   5| . . . . .LINKED_SOLVER_TYPE_MAP(5)
+ 
+   5| . . . . .LINKED_SOLVER_TYPE_MAP(6)
+ 
+   5| . . . . .LINKED_SOLVER_TYPE_MAP(7)
+ 
+   5| . . . . .LINKED_SOLVER_TYPE_MAP(8)
+ 
+   5| . . . . .LINKED_SOLVER_TYPE_MAP(9)
+   5| . . . . .LOGICAL :: SOLVER_FINISHED:                                  F
+   5| . . . . .INTEGER(INTG) :: OUTPUT_TYPE:                                0  SOLVER_NO_OUTPUT !No output from the solver routines
+   5| . . . . .INTEGER(INTG) :: SOLVE_TYPE:                                 1  SOLVER_LINEAR_TYPE !A linear solver
+   5| . . . . .TYPE(LINEAR_SOLVER_TYPE), POINTER :: LINEAR_SOLVER (associated):  (Pointer loop)
+   5| . . . . .TYPE(NONLINEAR_SOLVER_TYPE), POINTER :: NONLINEAR_SOLVER (NULL)
+   5| . . . . .TYPE(DYNAMIC_SOLVER_TYPE), POINTER :: DYNAMIC_SOLVER (NULL)
+   5| . . . . .TYPE(DAE_SOLVER_TYPE), POINTER :: DAE_SOLVER (NULL)
+   5| . . . . .TYPE(EIGENPROBLEM_SOLVER_TYPE), POINTER :: EIGENPROBLEM_SOLVER (NULL)
+   5| . . . . .TYPE(OPTIMISER_SOLVER_TYPE), POINTER :: OPTIMISER_SOLVER (NULL)
+   5| . . . . .TYPE(CELLML_EVALUATOR_SOLVER_TYPE), POINTER :: CELLML_EVALUATOR_SOLVER (NULL)
+   5| . . . . .TYPE(GeometricTransformationSolverType), POINTER :: geometricTransformationSolver (NULL)
+   5| . . . . .TYPE(SOLVER_EQUATIONS_TYPE), POINTER :: SOLVER_EQUATIONS (NULL)
+   5| . . . . .TYPE(CELLML_EQUATIONS_TYPE), POINTER :: CELLML_EQUATIONS (NULL)
+   4| . . . .INTEGER(INTG) :: LINEAR_SOLVE_TYPE:                          2  SOLVER_LINEAR_ITERATIVE_SOLVE_TYPE !Iterative linear solver type
+   4| . . . .LOGICAL :: LINKED_NEWTON_PETSC_SOLVER:                       F
+   4| . . . .TYPE(LINEAR_DIRECT_SOLVER_TYPE), POINTER :: DIRECT_SOLVER (NULL)
+   4| . . . .TYPE(LINEAR_ITERATIVE_SOLVER_TYPE), POINTER :: ITERATIVE_SOLVER (associated):  
+   4| . . . .ITERATIVE_SOLVER
+   5| . . . . .TYPE(LINEAR_SOLVER_TYPE), POINTER :: LINEAR_SOLVER (associated):  (Pointer loop)
+   5| . . . . .INTEGER(INTG) :: SOLVER_LIBRARY:                             2  SOLVER_PETSC_LIBRARY !PETSc solver library
+   5| . . . . .INTEGER(INTG) :: SOLVER_MATRICES_LIBRARY:                    2
+   5| . . . . .INTEGER(INTG) :: ITERATIVE_SOLVER_TYPE:                      5  SOLVER_ITERATIVE_GMRES !Generalised minimum residual iterative solver type
+   5| . . . . .INTEGER(INTG) :: ITERATIVE_PRECONDITIONER_TYPE:              1  SOLVER_ITERATIVE_JACOBI_PRECONDITIONER !Jacobi preconditioner type
+   5| . . . . .INTEGER(INTG) :: SOLUTION_INITIALISE_TYPE:                   0  SOLVER_SOLUTION_INITIALISE_ZERO !Initialise the solution by zeroing it before a solve
+   5| . . . . .INTEGER(INTG) :: MAXIMUM_NUMBER_OF_ITERATIONS:          100000  
+   5| . . . . .REAL(DP) :: RELATIVE_TOLERANCE:             1.0000000000000001E-005
+   5| . . . . .REAL(DP) :: ABSOLUTE_TOLERANCE:             1.0000000000000000E-010
+   5| . . . . .REAL(DP) :: DIVERGENCE_TOLERANCE:           100000.00000000000     
+   5| . . . . .INTEGER(INTG) :: GMRES_RESTART:                             30  
+   3| . . .TYPE(NONLINEAR_SOLVER_TYPE), POINTER :: NONLINEAR_SOLVER (NULL)
+   3| . . .TYPE(DYNAMIC_SOLVER_TYPE), POINTER :: DYNAMIC_SOLVER (NULL)
+   3| . . .TYPE(DAE_SOLVER_TYPE), POINTER :: DAE_SOLVER (NULL)
+   3| . . .TYPE(EIGENPROBLEM_SOLVER_TYPE), POINTER :: EIGENPROBLEM_SOLVER (NULL)
+   3| . . .TYPE(OPTIMISER_SOLVER_TYPE), POINTER :: OPTIMISER_SOLVER (NULL)
+   3| . . .TYPE(CELLML_EVALUATOR_SOLVER_TYPE), POINTER :: CELLML_EVALUATOR_SOLVER (NULL)
+   3| . . .TYPE(GeometricTransformationSolverType), POINTER :: geometricTransformationSolver (NULL)
+   3| . . .TYPE(SOLVER_EQUATIONS_TYPE), POINTER :: SOLVER_EQUATIONS (NULL)
+   3| . . .TYPE(CELLML_EQUATIONS_TYPE), POINTER :: CELLML_EQUATIONS (NULL)
+ 
+   1| .LINKED_SOLVER_TYPE_MAP(2)
+   2| . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   1| .LINKED_SOLVER_TYPE_MAP(3)
+   2| . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   1| .LINKED_SOLVER_TYPE_MAP(4)
+   2| . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   1| .LINKED_SOLVER_TYPE_MAP(5)
+   2| . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   1| .LINKED_SOLVER_TYPE_MAP(6)
+   2| . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   1| .LINKED_SOLVER_TYPE_MAP(7)
+   2| . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   1| .LINKED_SOLVER_TYPE_MAP(8)
+   2| . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   1| .LINKED_SOLVER_TYPE_MAP(9)
+   2| . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+   1| .LOGICAL :: SOLVER_FINISHED:                                  F
+   1| .INTEGER(INTG) :: OUTPUT_TYPE:                                0  SOLVER_NO_OUTPUT !No output from the solver routines
+   1| .INTEGER(INTG) :: SOLVE_TYPE:                                 3  SOLVER_DYNAMIC_TYPE !A dynamic solver
+   1| .TYPE(LINEAR_SOLVER_TYPE), POINTER :: LINEAR_SOLVER (NULL)
+   1| .TYPE(NONLINEAR_SOLVER_TYPE), POINTER :: NONLINEAR_SOLVER (NULL)
+   1| .TYPE(DYNAMIC_SOLVER_TYPE), POINTER :: DYNAMIC_SOLVER (associated):  
+   1| .DYNAMIC_SOLVER
+   2| . .TYPE(SOLVER_TYPE), POINTER :: SOLVER (associated):  (Pointer loop)
+   2| . .INTEGER(INTG) :: SOLVER_LIBRARY:                             1  SOLVER_CMISS_LIBRARY !CMISS (internal) solver library
+   2| . .LOGICAL :: SOLVER_INITIALISED:                               F
+   2| . .INTEGER(INTG) :: LINEARITY:                                  1  SOLVER_DYNAMIC_LINEAR !Dynamic solver has linear terms
+   2| . .INTEGER(INTG) :: ORDER:                                      1  SOLVER_DYNAMIC_FIRST_ORDER !Dynamic solver has first order terms
+   2| . .INTEGER(INTG) :: DEGREE:                                     1  SOLVER_DYNAMIC_FIRST_DEGREE !Dynamic solver uses a first degree polynomial for time interpolation
+   2| . .INTEGER(INTG) :: SCHEME:                                     2  SOLVER_DYNAMIC_BACKWARD_EULER_SCHEME !Backward Euler (implicit) dynamic solver
+   2| . .REAL(DP), ALLOCATABLE :: THETA(:) (allocated, rank= 1, size=    1):   
+   2| . .   1.0000000000000000     
+   2| . .LOGICAL :: EXPLICIT:                                         F
+   2| . .LOGICAL :: RESTART:                                          T
+   2| . .LOGICAL :: ALE:                                              T
+   2| . .LOGICAL :: FSI:                                              F
+   2| . .LOGICAL :: UPDATE_BC:                                        T
+   2| . .REAL(DP) :: CURRENT_TIME:                   0.0000000000000000     
+   2| . .REAL(DP) :: TIME_INCREMENT:                 1.0000000000000000E-002
+   2| . .TYPE(SOLVER_TYPE), POINTER :: LINEAR_SOLVER (associated):  
+   2| . .LINEAR_SOLVER
+   3| . . .TYPE(SOLVERS_TYPE), POINTER :: SOLVERS (NULL)
+   3| . . .INTEGER(INTG) :: GLOBAL_NUMBER:                              0
+   3| . . .TYPE(SOLVER_TYPE), POINTER :: LINKING_SOLVER (associated):  (Pointer loop)
+   3| . . .INTEGER(INTG) :: NUMBER_OF_LINKED_SOLVERS:                   0
+   3| . . .TYPE(SOLVER_PTR_TYPE), ALLOCATABLE :: LINKED_SOLVERS(:) (not allocated)
+   3| . . .TYPE(SOLVER_PTR_TYPE), ALLOCATABLE :: LINKED_SOLVER_TYPE_MAP(:) (allocated, rank= 1, size=    9):  
+   3| . . .LINKED_SOLVER_TYPE_MAP(1)
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   3| . . .LINKED_SOLVER_TYPE_MAP(2)
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   3| . . .LINKED_SOLVER_TYPE_MAP(3)
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   3| . . .LINKED_SOLVER_TYPE_MAP(4)
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   3| . . .LINKED_SOLVER_TYPE_MAP(5)
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   3| . . .LINKED_SOLVER_TYPE_MAP(6)
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   3| . . .LINKED_SOLVER_TYPE_MAP(7)
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   3| . . .LINKED_SOLVER_TYPE_MAP(8)
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+ 
+   3| . . .LINKED_SOLVER_TYPE_MAP(9)
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: PTR (NULL)
+   3| . . .LOGICAL :: SOLVER_FINISHED:                                  F
+   3| . . .INTEGER(INTG) :: OUTPUT_TYPE:                                0  SOLVER_NO_OUTPUT !No output from the solver routines
+   3| . . .INTEGER(INTG) :: SOLVE_TYPE:                                 1  SOLVER_LINEAR_TYPE !A linear solver
+   3| . . .TYPE(LINEAR_SOLVER_TYPE), POINTER :: LINEAR_SOLVER (associated):  
+   3| . . .LINEAR_SOLVER
+   4| . . . .TYPE(SOLVER_TYPE), POINTER :: SOLVER (associated):  
+   4| . . . .SOLVER
+   5| . . . . .TYPE(SOLVERS_TYPE), POINTER :: SOLVERS (NULL)
+   5| . . . . .INTEGER(INTG) :: GLOBAL_NUMBER:                              0
+   5| . . . . .TYPE(SOLVER_TYPE), POINTER :: LINKING_SOLVER (associated):  (Pointer loop)
+   5| . . . . .INTEGER(INTG) :: NUMBER_OF_LINKED_SOLVERS:                   0
+   5| . . . . .TYPE(SOLVER_PTR_TYPE), ALLOCATABLE :: LINKED_SOLVERS(:) (not allocated)
+   5| . . . . .TYPE(SOLVER_PTR_TYPE), ALLOCATABLE :: LINKED_SOLVER_TYPE_MAP(:) (allocated, rank= 1, size=    9):  
+   5| . . . . .LINKED_SOLVER_TYPE_MAP(1)
+ 
+   5| . . . . .LINKED_SOLVER_TYPE_MAP(2)
+ 
+   5| . . . . .LINKED_SOLVER_TYPE_MAP(3)
+ 
+   5| . . . . .LINKED_SOLVER_TYPE_MAP(4)
+ 
+   5| . . . . .LINKED_SOLVER_TYPE_MAP(5)
+ 
+   5| . . . . .LINKED_SOLVER_TYPE_MAP(6)
+ 
+   5| . . . . .LINKED_SOLVER_TYPE_MAP(7)
+ 
+   5| . . . . .LINKED_SOLVER_TYPE_MAP(8)
+ 
+   5| . . . . .LINKED_SOLVER_TYPE_MAP(9)
+   5| . . . . .LOGICAL :: SOLVER_FINISHED:                                  F
+   5| . . . . .INTEGER(INTG) :: OUTPUT_TYPE:                                0  SOLVER_NO_OUTPUT !No output from the solver routines
+   5| . . . . .INTEGER(INTG) :: SOLVE_TYPE:                                 1  SOLVER_LINEAR_TYPE !A linear solver
+   5| . . . . .TYPE(LINEAR_SOLVER_TYPE), POINTER :: LINEAR_SOLVER (associated):  (Pointer loop)
+   5| . . . . .TYPE(NONLINEAR_SOLVER_TYPE), POINTER :: NONLINEAR_SOLVER (NULL)
+   5| . . . . .TYPE(DYNAMIC_SOLVER_TYPE), POINTER :: DYNAMIC_SOLVER (NULL)
+   5| . . . . .TYPE(DAE_SOLVER_TYPE), POINTER :: DAE_SOLVER (NULL)
+   5| . . . . .TYPE(EIGENPROBLEM_SOLVER_TYPE), POINTER :: EIGENPROBLEM_SOLVER (NULL)
+   5| . . . . .TYPE(OPTIMISER_SOLVER_TYPE), POINTER :: OPTIMISER_SOLVER (NULL)
+   5| . . . . .TYPE(CELLML_EVALUATOR_SOLVER_TYPE), POINTER :: CELLML_EVALUATOR_SOLVER (NULL)
+   5| . . . . .TYPE(GeometricTransformationSolverType), POINTER :: geometricTransformationSolver (NULL)
+   5| . . . . .TYPE(SOLVER_EQUATIONS_TYPE), POINTER :: SOLVER_EQUATIONS (NULL)
+   5| . . . . .TYPE(CELLML_EQUATIONS_TYPE), POINTER :: CELLML_EQUATIONS (NULL)
+   4| . . . .INTEGER(INTG) :: LINEAR_SOLVE_TYPE:                          2  SOLVER_LINEAR_ITERATIVE_SOLVE_TYPE !Iterative linear solver type
+   4| . . . .LOGICAL :: LINKED_NEWTON_PETSC_SOLVER:                       F
+   4| . . . .TYPE(LINEAR_DIRECT_SOLVER_TYPE), POINTER :: DIRECT_SOLVER (NULL)
+   4| . . . .TYPE(LINEAR_ITERATIVE_SOLVER_TYPE), POINTER :: ITERATIVE_SOLVER (associated):  
+   4| . . . .ITERATIVE_SOLVER
+   5| . . . . .TYPE(LINEAR_SOLVER_TYPE), POINTER :: LINEAR_SOLVER (associated):  (Pointer loop)
+   5| . . . . .INTEGER(INTG) :: SOLVER_LIBRARY:                             2  SOLVER_PETSC_LIBRARY !PETSc solver library
+   5| . . . . .INTEGER(INTG) :: SOLVER_MATRICES_LIBRARY:                    2
+   5| . . . . .INTEGER(INTG) :: ITERATIVE_SOLVER_TYPE:                      5  SOLVER_ITERATIVE_GMRES !Generalised minimum residual iterative solver type
+   5| . . . . .INTEGER(INTG) :: ITERATIVE_PRECONDITIONER_TYPE:              1  SOLVER_ITERATIVE_JACOBI_PRECONDITIONER !Jacobi preconditioner type
+   5| . . . . .INTEGER(INTG) :: SOLUTION_INITIALISE_TYPE:                   0  SOLVER_SOLUTION_INITIALISE_ZERO !Initialise the solution by zeroing it before a solve
+   5| . . . . .INTEGER(INTG) :: MAXIMUM_NUMBER_OF_ITERATIONS:          100000  
+   5| . . . . .REAL(DP) :: RELATIVE_TOLERANCE:             1.0000000000000001E-005
+   5| . . . . .REAL(DP) :: ABSOLUTE_TOLERANCE:             1.0000000000000000E-010
+   5| . . . . .REAL(DP) :: DIVERGENCE_TOLERANCE:           100000.00000000000     
+   5| . . . . .INTEGER(INTG) :: GMRES_RESTART:                             30  
+   3| . . .TYPE(NONLINEAR_SOLVER_TYPE), POINTER :: NONLINEAR_SOLVER (NULL)
+   3| . . .TYPE(DYNAMIC_SOLVER_TYPE), POINTER :: DYNAMIC_SOLVER (NULL)
+   3| . . .TYPE(DAE_SOLVER_TYPE), POINTER :: DAE_SOLVER (NULL)
+   3| . . .TYPE(EIGENPROBLEM_SOLVER_TYPE), POINTER :: EIGENPROBLEM_SOLVER (NULL)
+   3| . . .TYPE(OPTIMISER_SOLVER_TYPE), POINTER :: OPTIMISER_SOLVER (NULL)
+   3| . . .TYPE(CELLML_EVALUATOR_SOLVER_TYPE), POINTER :: CELLML_EVALUATOR_SOLVER (NULL)
+   3| . . .TYPE(GeometricTransformationSolverType), POINTER :: geometricTransformationSolver (NULL)
+   3| . . .TYPE(SOLVER_EQUATIONS_TYPE), POINTER :: SOLVER_EQUATIONS (NULL)
+   3| . . .TYPE(CELLML_EQUATIONS_TYPE), POINTER :: CELLML_EQUATIONS (NULL)
+   2| . .TYPE(SOLVER_TYPE), POINTER :: NONLINEAR_SOLVER (NULL)
+   1| .TYPE(DAE_SOLVER_TYPE), POINTER :: DAE_SOLVER (NULL)
+   1| .TYPE(EIGENPROBLEM_SOLVER_TYPE), POINTER :: EIGENPROBLEM_SOLVER (NULL)
+   1| .TYPE(OPTIMISER_SOLVER_TYPE), POINTER :: OPTIMISER_SOLVER (NULL)
+   1| .TYPE(CELLML_EVALUATOR_SOLVER_TYPE), POINTER :: CELLML_EVALUATOR_SOLVER (NULL)
+   1| .TYPE(GeometricTransformationSolverType), POINTER :: geometricTransformationSolver (NULL)
+   1| .TYPE(SOLVER_EQUATIONS_TYPE), POINTER :: SOLVER_EQUATIONS (NULL)
+   1| .TYPE(CELLML_EQUATIONS_TYPE), POINTER :: CELLML_EQUATIONS (NULL)

@@ -1,0 +1,1101 @@
+*** Enters: DOMAIN_MAPPINGS_LOCAL_FROM_GLOBAL_CALCULATE
+Domain mappings:
+  Number of domains  = 1
+  Number of global = 8
+  Number of local = 8
+  Total number of local = 8
+  Domain numbers:
+    Number of domain local :          8
+    Number of domain ghost :          0
+  Domain list:
+    Number of internal = 8
+    Number of boundary = 0
+    Number of ghost = 0
+    Internal start = 1
+    Internal finish = 8
+    Boundary start = 9
+    Boundary finish = 8
+    Ghost start = 9
+    Ghost finish = 8
+    Internal list :          1          2          3          4          5          6          7          8
+    Boundary list :
+    Ghost list    :
+  Local to global map:
+    Local index : 1
+      Global index = 1
+    Local index : 2
+      Global index = 2
+    Local index : 3
+      Global index = 3
+    Local index : 4
+      Global index = 4
+    Local index : 5
+      Global index = 5
+    Local index : 6
+      Global index = 6
+    Local index : 7
+      Global index = 7
+    Local index : 8
+      Global index = 8
+  Global to local map:
+    Global idx : 1
+      Number of domains  = 1
+      Local number  :          1
+      Domain number :          0
+      Local type    :          1
+    Global idx : 2
+      Number of domains  = 1
+      Local number  :          2
+      Domain number :          0
+      Local type    :          1
+    Global idx : 3
+      Number of domains  = 1
+      Local number  :          3
+      Domain number :          0
+      Local type    :          1
+    Global idx : 4
+      Number of domains  = 1
+      Local number  :          4
+      Domain number :          0
+      Local type    :          1
+    Global idx : 5
+      Number of domains  = 1
+      Local number  :          5
+      Domain number :          0
+      Local type    :          1
+    Global idx : 6
+      Number of domains  = 1
+      Local number  :          6
+      Domain number :          0
+      Local type    :          1
+    Global idx : 7
+      Number of domains  = 1
+      Local number  :          7
+      Domain number :          0
+      Local type    :          1
+    Global idx : 8
+      Number of domains  = 1
+      Local number  :          8
+      Domain number :          0
+      Local type    :          1
+  Adjacent domains:
+    Number of adjacent domains = 0
+    Adjacent domains ptr  :     1     1
+*** Exits : DOMAIN_MAPPINGS_LOCAL_FROM_GLOBAL_CALCULATE
+*** Enters: DOMAIN_MAPPINGS_LOCAL_FROM_GLOBAL_CALCULATE
+Domain mappings:
+  Number of domains  = 1
+  Number of global = 15
+  Number of local = 15
+  Total number of local = 15
+  Domain numbers:
+    Number of domain local :         15
+    Number of domain ghost :          0
+  Domain list:
+    Number of internal = 15
+    Number of boundary = 0
+    Number of ghost = 0
+    Internal start = 1
+    Internal finish = 15
+    Boundary start = 16
+    Boundary finish = 15
+    Ghost start = 16
+    Ghost finish = 15
+    Internal list :          1          2          3          4          5          6          7          8
+                             9         10         11         12         13         14         15
+    Boundary list :
+    Ghost list    :
+  Local to global map:
+    Local index : 1
+      Global index = 1
+    Local index : 2
+      Global index = 2
+    Local index : 3
+      Global index = 3
+    Local index : 4
+      Global index = 4
+    Local index : 5
+      Global index = 5
+    Local index : 6
+      Global index = 6
+    Local index : 7
+      Global index = 7
+    Local index : 8
+      Global index = 8
+    Local index : 9
+      Global index = 9
+    Local index : 10
+      Global index = 10
+    Local index : 11
+      Global index = 11
+    Local index : 12
+      Global index = 12
+    Local index : 13
+      Global index = 13
+    Local index : 14
+      Global index = 14
+    Local index : 15
+      Global index = 15
+  Global to local map:
+    Global idx : 1
+      Number of domains  = 1
+      Local number  :          1
+      Domain number :          0
+      Local type    :          1
+    Global idx : 2
+      Number of domains  = 1
+      Local number  :          2
+      Domain number :          0
+      Local type    :          1
+    Global idx : 3
+      Number of domains  = 1
+      Local number  :          3
+      Domain number :          0
+      Local type    :          1
+    Global idx : 4
+      Number of domains  = 1
+      Local number  :          4
+      Domain number :          0
+      Local type    :          1
+    Global idx : 5
+      Number of domains  = 1
+      Local number  :          5
+      Domain number :          0
+      Local type    :          1
+    Global idx : 6
+      Number of domains  = 1
+      Local number  :          6
+      Domain number :          0
+      Local type    :          1
+    Global idx : 7
+      Number of domains  = 1
+      Local number  :          7
+      Domain number :          0
+      Local type    :          1
+    Global idx : 8
+      Number of domains  = 1
+      Local number  :          8
+      Domain number :          0
+      Local type    :          1
+    Global idx : 9
+      Number of domains  = 1
+      Local number  :          9
+      Domain number :          0
+      Local type    :          1
+    Global idx : 10
+      Number of domains  = 1
+      Local number  :         10
+      Domain number :          0
+      Local type    :          1
+    Global idx : 11
+      Number of domains  = 1
+      Local number  :         11
+      Domain number :          0
+      Local type    :          1
+    Global idx : 12
+      Number of domains  = 1
+      Local number  :         12
+      Domain number :          0
+      Local type    :          1
+    Global idx : 13
+      Number of domains  = 1
+      Local number  :         13
+      Domain number :          0
+      Local type    :          1
+    Global idx : 14
+      Number of domains  = 1
+      Local number  :         14
+      Domain number :          0
+      Local type    :          1
+    Global idx : 15
+      Number of domains  = 1
+      Local number  :         15
+      Domain number :          0
+      Local type    :          1
+  Adjacent domains:
+    Number of adjacent domains = 0
+    Adjacent domains ptr  :     1     1
+*** Exits : DOMAIN_MAPPINGS_LOCAL_FROM_GLOBAL_CALCULATE
+*** Enters: DOMAIN_MAPPINGS_LOCAL_FROM_GLOBAL_CALCULATE
+Domain mappings:
+  Number of domains  = 1
+  Number of global = 15
+  Number of local = 15
+  Total number of local = 15
+  Domain numbers:
+    Number of domain local :         15
+    Number of domain ghost :          0
+  Domain list:
+    Number of internal = 15
+    Number of boundary = 0
+    Number of ghost = 0
+    Internal start = 1
+    Internal finish = 15
+    Boundary start = 16
+    Boundary finish = 15
+    Ghost start = 16
+    Ghost finish = 15
+    Internal list :          1          2          3          4          5          6          7          8
+                             9         10         11         12         13         14         15
+    Boundary list :
+    Ghost list    :
+  Local to global map:
+    Local index : 1
+      Global index = 1
+    Local index : 2
+      Global index = 2
+    Local index : 3
+      Global index = 3
+    Local index : 4
+      Global index = 4
+    Local index : 5
+      Global index = 5
+    Local index : 6
+      Global index = 6
+    Local index : 7
+      Global index = 7
+    Local index : 8
+      Global index = 8
+    Local index : 9
+      Global index = 9
+    Local index : 10
+      Global index = 10
+    Local index : 11
+      Global index = 11
+    Local index : 12
+      Global index = 12
+    Local index : 13
+      Global index = 13
+    Local index : 14
+      Global index = 14
+    Local index : 15
+      Global index = 15
+  Global to local map:
+    Global idx : 1
+      Number of domains  = 1
+      Local number  :          1
+      Domain number :          0
+      Local type    :          1
+    Global idx : 2
+      Number of domains  = 1
+      Local number  :          2
+      Domain number :          0
+      Local type    :          1
+    Global idx : 3
+      Number of domains  = 1
+      Local number  :          3
+      Domain number :          0
+      Local type    :          1
+    Global idx : 4
+      Number of domains  = 1
+      Local number  :          4
+      Domain number :          0
+      Local type    :          1
+    Global idx : 5
+      Number of domains  = 1
+      Local number  :          5
+      Domain number :          0
+      Local type    :          1
+    Global idx : 6
+      Number of domains  = 1
+      Local number  :          6
+      Domain number :          0
+      Local type    :          1
+    Global idx : 7
+      Number of domains  = 1
+      Local number  :          7
+      Domain number :          0
+      Local type    :          1
+    Global idx : 8
+      Number of domains  = 1
+      Local number  :          8
+      Domain number :          0
+      Local type    :          1
+    Global idx : 9
+      Number of domains  = 1
+      Local number  :          9
+      Domain number :          0
+      Local type    :          1
+    Global idx : 10
+      Number of domains  = 1
+      Local number  :         10
+      Domain number :          0
+      Local type    :          1
+    Global idx : 11
+      Number of domains  = 1
+      Local number  :         11
+      Domain number :          0
+      Local type    :          1
+    Global idx : 12
+      Number of domains  = 1
+      Local number  :         12
+      Domain number :          0
+      Local type    :          1
+    Global idx : 13
+      Number of domains  = 1
+      Local number  :         13
+      Domain number :          0
+      Local type    :          1
+    Global idx : 14
+      Number of domains  = 1
+      Local number  :         14
+      Domain number :          0
+      Local type    :          1
+    Global idx : 15
+      Number of domains  = 1
+      Local number  :         15
+      Domain number :          0
+      Local type    :          1
+  Adjacent domains:
+    Number of adjacent domains = 0
+    Adjacent domains ptr  :     1     1
+*** Exits : DOMAIN_MAPPINGS_LOCAL_FROM_GLOBAL_CALCULATE
+*** Enters: DOMAIN_MAPPINGS_LOCAL_FROM_GLOBAL_CALCULATE
+Domain mappings:
+  Number of domains  = 1
+  Number of global = 30
+  Number of local = 30
+  Total number of local = 30
+  Domain numbers:
+    Number of domain local :         30
+    Number of domain ghost :          0
+  Domain list:
+    Number of internal = 30
+    Number of boundary = 0
+    Number of ghost = 0
+    Internal start = 1
+    Internal finish = 30
+    Boundary start = 31
+    Boundary finish = 30
+    Ghost start = 31
+    Ghost finish = 30
+    Internal list :          1          2          3          4          5          6          7          8
+                             9         10         11         12         13         14         15         16
+                            17         18         19         20         21         22         23         24
+                            25         26         27         28         29         30
+    Boundary list :
+    Ghost list    :
+  Local to global map:
+    Local index : 1
+      Global index = 1
+    Local index : 2
+      Global index = 2
+    Local index : 3
+      Global index = 3
+    Local index : 4
+      Global index = 4
+    Local index : 5
+      Global index = 5
+    Local index : 6
+      Global index = 6
+    Local index : 7
+      Global index = 7
+    Local index : 8
+      Global index = 8
+    Local index : 9
+      Global index = 9
+    Local index : 10
+      Global index = 10
+    Local index : 11
+      Global index = 11
+    Local index : 12
+      Global index = 12
+    Local index : 13
+      Global index = 13
+    Local index : 14
+      Global index = 14
+    Local index : 15
+      Global index = 15
+    Local index : 16
+      Global index = 16
+    Local index : 17
+      Global index = 17
+    Local index : 18
+      Global index = 18
+    Local index : 19
+      Global index = 19
+    Local index : 20
+      Global index = 20
+    Local index : 21
+      Global index = 21
+    Local index : 22
+      Global index = 22
+    Local index : 23
+      Global index = 23
+    Local index : 24
+      Global index = 24
+    Local index : 25
+      Global index = 25
+    Local index : 26
+      Global index = 26
+    Local index : 27
+      Global index = 27
+    Local index : 28
+      Global index = 28
+    Local index : 29
+      Global index = 29
+    Local index : 30
+      Global index = 30
+  Global to local map:
+    Global idx : 1
+      Number of domains  = 1
+      Local number  :          1
+      Domain number :          0
+      Local type    :          1
+    Global idx : 2
+      Number of domains  = 1
+      Local number  :          2
+      Domain number :          0
+      Local type    :          1
+    Global idx : 3
+      Number of domains  = 1
+      Local number  :          3
+      Domain number :          0
+      Local type    :          1
+    Global idx : 4
+      Number of domains  = 1
+      Local number  :          4
+      Domain number :          0
+      Local type    :          1
+    Global idx : 5
+      Number of domains  = 1
+      Local number  :          5
+      Domain number :          0
+      Local type    :          1
+    Global idx : 6
+      Number of domains  = 1
+      Local number  :          6
+      Domain number :          0
+      Local type    :          1
+    Global idx : 7
+      Number of domains  = 1
+      Local number  :          7
+      Domain number :          0
+      Local type    :          1
+    Global idx : 8
+      Number of domains  = 1
+      Local number  :          8
+      Domain number :          0
+      Local type    :          1
+    Global idx : 9
+      Number of domains  = 1
+      Local number  :          9
+      Domain number :          0
+      Local type    :          1
+    Global idx : 10
+      Number of domains  = 1
+      Local number  :         10
+      Domain number :          0
+      Local type    :          1
+    Global idx : 11
+      Number of domains  = 1
+      Local number  :         11
+      Domain number :          0
+      Local type    :          1
+    Global idx : 12
+      Number of domains  = 1
+      Local number  :         12
+      Domain number :          0
+      Local type    :          1
+    Global idx : 13
+      Number of domains  = 1
+      Local number  :         13
+      Domain number :          0
+      Local type    :          1
+    Global idx : 14
+      Number of domains  = 1
+      Local number  :         14
+      Domain number :          0
+      Local type    :          1
+    Global idx : 15
+      Number of domains  = 1
+      Local number  :         15
+      Domain number :          0
+      Local type    :          1
+    Global idx : 16
+      Number of domains  = 1
+      Local number  :         16
+      Domain number :          0
+      Local type    :          1
+    Global idx : 17
+      Number of domains  = 1
+      Local number  :         17
+      Domain number :          0
+      Local type    :          1
+    Global idx : 18
+      Number of domains  = 1
+      Local number  :         18
+      Domain number :          0
+      Local type    :          1
+    Global idx : 19
+      Number of domains  = 1
+      Local number  :         19
+      Domain number :          0
+      Local type    :          1
+    Global idx : 20
+      Number of domains  = 1
+      Local number  :         20
+      Domain number :          0
+      Local type    :          1
+    Global idx : 21
+      Number of domains  = 1
+      Local number  :         21
+      Domain number :          0
+      Local type    :          1
+    Global idx : 22
+      Number of domains  = 1
+      Local number  :         22
+      Domain number :          0
+      Local type    :          1
+    Global idx : 23
+      Number of domains  = 1
+      Local number  :         23
+      Domain number :          0
+      Local type    :          1
+    Global idx : 24
+      Number of domains  = 1
+      Local number  :         24
+      Domain number :          0
+      Local type    :          1
+    Global idx : 25
+      Number of domains  = 1
+      Local number  :         25
+      Domain number :          0
+      Local type    :          1
+    Global idx : 26
+      Number of domains  = 1
+      Local number  :         26
+      Domain number :          0
+      Local type    :          1
+    Global idx : 27
+      Number of domains  = 1
+      Local number  :         27
+      Domain number :          0
+      Local type    :          1
+    Global idx : 28
+      Number of domains  = 1
+      Local number  :         28
+      Domain number :          0
+      Local type    :          1
+    Global idx : 29
+      Number of domains  = 1
+      Local number  :         29
+      Domain number :          0
+      Local type    :          1
+    Global idx : 30
+      Number of domains  = 1
+      Local number  :         30
+      Domain number :          0
+      Local type    :          1
+  Adjacent domains:
+    Number of adjacent domains = 0
+    Adjacent domains ptr  :     1     1
+*** Exits : DOMAIN_MAPPINGS_LOCAL_FROM_GLOBAL_CALCULATE
+*** Enters: DOMAIN_MAPPINGS_LOCAL_FROM_GLOBAL_CALCULATE
+Domain mappings:
+  Number of domains  = 1
+  Number of global = 15
+  Number of local = 15
+  Total number of local = 15
+  Domain numbers:
+    Number of domain local :         15
+    Number of domain ghost :          0
+  Domain list:
+    Number of internal = 15
+    Number of boundary = 0
+    Number of ghost = 0
+    Internal start = 1
+    Internal finish = 15
+    Boundary start = 16
+    Boundary finish = 15
+    Ghost start = 16
+    Ghost finish = 15
+    Internal list :          1          2          3          4          5          6          7          8
+                             9         10         11         12         13         14         15
+    Boundary list :
+    Ghost list    :
+  Local to global map:
+    Local index : 1
+      Global index = 1
+    Local index : 2
+      Global index = 2
+    Local index : 3
+      Global index = 3
+    Local index : 4
+      Global index = 4
+    Local index : 5
+      Global index = 5
+    Local index : 6
+      Global index = 6
+    Local index : 7
+      Global index = 7
+    Local index : 8
+      Global index = 8
+    Local index : 9
+      Global index = 9
+    Local index : 10
+      Global index = 10
+    Local index : 11
+      Global index = 11
+    Local index : 12
+      Global index = 12
+    Local index : 13
+      Global index = 13
+    Local index : 14
+      Global index = 14
+    Local index : 15
+      Global index = 15
+  Global to local map:
+    Global idx : 1
+      Number of domains  = 1
+      Local number  :          1
+      Domain number :          0
+      Local type    :          1
+    Global idx : 2
+      Number of domains  = 1
+      Local number  :          2
+      Domain number :          0
+      Local type    :          1
+    Global idx : 3
+      Number of domains  = 1
+      Local number  :          3
+      Domain number :          0
+      Local type    :          1
+    Global idx : 4
+      Number of domains  = 1
+      Local number  :          4
+      Domain number :          0
+      Local type    :          1
+    Global idx : 5
+      Number of domains  = 1
+      Local number  :          5
+      Domain number :          0
+      Local type    :          1
+    Global idx : 6
+      Number of domains  = 1
+      Local number  :          6
+      Domain number :          0
+      Local type    :          1
+    Global idx : 7
+      Number of domains  = 1
+      Local number  :          7
+      Domain number :          0
+      Local type    :          1
+    Global idx : 8
+      Number of domains  = 1
+      Local number  :          8
+      Domain number :          0
+      Local type    :          1
+    Global idx : 9
+      Number of domains  = 1
+      Local number  :          9
+      Domain number :          0
+      Local type    :          1
+    Global idx : 10
+      Number of domains  = 1
+      Local number  :         10
+      Domain number :          0
+      Local type    :          1
+    Global idx : 11
+      Number of domains  = 1
+      Local number  :         11
+      Domain number :          0
+      Local type    :          1
+    Global idx : 12
+      Number of domains  = 1
+      Local number  :         12
+      Domain number :          0
+      Local type    :          1
+    Global idx : 13
+      Number of domains  = 1
+      Local number  :         13
+      Domain number :          0
+      Local type    :          1
+    Global idx : 14
+      Number of domains  = 1
+      Local number  :         14
+      Domain number :          0
+      Local type    :          1
+    Global idx : 15
+      Number of domains  = 1
+      Local number  :         15
+      Domain number :          0
+      Local type    :          1
+  Adjacent domains:
+    Number of adjacent domains = 0
+    Adjacent domains ptr  :     1     1
+*** Exits : DOMAIN_MAPPINGS_LOCAL_FROM_GLOBAL_CALCULATE
+*** Enters: DOMAIN_MAPPINGS_LOCAL_FROM_GLOBAL_CALCULATE
+Domain mappings:
+  Number of domains  = 1
+  Number of global = 15
+  Number of local = 15
+  Total number of local = 15
+  Domain numbers:
+    Number of domain local :         15
+    Number of domain ghost :          0
+  Domain list:
+    Number of internal = 15
+    Number of boundary = 0
+    Number of ghost = 0
+    Internal start = 1
+    Internal finish = 15
+    Boundary start = 16
+    Boundary finish = 15
+    Ghost start = 16
+    Ghost finish = 15
+    Internal list :          1          2          3          4          5          6          7          8
+                             9         10         11         12         13         14         15
+    Boundary list :
+    Ghost list    :
+  Local to global map:
+    Local index : 1
+      Global index = 1
+    Local index : 2
+      Global index = 2
+    Local index : 3
+      Global index = 3
+    Local index : 4
+      Global index = 4
+    Local index : 5
+      Global index = 5
+    Local index : 6
+      Global index = 6
+    Local index : 7
+      Global index = 7
+    Local index : 8
+      Global index = 8
+    Local index : 9
+      Global index = 9
+    Local index : 10
+      Global index = 10
+    Local index : 11
+      Global index = 11
+    Local index : 12
+      Global index = 12
+    Local index : 13
+      Global index = 13
+    Local index : 14
+      Global index = 14
+    Local index : 15
+      Global index = 15
+  Global to local map:
+    Global idx : 1
+      Number of domains  = 1
+      Local number  :          1
+      Domain number :          0
+      Local type    :          1
+    Global idx : 2
+      Number of domains  = 1
+      Local number  :          2
+      Domain number :          0
+      Local type    :          1
+    Global idx : 3
+      Number of domains  = 1
+      Local number  :          3
+      Domain number :          0
+      Local type    :          1
+    Global idx : 4
+      Number of domains  = 1
+      Local number  :          4
+      Domain number :          0
+      Local type    :          1
+    Global idx : 5
+      Number of domains  = 1
+      Local number  :          5
+      Domain number :          0
+      Local type    :          1
+    Global idx : 6
+      Number of domains  = 1
+      Local number  :          6
+      Domain number :          0
+      Local type    :          1
+    Global idx : 7
+      Number of domains  = 1
+      Local number  :          7
+      Domain number :          0
+      Local type    :          1
+    Global idx : 8
+      Number of domains  = 1
+      Local number  :          8
+      Domain number :          0
+      Local type    :          1
+    Global idx : 9
+      Number of domains  = 1
+      Local number  :          9
+      Domain number :          0
+      Local type    :          1
+    Global idx : 10
+      Number of domains  = 1
+      Local number  :         10
+      Domain number :          0
+      Local type    :          1
+    Global idx : 11
+      Number of domains  = 1
+      Local number  :         11
+      Domain number :          0
+      Local type    :          1
+    Global idx : 12
+      Number of domains  = 1
+      Local number  :         12
+      Domain number :          0
+      Local type    :          1
+    Global idx : 13
+      Number of domains  = 1
+      Local number  :         13
+      Domain number :          0
+      Local type    :          1
+    Global idx : 14
+      Number of domains  = 1
+      Local number  :         14
+      Domain number :          0
+      Local type    :          1
+    Global idx : 15
+      Number of domains  = 1
+      Local number  :         15
+      Domain number :          0
+      Local type    :          1
+  Adjacent domains:
+    Number of adjacent domains = 0
+    Adjacent domains ptr  :     1     1
+*** Exits : DOMAIN_MAPPINGS_LOCAL_FROM_GLOBAL_CALCULATE
+*** Enters: DOMAIN_MAPPINGS_LOCAL_FROM_GLOBAL_CALCULATE
+Domain mappings:
+  Number of domains  = 1
+  Number of global = 13
+  Number of local = 13
+  Total number of local = 13
+  Domain numbers:
+    Number of domain local :         13
+    Number of domain ghost :          0
+  Domain list:
+    Number of internal = 13
+    Number of boundary = 0
+    Number of ghost = 0
+    Internal start = 1
+    Internal finish = 13
+    Boundary start = 14
+    Boundary finish = 13
+    Ghost start = 14
+    Ghost finish = 13
+    Internal list :          1          2          3          4          5          6          7          8
+                             9         10         11         12         13
+    Boundary list :
+    Ghost list    :
+  Local to global map:
+    Local index : 1
+      Global index = 1
+    Local index : 2
+      Global index = 2
+    Local index : 3
+      Global index = 3
+    Local index : 4
+      Global index = 4
+    Local index : 5
+      Global index = 5
+    Local index : 6
+      Global index = 6
+    Local index : 7
+      Global index = 7
+    Local index : 8
+      Global index = 8
+    Local index : 9
+      Global index = 9
+    Local index : 10
+      Global index = 10
+    Local index : 11
+      Global index = 11
+    Local index : 12
+      Global index = 12
+    Local index : 13
+      Global index = 13
+  Global to local map:
+    Global idx : 1
+      Number of domains  = 1
+      Local number  :          1
+      Domain number :          0
+      Local type    :          1
+    Global idx : 2
+      Number of domains  = 1
+      Local number  :          2
+      Domain number :          0
+      Local type    :          1
+    Global idx : 3
+      Number of domains  = 1
+      Local number  :          3
+      Domain number :          0
+      Local type    :          1
+    Global idx : 4
+      Number of domains  = 1
+      Local number  :          4
+      Domain number :          0
+      Local type    :          1
+    Global idx : 5
+      Number of domains  = 1
+      Local number  :          5
+      Domain number :          0
+      Local type    :          1
+    Global idx : 6
+      Number of domains  = 1
+      Local number  :          6
+      Domain number :          0
+      Local type    :          1
+    Global idx : 7
+      Number of domains  = 1
+      Local number  :          7
+      Domain number :          0
+      Local type    :          1
+    Global idx : 8
+      Number of domains  = 1
+      Local number  :          8
+      Domain number :          0
+      Local type    :          1
+    Global idx : 9
+      Number of domains  = 1
+      Local number  :          9
+      Domain number :          0
+      Local type    :          1
+    Global idx : 10
+      Number of domains  = 1
+      Local number  :         10
+      Domain number :          0
+      Local type    :          1
+    Global idx : 11
+      Number of domains  = 1
+      Local number  :         11
+      Domain number :          0
+      Local type    :          1
+    Global idx : 12
+      Number of domains  = 1
+      Local number  :         12
+      Domain number :          0
+      Local type    :          1
+    Global idx : 13
+      Number of domains  = 1
+      Local number  :         13
+      Domain number :          0
+      Local type    :          1
+  Adjacent domains:
+    Number of adjacent domains = 0
+    Adjacent domains ptr  :     1     1
+*** Exits : DOMAIN_MAPPINGS_LOCAL_FROM_GLOBAL_CALCULATE
+*** Enters: DOMAIN_MAPPINGS_LOCAL_FROM_GLOBAL_CALCULATE
+Domain mappings:
+  Number of domains  = 1
+  Number of global = 13
+  Number of local = 13
+  Total number of local = 13
+  Domain numbers:
+    Number of domain local :         13
+    Number of domain ghost :          0
+  Domain list:
+    Number of internal = 13
+    Number of boundary = 0
+    Number of ghost = 0
+    Internal start = 1
+    Internal finish = 13
+    Boundary start = 14
+    Boundary finish = 13
+    Ghost start = 14
+    Ghost finish = 13
+    Internal list :          1          2          3          4          5          6          7          8
+                             9         10         11         12         13
+    Boundary list :
+    Ghost list    :
+  Local to global map:
+    Local index : 1
+      Global index = 1
+    Local index : 2
+      Global index = 2
+    Local index : 3
+      Global index = 3
+    Local index : 4
+      Global index = 4
+    Local index : 5
+      Global index = 5
+    Local index : 6
+      Global index = 6
+    Local index : 7
+      Global index = 7
+    Local index : 8
+      Global index = 8
+    Local index : 9
+      Global index = 9
+    Local index : 10
+      Global index = 10
+    Local index : 11
+      Global index = 11
+    Local index : 12
+      Global index = 12
+    Local index : 13
+      Global index = 13
+  Global to local map:
+    Global idx : 1
+      Number of domains  = 1
+      Local number  :          1
+      Domain number :          0
+      Local type    :          1
+    Global idx : 2
+      Number of domains  = 1
+      Local number  :          2
+      Domain number :          0
+      Local type    :          1
+    Global idx : 3
+      Number of domains  = 1
+      Local number  :          3
+      Domain number :          0
+      Local type    :          1
+    Global idx : 4
+      Number of domains  = 1
+      Local number  :          4
+      Domain number :          0
+      Local type    :          1
+    Global idx : 5
+      Number of domains  = 1
+      Local number  :          5
+      Domain number :          0
+      Local type    :          1
+    Global idx : 6
+      Number of domains  = 1
+      Local number  :          6
+      Domain number :          0
+      Local type    :          1
+    Global idx : 7
+      Number of domains  = 1
+      Local number  :          7
+      Domain number :          0
+      Local type    :          1
+    Global idx : 8
+      Number of domains  = 1
+      Local number  :          8
+      Domain number :          0
+      Local type    :          1
+    Global idx : 9
+      Number of domains  = 1
+      Local number  :          9
+      Domain number :          0
+      Local type    :          1
+    Global idx : 10
+      Number of domains  = 1
+      Local number  :         10
+      Domain number :          0
+      Local type    :          1
+    Global idx : 11
+      Number of domains  = 1
+      Local number  :         11
+      Domain number :          0
+      Local type    :          1
+    Global idx : 12
+      Number of domains  = 1
+      Local number  :         12
+      Domain number :          0
+      Local type    :          1
+    Global idx : 13
+      Number of domains  = 1
+      Local number  :         13
+      Domain number :          0
+      Local type    :          1
+  Adjacent domains:
+    Number of adjacent domains = 0
+    Adjacent domains ptr  :     1     1
+*** Exits : DOMAIN_MAPPINGS_LOCAL_FROM_GLOBAL_CALCULATE

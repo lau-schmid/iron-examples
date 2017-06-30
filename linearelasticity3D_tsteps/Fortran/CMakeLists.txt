@@ -1,6 +1,5 @@
 # Add example executable
-add_executable(cuboid src/FortranExample.f90)
-#add_executable(cuboid src/FortranExample_3.f90)
+add_executable(Uniaxial_3Dtstep src/3DPlaneStress_tstep.f90)
 
 # Turn on Fortran preprocessing (#include directives)
 if (MSVC)
@@ -8,16 +7,7 @@ if (MSVC)
 else()
     set(PROC_OPT "-cpp")
 endif()
-
-# in debug mode, add flag that make Floating point exceptions fatal
-set(OPT "")
-if (TRUE)
-    if(CMAKE_BUILD_TYPE MATCHES DEBUG)
-        set(OPT "-ffpe-trap=invalid,zero,underflow,overflow,denormal")
-    endif()
-endif()
-
-target_compile_options(cuboid PRIVATE ${PROC_OPT} ${OPT} "-fbacktrace")
+target_compile_options(Uniaxial_3Dtstep PRIVATE ${PROC_OPT})
 
 # Link to opencmiss
 # -----------------
@@ -34,11 +24,11 @@ target_compile_options(cuboid PRIVATE ${PROC_OPT} ${OPT} "-fbacktrace")
 #     target_link_libraries(${EXAMPLE_BINARY} PRIVATE petsc)
 #
 # All the OpenCMISS dependencies provide a target you can link against corresponding to the (lowercase) component name.
-target_link_libraries(cuboid PRIVATE opencmiss)
+target_link_libraries(Uniaxial_3Dtstep PRIVATE opencmiss)
 
 # Add a simple test that runs the executable
-add_test(NAME Cuboid COMMAND cuboid)
-add_opencmiss_environment(Cuboid)
+add_test(NAME Uniaxial_3Dtstep COMMAND Uniaxial_3Dtstep)
+add_opencmiss_environment(Uniaxial_3Dtstep)
 
 ###################
 # Developer notice!

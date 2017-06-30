@@ -1,0 +1,6 @@
+build_debug
+build_release
+build
+*.ex*
+*.out
+*.log

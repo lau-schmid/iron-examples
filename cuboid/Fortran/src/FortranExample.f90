@@ -72,10 +72,8 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   LOGICAL, PARAMETER :: DEBUGGING_PARALLEL_BARRIER = .FALSE.   ! execute a barrier where all processes wait when running in parallel, this is helpful to only debug the execution of single processes in a parallel scenario with gdb
   LOGICAL, PARAMETER :: DEBUGGING_PROBLEM_OUTPUT = .FALSE.     ! output the 'solver' object after it is created
   LOGICAL :: DebuggingOutput = .FALSE.    ! enable information from solvers
-  LOGICAL :: OldTomoMechanics = .FALSE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
+  LOGICAL :: OldTomoMechanics = .TRUE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
   LOGICAL :: EnableExportEMG = .FALSE.
-  !LOGICAL :: BDFIntegrator = .TRUE. ! Whether or not to use the bdf integration scheme for the DAE cellml problem. otherwise euler explicit
-
   
   ! physical dimensions in [cm]
   REAL(CMISSRP) :: PhysicalLength=3.0_CMISSRP ! (6)     X-direction
@@ -85,7 +83,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !all times in [ms]
   REAL(CMISSRP) :: time !=10.00_CMISSRP
   REAL(CMISSRP), PARAMETER :: PERIODD=0.2_CMISSRP ! was 1
-  REAL(CMISSRP)            :: TimeStop=0.2_CMISSRP ! this should be replaced. or PERIODD. one can be computed from the other and they are used in code at different places. provokes errors.
+  REAL(CMISSRP)            :: TimeStop=0.2_CMISSRP
 
   REAL(CMISSRP) :: ElasticityTimeStep = 0.1000000000_CMISSRP !0.5_CMISSRP!0.05_CMISSRP!0.8_CMISSRP
   REAL(CMISSRP) :: PDETimeStep = 0.005_CMISSRP              ! 0.005_CMISSRP
@@ -217,7 +215,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   INTEGER(CMISSIntg) :: MonodomainSolverId = 2
   INTEGER(CMISSIntg) :: MonodomainPreconditionerId = 1
 
-  INTEGER(CMISSIntg) :: ODESolverId = 1 ! will be overwritten if BDFIntegrator == .true.
+  INTEGER(CMISSIntg) :: ODESolverId = 1
 
   INTEGER(CMISSIntg), DIMENSION(10000,100) :: MotorUnitFiringTimes
   INTEGER(CMISSIntg), ALLOCATABLE :: InnervationZoneOffset(:)
@@ -1358,13 +1356,19 @@ SUBROUTINE ParseParameters()
   
     SELECT CASE(ODESolverId)
       CASE(1)
-        PRINT *, "(0D) ODE:        1 explicit Euler"
+        PRINT *, "(0D) ODE:        1 Explicit Euler"
       CASE(2)
         PRINT *, "(0D) ODE:        2 BDF"
         PRINT *, "                   Absolute Tolerance: ",DAEAbsoluteTolerance
         PRINT *, "                   Relative Tolerance: ",DAERelativeTolerance
+      CASE(3)
+        PRINT *, "(0D) ODE:        3 General Linear (GL)"
+      CASE(4)
+        PRINT *, "(0D) ODE:        4 Crank-Nicolson"
+      CASE(5)
+        PRINT *, "(0D) ODE:        5 Improved Euler (Heun's method)"
       CASE DEFAULT
-        PRINT *, "(0D) ODE:        SOLVER_ITERATIVE_GMRES (default)" 
+        PRINT *, "(0D) ODE:        Explicit Euler (default)" 
     END SELECT
 
     SELECT CASE(MonodomainSolverId)
@@ -3074,12 +3078,20 @@ SUBROUTINE CreateSolvers()
   ! might be handy some day:
   ! CALL cmfe_Solver_DAETimesSet(SolverDAE,?0.0_CMISSRP?,?0.001_CMISSRP?,Err)
   
-  IF (ODESolverId==2) THEN !use bdf instead of default-explicitEuler
-    CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_BDF,Err)
-    CALL cmfe_Solver_DAEbdfSetTolerance(SolverDAE,0.0000001_CMISSRP,0.0000001_CMISSRP,err) !default values were both: 1.0E-7
-  ! ELSEIF (useGL) THEN !!! not stable yet
-  ! CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_GL,Err)
-  ENDIF
+  SELECT CASE(ODESolverId) !use bdf instead of default-explicitEuler
+    CASE(2)
+      CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_BDF,Err)
+      CALL cmfe_Solver_DAEbdfSetTolerance(SolverDAE,0.0000001_CMISSRP,0.0000001_CMISSRP,err) !default values were both: 1.0E-7
+    CASE(3) !!! not stable yet
+      CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_GL,Err)
+    CASE(4) !!! not stable yet
+      CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_CRANK_NICOLSON,Err)
+    CASE(5)
+      ! out of date: CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_HEUN,Err)
+      CALL cmfe_Solver_DAEEulerSolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_EULER_IMPROVED,Err)
+    CASE DEFAULT
+      PRINT *, "Consider to use an other DAE solver via the command line option 'ODESolverId'."
+  END SELECT
   !> \todo or not-todo... solve the CellML equations on the GPU for efficiency (later)
   !CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_EXTERNAL,Err)
 

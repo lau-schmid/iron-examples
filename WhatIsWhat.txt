@@ -28,3 +28,27 @@ ________________________________________________________________________________
 initialisation in parallel executions.
 Example 'cuboid' includes 3a as well as 3. This can be chosen via a constant in line 76 (.TRUE. = 3a, .FALSE. = 3):
    LOGICAL, PARAMETER :: OLD_TOMO_MECHANICS = .TRUE.
+
+
+Mail from Thomas Heidlauf
+Date: 	Tue, 25 Oct 2016 20:02:18 +0200
+
+1: active strain simple
+2: multiscale active strain, mechanics only
+3: multiscale and multiphysics active strain <--- THIS IS YOUR MAN!
+4: titin
+5: titin heterogeneous material properties
+
+active strain (1-3) ist eine neue Formulierung der Mechanik basierend 
+auf einer multiplikativen Zerlegung des Deformationsgradienten (nicht in 
+meiner Diss beschrieben). Daran arbeiten wir gerade, also bitte nicht 
+weiter geben. Nr. 3 beinhaltet auch die Elektrophysiologie (Fasern, 
+Aktionspotentiale, ...), wie in meiner Diss beschrieben. Diese 
+Formulierung der Mechanik ist geeigneter, da sie (theoretisch) deutlich 
+stabiler ist! Wir sollten also in Zukunft hiermit arbeiten, aber wie 
+gesagt, das ist noch nicht veröffentlicht.
+
+titin (4-5) ist eine kleine Erweiterung des Modells aus meiner Diss. Die 
+Mechanik ist (fast) wie in meiner Diss beschrieben. Zusätzlich gibt es 
+noch einen weiteren Term im Spannungstensor (titin). Details dazu im 
+angehängten Paper.

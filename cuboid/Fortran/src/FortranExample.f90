@@ -72,7 +72,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   LOGICAL, PARAMETER :: DEBUGGING_PARALLEL_BARRIER = .FALSE.   ! execute a barrier where all processes wait when running in parallel, this is helpful to only debug the execution of single processes in a parallel scenario with gdb
   LOGICAL, PARAMETER :: DEBUGGING_PROBLEM_OUTPUT = .FALSE.     ! output the 'solver' object after it is created
   LOGICAL :: DebuggingOutput = .FALSE.    ! enable information from solvers
-  LOGICAL :: OldTomoMechanics = .TRUE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
+  INTEGER(CMISSIntg) :: ModelType = 0     ! type of the model (was OldTomoMechanics): 0 = "3a","MultiPhysStrain", old version of tomo that works in parallel, 1 = "3","MultiPhysStrain", new version of tomo that is more stable in numerical sense, 2 = "4","Titin"
   LOGICAL :: EnableExportEMG = .FALSE.
   
   ! physical dimensions in [cm]
@@ -134,12 +134,14 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
     &  1.0_CMISSRP,2.2e-9_CMISSRP]
 
   !maximum contraction velocity in [cm/ms]
-  REAL(CMISSRP) :: Vmax=-0.02_CMISSRP ! =0.2 m/s, rat GM
+  REAL(CMISSRP) :: VMax=-0.02_CMISSRP ! =0.2 m/s, rat GM
   ! value for new mechanics: -0.2_CMISSRP
 
   !CAUTION - what are the units???
   REAL(CMISSRP), PARAMETER, DIMENSION(4) :: MAT_FE= &
     &[0.0000000000635201_CMISSRP,0.3626712895523322_CMISSRP,0.0000027562837093_CMISSRP,43.372873938671383_CMISSRP]  ![N/cm^2]
+
+  REAL(CMISSRP) :: TkLinParam=1.0_CMISSRP ! 1: With Actin-Tintin Interaction 0: No Actin-Titin Interactions
 
   !Inital Conditions
   REAL(CMISSRP) :: InitialStretch=1.0_CMISSRP   ! previous value in new mechanical description: 1.2_CMISSRP
@@ -149,7 +151,6 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   REAL(CMISSRP) :: NewtonTolerance = 1.E-8_CMISSRP
   REAL(CMISSRP) :: DAERelativeTolerance = 1.E-7_CMISSRP, DAEAbsoluteTolerance = 1.E-7_CMISSRP
 
-!  REAL(CMISSRP) :: INIT_PRESSURE
 !  REAL(CMISSRP), PARAMETER :: CONTRACTION_VELOCITY=-6.0e-1_CMISSRP ![cm/s]
   
   !--------------------------------------------------------------------------------------------------------------------------------
@@ -447,24 +448,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
   CALL CreateEquations()
   CALL InitializeCellML()
-
-  !--------------------------------------------------------------------------------------------------------------------------------
-  !Define the problem
-  CALL cmfe_Problem_Initialise(Problem,Err)
-
-  IF (OldTomoMechanics) THEN
-    CALL cmfe_Problem_CreateStart(ProblemUserNumber,[CMFE_PROBLEM_MULTI_PHYSICS_CLASS, &
-      & CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE,CMFE_PROBLEM_GUDUNOV_MONODOMAIN_1D3D_ELASTICITY_SUBTYPE],Problem,Err)
-  ELSE
-    CALL cmfe_Problem_CreateStart(ProblemUserNumber,[CMFE_PROBLEM_MULTI_PHYSICS_CLASS, &
-      & CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE,CMFE_PROBLEM_MONODOMAIN_1D3D_ACTIVE_STRAIN_SUBTYPE],Problem,Err)
-  !  CALL cmfe_Problem_SpecificationSet(Problem,CMFE_PROBLEM_MULTI_PHYSICS_CLASS,CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE, &
-  !   & CMFE_PROBLEM_MONODOMAIN_1D3D_ACTIVE_STRAIN_SUBTYPE,Err)
-  ENDIF
-
-
-  CALL cmfe_Problem_CreateFinish(Problem,Err)
-
+  CALL CreateProblem()
 
   CALL CreateControlLoops()
   CALL CreateSolvers()
@@ -519,7 +503,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3, &
    & 0.0_CMISSRP,Err)
 
-  IF (OldTomoMechanics) THEN
+  IF (ModelType == 0) THEN    ! 3a, "MultiPhysStrain", old tomo mechanics
     CALL cmfe_Field_ParameterSetUpdateConstant(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,5,PMax, Err)
   ENDIF
 
@@ -529,15 +513,6 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   CALL cmfe_ControlLoop_MaximumIterationsSet(ControlLoopFE,1,Err)
 
 ! no change for BCs -- fix at this length!!!
-
-  !Set the Stimulus for monodomain at the middle of the fibres
-!  IF (OldTomoMechanics) THEN
-!    CALL cmfe_CellML_FieldComponentGet(CellML,shortenModelIndex,CMFE_CELLML_PARAMETERS_FIELD, &
-!      & "wal_environment/I_HH",stimcomponent,Err)
-!  ELSE
-!    CALL cmfe_CellML_FieldComponentGet(CellML,shortenModelIndex,CMFE_CELLML_PARAMETERS_FIELD, &
-!      & "Aliev_Panfilov/I_HH",stimcomponent,Err)
-!  ENDIF
 
 
   !--------------------------------------------------------------------------------------------------------------------------------
@@ -562,7 +537,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
     IF (ComputationalNodeNumber == 0) PRINT "(A,F0.5,A)","t = ",time," s"
     !-------------------------------------------------------------------------------------------------------------------------------
     !Set the Stimulus for monodomain at the middle of the fibres
-    IF (OldTomoMechanics) THEN
+    IF (ModelType == 0) THEN    ! 3a, "MultiPhysStrain", old tomo mechanics
 
   !>Find the component ID in the given field for the variable defined by the given variable ID in the provided CellML environment.
   !! This generic routine will be used to map variable ID's in CellML models to components in the various fields defined in the CellML models defined for the provided CellML environment.
@@ -578,7 +553,8 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
    !INTEGER(INTG), INTENT(OUT) :: COMPONENT_USER_NUMBER !<On return, the field component for the model variable defined by the given ID.
       CALL cmfe_CellML_FieldComponentGet(CellML,shortenModelIndex,CMFE_CELLML_PARAMETERS_FIELD, &
         & "wal_environment/I_HH",StimComponent,Err)
-    ELSE
+    
+    ELSEIF (ModelType == 1) THEN ! 3, , "MultiPhysStrain", numerically more stable
       CALL cmfe_CellML_FieldComponentGet(CellML,shortenModelIndex,CMFE_CELLML_PARAMETERS_FIELD, &
         & "Aliev_Panfilov/I_HH",StimComponent,Err)
     ENDIF
@@ -943,6 +919,7 @@ SUBROUTINE ParseAssignment(Line, LineNumber, ScenarioInputFile)
   CHARACTER(LEN=*), INTENT(IN) :: ScenarioInputFile
   CHARACTER(LEN=1024) :: VariableName, StrValue
   INTEGER(CMISSIntg) :: StringLength
+  LOGICAL :: OldTomoMechanics   
 
   !PRINT *, "Read line """//TRIM(Line)//"""."
   
@@ -1009,8 +986,17 @@ SUBROUTINE ParseAssignment(Line, LineNumber, ScenarioInputFile)
       READ(StrValue, *, IOSTAT=Stat) ElasticityLoopMaximumNumberOfIterations
     CASE ("enableexportemg")
       READ(StrValue, *, IOSTAT=Stat) EnableExportEMG
-    CASE ("oldtomomechanics")
+    CASE ("oldtomomechanics")                   ! deprecated variable, use ModelType instead
       READ(StrValue, *, IOSTAT=Stat) OldTomoMechanics
+      IF (OldTomoMechanics) THEN
+        ModelType = 0
+      ELSE
+        ModelType = 1
+      ENDIF
+    CASE ("modeltype")
+      READ(StrValue, *, IOSTAT=Stat) ModelType
+    CASE ("tklinparam")
+      READ(StrValue, *, IOSTAT=Stat) TkLinParam
     CASE ("debuggingoutput")
       READ(StrValue, *, IOSTAT=Stat) DebuggingOutput
     CASE ("debuggingonlyrunshortpartofsimulation")
@@ -1206,10 +1192,10 @@ SUBROUTINE ParseParameters()
 !  CellMLModelFilename=trim(pathname)//"fast_2014_03_25_no_Fl_no_Fv.xml" !FAST
  
   IF (TRIM(CellMLModelFilename) == "standard") THEN
-    IF (OldTomoMechanics) THEN
+    IF (ModelType == 0) THEN    ! 3a, "MultiPhysStrain", old tomo mechanics
       CellMLModelFilename = TRIM(inputDirectory) // "slow_TK_2014_12_08.xml"
       !StimValue = 20000.0_CMISSRP !700.0_CMISSRP!700.0_CMISSRP
-    ELSE
+    ELSEIF (ModelType == 1) THEN ! 3, , "MultiPhysStrain", numerically more stable
       CellMLModelFilename = TRIM(inputDirectory) // "Aliev_Panfilov_Razumova_2016_08_22.cellml"
       !StimValue = 90.0_CMISSRP !90.0_CMISSRP
     ENDIF
@@ -1406,10 +1392,12 @@ SUBROUTINE ParseParameters()
     PRINT *, ""
 
     ! Output some static (compile-time) settings
-    IF (OldTomoMechanics) THEN
-      PRINT*, "Old mechanics formulation that works in parallel."
-    ELSE
-      PRINT*, "New mechanics formulation that does not work in parallel."
+    IF (ModelType == 0) THEN    ! 3a, "MultiPhysStrain", old tomo mechanics
+      PRINT *, "ModelType: 0 (3a, MultiPhysStrain, Old mechanics formulation that works in parallel.)"
+    ELSEIF (ModelType == 1) THEN ! 3, "MultiPhysStrain", numerically more stable
+      PRINT *, "ModelType: 1 (3, MultiPhysStrain)"
+    ELSEIF (ModelType == 2) THEN  ! 4, "Titin"
+      PRINT *, "ModelType: 2 (4, Titin)"
     ENDIF
 
     CALL cmfe_CustomProfilingGetEnabled(CustomProfilingEnabled, TAUProfilingEnabled, Err)
@@ -2247,10 +2235,12 @@ SUBROUTINE CreateFieldFiniteElasticity()
   CALL cmfe_Field_NumberOfVariablesSet(MaterialFieldFE,FieldMaterialNumberOfVariablesFE,Err)
   CALL cmfe_Field_VariableTypesSet(MaterialFieldFE,[CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_V_VARIABLE_TYPE],Err)
 
-  IF (OldTomoMechanics) THEN
+  IF (ModelType == 0) THEN    ! 3a, "MultiPhysStrain", old tomo mechanics
     CALL cmfe_Field_NumberOfComponentsSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,5,Err)
-  ELSE
+  ELSEIF (ModelType == 1) THEN ! 3, "MultiPhysStrain", numerically more stable
     CALL cmfe_Field_NumberOfComponentsSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,8,Err)
+  ELSEIF (ModelType == 2) THEN  ! 4, "Titin"
+    CALL cmfe_Field_NumberOfComponentsSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,6,Err)
   ENDIF
 
   CALL cmfe_Field_NumberOfComponentsSet(MaterialFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,1,Err)
@@ -2260,8 +2250,11 @@ SUBROUTINE CreateFieldFiniteElasticity()
   CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,4,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
   CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,5,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
 
-  IF (.NOT. OldTomoMechanics) THEN
+  IF (ModelType == 1 .OR. ModelType == 2) THEN !
     CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,6,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
+  ENDIF
+
+  IF (ModelType == 1) THEN ! 3, "MultiPhysStrain", numerically more stable
     CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,7,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
     CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,8,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
   ENDIF
@@ -2271,7 +2264,7 @@ SUBROUTINE CreateFieldFiniteElasticity()
   CALL cmfe_Field_VariableLabelSet(MaterialFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,"Gravity",Err)
   CALL cmfe_Field_CreateFinish(MaterialFieldFE,Err)
 
-  IF (OldTomoMechanics) THEN
+  IF (ModelType == 0) THEN    ! 3a, "MultiPhysStrain", old tomo mechanics
     !Set Mooney-Rivlin constants c10 and c01.
     CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,MAT_FE(1),Err)
     CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2,MAT_FE(2),Err)
@@ -2279,7 +2272,8 @@ SUBROUTINE CreateFieldFiniteElasticity()
     CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,4,MAT_FE(4),Err)
     CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,5,0.0_CMISSRP, &
      & Err)
-  ELSE
+     
+  ELSEIF (ModelType == 1) THEN ! 3, "MultiPhysStrain", numerically more stable
 
     !Set Material-Parameters [mu(1) mu(2) mu(3) alpha(1) alpha(2) alpha(3) mu_0]
     CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,C(1),Err)
@@ -2290,7 +2284,18 @@ SUBROUTINE CreateFieldFiniteElasticity()
     CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,6,C(6),Err)
     CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,7,C(7),Err)
     CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,8,C(8),Err)
-  !  CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,0.0_CMISSRP,Err)
+ 
+  ELSEIF (ModelType == 2) THEN ! 4, "Titin"
+    !Set Mooney-Rivlin constants c10 and c01.
+    CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,MAT_FE(1),Err)
+    CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2,MAT_FE(2),Err)
+    CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3,MAT_FE(3),Err)
+    CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,4,MAT_FE(4),Err)
+    CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,5,0.0_CMISSRP, &
+     & Err)
+    CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,6,TkLinParam,&
+     & Err)
+
   ENDIF
 
 
@@ -2334,19 +2339,23 @@ SUBROUTINE CreateFieldFiniteElasticity()
   CALL cmfe_Field_NumberOfVariablesSet(IndependentFieldFE,2,Err)
   CALL cmfe_Field_VariableTypesSet(IndependentFieldFE,[CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_V_VARIABLE_TYPE],Err)
 
-  IF (OldTomoMechanics) THEN
+  IF (ModelType == 0) THEN    ! 3a, "MultiPhysStrain", old tomo mechanics
     CALL cmfe_Field_DimensionSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_SCALAR_DIMENSION_TYPE,Err)
     CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1,Err)
-  ELSE
+  ELSEIF (ModelType == 1) THEN ! 3, "MultiPhysStrain", numerically more stable
     CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,5,Err)
+  ELSEIF (ModelType == 2) THEN ! 4, "Titin"
+    CALL cmfe_Field_DimensionSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VECTOR_DIMENSION_TYPE,Err)
+    CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,6,Err)
   ENDIF
 
   CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,5,Err)
 
-  IF (OldTomoMechanics) THEN
+  IF (ModelType == 0) THEN    ! 3a, "MultiPhysStrain", old tomo mechanics
     CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1, &
        & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err)
-  ELSE
+  
+  ELSEIF (ModelType == 1) THEN ! 3, "MultiPhysStrain", numerically more stable
     CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1, &
       & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) !A_1
     CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,2, &
@@ -2357,6 +2366,21 @@ SUBROUTINE CreateFieldFiniteElasticity()
       & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) !x_2
     CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,5, &
       & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) !lambda_a
+  
+  ELSEIF (ModelType == 2) THEN ! 4, "Titin"
+    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1, &
+     & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err)
+    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,2, &
+     & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) ! titin force (unbound)
+    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,3, &
+     & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) ! titin force (bound)
+    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,4, &
+     & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) ! titin force in XF-direction (unbound)
+    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,5, &
+     & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) ! titin force in XF-direction (bound)
+    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,6, &
+     & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) ! activation for titin
+    CALL cmfe_Field_ComponentMeshComponentSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,2,QuadraticMeshComponentNumber,Err)
   ENDIF
 
   CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,1, &
@@ -2373,10 +2397,12 @@ SUBROUTINE CreateFieldFiniteElasticity()
   CALL cmfe_Field_DataTypeSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_DP_TYPE,Err)
   CALL cmfe_Field_DataTypeSet(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_INTG_TYPE,Err)
 
-  IF (OldTomoMechanics) THEN
+  IF (ModelType == 0) THEN    ! 3a, "MultiPhysStrain", old tomo mechanics
     CALL cmfe_Field_VariableLabelSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,"Active_Stress_FE",Err)
-  ELSE
+  ELSEIF (ModelType == 1) THEN ! 3, "MultiPhysStrain", numerically more stable
     CALL cmfe_Field_VariableLabelSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,"XB_state_variables_FE",Err)
+  ELSEIF (ModelType == 2) THEN ! 4, "Titin"
+    CALL cmfe_Field_VariableLabelSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,"Active_Stress_FE",Err)
   ENDIF
 
   CALL cmfe_Field_VariableLabelSet(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,"subgrid_info",Err)
@@ -2467,14 +2493,14 @@ SUBROUTINE CreateFieldMonodomain()
 
   !first variable:   CMFE_FIELD_U_VARIABLE_TYPE
   CALL cmfe_Field_DataTypeSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_DP_TYPE,Err)
-  IF (OldTomoMechanics) THEN
+  IF (ModelType == 0) THEN    ! 3a, "MultiPhysStrain", old tomo mechanics
     !first variable:   CMFE_FIELD_U_VARIABLE_TYPE -- 1) active stress
     CALL cmfe_Field_DimensionSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_SCALAR_DIMENSION_TYPE,Err)
     CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1,Err)
     CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1, &
      & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
     CALL cmfe_Field_VariableLabelSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,"Active_Stress_M",Err)
-  ELSE
+  ELSEIF (ModelType == 1) THEN ! 3, "MultiPhysStrain", numerically more stable
     CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,4,Err)
     CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1, &
      & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err) !A_1
@@ -2485,6 +2511,22 @@ SUBROUTINE CreateFieldMonodomain()
     CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,4, &
      & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err) !x_2
     CALL cmfe_Field_VariableLabelSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,"XB_state_variables_M",Err)
+  ELSEIF (ModelType == 2) THEN ! 4, "Titin"
+    CALL cmfe_Field_DimensionSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VECTOR_DIMENSION_TYPE,Err)
+    CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,6,Err)
+    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1, &
+     & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err) !normalised sarcomere-based active stress
+    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,2, &
+     & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err) !this component is for the unbound titin stress
+    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,3, &
+     & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err) !this component is for the bound titin stress
+    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,4, &
+     & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err) !this component is for the unbound titin stress in the XF-direction
+    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,5, &
+     & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err) !this component is for the bound titin stress in the XF-direction
+    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,6, &
+     & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err) !this component is for the titin activation (stress without force-length relation)
+    CALL cmfe_Field_VariableLabelSet(IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,"Active_Stress_M",Err)
   ENDIF
 
   !second variable:   CMFE_FIELD_V_VARIABLE_TYPE -- 1) motor unit number   2) fibre type   3) fibre number   4) nearest Gauss point   5) containing element local number 6) in-fibre contiguous node number
@@ -2507,13 +2549,24 @@ SUBROUTINE CreateFieldMonodomain()
 
   !third variable:   FIELD_U1_VARIABLE_TYPE -- 1) half-sarcomere length   2) inital half-sarcomere length   3) initial node distance
   CALL cmfe_Field_DataTypeSet(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,CMFE_FIELD_DP_TYPE,Err)
+
+IF (ModelType == 0 .OR. ModelType == 1) THEN ! 3,3a MultiPhysStrain
   CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,3,Err)
+ELSEIF (ModelType == 2) THEN ! 4, "Titin"
+  CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,4,Err)
+ENDIF
   CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,1, &
    & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
   CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,2, &
    & CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
   CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,3, &
    & CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
+
+  IF (ModelType == 2) THEN ! 4, "Titin"
+    CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,4, &
+     & CMFE_FIELD_NODE_BASED_INTERPOLATION,Err)
+  ENDIF
+
   CALL cmfe_Field_VariableLabelSet(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,"half-sarcomere_length",Err)
 
   !fourth variable:   FIELD_U2_VARIABLE_TYPE -- 1) old node distance   2) maximum contraction velocity   3) relative contraction velocity   4) velocity before 1 time step   5) velocity before 2 time step   6) velocity before 3 time steps   7) node distance to right node (only computed on some nodes)
@@ -2547,13 +2600,17 @@ SUBROUTINE CreateEquationsSet()
   CALL cmfe_Field_Initialise(EquationsSetFieldFE,Err)
   CALL cmfe_EquationsSet_Initialise(EquationsSetFE,Err)
 
-  IF (OldTomoMechanics) THEN
+  IF (ModelType == 0) THEN    ! 3a, "MultiPhysStrain", old tomo mechanics
     CALL cmfe_EquationsSet_CreateStart(EquationsSetsUserNumberFE,RegionFE,FibreField,[CMFE_EQUATIONS_SET_ELASTICITY_CLASS, &
      & CMFE_EQUATIONS_SET_FINITE_ELASTICITY_TYPE,CMFE_EQUATIONS_SET_1D3D_MONODOMAIN_ELASTICITY_SUBTYPE], &
      & EquationsSetFieldUserNumberFE,EquationsSetFieldFE,EquationsSetFE,Err)
-  ELSE
+  ELSEIF (ModelType == 1) THEN ! 3, "MultiPhysStrain", numerically more stable
     CALL cmfe_EquationsSet_CreateStart(EquationsSetsUserNumberFE,RegionFE,FibreField,[CMFE_EQUATIONS_SET_ELASTICITY_CLASS, &
      & CMFE_EQUATIONS_SET_FINITE_ELASTICITY_TYPE,CMFE_EQUATIONS_SET_1D3D_MONODOMAIN_ACTIVE_STRAIN_SUBTYPE], &
+     & EquationsSetFieldUserNumberFE,EquationsSetFieldFE,EquationsSetFE,Err)
+  ELSEIF (ModelType == 2) THEN ! 4, "Titin"
+    CALL cmfe_EquationsSet_CreateStart(EquationsSetsUserNumberFE,RegionFE,FibreField,[CMFE_EQUATIONS_SET_ELASTICITY_CLASS, &
+     & CMFE_EQUATIONS_SET_FINITE_ELASTICITY_TYPE,CMFE_EQUATIONS_SET_MONODOMAIN_ELASTICITY_W_TITIN_SUBTYPE], & 
      & EquationsSetFieldUserNumberFE,EquationsSetFieldFE,EquationsSetFE,Err)
   ENDIF
   CALL cmfe_EquationsSet_CreateFinish(EquationsSetFE,Err)
@@ -2577,14 +2634,22 @@ SUBROUTINE CreateEquationsSet()
   !Set the equations set to be a Monodomain equations set
   !> \todo solve the monodomain problem on the fibre field rather than on the geometric field: GeometricField <--> FibreField
 
-  IF (OldTomoMechanics) THEN
-    CALL cmfe_EquationsSet_CreateStart(EquationsSetsUserNumberM,RegionM,GeometricFieldM,[CMFE_EQUATIONS_SET_BIOELECTRICS_CLASS, &
+  IF (ModelType == 0) THEN    ! 3a, "MultiPhysStrain", old tomo mechanics
+    CALL cmfe_EquationsSet_CreateStart(EquationsSetsUserNumberM,RegionM,GeometricFieldM, &
+     & [CMFE_EQUATIONS_SET_BIOELECTRICS_CLASS, &
      & CMFE_EQUATIONS_SET_MONODOMAIN_EQUATION_TYPE,CMFE_EQUATIONS_SET_1D3D_MONODOMAIN_ELASTICITY_SUBTYPE], &
      & FieldEquationsSetUserNumberM,EquationsSetFieldM,EquationsSetM,Err)
-  ELSE
+  
+  ELSEIF (ModelType == 1) THEN ! 3, "MultiPhysStrain", numerically more stable
     CALL cmfe_EquationsSet_CreateStart(EquationsSetsUserNumberM,RegionM,GeometricFieldM, &
      & [CMFE_EQUATIONS_SET_BIOELECTRICS_CLASS, &
      & CMFE_EQUATIONS_SET_MONODOMAIN_EQUATION_TYPE,CMFE_EQUATIONS_SET_1D3D_MONODOMAIN_ACTIVE_STRAIN_SUBTYPE], &
+     & FieldEquationsSetUserNumberM,EquationsSetFieldM,EquationsSetM,Err)
+  
+  ELSEIF (ModelType == 2) THEN ! 4, "Titin"
+    CALL cmfe_EquationsSet_CreateStart(EquationsSetsUserNumberM,RegionM,GeometricFieldM, &
+     & [CMFE_EQUATIONS_SET_BIOELECTRICS_CLASS, &
+     & CMFE_EQUATIONS_SET_MONODOMAIN_EQUATION_TYPE,CMFE_EQUATIONS_SET_MONODOMAIN_ELASTICITY_W_TITIN_SUBTYPE], &
      & FieldEquationsSetUserNumberM,EquationsSetFieldM,EquationsSetM,Err)
   ENDIF
   CALL cmfe_EquationsSet_CreateFinish(EquationsSetM,Err)
@@ -2617,12 +2682,12 @@ SUBROUTINE InitializeFieldMonodomain()
   REAL(CMISSDP) :: InitialBioelectricNodeDistance
 
   !UPDATE THE INDEPENDENT FIELD IndependentFieldM
-  ! OldTomoMechanics
+  ! OldTomoMechanics (ModelType 0)
   !first variable (U)
   !  components:
   !    1) active stress
   !
-  ! .NOT. OldTomoMechanics
+  ! .NOT. OldTomoMechanics (ModelType 1)
   !first variable (U)
   !  components:
   !    1) A_1
@@ -2839,6 +2904,7 @@ SUBROUTINE CreateEquations()
 END SUBROUTINE CreateEquations
 
 SUBROUTINE InitializeCellML()
+  REAL(CMISSRP) :: InitialPressure
   
   !--------------------------------------------------------------------------------------------------------------------------------
   !Create the CellML environment
@@ -2851,12 +2917,16 @@ SUBROUTINE InitializeCellML()
   ! Now we have imported all the models we are able to specify which variables from the model we want:
   !,- to set from this side
 
-  IF (OldTomoMechanics) THEN
+  IF (ModelType == 0) THEN    ! 3a, "MultiPhysStrain", old tomo mechanics
     CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex,"wal_environment/I_HH",Err)
-  ELSE
+  ELSEIF (ModelType == 1) THEN ! 3, "MultiPhysStrain", numerically more stable
     CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex,"Aliev_Panfilov/I_HH",Err)
     CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex,"Razumova/l_hs",Err)
     CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex,"Razumova/velo",Err)
+  ELSEIF (ModelType == 2) THEN ! 4, "Titin"
+    CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex,"Aliev_Panfilov/I_HH",Err)
+    CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex,"Razumova/l_hs",Err)
+    CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex,"Razumova/rel_velo",Err)
   ENDIF
 !  CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex,"razumova/L_S",Err)
 !  CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex,"razumova/rel_velo",Err)
@@ -2872,8 +2942,11 @@ SUBROUTINE InitializeCellML()
   !NOTE: If an INTERMEDIATE (or ALGEBRAIC) variable should be used in a mapping, it has to be set as known or wanted first!
   !,  --> set "razumova/stress" as wanted!
   !,  --> no need to set "wal_environment/vS" since all STATE variables are automatically set as wanted!
-  IF (OldTomoMechanics) THEN
+  IF (ModelType == 0) THEN    ! 3a, "MultiPhysStrain", old tomo mechanics
     CALL cmfe_CellML_VariableSetAsWanted(CellML,shortenModelIndex,"razumova/stress",Err)
+  ELSEIF (ModelType == 2) THEN ! 4, "Titin"
+    CALL cmfe_CellML_VariableSetAsWanted(CellML,shortenModelIndex,"Razumova/ActiveStress",Err)
+    CALL cmfe_CellML_VariableSetAsWanted(CellML,shortenModelIndex,"Razumova/Activation",Err)
   ENDIF
 !  CALL cmfe_CellML_VariableSetAsWanted(CellML,shortenModelIndex2,"razumova/stress",Err)
   !,- and override constant parameters without needing to set up fields
@@ -2893,7 +2966,7 @@ SUBROUTINE InitializeCellML()
   CALL cmfe_CellML_FieldMapsCreateStart(CellML,Err)
   
   !Map the half-sarcomere length L_S
-  IF (OldTomoMechanics) THEN
+  IF (ModelType == 0) THEN    ! 3a, "MultiPhysStrain", old tomo mechanics
     !Map the transmembrane voltage V_m
     !                                       CellML env., "from"-field
     CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,      DependentFieldM, & 
@@ -2902,13 +2975,14 @@ SUBROUTINE InitializeCellML()
     !  "to"-cellml model user no., "to"-variable,      "to"-cellml variable parameter set
      & shortenModelIndex,          "wal_environment/vS",CMFE_FIELD_VALUES_SET_TYPE,Err)
      
-    CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,shortenModelIndex,"wal_environment/vS", &
+    CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,shortenModelIndex,"/vS", &
      & CMFE_FIELD_VALUES_SET_TYPE,DependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE,Err)
     
     !Map the active stress
     CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,shortenModelIndex,"razumova/stress", &
      & CMFE_FIELD_VALUES_SET_TYPE,IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE,Err)
-  ELSE
+  
+  ELSEIF (ModelType == 1) THEN ! 3, "MultiPhysStrain", numerically more stable
     CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,IndependentFieldM, &
      & CMFE_FIELD_U1_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE, &
      & shortenModelIndex,"Razumova/l_hs",CMFE_FIELD_VALUES_SET_TYPE,Err)
@@ -2931,6 +3005,25 @@ SUBROUTINE InitializeCellML()
      & CMFE_FIELD_VALUES_SET_TYPE,IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,3,CMFE_FIELD_VALUES_SET_TYPE,Err)
     CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,shortenModelIndex,"Razumova/x_2", &
      & CMFE_FIELD_VALUES_SET_TYPE,IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,4,CMFE_FIELD_VALUES_SET_TYPE,Err)
+  
+  ELSEIF (ModelType == 2) THEN ! 4, "Titin"
+    !Map the sarcomere half length L_S
+    CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE, &
+     & shortenModelIndex,"Razumova/l_hs",CMFE_FIELD_VALUES_SET_TYPE,Err)
+    !Map the sarcomere relative contraction velocity
+    CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,3,CMFE_FIELD_VALUES_SET_TYPE, &
+     & shortenModelIndex,"Razumova/rel_velo",CMFE_FIELD_VALUES_SET_TYPE,Err)
+    !Map the transmembrane voltage V_m
+    CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,DependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE, &
+      & shortenModelIndex,"Aliev_Panfilov/V_m",CMFE_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,shortenModelIndex,"Aliev_Panfilov/V_m",CMFE_FIELD_VALUES_SET_TYPE, &
+     & DependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE,Err)
+    !Map the active stress
+    CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,shortenModelIndex,"Razumova/ActiveStress",CMFE_FIELD_VALUES_SET_TYPE, &
+     & IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,shortenModelIndex,"Razumova/Activation",CMFE_FIELD_VALUES_SET_TYPE, &
+     & IndependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,6,CMFE_FIELD_VALUES_SET_TYPE,Err)
+
   ENDIF
 
 !  CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE, &
@@ -2952,12 +3045,18 @@ SUBROUTINE InitializeCellML()
   !--------------------------------------------------------------------------------------------------------------------------------
   !Initialise dependent field for monodomain
   !> \todo - get V_m initialial value.
-  IF (OldTomoMechanics) THEN
+  IF (ModelType == 0) THEN    ! 3a, "MultiPhysStrain", old tomo mechanics
     CALL cmfe_Field_ComponentValuesInitialise(DependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1, &
       & -79.974_CMISSRP,Err)
-  ELSE
+  
+  ELSEIF (ModelType == 1) THEN ! 3, "MultiPhysStrain", numerically more stable
     CALL cmfe_Field_ComponentValuesInitialise(DependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1, &
       & 0.0_CMISSRP,Err)
+
+  ELSEIF (ModelType == 2) THEN ! 4, "Titin"
+    CALL cmfe_Field_ComponentValuesInitialise(DependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1, &
+      & 0.0_CMISSRP,Err)
+
   ENDIF
 
   !Initialise dependent field for Finite Elasticity from undeformed geometry and set hydrostatic pressure
@@ -2967,10 +3066,17 @@ SUBROUTINE InitializeCellML()
    & CMFE_FIELD_VALUES_SET_TYPE,2,DependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2,Err)
   CALL cmfe_Field_ParametersToFieldParametersComponentCopy(GeometricFieldFE,CMFE_FIELD_U_VARIABLE_TYPE, &
    & CMFE_FIELD_VALUES_SET_TYPE,3,DependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3,Err)
-!  INIT_PRESSURE=-2.0_CMISSRP*MAT_FE(2)-MAT_FE(1)
-  CALL cmfe_Field_ComponentValuesInitialise(DependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,4, &
-!   & INIT_PRESSURE,Err)
-   & 0.0_CMISSRP,Err)
+
+  IF (ModelType == 0 .OR. ModelType == 1) THEN    ! 3,3a, "MultiPhysStrain"
+    CALL cmfe_Field_ComponentValuesInitialise(DependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,4, &
+     & 0.0_CMISSRP,Err)
+
+  ELSEIF (ModelType == 2) THEN ! 4, "Titin"
+    InitialPressure = -2.0_CMISSRP*MAT_FE(2)-MAT_FE(1)
+    CALL cmfe_Field_ComponentValuesInitialise(DependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,4, &
+     & InitialPressure,Err)
+
+  ENDIF
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !Create the CellML models field
@@ -2987,7 +3093,7 @@ SUBROUTINE InitializeCellML()
   CALL cmfe_CellML_StateFieldCreateStart(CellML,CellMLStateFieldUserNumber,CellMLStateField,Err)
   CALL cmfe_CellML_StateFieldCreateFinish(CellML,Err)
 
-  IF (OldTomoMechanics .OR. ODESolverId==2) THEN !
+  IF (ModelType==0 .OR. ODESolverId==2) THEN !
     !Create the CellML intermediate field
     CALL cmfe_Field_Initialise(CellMLIntermediateField,Err)
     CALL cmfe_CellML_IntermediateFieldCreateStart(CellML,CellMLIntermediateFieldUserNumber, & 
@@ -3001,6 +3107,35 @@ SUBROUTINE InitializeCellML()
   CALL cmfe_CellML_ParametersFieldCreateFinish(CellML,Err)
 
 END SUBROUTINE InitializeCellML
+
+SUBROUTINE CreateProblem()
+
+  !--------------------------------------------------------------------------------------------------------------------------------
+  !Define the problem
+  CALL cmfe_Problem_Initialise(Problem,Err)
+
+  IF (ModelType == 0) THEN    ! 3a, "MultiPhysStrain", old tomo mechanics
+    CALL cmfe_Problem_CreateStart(ProblemUserNumber,[CMFE_PROBLEM_MULTI_PHYSICS_CLASS, &
+      & CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE,CMFE_PROBLEM_GUDUNOV_MONODOMAIN_1D3D_ELASTICITY_SUBTYPE],Problem,Err)
+      
+  ELSEIF (ModelType == 1) THEN ! 3, , "MultiPhysStrain", numerically more stable
+    CALL cmfe_Problem_CreateStart(ProblemUserNumber,[CMFE_PROBLEM_MULTI_PHYSICS_CLASS, &
+      & CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE,CMFE_PROBLEM_MONODOMAIN_1D3D_ACTIVE_STRAIN_SUBTYPE],Problem,Err)
+  !  CALL cmfe_Problem_SpecificationSet(Problem,CMFE_PROBLEM_MULTI_PHYSICS_CLASS,CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE, &
+  !   & CMFE_PROBLEM_MONODOMAIN_1D3D_ACTIVE_STRAIN_SUBTYPE,Err)
+
+  ELSEIF (ModelType == 2) THEN ! 4, "Titin"
+    CALL cmfe_Problem_CreateStart(ProblemUserNumber,[CMFE_PROBLEM_MULTI_PHYSICS_CLASS, &
+     & CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE,CMFE_PROBLEM_MONODOMAIN_ELASTICITY_W_TITIN_SUBTYPE],Problem,Err)
+  !  CALL cmfe_Problem_SpecificationSet(Problem,CMFE_PROBLEM_MULTI_PHYSICS_CLASS,CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE, &
+  !   & CMFE_PROBLEM_MONODOMAIN_ELASTICITY_W_TITIN_SUBTYPE,Err)
+
+  ENDIF
+
+
+  CALL cmfe_Problem_CreateFinish(Problem,Err)
+
+END SUBROUTINE CreateProblem
 
 SUBROUTINE CreateControlLoops()
 
@@ -3647,7 +3782,7 @@ SUBROUTINE WriteTimingFile()
       & 'duration FileOutputPreLoad (user); duration export EMG user; duration export EMG system; duration FileOutput (user); ' // &
       & 'duration FileOutput (system); duration FileOutputPreload (system); MonodomainSolverId; MonodomainPreconditionerId; ' // &
       & 'ODESolverId; NumberOfElementsInAtomX; NumberOfElementsInAtomY; NumberOfElementsInAtomZ; nSubdomainsX; nSubdomainsY; ' // &
-      & 'nSubdomainsZ'
+      & 'nSubdomainsZ; ModelType'
       
     CLOSE(unit=123)
   ENDIF
@@ -3669,7 +3804,7 @@ SUBROUTINE WriteTimingFile()
 
   IF (CustomProfilingEnabled) THEN
 
-    WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),35(F25.13,A),8(I17,A,I5,A,I7,A),9(F8.3,A),3(I2,A),3(I8,A))") &
+    WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),35(F25.13,A),8(I17,A,I5,A,I7,A),9(F8.3,A),3(I2,A),3(I8,A),I1)") &
       & TRIM(TimeStampStr), ';', &
       & TRIM(Hostname(1:22)), ';', &
       & NumberOfComputationalNodes, ';', &
@@ -3779,11 +3914,12 @@ SUBROUTINE WriteTimingFile()
       & NumberOfElementsInAtomZ, ';', &
       & nSubdomainsX, ';', &
       & nSubdomainsY, ';', &
-      & nSubdomainsZ
+      & nSubdomainsZ, ';', &
+      & ModelType
 
   ELSE  ! custom profiling is disabled
     
-    WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),9(F8.3,A),3(I2,A),3(I8,A))") &
+    WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),9(F8.3,A),3(I2,A),3(I8,A),I1)") &
       & TRIM(TimeStampStr), ';', &
       & TRIM(Hostname(1:22)), ';', &
       & NumberOfComputationalNodes, ';', &
@@ -3832,7 +3968,8 @@ SUBROUTINE WriteTimingFile()
       & NumberOfElementsInAtomZ, ';', &
       & nSubdomainsX, ';', &
       & nSubdomainsY, ';', &
-      & nSubdomainsZ
+      & nSubdomainsZ, ';', &
+      & ModelType
   ENDIF
 
   CLOSE(unit=123)
@@ -3942,5 +4079,4 @@ SUBROUTINE gdbParallelDebuggingBarrier()
 END SUBROUTINE gdbParallelDebuggingBarrier
 
 END PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
-
 

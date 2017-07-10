@@ -3791,21 +3791,12 @@ SUBROUTINE WriteTimingFile()
       & 'Dur. Init; Stretch Sim; Int. Init; Main Sim; Total; Total (User); Total (System); ' // &
       & 'ODE; Parabolic; FE; FE before Main Sim; Mem. Consumption after 1st timestep; Memory Consumption At End; ' // &
       & 'Parabolic reason; Newton reason; parabolic n. iter; min; max; newton n. iter; min; max; ' // &
-      & '1. problem solve; 1.1/2 pre solve; problem_solver_pre_solve; 1.1. problem cellml solve; ' // &
-      & 'cellml solve (*); 1.1.1. cellml field2cellml update; 1.1.2. cellml field var get; 1.1.3. cellml data get; ' // &
-      & '1.1.4. cellml integrate; cellml call rhs; 1.1.5. cellml data restore; 1.1.6. cellml field update; ' // &
-      & 'problem_solver_post_solve; 1.2. dynamic linear solve (*); 1.2.1 assemble equations; 1.2.2 get loop time; ' // &
-      & '1.2.3 solve; 1.2.4 back-substitute; 1.1/2 post solve; 1.2.3.1 dynamic mean predicted calculate; ' // &
-      & '1.2.3.2 dynamic assemble; 1.2.3.3 solve linear system; 1.2.3.4 update dependent field; 1.3.1 pre solve; ' // &
-      & '1.3.2 apply incremented BC; 1.3.3 solve; 1.3.3.1 static nonlinear solve (*); 1.3.3.1.1 apply BC, assemble; ' // &
-      & '1.3.3.1.2 assemble interface conditions; 1.3.3.1.3 solve; 1.3.3.1.3.1 newton update solution vector; ' // &
-      & '1.3.3.1.3.2 newton Petsc solve; 1.3.3.1.3.3 newton diagnostics; 1.3.3.1.4 update residual; 1.3.4 post solve; ' // & 
-      & '(memory consumption, size 1 el., n. objects): distributed vector cmiss DP;;; ' // &
-      & 'distributed vector cmiss INTG;;; distributed matrix petsc, compr. row storage diag;;; ' // &
-      & 'distributed matrix petsc, compr. row storage, offdiag;;; distributed matrix petsc, compr. row storage, row ind.;;; ' // &
-      & 'distributed matrix petsc, compr. row storage, col. ind.;;; ' // &
-      & 'distributed matrix petsc, compr. row storage (local to global mapping);;; ' // &
-      & 'distributed vector petsc;;; ' // &
+      & 'level 0: stimulation handling; level 0: problem solve; level 1: MAIN_TIME_LOOP overhead; ' // &
+      & 'level 1: MONODOMAIN_TIME_LOOP overhead; level 1: ELASTICITY_LOOP overhead; level 1: SolverDAE solve; ' // &
+      & 'level 1: SolverParabolic solve; level 1: SolverFE solve; level 1: interpolate 1D->3D; level 1: interpolate 3D->1D; ' // &
+      & 'level 1: file output; level 2: solver overhead; level 2: 0D solve; level 2: 1D solve; level 2: 3D solve; ' // &
+      & 'level 3: 1D assembly; level 3: 1D solve; level 3: 1D other; level 3: 3D assembly; level 3: 3D solve; ' // &
+      & 'level 3: 3D other;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;' // &
       & 'duration FESolverPreLoad; duration OdeSolverPreLoad; duration ParabolicSolverPreLoad; ' // &
       & 'duration FileOutputPreLoad (user); duration export EMG user; duration export EMG system; duration FileOutput (user); ' // &
       & 'duration FileOutput (system); duration FileOutputPreload (system); MonodomainSolverId; MonodomainPreconditionerId; ' // &

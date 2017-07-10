@@ -408,10 +408,6 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 !##################################################################################################################################
 !##################################################################################################################################
 
-  !IF(BDFIntegrator) THEN
-  !  ODESolverId = 2
-  !ENDIF
-
   WRITE(*,'(A,A)') TRIM(GetTimeStamp()), " Program started."
 
   CALL ETIME(DurationSystemUser, DurationTotal)
@@ -539,22 +535,26 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
     !Set the Stimulus for monodomain at the middle of the fibres
     IF (ModelType == 0) THEN    ! 3a, "MultiPhysStrain", old tomo mechanics
 
-  !>Find the component ID in the given field for the variable defined by the given variable ID in the provided CellML environment.
-  !! This generic routine will be used to map variable ID's in CellML models to components in the various fields defined in the CellML models defined for the provided CellML environment.
-  !! - may need to also provide a FIELD_VARIABLE_NUMBER (always 1?) for completeness
-  !! - is the model ID also needed?
-  !! - because the CellML fields should all be set up to allow direct use in the CellML code, the component number matches the index of the given variable in its associated array in the CellML generated code.
-  !SUBROUTINE CELLML_FIELD_COMPONENT_GET_C(CELLML,MODEL_INDEX,CELLML_FIELD_TYPE,VARIABLE_ID,COMPONENT_USER_NUMBER,ERR,ERROR,*)
-   !Argument variables
-   !TYPE(CELLML_TYPE), POINTER :: CELLML !<The CellML environment object from which to get the field component.
-   !INTEGER(INTG), INTENT(IN) :: MODEL_INDEX !<The index of the CellML model to map from.
-   !INTEGER(INTG), INTENT(IN) :: CELLML_FIELD_TYPE !<The type of CellML field type to get the component for. \see CELLML_FieldTypes,CMISS_CELLML
-   !CHARACTER(LEN=*), INTENT(IN) :: VARIABLE_ID !<The ID of the model variable which needs to be located in the provided field.
-   !INTEGER(INTG), INTENT(OUT) :: COMPONENT_USER_NUMBER !<On return, the field component for the model variable defined by the given ID.
+      !>Find the component ID in the given field for the variable defined by the given variable ID in the provided CellML environment.
+      !! This generic routine will be used to map variable ID's in CellML models to components in the various fields defined in the CellML models defined for the provided CellML environment.
+      !! - may need to also provide a FIELD_VARIABLE_NUMBER (always 1?) for completeness
+      !! - is the model ID also needed?
+      !! - because the CellML fields should all be set up to allow direct use in the CellML code, the component number matches the index of the given variable in its associated array in the CellML generated code.
+      !SUBROUTINE CELLML_FIELD_COMPONENT_GET_C(CELLML,MODEL_INDEX,CELLML_FIELD_TYPE,VARIABLE_ID,COMPONENT_USER_NUMBER,ERR,ERROR,*)
+       !Argument variables
+       !TYPE(CELLML_TYPE), POINTER :: CELLML !<The CellML environment object from which to get the field component.
+       !INTEGER(INTG), INTENT(IN) :: MODEL_INDEX !<The index of the CellML model to map from.
+       !INTEGER(INTG), INTENT(IN) :: CELLML_FIELD_TYPE !<The type of CellML field type to get the component for. \see CELLML_FieldTypes,CMISS_CELLML
+       !CHARACTER(LEN=*), INTENT(IN) :: VARIABLE_ID !<The ID of the model variable which needs to be located in the provided field.
+       !INTEGER(INTG), INTENT(OUT) :: COMPONENT_USER_NUMBER !<On return, the field component for the model variable defined by the given ID.
       CALL cmfe_CellML_FieldComponentGet(CellML,shortenModelIndex,CMFE_CELLML_PARAMETERS_FIELD, &
         & "wal_environment/I_HH",StimComponent,Err)
     
-    ELSEIF (ModelType == 1) THEN ! 3, , "MultiPhysStrain", numerically more stable
+    ELSEIF (ModelType == 1) THEN ! 3, "MultiPhysStrain", numerically more stable
+      CALL cmfe_CellML_FieldComponentGet(CellML,shortenModelIndex,CMFE_CELLML_PARAMETERS_FIELD, &
+        & "Aliev_Panfilov/I_HH",StimComponent,Err)
+        
+    ELSEIF (ModelType == 2) THEN ! 4, "Titin"
       CALL cmfe_CellML_FieldComponentGet(CellML,shortenModelIndex,CMFE_CELLML_PARAMETERS_FIELD, &
         & "Aliev_Panfilov/I_HH",StimComponent,Err)
     ENDIF
@@ -991,7 +991,11 @@ SUBROUTINE ParseAssignment(Line, LineNumber, ScenarioInputFile)
       IF (OldTomoMechanics) THEN
         ModelType = 0
       ELSE
+        ! If OldTomoMechanics is false, it means that ModelType=0 should not be used. 
+        ! But is then ModelType=1 or ModelType=2 intended? Not clear (assume ModelType=1), thus deprecated.
+        
         ModelType = 1
+        PRINT *, "Warning: Parameter ""OldTomoMechanics=F"" was given, which is deprecated. Use ModelType=1 or ModelType=2 instead!"
       ENDIF
     CASE ("modeltype")
       READ(StrValue, *, IOSTAT=Stat) ModelType
@@ -1040,10 +1044,12 @@ SUBROUTINE ParseAssignment(Line, LineNumber, ScenarioInputFile)
     CASE ("cellmlmodelfilename")
       CellMLModelFilename = TRIM(ADJUSTL(StrValue))
     CASE DEFAULT
-      PRINT*, TRIM(ScenarioInputFile) // ":", LineNumber, "Unrecognized variable """ // TRIM(VariableName) // """."
+      Read(LineNumber, *, IOSTAT=Stat) StrValue
+      WRITE(*,'(A)') TRIM(ScenarioInputFile) // ":" // TRIM(StrValue) // ": Unrecognized variable """ // TRIM(VariableName) // """."
   END SELECT
   IF (Stat /= 0) THEN
-    PRINT *, TRIM(ScenarioInputFile) // ":", &
+    Read(LineNumber, *, IOSTAT=Stat) StrValue
+    WRITE(*,'(A)') TRIM(ScenarioInputFile) // ": " // &
      &  "Could not parse value """ // TRIM(StrValue) // """ for variable """//TRIM(VariableName)//"""."            
   ENDIF
   
@@ -1159,7 +1165,6 @@ SUBROUTINE ParseParameters()
      & "[<ODEsolver> [<Msolver> [<Mprecond> ]]]]]]] " // NEW_LINE('A') // &
      & "2)   ./cuboid [<variable>=<value>] [<input.sce>] [<variable>=<value>] " // NEW_LINE('A') // &
      & "     See the example scenario file for file format and variable names. Variables will be set in order of the arguments."
-     
   ENDIF
 
 
@@ -1195,9 +1200,14 @@ SUBROUTINE ParseParameters()
     IF (ModelType == 0) THEN    ! 3a, "MultiPhysStrain", old tomo mechanics
       CellMLModelFilename = TRIM(inputDirectory) // "slow_TK_2014_12_08.xml"
       !StimValue = 20000.0_CMISSRP !700.0_CMISSRP!700.0_CMISSRP
+
     ELSEIF (ModelType == 1) THEN ! 3, , "MultiPhysStrain", numerically more stable
       CellMLModelFilename = TRIM(inputDirectory) // "Aliev_Panfilov_Razumova_2016_08_22.cellml"
       !StimValue = 90.0_CMISSRP !90.0_CMISSRP
+
+    ELSEIF (ModelType == 2) THEN  ! 4, "Titin"
+      CellMLModelFilename = TRIM(inputDirectory) // "Aliev_Panfilov_Razumova_Titin_2016_10_10_noFv.cellml"
+      
     ENDIF
   ENDIF
 
@@ -1282,13 +1292,13 @@ SUBROUTINE ParseParameters()
     PRINT "(A,F5.2)", "  - stimulation disabled: Δt = ", (PERIODD - STIM_STOP)
     PRINT *, ""
 
-    PRINT "(A,F7.2,A,F0.5,A,I5)", "- MAIN_TIME_LOOP,         Δt = ", TimeStop, ", dt = ", ElasticityTimeStep, &
+    PRINT "(A,F7.2,A,F0.5,A,I5)", "- MAIN_TIME_LOOP,         Δt =", TimeStop, ", dt = ", ElasticityTimeStep, &
       & ", # Iter: ", CEILING(TimeStop/ElasticityTimeStep)
     PRINT "(A,F0.4,A,F0.5,A,I5)", "  - MONODOMAIN_TIME_LOOP, Δt = ", ElasticityTimeStep, ", dt = ", PDETimeStep,&
       & ", # Iter: ", CEILING(ElasticityTimeStep/PDETimeStep)
     PRINT "(A,F0.5,A,I5)", "    - SolverDAE,                      dt = ", ODETimeStep, &
       & ", # Iter: ", CEILING(PDETimeStep/ODETimeStep)
-    PRINT "(A,F0.4)", "    - SolverParabolic, (dynamic backward euler)"
+    PRINT "(A,F0.4)", "    - SolverParabolic"
     PRINT "(A,I5)",               "  - ELASTICITY_LOOP,                               # Iter: ",&
       & ElasticityLoopMaximumNumberOfIterations
     PRINT "(A,I4,A,E10.4)", "    - SolverFE,                 # Iter (max): ", NewtonMaximumNumberOfIterations, &
@@ -1322,7 +1332,7 @@ SUBROUTINE ParseParameters()
     !PRINT "(A,I6)", "              NumberOfNodesMPerFibreLine: ", NumberOfNodesMPerFibreLine
     PRINT "(A,I6)", "                          NumberOfNodesM: ", NumberOfNodesM
     PRINT *,""
-    PRINT "(3(A,I5),A)", "                               Atom: ", NumberOfElementsInAtomX, &
+    PRINT "(3(A,I5),A)", "              Non-decomposable atom: ", NumberOfElementsInAtomX, &
       & "x", NumberOfElementsInAtomY, "x", NumberOfElementsInAtomZ, " elements"
     PRINT "(A,3(I5,A))", "                          Subdomain: ", NumberOfElementsInAtomX*NumberOfAtomsPerSubdomainX, "x", &
       & NumberOfElementsInAtomY*NumberOfAtomsPerSubdomainY, "x", &
@@ -1337,6 +1347,15 @@ SUBROUTINE ParseParameters()
     PRINT "(A,F11.2)", " Stimulation [uA/cm^2]: ",StimValue
     PRINT "(3(A,F5.2))", " PMax:", PMax, ",      VMax: ", VMax, ", Conductivity: ", Conductivity
     PRINT "(3(A,F5.2))", "   Am:", Am, ", Cm (fast):", CmFast, ",     Cm (slow):", CmSlow
+    
+    IF (ModelType == 0) THEN    ! 3a, "MultiPhysStrain", old tomo mechanics
+      PRINT *, "ModelType: 0 (""3a"", MultiPhysStrain, Old mechanics formulation that works in parallel.)"
+    ELSEIF (ModelType == 1) THEN ! 3, "MultiPhysStrain", numerically more stable
+      PRINT *, "ModelType: 1 (""3"", MultiPhysStrain)"
+    ELSEIF (ModelType == 2) THEN  ! 4, "Titin"
+      PRINT *, "ModelType: 2 (""4"", Titin)"
+    ENDIF
+
     PRINT *, ""
     PRINT *, "---------- Solvers -----------------------------------------------------------"
   
@@ -1392,14 +1411,6 @@ SUBROUTINE ParseParameters()
     PRINT *, ""
 
     ! Output some static (compile-time) settings
-    IF (ModelType == 0) THEN    ! 3a, "MultiPhysStrain", old tomo mechanics
-      PRINT *, "ModelType: 0 (3a, MultiPhysStrain, Old mechanics formulation that works in parallel.)"
-    ELSEIF (ModelType == 1) THEN ! 3, "MultiPhysStrain", numerically more stable
-      PRINT *, "ModelType: 1 (3, MultiPhysStrain)"
-    ELSEIF (ModelType == 2) THEN  ! 4, "Titin"
-      PRINT *, "ModelType: 2 (4, Titin)"
-    ENDIF
-
     CALL cmfe_CustomProfilingGetEnabled(CustomProfilingEnabled, TAUProfilingEnabled, Err)
 
     IF (CustomProfilingEnabled) THEN
@@ -2953,7 +2964,7 @@ SUBROUTINE InitializeCellML()
   !> \todo Need to allow parameter values to be overridden for the case when user has non-spatially varying parameter value.
   !Finish the CellML environment
   
-  IF (ODESolverId==2) THEN
+  IF (ODESolverId==2) THEN      ! BDF solver
    ! To initialize the BDF solver, OpenCMISS requires to have set CELLML%MAX_NUMBER_OF_INTERMEDIATE.
    ! For now, we can manipulate it here:
     CALL cmfe_CellML_IntermediateMaxNumberSet(CellML,1,Err) ! todo: exact number required or just something > 0?
@@ -2975,7 +2986,7 @@ SUBROUTINE InitializeCellML()
     !  "to"-cellml model user no., "to"-variable,      "to"-cellml variable parameter set
      & shortenModelIndex,          "wal_environment/vS",CMFE_FIELD_VALUES_SET_TYPE,Err)
      
-    CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,shortenModelIndex,"/vS", &
+    CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,shortenModelIndex,"wal_environment/vS", &
      & CMFE_FIELD_VALUES_SET_TYPE,DependentFieldM,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE,Err)
     
     !Map the active stress
@@ -3093,8 +3104,8 @@ SUBROUTINE InitializeCellML()
   CALL cmfe_CellML_StateFieldCreateStart(CellML,CellMLStateFieldUserNumber,CellMLStateField,Err)
   CALL cmfe_CellML_StateFieldCreateFinish(CellML,Err)
 
-  IF (ModelType==0 .OR. ODESolverId==2) THEN !
-    !Create the CellML intermediate field
+  !Create the CellML intermediate field
+  IF (ModelType==0 .OR. ModelType==2 .OR. ODESolverId==2) THEN ! ModelType==0: 3a, "MultiPhysStrain", ModelType==2: 4, "Titin", ODESolverId== 2: BDF
     CALL cmfe_Field_Initialise(CellMLIntermediateField,Err)
     CALL cmfe_CellML_IntermediateFieldCreateStart(CellML,CellMLIntermediateFieldUserNumber, & 
      & CellMLIntermediateField,Err)
@@ -3214,18 +3225,21 @@ SUBROUTINE CreateSolvers()
   ! CALL cmfe_Solver_DAETimesSet(SolverDAE,?0.0_CMISSRP?,?0.001_CMISSRP?,Err)
   
   SELECT CASE(ODESolverId) !use bdf instead of default-explicitEuler
-    CASE(2)
+    CASE(2) ! BDF
       CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_BDF,Err)
       CALL cmfe_Solver_DAEbdfSetTolerance(SolverDAE,0.0000001_CMISSRP,0.0000001_CMISSRP,err) !default values were both: 1.0E-7
-    CASE(3) !!! not stable yet
+    CASE(3) ! GL, not stable yet
       CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_GL,Err)
-    CASE(4) !!! not stable yet
+    CASE(4) ! Crank-Nicolson, not stable yet
       CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_CRANK_NICOLSON,Err)
-    CASE(5)
+    CASE(5) ! improved Euler (Heun)
       ! out of date: CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_HEUN,Err)
       CALL cmfe_Solver_DAEEulerSolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_EULER_IMPROVED,Err)
     CASE DEFAULT
-      PRINT *, "Consider to use an other DAE solver via the command line option 'ODESolverId'."
+      PRINT *, ""
+      PRINT *, "Warning: For the DAE Problem (0D) the standard explicit Euler method is used, which is slow. " // NEW_LINE('A') &
+        & // "          Consider to use another DAE solver via the command line option 'ODESolverId'."
+      PRINT *, ""
   END SELECT
   !> \todo or not-todo... solve the CellML equations on the GPU for efficiency (later)
   !CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_EXTERNAL,Err)
@@ -3804,17 +3818,17 @@ SUBROUTINE WriteTimingFile()
 
   IF (CustomProfilingEnabled) THEN
 
-    WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),35(F25.13,A),8(I17,A,I5,A,I7,A),9(F8.3,A),3(I2,A),3(I8,A),I1)") &
+    WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),35(F25.13,A),8(I17,A,I5,A,I7,A),9(F8.3,A),3(I2,A),6(I8,A),I1)") &
       & TRIM(TimeStampStr), ';', &
-      & TRIM(Hostname(1:22)), ';', &
+      & TRIM(Hostname(1:22)), ';', &          ! end of 4A
       & NumberOfComputationalNodes, ';', &
       & NumberGlobalXElements, ';', &
       & NumberGlobalYElements, ';', &
       & NumberGlobalZElements, ';', &
       & NumberOfInSeriesFibres, ';', &
       & NumberOfElementsFE, ';', &
-      & NumberOfElementsM, ';', &
-      & TimeStop, ';', &
+      & NumberOfElementsM, ';', &             ! end of 7(I11,A)
+      & TimeStop, ';', &                      ! (F8.3,A)
       & DurationInit, ';', &
       & DurationStretchSim, ';', &
       & DurationIntInit, ';', &
@@ -3825,9 +3839,9 @@ SUBROUTINE WriteTimingFile()
       & CustomTimingOdeSolver, ';', &
       & CustomTimingParabolicSolver, ';', &
       & CustomTimingFESolver, ';', &
-      & CustomTimingFESolverPreLoad, ';', &
+      & CustomTimingFESolverPreLoad, ';', &   ! end of 11(F0.8,A)
       & TRIM(ADJUSTL(MemoryConsumption1StTimeStep)), ';', &
-      & TRIM(ADJUSTL(MemoryConsumptionEnd)), ';', &
+      & TRIM(ADJUSTL(MemoryConsumptionEnd)), ';', &   ! end of 2(A,A)
       & CustomSolverConvergenceReasonParabolic, ';', &
       & CustomSolverConvergenceReasonNewton, ';', &
       & CustomSolverNumberIterationsParabolic, ';', &
@@ -3835,7 +3849,7 @@ SUBROUTINE WriteTimingFile()
       & CustomSolverNumberIterationsParabolicMax, ';', &
       & CustomSolverNumberIterationsNewton, ';', &
       & CustomSolverNumberIterationsNewtonMin, ';', &
-      & CustomSolverNumberIterationsNewtonMax, ';', &
+      & CustomSolverNumberIterationsNewtonMax, ';', &   ! end of 8(I7,A)
       ! Custom Profiling durations
       & cmfe_CustomProfilingGetDuration("1. problem solve", Err), ';', &
       & cmfe_CustomProfilingGetDuration("1.1/2 pre solve", Err), ';', &
@@ -3871,7 +3885,7 @@ SUBROUTINE WriteTimingFile()
       & cmfe_CustomProfilingGetDuration("1.3.3.1.3.2 newton Petsc solve", Err), ';', &
       & cmfe_CustomProfilingGetDuration("1.3.3.1.3.3 newton diagnostics", Err), ';', &
       & cmfe_CustomProfilingGetDuration("1.3.3.1.4 update residual", Err), ';', &
-      & cmfe_CustomProfilingGetDuration("1.3.4 post solve (file output)", Err), ';', &
+      & cmfe_CustomProfilingGetDuration("1.3.4 post solve (file output)", Err), ';', &              ! end of 35(F25.13,A)
       ! custom profiling memory consumption
       & cmfe_CustomProfilingGetMemory("distributed vector cmiss DP", Err), ';', &
       & cmfe_CustomProfilingGetSizePerElement("distributed vector cmiss DP", Err), ';', &
@@ -3896,7 +3910,7 @@ SUBROUTINE WriteTimingFile()
       & cmfe_CustomProfilingGetNumberObjects("distributed matrix petsc, compr. row storage (local to global mapping)", Err), ';', &
       & cmfe_CustomProfilingGetMemory("distributed vector petsc", Err), ';', &
       & cmfe_CustomProfilingGetSizePerElement("distributed vector petsc", Err), ';', &
-      & cmfe_CustomProfilingGetNumberObjects("distributed vector petsc", Err), ';', &
+      & cmfe_CustomProfilingGetNumberObjects("distributed vector petsc", Err), ';', &       ! end of 8(I17,A,I5,A,I7,A)
       & CustomTimingFESolverPreLoad, ';', &
       & CustomTimingOdeSolverPreLoad, ';', &
       & CustomTimingParabolicSolverPreLoad, ';', &
@@ -3905,31 +3919,31 @@ SUBROUTINE WriteTimingFile()
       & TimingExportEMGSystem, ';', &
       & CustomTimingFileOutputUser, ';', &
       & CustomTimingFileOutputSystem, ';', &
-      & CustomTimingFileOutputSystemPreLoad, ';', &
+      & CustomTimingFileOutputSystemPreLoad, ';', &     ! end of 9(F8.3,A)
       & MonodomainSolverId, ';', &
       & MonodomainPreconditionerId, ';', &
-      & ODESolverId, ';', &
+      & ODESolverId, ';', &                             ! end of 3(I2,A)
       & NumberOfElementsInAtomX, ';', &
       & NumberOfElementsInAtomY, ';', &
-      & NumberOfElementsInAtomZ, ';', &
+      & NumberOfElementsInAtomZ, ';', &                 
       & nSubdomainsX, ';', &
       & nSubdomainsY, ';', &
-      & nSubdomainsZ, ';', &
-      & ModelType
+      & nSubdomainsZ, ';', &                            ! end of 6(I8,A)
+      & ModelType                                       ! I1
 
   ELSE  ! custom profiling is disabled
     
-    WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),9(F8.3,A),3(I2,A),3(I8,A),I1)") &
+    WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),9(F8.3,A),3(I2,A),6(I8,A),I1)") &
       & TRIM(TimeStampStr), ';', &
-      & TRIM(Hostname(1:22)), ';', &
+      & TRIM(Hostname(1:22)), ';', &                    ! end of 4A
       & NumberOfComputationalNodes, ';', &
       & NumberGlobalXElements, ';', &
       & NumberGlobalYElements, ';', &
       & NumberGlobalZElements, ';', &
       & NumberOfInSeriesFibres, ';', &
       & NumberOfElementsFE, ';', &
-      & NumberOfElementsM, ';', &
-      & TimeStop, ';', &
+      & NumberOfElementsM, ';', &                       ! end of 7(I11,A)
+      & TimeStop, ';', &                                ! (F8.3,A)
       & DurationInit, ';', &
       & DurationStretchSim, ';', &
       & DurationIntInit, ';', &
@@ -3940,9 +3954,9 @@ SUBROUTINE WriteTimingFile()
       & CustomTimingOdeSolver, ';', &
       & CustomTimingParabolicSolver, ';', &
       & CustomTimingFESolver, ';', &
-      & CustomTimingFESolverPreLoad, ';', &
+      & CustomTimingFESolverPreLoad, ';', &             ! end of 11(F0.8,A)
       & TRIM(ADJUSTL(MemoryConsumption1StTimeStep)), ';', &
-      & TRIM(ADJUSTL(MemoryConsumptionEnd)), ';', &
+      & TRIM(ADJUSTL(MemoryConsumptionEnd)), ';', &     ! end of 2(A,A)
       & CustomSolverConvergenceReasonParabolic, ';', &
       & CustomSolverConvergenceReasonNewton, ';', &
       & CustomSolverNumberIterationsParabolic, ';', &
@@ -3950,7 +3964,7 @@ SUBROUTINE WriteTimingFile()
       & CustomSolverNumberIterationsParabolicMax, ';', &
       & CustomSolverNumberIterationsNewton, ';', &
       & CustomSolverNumberIterationsNewtonMin, ';', &
-      & CustomSolverNumberIterationsNewtonMax, ';;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;', &
+      & CustomSolverNumberIterationsNewtonMax, ';;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;', &    ! end of 8(I7,A)
       & CustomTimingFESolverPreLoad, ';', &
       & CustomTimingOdeSolverPreLoad, ';', &
       & CustomTimingParabolicSolverPreLoad, ';', &
@@ -3959,17 +3973,17 @@ SUBROUTINE WriteTimingFile()
       & TimingExportEMGSystem, ';', &
       & CustomTimingFileOutputUser, ';', &
       & CustomTimingFileOutputSystem, ';', &
-      & CustomTimingFileOutputSystemPreLoad, ';', &
+      & CustomTimingFileOutputSystemPreLoad, ';', &   ! end of 9(F8.3,A)
       & MonodomainSolverId, ';', &
       & MonodomainPreconditionerId, ';', &
-      & ODESolverId, ';', &
+      & ODESolverId, ';', &                           ! end of 3(I2,A)
       & NumberOfElementsInAtomX, ';', &
       & NumberOfElementsInAtomY, ';', &
       & NumberOfElementsInAtomZ, ';', &
       & nSubdomainsX, ';', &
       & nSubdomainsY, ';', &
-      & nSubdomainsZ, ';', &
-      & ModelType
+      & nSubdomainsZ, ';', &                          ! end of 6(I8,A)
+      & ModelType                                     ! I1
   ENDIF
 
   CLOSE(unit=123)

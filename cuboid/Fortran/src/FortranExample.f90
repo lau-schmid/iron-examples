@@ -3236,10 +3236,12 @@ SUBROUTINE CreateSolvers()
       ! out of date: CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_HEUN,Err)
       CALL cmfe_Solver_DAEEulerSolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_EULER_IMPROVED,Err)
     CASE DEFAULT
-      PRINT *, ""
-      PRINT *, "Warning: For the DAE Problem (0D) the standard explicit Euler method is used, which is slow. " // NEW_LINE('A') &
-        & // "          Consider to use another DAE solver via the command line option 'ODESolverId'."
-      PRINT *, ""
+      IF (ComputationalNodeNumber == 0) THEN
+        PRINT *, ""
+        PRINT *, "Warning: For the DAE Problem (0D) the standard explicit Euler method is used, which is slow. " // NEW_LINE('A') &
+          & // "          Consider to use another DAE solver via the command line option 'ODESolverId'."
+        PRINT *, ""
+      ENDIF
   END SELECT
   !> \todo or not-todo... solve the CellML equations on the GPU for efficiency (later)
   !CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_EXTERNAL,Err)

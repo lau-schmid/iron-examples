@@ -11,7 +11,7 @@ endif()
 
 # in debug mode, add flag that make Floating point exceptions fatal
 set(OPT "")
-if (TRUE)
+if (FALSE)
     if(CMAKE_BUILD_TYPE MATCHES DEBUG)
         set(OPT "-ffpe-trap=invalid,zero,underflow,overflow,denormal")
     endif()

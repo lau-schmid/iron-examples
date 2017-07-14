@@ -79,7 +79,8 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   REAL(CMISSRP) :: PhysicalLength=3.0_CMISSRP ! (6)     X-direction
   REAL(CMISSRP) :: PhysicalWidth= 3.0_CMISSRP ! (3)     Y-direction
   REAL(CMISSRP) :: PhysicalHeight=1.5_CMISSRP ! (1.5)   Z-direction
-
+  REAL(CMISSRP) :: PhysicalStimulationLength = 0.1_CMISSRP  ! X-direction
+  
   !all times in [ms]
   REAL(CMISSRP) :: time !=10.00_CMISSRP
   REAL(CMISSRP), PARAMETER :: PERIODD=0.2_CMISSRP ! was 1
@@ -140,6 +141,8 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !CAUTION - what are the units???
   REAL(CMISSRP), PARAMETER, DIMENSION(4) :: MAT_FE= &
     &[0.0000000000635201_CMISSRP,0.3626712895523322_CMISSRP,0.0000027562837093_CMISSRP,43.372873938671383_CMISSRP]  ![N/cm^2]
+  !REAL(CMISSRP), PARAMETER, DIMENSION(4) :: MAT_FE= &
+  !  &[0.00000000635201_CMISSRP,36.26712895523322_CMISSRP,0.00027562837093_CMISSRP,4337.2873938671383_CMISSRP]  ![N/cm^2]
 
   REAL(CMISSRP) :: TkLinParam=1.0_CMISSRP ! 1: With Actin-Tintin Interaction 0: No Actin-Titin Interactions
 
@@ -184,7 +187,8 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   INTEGER(CMISSIntg) :: NumberOfAtomsPerSubdomainX, NumberOfAtomsPerSubdomainY, NumberOfAtomsPerSubdomainZ
   INTEGER(CMISSIntg) :: NumberOfAtomsLastSubdomainX, NumberOfAtomsLastSubdomainY, NumberOfAtomsLastSubdomainZ
   INTEGER(CMISSIntg) :: NumberOfElementsLastAtomX, NumberOfElementsLastAtomY, NumberOfElementsLastAtomZ
-
+  INTEGER(CMISSIntg) :: NumberStimulatedNodesPerFibre
+  
   INTEGER(CMISSIntg) :: Stat
   CHARACTER(len=256) :: CellMLModelFilename = "standard" ! standard will be replaced by the standard model file
   CHARACTER(len=1024) :: inputDirectory = "input/"
@@ -204,6 +208,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   REAL(CMISSRP) :: TimeStart, TimeInitFinshed, TimeStretchSimFinished, TimeMainSimulationStart, TimeMainSimulationFinished
   REAL(CMISSSP), DIMENSION(2) :: DurationSystemUser     ! For receiving user and system time
   REAL(CMISSSP) :: DurationTotal
+  REAL(CMISSRP) :: StimValuePerNode
   
   INTEGER(CMISSIntg) :: CustomSolverConvergenceReasonParabolic = 0
   INTEGER(CMISSIntg) :: CustomSolverConvergenceReasonNewton = 0
@@ -337,7 +342,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 !  REAL(CMISSRP) :: YVALUE
   REAL(CMISSRP) :: VALUE
 
-  INTEGER(CMISSIntg) :: Err
+  INTEGER(CMISSIntg) :: Err, NodeIdx
 
 
   !CMISS variables
@@ -510,7 +515,6 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
 ! no change for BCs -- fix at this length!!!
 
-
   !--------------------------------------------------------------------------------------------------------------------------------
   !--------------------------------------------------------------------------------------------------------------------------------
   IF (ComputationalNodeNumber == 0) PRINT*, "2.) Simulate with stimulation"
@@ -574,41 +578,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !    ENDIF
   !  ENDDO
 
-    NumberFiringFibres = 0
-    !loop over all neuromuscular junctions (middle point of the fibres)
-    DO FibreNo = 1, NumberOfFibres
-      ! get middle point of fibre
-      JunctionNodeNo = (FibreNo-1) * NumberOfNodesPerLongFibre + NumberOfNodesPerLongFibre/2
-      
-      ! add offset
-      JunctionNodeNo = JunctionNodeNo + InnervationZoneOffset(FibreNo)
-      
-      ! assert limits
-      JunctionNodeNo = MIN(FibreNo*NumberOfNodesPerLongFibre, MAX((FibreNo-1)*NumberOfNodesPerLongFibre, JunctionNodeNo))
-
-      !                                     decomposition,  nodeUserNumber, meshComponentNumber, domain
-      CALL cmfe_Decomposition_NodeDomainGet(DecompositionM, JunctionNodeNo, 1,                   NodeDomain, Err)
-      IF (NodeDomain == ComputationalNodeNumber) THEN
-        CALL cmfe_Field_ParameterSetGetNode(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1, &
-        & JunctionNodeNo,1,MotorUnitRank,Err)
-
-        IF ((MotorUnitRank <= 0) .OR. (MotorUnitRank >= 101)) THEN
-          PRINT*, "Warning! MotorUnitRank=",MotorUnitRank,", set to 100"
-          MotorUnitRank=100
-        ELSE
-          !PRINT*, "MotorUnitFiringTimes row k=", k, ": MU rank=", MotorUnitRank, ", StimComponent=",StimComponent
-          MotorUnitFires = MotorUnitFiringTimes(k, MotorUnitRank)   ! determine if mu fires
-          IF (MotorUnitFires == 1) THEN
-            !PRINT*, "k=", k, ", Fibre ",FibreNo,": MU ", MotorUnitRank, " fires, JunctionNodeNo=",JunctionNodeNo, &
-            !  & ", StimComponent=",StimComponent,", StimValue=", StimValue
-
-            NumberFiringFibres = NumberFiringFibres + 1
-            CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
-              & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,JunctionNodeNo,StimComponent,StimValue,Err)
-          ENDIF
-        ENDIF
-      ENDIF
-    ENDDO
+    CALL SetStimulationAtNodes(StimValuePerNode)
 
     IF (ComputationalNodeNumber == 0) THEN
       PRINT "(A,I4,A,I6)", "   Number of stimulated fibres: ", NumberFiringFibres," of",NumberOfFibres
@@ -632,22 +602,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
     !-------------------------------------------------------------------------------------------------------------------------------
     !Now turn the stimulus off
-    DO FibreNo = 1, NumberOfFibres
-      ! get middle point of fibre
-      JunctionNodeNo = (FibreNo-1) * NumberOfNodesPerLongFibre + NumberOfNodesPerLongFibre/2
-      
-      ! add offset
-      JunctionNodeNo = JunctionNodeNo + InnervationZoneOffset(FibreNo)
-      
-      ! assert limits
-      JunctionNodeNo = MIN(FibreNo*NumberOfNodesPerLongFibre, MAX((FibreNo-1)*NumberOfNodesPerLongFibre, JunctionNodeNo))
-
-      CALL cmfe_Decomposition_NodeDomainGet(DecompositionM, JunctionNodeNo, 1, NodeDomain, Err)
-      IF(NodeDomain == ComputationalNodeNumber) THEN
-        CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
-          & CMFE_FIELD_U_VARIABLE_TYPE, CMFE_FIELD_VALUES_SET_TYPE,1,1,JunctionNodeNo,StimComponent,0.0_CMISSRP,Err)
-      ENDIF
-    ENDDO
+    CALL SetStimulationAtNodes(0.0_CMISSRP)
     
     !-------------------------------------------------------------------------------------------------------------------------------
     !Solve the problem for the rest of the period
@@ -1023,6 +978,8 @@ SUBROUTINE ParseAssignment(Line, LineNumber, ScenarioInputFile)
       READ(StrValue, *, IOSTAT=Stat) PhysicalWidth
     CASE ("physicalheight")
       READ(StrValue, *, IOSTAT=Stat) PhysicalHeight
+    CASE ("physicalstimulationlength", "physicalstimulationwidth")
+      READ(StrValue, *, IOSTAT=Stat) PhysicalStimulationLength
     CASE ("pmax")
       READ(StrValue, *, IOSTAT=Stat) PMax
     CASE ("conductivity")
@@ -1202,6 +1159,10 @@ SUBROUTINE ParseParameters()
   NumberOfNodesM = NumberOfNodesMPerFibreLine * NumberOfFibreLinesTotal
   NumberOfElementsM = NumberOfElementsMPerFibre * NumberOfFibres
 
+  ! compute number of bioelectric nodes that will be stimulated
+  NumberStimulatedNodesPerFibre = MAX(1, NINT(DBLE(PhysicalStimulationLength) / PhysicalWidth * NumberOfElementsMPerFibre))
+  StimValuePerNode = StimValue / NumberStimulatedNodesPerFibre
+  
 !##################################################################################################################################
 !  fast_twitch=.true.
 !  if(fast_twitch) then
@@ -1356,7 +1317,8 @@ SUBROUTINE ParseParameters()
     PRINT *, "---------- Physical parameters -----------------------------------------------"
     PRINT "(4(A,F5.2))", "       Dimensions [cm]: ",PhysicalLength,"x",PhysicalWidth,"x",PhysicalHeight,&
      & ",          InitialStretch: ", InitialStretch
-    PRINT "(A,F11.2)", " Stimulation [uA/cm^2]: ",StimValue
+    PRINT "(A,F11.2,A,F5.2,A,I3,A,F9.2,A)", " Stimulation [uA/cm^2]: ",StimValue," on ",PhysicalStimulationLength," cm, i.e. ",&
+      & NumberStimulatedNodesPerFibre," nodes, ",StimValuePerNode, " per node"
     PRINT "(3(A,F5.2))", " PMax:", PMax, ",      VMax: ", VMax, ", Conductivity: ", Conductivity
     PRINT "(3(A,F5.2))", "   Am:", Am, ", Cm (fast):", CmFast, ",     Cm (slow):", CmSlow
     
@@ -3565,6 +3527,9 @@ SUBROUTINE SetBoundaryConditions()
     IF (NodeDomain == ComputationalNodeNumber) THEN
       CALL cmfe_BoundaryConditions_SetNode(BoundaryConditionsFE,DependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1,1,NodeNumber,1, &
         & CMFE_BOUNDARY_CONDITION_FIXED_INCREMENTED, PhysicalLength*InitialStretch, Err)
+        
+      !CALL cmfe_BoundaryConditions_SetNode(BoundaryConditionsFE,DependentFieldFE,CMFE_FIELD_DELUDELN_VARIABLE_TYPE,1,1,NodeNumber,&
+      !  & 1,CMFE_BOUNDARY_CONDITION_FIXED, 0.0_CMISSRP, Err)
     ENDIF
   ENDDO
 
@@ -3644,6 +3609,59 @@ SUBROUTINE ExportEMG()
 
 END SUBROUTINE ExportEMG
 
+SUBROUTINE SetStimulationAtNodes(StimValuePerNode)
+  REAL(CMISSRP), INTENT(IN) :: StimValuePerNode
+  INTEGER(CMISSIntg) :: StimulatedNodeBegin, StimulatedNodeEnd, StimulatedNodeNo
+  
+  
+  NumberFiringFibres = 0
+  !loop over all neuromuscular junctions (middle point of the fibres)
+  DO FibreNo = 1, NumberOfFibres
+    ! get middle point of fibre
+    JunctionNodeNo = (FibreNo-1) * NumberOfNodesPerLongFibre + NumberOfNodesPerLongFibre/2
+    
+    ! add innervation zone offset
+    JunctionNodeNo = JunctionNodeNo + InnervationZoneOffset(FibreNo)
+    
+    ! compute first node to stimulation
+    StimulatedNodeBegin = JunctionNodeNo - NumberStimulatedNodesPerFibre/2
+    
+    ! assert limits
+    StimulatedNodeBegin = MIN(FibreNo*NumberOfNodesPerLongFibre-NumberStimulatedNodesPerFibre, &
+      & MAX((FibreNo-1)*NumberOfNodesPerLongFibre, StimulatedNodeBegin))
+    
+    StimulatedNodeEnd = StimulatedNodeBegin + NumberStimulatedNodesPerFibre
+    
+    ! loop over nodes of current fibre to be stimulated
+    DO StimulatedNodeNo = StimulatedNodeBegin, StimulatedNodeEnd
+      
+      !                                     decomposition,  nodeUserNumber, meshComponentNumber, domain
+      CALL cmfe_Decomposition_NodeDomainGet(DecompositionM, JunctionNodeNo, 1,                   NodeDomain, Err)
+      IF (NodeDomain == ComputationalNodeNumber) THEN
+        CALL cmfe_Field_ParameterSetGetNode(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1, &
+        & JunctionNodeNo,1,MotorUnitRank,Err)
+
+        IF ((MotorUnitRank <= 0) .OR. (MotorUnitRank >= 101)) THEN
+          PRINT*, "Warning! MotorUnitRank=",MotorUnitRank,", set to 100"
+          MotorUnitRank=100
+        ELSE
+          !PRINT*, "MotorUnitFiringTimes row k=", k, ": MU rank=", MotorUnitRank, ", StimComponent=",StimComponent
+          MotorUnitFires = MotorUnitFiringTimes(k, MotorUnitRank)   ! determine if mu fires
+          IF (MotorUnitFires == 1) THEN
+            !PRINT*, "k=", k, ", Fibre ",FibreNo,": MU ", MotorUnitRank, " fires, JunctionNodeNo=",JunctionNodeNo, &
+            !  & ", StimComponent=",StimComponent,", StimValue=", StimValue
+
+            NumberFiringFibres = NumberFiringFibres + 1
+            CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
+              & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,StimulatedNodeNo,StimComponent,StimValuePerNode,Err)
+          ENDIF
+        ENDIF
+      ENDIF
+    ENDDO
+  ENDDO
+
+END SUBROUTINE SetStimulationAtNodes
+  
 FUNCTION GetTimeStamp()
   INTEGER(CMISSIntg), DIMENSION(3) :: Today, Now
   CHARACTER(LEN=100) :: TimeString

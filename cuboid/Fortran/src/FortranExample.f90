@@ -627,6 +627,9 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
     ENDIF
     CALL cmfe_CustomProfilingStop("level 0: stimulation handling",Err)
 
+    ! get address of some fields, start visualization from here
+    CALL cmfe_VisualizationDataGet(DependentFieldM, IndependentFieldM, GeometricFieldFE, IndependentFieldFE, Err)
+    
   ENDDO
 
   ! store duration

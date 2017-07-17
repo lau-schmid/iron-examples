@@ -1292,18 +1292,18 @@ SUBROUTINE ParseParameters()
       & ", Total: ", NumberOfElementsFE
     PRINT "(A,3(I6,A),I12)", "# local nodes per element: ", NumberOfNodesInXi1, ", ", NumberOfNodesInXi2, ", ", NumberOfNodesInXi3,&
       & ", Total: ", NumberOfNodesInXi1*NumberOfNodesInXi2*NumberOfNodesInXi3
-    !PRINT "(A,I6)", "                  NumberOfInSeriesFibres: ", NumberOfInSeriesFibres
-    PRINT "(A,I6)", "      NumberOfFibreLinesPerGlobalElement: ", NumberOfFibreLinesPerGlobalElement
-    PRINT "(A,I6)", "              NumberOfGlobalElementLines: ", NumberOfGlobalElementLines
-    !PRINT "(A,I6)", "                 NumberOfFibreLinesTotal: ", NumberOfFibreLinesTotal
-    PRINT "(A,I6)", "                          NumberOfFibres: ", NumberOfFibres
-    PRINT "(A,I6)", "               NumberOfElementsMPerFibre: ", NumberOfElementsMPerFibre
-    PRINT "(A,I6)", "               NumberOfNodesPerLongFibre: ", NumberOfNodesPerLongFibre
-    !PRINT "(A,I6)", "           NumberOfElementsMPerFibreLine: ", NumberOfElementsMPerFibreLine
-    PRINT "(A,I6)", "                       NumberOfElementsM: ", NumberOfElementsM
-    !PRINT "(A,I6)", "              NumberOfNodesPerShortFibre: ", NumberOfNodesPerShortFibre
-    !PRINT "(A,I6)", "              NumberOfNodesMPerFibreLine: ", NumberOfNodesMPerFibreLine
-    PRINT "(A,I6)", "                          NumberOfNodesM: ", NumberOfNodesM
+    !PRINT "(A,I8)", "                  NumberOfInSeriesFibres: ", NumberOfInSeriesFibres
+    PRINT "(A,I8)", "      NumberOfFibreLinesPerGlobalElement: ", NumberOfFibreLinesPerGlobalElement
+    PRINT "(A,I8)", "              NumberOfGlobalElementLines: ", NumberOfGlobalElementLines
+    !PRINT "(A,I8)", "                 NumberOfFibreLinesTotal: ", NumberOfFibreLinesTotal
+    PRINT "(A,I8)", "                          NumberOfFibres: ", NumberOfFibres
+    PRINT "(A,I8)", "               NumberOfElementsMPerFibre: ", NumberOfElementsMPerFibre
+    PRINT "(A,I8)", "               NumberOfNodesPerLongFibre: ", NumberOfNodesPerLongFibre
+    !PRINT "(A,I8)", "           NumberOfElementsMPerFibreLine: ", NumberOfElementsMPerFibreLine
+    PRINT "(A,I8)", "                       NumberOfElementsM: ", NumberOfElementsM
+    !PRINT "(A,I8)", "              NumberOfNodesPerShortFibre: ", NumberOfNodesPerShortFibre
+    !PRINT "(A,I8)", "              NumberOfNodesMPerFibreLine: ", NumberOfNodesMPerFibreLine
+    PRINT "(A,I8)", "                          NumberOfNodesM: ", NumberOfNodesM
     PRINT *,""
     PRINT "(3(A,I5),A)", "              Non-decomposable atom: ", NumberOfElementsInAtomX, &
       & "x", NumberOfElementsInAtomY, "x", NumberOfElementsInAtomZ, " elements"
@@ -1313,6 +1313,12 @@ SUBROUTINE ParseParameters()
     PRINT "(A,4(I5,A))", "               Domain decomposition: ", nSubdomainsX, "x", nSubdomainsY, "x", nSubdomainsZ, &
       & " subdomains"
     PRINT "(A, I5)", " Number of different processes for a fibre: ", nSubdomainsX
+    
+    ENDIF
+    CALL MPI_BARRIER(MPI_COMM_WORLD, Err)
+    CALL MPI_FINALIZE(Err)
+    STOP
+  IF (ComputationalNodeNumber == 0) THEN
     PRINT *, ""
     PRINT *, "---------- Physical parameters -----------------------------------------------"
     PRINT "(4(A,F5.2))", "       Dimensions [cm]: ",PhysicalLength,"x",PhysicalWidth,"x",PhysicalHeight,&
@@ -1637,7 +1643,7 @@ SUBROUTINE ComputeSubdomainsWithAtoms()
   INTEGER(CMISSIntg) :: nEmptySubdomainsX, nEmptySubdomainsY, nEmptySubdomainsZ, nEmptySubdomains
   INTEGER(CMISSIntg) :: nSubdomains
   INTEGER(CMISSIntg) :: NormalNumberOfElements, actualNumberOfElements
-  LOGICAL :: DEBUGGING = .FALSE.
+  LOGICAL :: DEBUGGING = .True.
   
   IF (DEBUGGING) DEBUGGING = (ComputationalNodeNumber == 0)  
   
@@ -1675,24 +1681,26 @@ SUBROUTINE ComputeSubdomainsWithAtoms()
   OptimalSideLength = (DBLE(NumberOfElementsFE) / NumberOfDomains)**(1./3)
 
   IF (DBLE(NumberGlobalZElements) / OptimalSideLength > NumberOfAtomsZ) THEN
+      
+    nSubdomainsZFloat = MIN(DBLE(NumberGlobalZElements) / OptimalSideLength, DBLE(NumberOfAtomsZ))
     
-  nSubdomainsZFloat = MIN(DBLE(NumberGlobalZElements) / OptimalSideLength, DBLE(NumberOfAtomsZ))
-  
-  IF (DEBUGGING) PRINT *, "NumberOfAtomsZ =", NumberOfAtomsZ, ", OptimalSideLength =",OptimalSideLength,", z=",&
-     & NumberGlobalZElements, ", z/Opt=", DBLE(NumberGlobalZElements) / OptimalSideLength, ", nSubdomainsZFloat=", nSubdomainsZFloat
+    IF (DEBUGGING) PRINT *, "NumberOfAtomsZ =", NumberOfAtomsZ, ", OptimalSideLength =",OptimalSideLength,", z=",&
+       & NumberGlobalZElements, ", z/Opt=", DBLE(NumberGlobalZElements) / OptimalSideLength, ", nSubdomainsZFloat=", &
+       & nSubdomainsZFloat
 
-  OptimalSideLength = SQRT(nSubdomainsZFloat * NumberGlobalXElements * NumberGlobalYElements / NumberOfDomains)
-  IF (DEBUGGING) PRINT *, "new OptimalSideLength=", OptimalSideLength
-  
-  nSubdomainsYFloat = MIN(DBLE(NumberGlobalYElements) / OptimalSideLength, DBLE(NumberOfAtomsY))
-  IF (DEBUGGING) PRINT *, "NumberOfAtomsY=", NumberOfAtomsY, ", OptimalSideLength=",OptimalSideLength,", y=",&
-    & NumberGlobalYElements, ", y/Opt=", DBLE(NumberGlobalYElements) / OptimalSideLength, ", nSubdomainsyFloat=", nSubdomainsYFloat
+    OptimalSideLength = SQRT(nSubdomainsZFloat * NumberGlobalXElements * NumberGlobalYElements / NumberOfDomains)
+    IF (DEBUGGING) PRINT *, "new OptimalSideLength=", OptimalSideLength
+    
+    nSubdomainsYFloat = MIN(DBLE(NumberGlobalYElements) / OptimalSideLength, DBLE(NumberOfAtomsY))
+    IF (DEBUGGING) PRINT *, "NumberOfAtomsY=", NumberOfAtomsY, ", OptimalSideLength=",OptimalSideLength,", y=",&
+      & NumberGlobalYElements, ", y/Opt=", DBLE(NumberGlobalYElements) / OptimalSideLength, ", nSubdomainsyFloat=", &
+      & nSubdomainsYFloat
 
-  nSubdomainsXFloat = MIN(DBLE(NumberOfDomains) / (nSubdomainsZFloat * nSubdomainsYFloat), DBLE(NumberOfAtomsX))
-  IF (DEBUGGING) PRINT *, "NumberOfAtomsX=", NumberOfAtomsX, ", nSubdomainsXFloat=", &
-     & DBLE(NumberOfDomains) / (nSubdomainsZFloat * nSubdomainsYFloat), ", final: ", nSubdomainsXFloat
-  
-  ! begin partioning in  x direction
+    nSubdomainsXFloat = MIN(DBLE(NumberOfDomains) / (nSubdomainsZFloat * nSubdomainsYFloat), DBLE(NumberOfAtomsX))
+    IF (DEBUGGING) PRINT *, "NumberOfAtomsX=", NumberOfAtomsX, ", nSubdomainsXFloat=", &
+       & DBLE(NumberOfDomains) / (nSubdomainsZFloat * nSubdomainsYFloat), ", final: ", nSubdomainsXFloat
+    
+  ! begin partioning in x direction
   ELSE
     
     nSubdomainsXFloat = MIN(DBLE(NumberGlobalXElements) / OptimalSideLength, DBLE(NumberOfAtomsX))
@@ -1820,10 +1828,13 @@ SUBROUTINE ComputeSubdomainsWithAtoms()
   NumberOfAtomsPerSubdomain = NumberOfAtomsPerSubdomainX*NumberOfAtomsPerSubdomainY*NumberOfAtomsPerSubdomainZ
 
   ! decrease number of subdomains to exclude now empty subdomains
-  nEmptySubdomainsX = CEILING(DBLE(NumberOfAtomsPerSubdomainX*nSubdomainsX - NumberOfAtomsX) / NumberOfAtomsPerSubdomainX)
-  nEmptySubdomainsY = CEILING(DBLE(NumberOfAtomsPerSubdomainY*nSubdomainsY - NumberOfAtomsY) / NumberOfAtomsPerSubdomainY)
-  nEmptySubdomainsZ = CEILING(DBLE(NumberOfAtomsPerSubdomainZ*nSubdomainsZ - NumberOfAtomsZ) / NumberOfAtomsPerSubdomainZ)
+  nEmptySubdomainsX = FLOOR(DBLE(NumberOfAtomsPerSubdomainX*nSubdomainsX - NumberOfAtomsX) / NumberOfAtomsPerSubdomainX)
+  nEmptySubdomainsY = FLOOR(DBLE(NumberOfAtomsPerSubdomainY*nSubdomainsY - NumberOfAtomsY) / NumberOfAtomsPerSubdomainY)
+  nEmptySubdomainsZ = FLOOR(DBLE(NumberOfAtomsPerSubdomainZ*nSubdomainsZ - NumberOfAtomsZ) / NumberOfAtomsPerSubdomainZ)
 
+  IF (DEBUGGING) PRINT *, "NumberOfAtomsPerSubdomain: ",NumberOfAtomsPerSubdomainX,NumberOfAtomsPerSubdomainY, &
+    & NumberOfAtomsPerSubdomainZ
+  
   nEmptySubdomains = nSubdomainsX*nSubdomainsY*nSubdomainsZ &
     & - (nSubdomainsX-nEmptySubdomainsX)*(nSubdomainsY-nEmptySubdomainsY)*(nSubdomainsZ-nEmptySubdomainsZ)
 
@@ -1842,7 +1853,8 @@ SUBROUTINE ComputeSubdomainsWithAtoms()
   IF (nUnusedSubdomains /= 0) THEN
     IF (ComputationalNodeNumber == 0) THEN
       PRINT *, "The computed decomposition contains ", nUnusedSubdomains, " subdomains less than given processes. " // &
-        & " This is intended and no error. Restart program with ", nSubdomains, " processes instead of ", NumberOfDomains
+        & NEW_LINE('A') // " This is intended and no error. Restart program with ", nSubdomains, &
+        & " processes instead of ", NumberOfDomains, "."
     ENDIF
     
     CALL MPI_BARRIER(MPI_COMM_WORLD, Err)

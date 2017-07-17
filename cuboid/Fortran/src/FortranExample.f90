@@ -1745,9 +1745,9 @@ SUBROUTINE ComputeSubdomainsWithAtoms()
   IF (DEBUGGING) PRINT *, "nSubdomainsFloat=", nSubdomainsXFloat,nSubdomainsYFloat,nSubdomainsZFloat,"=",&
     & nSubdomainsXFloat*nSubdomainsYFloat*nSubdomainsZFloat
 
-  nSubdomainsX = MAX(1, NINT(nSubdomainsXFloat))
-  nSubdomainsY = MAX(1, NINT(nSubdomainsYFloat))
-  nSubdomainsZ = MAX(1, NINT(nSubdomainsZFloat))
+  nSubdomainsX = MAX(1, CEILING(nSubdomainsXFloat))     ! try to round up to use the maximum number of processes possible, if value gets to high, it will be decreased anyway
+  nSubdomainsY = MAX(1, CEILING(nSubdomainsYFloat))
+  nSubdomainsZ = MAX(1, CEILING(nSubdomainsZFloat))
 
   IF (DEBUGGING) PRINT *, "nSubdomains: ",nSubdomainsX, nSubdomainsY, nSubdomainsZ, "=", nSubdomainsX*nSubdomainsY*nSubdomainsZ
 
@@ -1991,8 +1991,6 @@ SUBROUTINE ComputeSubdomainsWithAtoms()
       & 100.*actualNumberOfElements/normalNumberOfElements,"%)"
   ENDIF
   
-  ! TODO richtige Var lokal und global, dann unten in CreateDecompositionFiniteElasticity schliefen
-
 END SUBROUTINE ComputeSubdomainsWithAtoms
 
 SUBROUTINE CreateDecompositionFiniteElasticity()

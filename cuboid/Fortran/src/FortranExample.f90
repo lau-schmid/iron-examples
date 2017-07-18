@@ -1314,11 +1314,6 @@ SUBROUTINE ParseParameters()
       & " subdomains"
     PRINT "(A, I5)", " Number of different processes for a fibre: ", nSubdomainsX
     
-    ENDIF
-    CALL MPI_BARRIER(MPI_COMM_WORLD, Err)
-    CALL MPI_FINALIZE(Err)
-    STOP
-  IF (ComputationalNodeNumber == 0) THEN
     PRINT *, ""
     PRINT *, "---------- Physical parameters -----------------------------------------------"
     PRINT "(4(A,F5.2))", "       Dimensions [cm]: ",PhysicalLength,"x",PhysicalWidth,"x",PhysicalHeight,&

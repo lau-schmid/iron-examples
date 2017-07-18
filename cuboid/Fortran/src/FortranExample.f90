@@ -1638,7 +1638,7 @@ SUBROUTINE ComputeSubdomainsWithAtoms()
   INTEGER(CMISSIntg) :: nEmptySubdomainsX, nEmptySubdomainsY, nEmptySubdomainsZ, nEmptySubdomains
   INTEGER(CMISSIntg) :: nSubdomains
   INTEGER(CMISSIntg) :: NormalNumberOfElements, actualNumberOfElements
-  LOGICAL :: DEBUGGING = .True.
+  LOGICAL :: DEBUGGING = .False.
   
   IF (DEBUGGING) DEBUGGING = (ComputationalNodeNumber == 0)  
   

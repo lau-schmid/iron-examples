@@ -3618,7 +3618,6 @@ SUBROUTINE SetStimulationAtNodes(StimValuePerNode)
   REAL(CMISSRP), INTENT(IN) :: StimValuePerNode
   INTEGER(CMISSIntg) :: StimulatedNodeBegin, StimulatedNodeEnd, StimulatedNodeNo
   
-  
   NumberFiringFibres = 0
   !loop over all neuromuscular junctions (middle point of the fibres)
   DO FibreNo = 1, NumberOfFibres
@@ -3635,16 +3634,16 @@ SUBROUTINE SetStimulationAtNodes(StimValuePerNode)
     StimulatedNodeBegin = MIN(FibreNo*NumberOfNodesPerLongFibre-NumberStimulatedNodesPerFibre, &
       & MAX((FibreNo-1)*NumberOfNodesPerLongFibre, StimulatedNodeBegin))
     
-    StimulatedNodeEnd = StimulatedNodeBegin + NumberStimulatedNodesPerFibre
+    StimulatedNodeEnd = StimulatedNodeBegin + NumberStimulatedNodesPerFibre-1
     
     ! loop over nodes of current fibre to be stimulated
     DO StimulatedNodeNo = StimulatedNodeBegin, StimulatedNodeEnd
       
       !                                     decomposition,  nodeUserNumber, meshComponentNumber, domain
-      CALL cmfe_Decomposition_NodeDomainGet(DecompositionM, JunctionNodeNo, 1,                   NodeDomain, Err)
+      CALL cmfe_Decomposition_NodeDomainGet(DecompositionM, StimulatedNodeNo, 1,                   NodeDomain, Err)
       IF (NodeDomain == ComputationalNodeNumber) THEN
         CALL cmfe_Field_ParameterSetGetNode(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1, &
-        & JunctionNodeNo,1,MotorUnitRank,Err)
+        & StimulatedNodeNo,1,MotorUnitRank,Err)
 
         IF ((MotorUnitRank <= 0) .OR. (MotorUnitRank >= 101)) THEN
           PRINT*, "Warning! MotorUnitRank=",MotorUnitRank,", set to 100"
@@ -3653,7 +3652,7 @@ SUBROUTINE SetStimulationAtNodes(StimValuePerNode)
           !PRINT*, "MotorUnitFiringTimes row k=", k, ": MU rank=", MotorUnitRank, ", StimComponent=",StimComponent
           MotorUnitFires = MotorUnitFiringTimes(k, MotorUnitRank)   ! determine if mu fires
           IF (MotorUnitFires == 1) THEN
-            !PRINT*, "k=", k, ", Fibre ",FibreNo,": MU ", MotorUnitRank, " fires, JunctionNodeNo=",JunctionNodeNo, &
+            !PRINT*, "Fibre ",FibreNo,": MU ", MotorUnitRank, " fires, StimulatedNodeNo=",StimulatedNodeNo, &
             !  & ", StimComponent=",StimComponent,", StimValue=", StimValue
 
             NumberFiringFibres = NumberFiringFibres + 1

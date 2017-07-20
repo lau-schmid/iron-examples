@@ -1675,7 +1675,7 @@ SUBROUTINE ComputeSubdomainsWithAtoms()
 
   OptimalSideLength = (DBLE(NumberOfElementsFE) / NumberOfDomains)**(1./3)
 
-  IF (DBLE(NumberGlobalZElements) / OptimalSideLength > NumberOfAtomsZ) THEN
+  IF (DBLE(NumberGlobalZElements) / OptimalSideLength > NumberOfAtomsZ - 1e-3) THEN
       
     nSubdomainsZFloat = MIN(DBLE(NumberGlobalZElements) / OptimalSideLength, DBLE(NumberOfAtomsZ))
     

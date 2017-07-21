@@ -4043,6 +4043,8 @@ SUBROUTINE HandleSolverInfo(TimeStep)
   CHARACTER(len=256) :: Filename = "iterations.csv"
   LOGICAL :: FileExists
 
+  RETURN      ! disable solver info for the moment
+  
   IF (ComputationalNodeNumber == 0) THEN
 
     CALL cmfe_CustomSolverInfoGet(CustomSolverConvergenceReasonParabolic, CustomSolverConvergenceReasonNewton, &

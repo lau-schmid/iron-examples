@@ -13,7 +13,7 @@ endif()
 set(OPT "")
 if (FALSE)
     if(CMAKE_BUILD_TYPE MATCHES DEBUG)
-        set(OPT "-ffpe-trap=invalid,zero,underflow,overflow,denormal")
+        set(OPT "-ffpe-trap=invalid,zero,underflow,overflow,denormal")		# GCC: make floating point exceptions fatal
     endif()
 endif()
 

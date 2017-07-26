@@ -175,7 +175,7 @@ PROGRAM COUPLEDLAPLACE
     CALL GET_COMMAND_ARGUMENT(4,COMMAND_ARGUMENT,ARGUMENT_LENGTH,STATUS)
     IF(STATUS>0) CALL HANDLE_ERROR("Error for command argument 4.")
     READ(COMMAND_ARGUMENT(1:ARGUMENT_LENGTH),*) INTERPOLATION_TYPE
-    IF(INTERPOLATION_TYPE<=0.OR.INTERPOLATION_TYPE>4) CALL HANDLE_ERROR("Invalid Interpolation specification.")
+    IF(INTERPOLATION_TYPE<=0.OR.INTERPOLATION_TYPE>2) CALL HANDLE_ERROR("Invalid Interpolation specification.")
   ELSE IF(NUMBER_OF_ARGUMENTS == 0) THEN
     NUMBER_GLOBAL_X_ELEMENTS=2
     NUMBER_GLOBAL_Y_ELEMENTS=2
@@ -261,6 +261,14 @@ PROGRAM COUPLEDLAPLACE
   !Finish the creation of the second region
   CALL cmfe_Region_CreateFinish(Region2,Err)
 
+  SELECT CASE(INTERPOLATION_TYPE)
+  CASE(1)
+    NUMBER_OF_GAUSS_XI=2
+  CASE(2)
+    NUMBER_OF_GAUSS_XI=3
+  CASE DEFAULT
+    CALL HANDLE_ERROR("Invalid interpolation type.")
+  END SELECT
   !Start the creation of a bI/tri-linear-Lagrange basis
   PRINT *, ' == >> CREATING BASIS(1) << == '
   CALL cmfe_Basis_Initialise(Basis1,Err)
@@ -268,23 +276,18 @@ PROGRAM COUPLEDLAPLACE
   IF(NUMBER_GLOBAL_Z_ELEMENTS==0) THEN
     !Set the basis to be a bilinear Lagrange basis
     CALL cmfe_Basis_NumberOfXiSet(Basis1,2,Err)
+    CALL cmfe_Basis_InterpolationXiSet(Basis1,[INTERPOLATION_TYPE,INTERPOLATION_TYPE],Err)
+    CALL cmfe_Basis_QuadratureNumberOfGaussXiSet(Basis1,[NUMBER_OF_GAUSS_XI,NUMBER_OF_GAUSS_XI],Err)
   ELSE
     !Set the basis to be a trilinear Lagrange basis
     CALL cmfe_Basis_NumberOfXiSet(Basis1,3,Err)
+    CALL cmfe_Basis_InterpolationXiSet(Basis1,[INTERPOLATION_TYPE,INTERPOLATION_TYPE,INTERPOLATION_TYPE],Err)
+    CALL cmfe_Basis_QuadratureNumberOfGaussXiSet(Basis1, &
+      & [NUMBER_OF_GAUSS_XI,NUMBER_OF_GAUSS_XI,NUMBER_OF_GAUSS_XI],Err)
   ENDIF
   !Finish the creation of the basis
   CALL cmfe_Basis_CreateFinish(Basis1,Err)
    
-  SELECT CASE(INTERPOLATION_TYPE)
-  CASE(1)
-    NUMBER_OF_GAUSS_XI=2
-  CASE(2)
-    NUMBER_OF_GAUSS_XI=3
-  CASE(3,4)
-    NUMBER_OF_GAUSS_XI=4
-  CASE DEFAULT
-    CALL HANDLE_ERROR("Invalid interpolation type.")
-  END SELECT
   !Start the creation of a bI/tri-XXX-Lagrange basis
   PRINT *, ' == >> CREATING BASIS(2) << == '
   CALL cmfe_Basis_Initialise(Basis2,Err)
@@ -298,8 +301,8 @@ PROGRAM COUPLEDLAPLACE
     !Set the basis to be a tri-XXX Lagrange basis
     CALL cmfe_Basis_NumberOfXiSet(Basis2,3,Err)
     CALL cmfe_Basis_InterpolationXiSet(Basis2,[INTERPOLATION_TYPE,INTERPOLATION_TYPE,INTERPOLATION_TYPE],Err)
-    CALL cmfe_Basis_QuadratureNumberOfGaussXiSet(Basis2,[NUMBER_OF_GAUSS_XI,NUMBER_OF_GAUSS_XI, &
-      & NUMBER_OF_GAUSS_XI],Err)
+    CALL cmfe_Basis_QuadratureNumberOfGaussXiSet(Basis2, &
+      & [NUMBER_OF_GAUSS_XI,NUMBER_OF_GAUSS_XI,NUMBER_OF_GAUSS_XI],Err)
   ENDIF
   !Finish the creation of the basis
   CALL cmfe_Basis_CreateFinish(Basis2,Err)
@@ -369,12 +372,11 @@ PROGRAM COUPLEDLAPLACE
   IF(NUMBER_GLOBAL_Z_ELEMENTS==0) THEN
     !Set the basis to be a linear Lagrange basis
     CALL cmfe_Basis_NumberOfXiSet(InterfaceBasis,1,Err)
-    CALL cmfe_Basis_InterpolationXiSet(InterfaceBasis,[CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION],Err)
+    CALL cmfe_Basis_InterpolationXiSet(InterfaceBasis,[INTERPOLATION_TYPE],Err)
   ELSE
     !Set the basis to be a bilinear Lagrange basis
     CALL cmfe_Basis_NumberOfXiSet(InterfaceBasis,2,Err)
-    CALL cmfe_Basis_InterpolationXiSet(InterfaceBasis,[CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION, &
-      & CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION],Err)
+    CALL cmfe_Basis_InterpolationXiSet(InterfaceBasis,[INTERPOLATION_TYPE,INTERPOLATION_TYPE],Err)
   ENDIF
   !Finish the creation of the basis
   CALL cmfe_Basis_CreateFinish(InterfaceBasis,Err)
@@ -386,12 +388,11 @@ PROGRAM COUPLEDLAPLACE
   IF(NUMBER_GLOBAL_Z_ELEMENTS==0) THEN  
     !Set the basis to be a linear Lagrange basis
     CALL cmfe_Basis_NumberOfXiSet(InterfaceMappingBasis,1,Err)
-    CALL cmfe_Basis_InterpolationXiSet(InterfaceMappingBasis,[CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION],Err)
+    CALL cmfe_Basis_InterpolationXiSet(InterfaceMappingBasis,[INTERPOLATION_TYPE],Err)
   ELSE
     !Set the basis to be a bilinear Lagrange basis
     CALL cmfe_Basis_NumberOfXiSet(InterfaceMappingBasis,2,Err)
-    CALL cmfe_Basis_InterpolationXiSet(InterfaceMappingBasis,[CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION, &
-      & CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION],Err)
+    CALL cmfe_Basis_InterpolationXiSet(InterfaceMappingBasis,[INTERPOLATION_TYPE,INTERPOLATION_TYPE],Err)
   ENDIF
   !Finish the creation of the basis
   CALL cmfe_Basis_CreateFinish(InterfaceMappingBasis,Err)
@@ -425,39 +426,64 @@ PROGRAM COUPLEDLAPLACE
   CALL cmfe_InterfaceMeshConnectivity_CreateStart(Interface,InterfaceMesh,InterfaceMeshConnectivity,Err)
   CALL cmfe_InterfaceMeshConnectivity_BasisSet(InterfaceMeshConnectivity,InterfaceMappingBasis,Err)
   SELECT CASE(INTERPOLATION_TYPE)
-  CASE(1,4)
+  CASE(1)
     NUMBER_OF_NODE_XI=2
   CASE(2)
     NUMBER_OF_NODE_XI=3
-  CASE(3)
-    NUMBER_OF_NODE_XI=4
   CASE DEFAULT
     CALL HANDLE_ERROR("Invalid interpolation type.")
   END SELECT
   IF(NUMBER_GLOBAL_Z_ELEMENTS==0) THEN   
     DO y_element_idx=1,NUMBER_GLOBAL_Y_ELEMENTS
-      !Map the interface element to the elements in mesh 1
-      CALL cmfe_InterfaceMeshConnectivity_ElementNumberSet(InterfaceMeshConnectivity,y_element_idx,Mesh1Index, &
-        y_element_idx*NUMBER_GLOBAL_X_ELEMENTS,Err)
-      XI2 = [ 1.0_CMISSRP, 0.0_CMISSRP ]
-      CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity,y_element_idx,Mesh1Index, &
-        & y_element_idx*NUMBER_GLOBAL_X_ELEMENTS,1,1,XI2,Err)
-      XI2 = [ 1.0_CMISSRP, 1.0_CMISSRP ]
-      CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity,y_element_idx,Mesh1Index, &
-        & y_element_idx*NUMBER_GLOBAL_X_ELEMENTS,2,1,XI2,Err)      
-      !Map the interface element to the elements in mesh 2
-      CALL cmfe_InterfaceMeshConnectivity_ElementNumberSet(InterfaceMeshConnectivity,y_element_idx,Mesh2Index, &
-        & 1+(y_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS,Err)
-      DO mesh_local_y_node = 1,NUMBER_OF_NODE_XI-1
-        XI2 = [ 0.0_CMISSRP, REAL(mesh_local_y_node-1,CMISSRP)/REAL(NUMBER_OF_NODE_XI-1,CMISSRP) ]
+      IF (INTERPOLATION_TYPE==1) THEN
+        !Map the interface element to the elements in mesh 1
+        CALL cmfe_InterfaceMeshConnectivity_ElementNumberSet(InterfaceMeshConnectivity,y_element_idx,Mesh1Index, &
+          y_element_idx*NUMBER_GLOBAL_X_ELEMENTS,Err)
+        XI2 = [ 1.0_CMISSRP, 0.0_CMISSRP ]
+        CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity,y_element_idx,Mesh1Index, &
+          & y_element_idx*NUMBER_GLOBAL_X_ELEMENTS,1,1,XI2,Err)
+        XI2 = [ 1.0_CMISSRP, 1.0_CMISSRP ]
+        CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity,y_element_idx,Mesh1Index, &
+          & y_element_idx*NUMBER_GLOBAL_X_ELEMENTS,2,1,XI2,Err)
+        !Map the interface element to the elements in mesh 2
+        CALL cmfe_InterfaceMeshConnectivity_ElementNumberSet(InterfaceMeshConnectivity,y_element_idx,Mesh2Index, &
+          & 1+(y_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS,Err)
+        XI2 = [ 0.0_CMISSRP, 0.0_CMISSRP ]
         CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity,y_element_idx,Mesh2Index, &
           & 1+(y_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS,1,1,XI2,Err)
-        XI2 = [ 0.0_CMISSRP, REAL(mesh_local_y_node,CMISSRP)/REAL(NUMBER_OF_NODE_XI-1,CMISSRP) ]
+        XI2 = [ 0.0_CMISSRP, 1.0_CMISSRP ]
         CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity,y_element_idx,Mesh2Index, &
           & 1+(y_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS,2,1,XI2,Err)
-      ENDDO !mesh_local_y_node
+      ELSE IF (INTERPOLATION_TYPE==2) THEN
+        !Map the interface element to the elements in mesh 1
+        CALL cmfe_InterfaceMeshConnectivity_ElementNumberSet(InterfaceMeshConnectivity,y_element_idx,Mesh1Index, &
+          y_element_idx*NUMBER_GLOBAL_X_ELEMENTS,Err)
+        XI2 = [ 1.0_CMISSRP, 0.0_CMISSRP ]
+        CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity,y_element_idx,Mesh1Index, &
+          & y_element_idx*NUMBER_GLOBAL_X_ELEMENTS,1,1,XI2,Err)
+        XI2 = [ 1.0_CMISSRP, 0.5_CMISSRP ]
+        CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity,y_element_idx,Mesh1Index, &
+          & y_element_idx*NUMBER_GLOBAL_X_ELEMENTS,2,1,XI2,Err)
+        XI2 = [ 1.0_CMISSRP, 1.0_CMISSRP ]
+        CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity,y_element_idx,Mesh1Index, &
+          & y_element_idx*NUMBER_GLOBAL_X_ELEMENTS,3,1,XI2,Err)
+        !Map the interface element to the elements in mesh 2
+        CALL cmfe_InterfaceMeshConnectivity_ElementNumberSet(InterfaceMeshConnectivity,y_element_idx,Mesh2Index, &
+          & 1+(y_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS,Err)
+        XI2 = [ 0.0_CMISSRP, 0.0_CMISSRP ]
+        CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity,y_element_idx,Mesh2Index, &
+          & 1+(y_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS,1,1,XI2,Err)
+        XI2 = [ 0.0_CMISSRP, 0.5_CMISSRP ]
+        CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity,y_element_idx,Mesh2Index, &
+          & 1+(y_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS,2,1,XI2,Err)
+        XI2 = [ 0.0_CMISSRP, 1.0_CMISSRP ]
+        CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity,y_element_idx,Mesh2Index, &
+          & 1+(y_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS,3,1,XI2,Err)
+      END IF
     ENDDO !y_element_idx
   ELSE
+    WRITE(*,*) ">>>ERROR: Need to fix up interface mesh connectivity for 3D!"
+    STOP
     DO y_element_idx=1,NUMBER_GLOBAL_Y_ELEMENTS
       DO z_element_idx=1,NUMBER_GLOBAL_Z_ELEMENTS
         !Map the interface element to the elements in mesh 1
@@ -534,6 +560,7 @@ PROGRAM COUPLEDLAPLACE
   !Set the decomposition to be a general decomposition with the specified number of domains
   CALL cmfe_Decomposition_TypeSet(Decomposition1,CMFE_DECOMPOSITION_CALCULATED_TYPE,Err)
   CALL cmfe_Decomposition_NumberOfDomainsSet(Decomposition1,NumberOfComputationalNodes,Err)
+  CALL cmfe_Decomposition_CalculateFacesSet(Decomposition1,.TRUE.,Err)
   !Finish the decomposition
   CALL cmfe_Decomposition_CreateFinish(Decomposition1,Err)
 
@@ -544,6 +571,7 @@ PROGRAM COUPLEDLAPLACE
   !Set the decomposition to be a general decomposition with the specified number of domains
   CALL cmfe_Decomposition_TypeSet(Decomposition2,CMFE_DECOMPOSITION_CALCULATED_TYPE,Err)
   CALL cmfe_Decomposition_NumberOfDomainsSet(Decomposition2,NumberOfComputationalNodes,Err)
+  CALL cmfe_Decomposition_CalculateFacesSet(Decomposition2,.TRUE.,Err)
   !Finish the decomposition
   CALL cmfe_Decomposition_CreateFinish(Decomposition2,Err)
   
@@ -554,6 +582,7 @@ PROGRAM COUPLEDLAPLACE
   !Set the decomposition to be a general decomposition with the specified number of domains
   CALL cmfe_Decomposition_TypeSet(InterfaceDecomposition,CMFE_DECOMPOSITION_CALCULATED_TYPE,Err)
   CALL cmfe_Decomposition_NumberOfDomainsSet(InterfaceDecomposition,NumberOfComputationalNodes,Err)
+  CALL cmfe_Decomposition_CalculateFacesSet(InterfaceDecomposition,.TRUE.,Err)
   !Finish the decomposition
   CALL cmfe_Decomposition_CreateFinish(InterfaceDecomposition,Err)
 
@@ -772,7 +801,7 @@ PROGRAM COUPLEDLAPLACE
   CALL cmfe_Decomposition_NodeDomainGet(Decomposition1,FirstNodeNumber,1,FirstNodeDomain,Err)
   IF(FirstNodeDomain==ComputationalNodeNumber) THEN
     CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,DependentField1,CMFE_FIELD_U_VARIABLE_TYPE,1,1,FirstNodeNumber,1, &
-      & CMFE_BOUNDARY_CONDITION_FIXED,-1.0_CMISSRP,Err)
+      & CMFE_BOUNDARY_CONDITION_FIXED,0.0_CMISSRP,Err)
   ENDIF
   !Set boundary conditions for second dependent field
   !Set the last node to 1.0
@@ -784,8 +813,8 @@ PROGRAM COUPLEDLAPLACE
     CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,DependentField2,CMFE_FIELD_U_VARIABLE_TYPE,1,1,LastNodeNumber,1, &
       & CMFE_BOUNDARY_CONDITION_FIXED,1.0_CMISSRP,Err)
   ENDIF
+  WRITE(*,*) "BC finish, proc ",ComputationalNodeNumber
   CALL cmfe_SolverEquations_BoundaryConditionsCreateFinish(CoupledSolverEquations,Err)
-
 
   !Solve the problem
   PRINT *, ' == >> SOLVING PROBLEM << == '
@@ -812,7 +841,7 @@ PROGRAM COUPLEDLAPLACE
   !Finialise CMISS
   CALL cmfe_Finalise(Err)
 
-  WRITE(*,'(A)') "Program successfully completed."
+  WRITE(*,*) "Program successfully completed.",ComputationalNodeNumber
 
   STOP
  

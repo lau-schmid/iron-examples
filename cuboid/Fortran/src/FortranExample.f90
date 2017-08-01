@@ -1637,6 +1637,11 @@ FUNCTION GetNumberOfUsedSubdomains(NumberOfAtomsX, NumberOfAtomsY, NumberOfAtoms
   INTEGER(CMISSIntg) :: nSubdomains
   INTEGER(CMISSIntg) :: GetNumberOfUsedSubdomains, NumberOfAtomsPerSubdomain
   
+  IF (nSubdomainsX <= 0 .OR. nSubdomainsY <= 0 .OR. nSubdomainsZ <= 0) THEN
+    GetNumberOfUsedSubdomains = HUGE(GetNumberOfUsedSubdomains)
+    RETURN
+  ENDIF
+  
   NumberOfAtomsPerSubdomainX = CEILING(DBLE(NumberOfAtomsX) / nSubdomainsX)
   NumberOfAtomsPerSubdomainY = CEILING(DBLE(NumberOfAtomsY) / nSubdomainsY)
   NumberOfAtomsPerSubdomainZ = CEILING(DBLE(NumberOfAtomsZ) / nSubdomainsZ)
@@ -1784,7 +1789,8 @@ SUBROUTINE ComputeSubdomainsWithAtoms()
 
   ! adjust number of subdomains such that total number is <= number of domains (ideally '=')
   
-  IF (nSubdomainsX*nSubdomainsY*nSubdomainsZ > NumberOfDomains) THEN
+  IF (GetNumberOfUsedSubdomains(NumberOfAtomsX, NumberOfAtomsY, NumberOfAtomsZ, nSubdomainsX, nSubdomainsY, nSubdomainsZ) &
+     & > NumberOfDomains) THEN
     DiffNumberOfDomainsXDecreased = NumberOfDomains - &
       & GetNumberOfUsedSubdomains(NumberOfAtomsX, NumberOfAtomsY, NumberOfAtomsZ, nSubdomainsX-1, nSubdomainsY, nSubdomainsZ)
     DiffNumberOfDomainsYDecreased = NumberOfDomains - &
@@ -1812,27 +1818,47 @@ SUBROUTINE ComputeSubdomainsWithAtoms()
       & MIN(DiffNumberOfDomainsZDecreased, MIN(DiffNumberOfDomainsXYDecreased, MIN(DiffNumberOfDomainsXZDecreased, &
       & MIN(DiffNumberOfDomainsYZDecreased, DiffNumberOfDomainsXYZDecreased))))))
       
-    IF (MinDiffNumberOfDomains == DiffNumberOfDomainsXDecreased) THEN
+    IF (DEBUGGING) PRINT *, "diffs: x:",DiffNumberOfDomainsXDecreased, ", y:",DiffNumberOfDomainsYDecreased, &
+      & ", z:",DiffNumberOfDomainsZDecreased, ", xy:",DiffNumberOfDomainsXYDecreased, ", xz:",DiffNumberOfDomainsXZDecreased, &
+      & ", yz:", DiffNumberOfDomainsYZDecreased, "xyz:",DiffNumberOfDomainsXYZDecreased
+
+      
+    IF (MinDiffNumberOfDomains == DiffNumberOfDomainsXDecreased .AND. MinDiffNumberOfDomains /= HUGE(MinDiffNumberOfDomains)) THEN
+      IF (DEBUGGING) PRINT *, "best to decrease X by 1"
       nSubdomainsX = nSubdomainsX-1
-    ELSEIF (MinDiffNumberOfDomains == DiffNumberOfDomainsYDecreased) THEN
+    ELSEIF (MinDiffNumberOfDomains == DiffNumberOfDomainsYDecreased .AND. MinDiffNumberOfDomains /= HUGE(MinDiffNumberOfDomains)) &
+    & THEN
+      IF (DEBUGGING) PRINT *, "best to decrease Y by 1"
       nSubdomainsY = nSubdomainsY-1
-    ELSEIF (MinDiffNumberOfDomains == DiffNumberOfDomainsZDecreased) THEN
+    ELSEIF (MinDiffNumberOfDomains == DiffNumberOfDomainsZDecreased .AND. MinDiffNumberOfDomains /= HUGE(MinDiffNumberOfDomains)) &
+    & THEN
+      IF (DEBUGGING) PRINT *, "best to decrease Z by 1"
       nSubdomainsZ = nSubdomainsZ-1
-    ELSEIF (MinDiffNumberOfDomains == DiffNumberOfDomainsXYDecreased) THEN
+    ELSEIF (MinDiffNumberOfDomains == DiffNumberOfDomainsXYDecreased .AND. MinDiffNumberOfDomains /= HUGE(MinDiffNumberOfDomains)) &
+    & THEN
+      IF (DEBUGGING) PRINT *, "best to decrease X and Y by 1"
       nSubdomainsX = nSubdomainsX-1
       nSubdomainsY = nSubdomainsY-1
-    ELSEIF (MinDiffNumberOfDomains == DiffNumberOfDomainsXZDecreased) THEN
+    ELSEIF (MinDiffNumberOfDomains == DiffNumberOfDomainsXZDecreased .AND. MinDiffNumberOfDomains /= HUGE(MinDiffNumberOfDomains)) &
+    & THEN
+      IF (DEBUGGING) PRINT *, "best to decrease X and Z by 1"
       nSubdomainsX = nSubdomainsX-1
       nSubdomainsZ = nSubdomainsZ-1
-    ELSEIF (MinDiffNumberOfDomains == DiffNumberOfDomainsYZDecreased) THEN
+    ELSEIF (MinDiffNumberOfDomains == DiffNumberOfDomainsYZDecreased .AND. MinDiffNumberOfDomains /= HUGE(MinDiffNumberOfDomains)) &
+    & THEN
+      IF (DEBUGGING) PRINT *, "best to decrease Y and Z by 1"
       nSubdomainsY = nSubdomainsY-1
       nSubdomainsZ = nSubdomainsZ-1
-    ELSEIF (MinDiffNumberOfDomains == DiffNumberOfDomainsXYZDecreased) THEN
+    ELSEIF (MinDiffNumberOfDomains == DiffNumberOfDomainsXYZDecreased .AND. MinDiffNumberOfDomains /= HUGE(MinDiffNumberOfDomains & 
+    )) THEN
+      IF (DEBUGGING) PRINT *, "best to decrease X, Y and Z by 1"
       nSubdomainsX = nSubdomainsX-1
       nSubdomainsY = nSubdomainsY-1
       nSubdomainsZ = nSubdomainsZ-1
     ELSE
-      DO WHILE (nSubdomainsX*nSubdomainsY*nSubdomainsZ > NumberOfDomains)
+      IF (DEBUGGING) PRINT *, "it does not help to decrease X,Y or Z by 1, start iterative procedure"
+      DO WHILE (GetNumberOfUsedSubdomains(NumberOfAtomsX, NumberOfAtomsY, NumberOfAtomsZ, nSubdomainsX, nSubdomainsY, &
+        & nSubdomainsZ) > NumberOfDomains)
         DiffX = nSubdomainsX - nSubdomainsXFloat
         DiffY = nSubdomainsY - nSubdomainsYFloat
         DiffZ = nSubdomainsZ - nSubdomainsZFloat
@@ -1987,7 +2013,7 @@ SUBROUTINE ComputeSubdomainsWithAtoms()
     *NumberOfAtomsPerSubdomainY*NumberOfElementsInAtomY &
     *NumberOfAtomsPerSubdomainZ*NumberOfElementsInAtomZ
 
-  IF (ComputationalNodeNumber == 0) PRINT *, nSubdomains, " processes, normal number of elements per process: ", &
+  IF (ComputationalNodeNumber == 0) PRINT *, nSubdomains, " process(es), normal number of elements per process: ", &
     & normalNumberOfElements
 
   ! x+ face

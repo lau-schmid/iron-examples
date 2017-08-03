@@ -7,7 +7,7 @@ import exnode_reader
 import sys
 
 # get folder name from command line argument
-foldername="../../results/current_run"
+foldername="./"
 if len(sys.argv) >1:
    foldername=sys.argv[1]
 

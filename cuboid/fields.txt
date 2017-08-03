@@ -1,11 +1,32 @@
 
-              fibre_idx=0
-              CALL FIELD_VARIABLE_GET(DEPENDENT_FIELD_MONODOMAIN,FIELD_V_VARIABLE_TYPE,FIELD_VAR_DEP_M,ERR,ERROR,*999)
-              CALL FIELD_VARIABLE_GET(GEOMETRIC_FIELD_MONODOMAIN,FIELD_U_VARIABLE_TYPE,FIELD_VAR_GEO_M,ERR,ERROR,*999)
-              CALL FIELD_VARIABLE_GET(INDEPENDENT_FIELD_ELASTICITY,FIELD_V_VARIABLE_TYPE,FIELD_VAR_IND_FE,ERR,ERROR,*999)
-              CALL FIELD_VARIABLE_GET(INDEPENDENT_FIELD_MONODOMAIN,FIELD_U1_VARIABLE_TYPE,FIELD_VAR_IND_M,ERR,ERROR,*999)
-              CALL FIELD_VARIABLE_GET(INDEPENDENT_FIELD_MONODOMAIN,FIELD_U2_VARIABLE_TYPE,FIELD_VAR_IND_M_2,ERR,ERROR,*999)
              
+ =========================== EquationsSet ===========================
+
+(3a MultiPhysStrain, old tomo mechanics)
+M:  [CMFE_EQUATIONS_SET_ELASTICITY_CLASS,   CMFE_EQUATIONS_SET_FINITE_ELASTICITY_TYPE,   CMFE_EQUATIONS_SET_1D3D_MONODOMAIN_ELASTICITY_SUBTYPE]   
+FE: [CMFE_EQUATIONS_SET_BIOELECTRICS_CLASS, CMFE_EQUATIONS_SET_MONODOMAIN_EQUATION_TYPE, CMFE_EQUATIONS_SET_1D3D_MONODOMAIN_ELASTICITY_SUBTYPE]          
+
+(3 MultiPhysStrain)
+M:  [CMFE_EQUATIONS_SET_ELASTICITY_CLASS,   CMFE_EQUATIONS_SET_FINITE_ELASTICITY_TYPE,   CMFE_EQUATIONS_SET_1D3D_MONODOMAIN_ACTIVE_STRAIN_SUBTYPE]
+FE: [CMFE_EQUATIONS_SET_BIOELECTRICS_CLASS, CMFE_EQUATIONS_SET_MONODOMAIN_EQUATION_TYPE, CMFE_EQUATIONS_SET_1D3D_MONODOMAIN_ACTIVE_STRAIN_SUBTYPE]     
+
+(4 Titin)
+M:  [CMFE_EQUATIONS_SET_ELASTICITY_CLASS,   CMFE_EQUATIONS_SET_FINITE_ELASTICITY_TYPE,   CMFE_EQUATIONS_SET_MONODOMAIN_ELASTICITY_W_TITIN_SUBTYPE]
+FE: [CMFE_EQUATIONS_SET_BIOELECTRICS_CLASS, CMFE_EQUATIONS_SET_MONODOMAIN_EQUATION_TYPE, CMFE_EQUATIONS_SET_MONODOMAIN_ELASTICITY_W_TITIN_SUBTYPE]
+
+
+ =========================== Problem ===========================
+
+(3a MultiPhysStrain, old tomo mechanics)
+  [CMFE_PROBLEM_MULTI_PHYSICS_CLASS, CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE, CMFE_PROBLEM_GUDUNOV_MONODOMAIN_1D3D_ELASTICITY_SUBTYPE]
+
+(3 MultiPhysStrain)
+  [CMFE_PROBLEM_MULTI_PHYSICS_CLASS, CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE, CMFE_PROBLEM_MONODOMAIN_1D3D_ACTIVE_STRAIN_SUBTYPE]
+
+(4 Titin)
+  [CMFE_PROBLEM_MULTI_PHYSICS_CLASS, CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE, CMFE_PROBLEM_MONODOMAIN_ELASTICITY_W_TITIN_SUBTYPE]
+
+======================= Field ===========================
 ----------------------- monodomain --------------------------------------            
 GeometricFieldM
   FIELD_U_VARIABLE_TYPE: 1) GeometryM
@@ -15,31 +36,37 @@ MaterialFieldM
 
 DependentFieldM
   FIELD_U_VARIABLE_TYPE: 1) Vm
-  FIELD_DELUDELN_VARIABLE_TYPE: 1)dVm/dn
+  FIELD_DELUDELN_VARIABLE_TYPE: 1) dVm/dn
   FIELD_V_VARIABLE_TYPE: 1),2),3): GeometryM3D, 3D-position of geometry
  
 IndependentFieldM
   CMFE_FIELD_U_VARIABLE_TYPE:   ("Active_Stress_M") / ("XB_state_variables_M")
-    1) Active_Stress_M
-    2) A_1
-    3) A_2
-    4) x_1
-    5) x_2
-   *2) titin stress unbound
-   *3) titin stress bound
-   *4) titin XF-stress (cross-fibre directions) unbound
-   *5) titin XF-stress (cross-fibre directions) bound
-   *6) titin activation
+  (3a MultiPhysStrain, old tomo mechanics)
+    1) Active_Stress_M, normalised sarcomere-based active stress
+  (3 MultiPhysStrain)
+    1) A_1
+    2) A_2
+    3) x_1
+    4) x_2
+  (4 Titin)
+    1) Active_Stress_M, normalised sarcomere-based active stress
+    2) titin stress unbound, this component is for the unbound titin stress
+    3) titin stress bound, this component is for the bound titin stress
+    4) titin XF-stress (cross-fibre directions) unbound, this component is for the unbound titin stress in the XF-direction
+    5) titin XF-stress (cross-fibre directions) bound, this component is for the bound titin stress in the XF-direction
+    6) titin activation, this component is for the titin activation (stress without force-length relation)
   CMFE_FIELD_V_VARIABLE_TYPE: ("fibre_info")
     1) motor unit number,
     2) fibre type,
     3) fibre number,
     4) nearest Gauss point number,
     5) FE element local number that contains bioelectric node
-  CMFE_FIELD_U1_VARIABLE_TYPE: 
+  CMFE_FIELD_U1_VARIABLE_TYPE: ("half-sarcomere_length")
     1) half-sarcomere length   
     2) inital half-sarcomere length
     3) initial node distance
+  (4 Titin)
+    4) 
   CMFE_FIELD_U2_VARIABLE_TYPE: ("contraction_velocity")
     1) node distance to left node
     2) maximum contraction velocity  
@@ -78,8 +105,19 @@ DependentFieldFE
     1) - 4)
   
 IndependentFieldFE  // Eingabevariablen, kommen von anderem Modell oder sind konstant
-  CMFE_FIELD_U_VARIABLE_TYPE ("Active_Stress_FE")
-    1)  Active_Stress_FE
+  CMFE_FIELD_U_VARIABLE_TYPE (3a,4: "Active_Stress_FE") (3: "XB_state_variables_FE")
+    1) Active_Stress_FE
+  (3 MultiPhysStrain)
+   *2) A_1
+   *3) A_2
+   *4) x_1
+   *5) x_2
+  (4 Titin)
+   *2) titin force (unbound)
+   *3) titin force (bound)
+   *4) titin force in XF-direction (unbound)
+   *5) titin force in XF-direction (bound)
+   *6) activation for titin
   CMFE_FIELD_V_VARIABLE_TYPE    ("subgrid_info")
     1)  number of elements in Xi(1) direction per element
     2)  number of nodes in Xi(2) direction per element

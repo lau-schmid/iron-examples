@@ -942,7 +942,7 @@ SUBROUTINE ParseAssignment(Line, LineNumber, ScenarioInputFile)
       READ(StrValue, *, IOSTAT=Stat) NumberOfNodesInXi2
     CASE ("xi3", "numberofnodesinxi3")
       READ(StrValue, *, IOSTAT=Stat) NumberOfNodesInXi3
-    CASE ("pretendednumberofdomainsfordomaindecomposition")
+    CASE ("pretendednumberofdomainsfordomaindecomposition", "pretendednumberofdomains")
       READ(StrValue, *, IOSTAT=Stat) PretendedNumberOfDomainsForDomainDecomposition
     CASE ("newtonmaximumnumberofiterations")
       READ(StrValue, *, IOSTAT=Stat) NewtonMaximumNumberOfIterations
@@ -1765,7 +1765,8 @@ SUBROUTINE ComputeSubdomainsWithAtoms()
        & nSubdomainsXFloat
 
     OptimalSideLength = SQRT(nSubdomainsXFloat * NumberGlobalYElements * NumberGlobalZElements / PretendedNumberOfDomains)
-    IF (DEBUGGING) PRINT *, "new OptimalSideLength=", OptimalSideLength
+    IF (DEBUGGING) PRINT *, "new OptimalSideLength=", OptimalSideLength, "=sqrt(",nSubdomainsXFloat," * ",&
+      & NumberGlobalYElements," * ",NumberGlobalZElements,")/",PretendedNumberOfDomains
 
     nSubdomainsYFloat = MIN(DBLE(NumberGlobalYElements) / OptimalSideLength, DBLE(NumberOfAtomsY))
     IF (DEBUGGING) PRINT *, "NumberOfAtomsY=", NumberOfAtomsY, ", OptimalSideLength=",OptimalSideLength,", y=",&

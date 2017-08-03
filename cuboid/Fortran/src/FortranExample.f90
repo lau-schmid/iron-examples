@@ -1967,7 +1967,7 @@ SUBROUTINE ComputeSubdomainsWithAtoms()
   nSubdomainsZ = nSubdomainsZ - nEmptySubdomainsZ
   nSubdomains = nSubdomainsX*nSubdomainsY*nSubdomainsZ
 
-  nUnusedSubdomains = PretendedNumberOfDomains - nSubdomains
+  nUnusedSubdomains = NumberOfDomains - nSubdomains
   IF (DEBUGGING) PRINT *, "PretendedNumberOfDomains: ", PretendedNumberOfDomains,", nSubdomains:", nSubdomains, &
     & ", nUnusedSubdomains:",nUnusedSubdomains
   

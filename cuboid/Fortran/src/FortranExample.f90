@@ -1684,7 +1684,7 @@ SUBROUTINE ComputeSubdomainsWithAtoms()
   INTEGER(CMISSIntg) :: DiffNumberOfDomainsXYDecreased, DiffNumberOfDomainsXZDecreased, DiffNumberOfDomainsYZDecreased
   INTEGER(CMISSIntg) :: DiffNumberOfDomainsXYZDecreased, MinDiffNumberOfDomains
   INTEGER(CMISSIntg) :: PretendedNumberOfDomains     !< this is a value for the number of domains to be used in domain decomposition. It can be higher than the actual number of processes, because sometimes domain decomposition output produces less domains than requested.
-  LOGICAL :: DEBUGGING = .FALSE.
+  LOGICAL :: DEBUGGING = .TRUE.
   
   IF (DEBUGGING) DEBUGGING = (ComputationalNodeNumber == 0)  
   
@@ -1708,6 +1708,7 @@ SUBROUTINE ComputeSubdomainsWithAtoms()
   NumberOfAtomsZ = CeilDiv(NumberGlobalZElements, NumberOfElementsInAtomZ)
   NumberOfAtoms = NumberOfAtomsX * NumberOfAtomsY * NumberOfAtomsZ
 
+  IF (DEBUGGING) PRINT *, "PretendedNumberOfDomains=",PretendedNumberOfDomains
   IF (DEBUGGING) PRINT *, "NumberOfAtoms: ",NumberOfAtomsX,NumberOfAtomsY,NumberOfAtomsZ,"=",NumberOfAtoms
 
   ! subdomain = all the atoms that belong to one process

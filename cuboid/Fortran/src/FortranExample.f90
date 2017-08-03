@@ -1684,7 +1684,7 @@ SUBROUTINE ComputeSubdomainsWithAtoms()
   INTEGER(CMISSIntg) :: DiffNumberOfDomainsXYDecreased, DiffNumberOfDomainsXZDecreased, DiffNumberOfDomainsYZDecreased
   INTEGER(CMISSIntg) :: DiffNumberOfDomainsXYZDecreased, MinDiffNumberOfDomains
   INTEGER(CMISSIntg) :: PretendedNumberOfDomains     !< this is a value for the number of domains to be used in domain decomposition. It can be higher than the actual number of processes, because sometimes domain decomposition output produces less domains than requested.
-  LOGICAL :: DEBUGGING = .TRUE.
+  LOGICAL :: DEBUGGING = .FALSE.
   
   IF (DEBUGGING) DEBUGGING = (ComputationalNodeNumber == 0)  
   

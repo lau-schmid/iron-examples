@@ -18,7 +18,7 @@ gfx modify window 1 view interest_point 2.0,0.5,0.0 eye_point 2.0,0.5,10.0 up_ve
 
 # modify spectrum
 gfx modify spectrum default clear overwrite_colour;
-gfx modify spectrum default linear reverse range -1.0 1.0 extend_above extend_below rainbow colour_range 0 1 component 1
+gfx modify spectrum default linear reverse range -1.75 1.0 extend_above extend_below rainbow colour_range 0 1 component 1
 
 # color spheres with nodal values
 gfx modify g_element Region1 node_points glyph sphere general size "0.1*0.1*0.1" centre 0,0,0 data Phi

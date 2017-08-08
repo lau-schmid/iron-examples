@@ -51,7 +51,7 @@ PROGRAM COUPLEDLAPLACE
 
   USE OpenCMISS
   USE OpenCMISS_Iron
-  
+
 #ifdef WIN32
   USE IFQWIN
 #endif
@@ -95,9 +95,9 @@ PROGRAM COUPLEDLAPLACE
   INTEGER(CMISSIntg), PARAMETER :: InterfaceMappingBasisUserNumber=28
   INTEGER(CMISSIntg), PARAMETER :: EquationsSetField1UserNumber=40
   INTEGER(CMISSIntg), PARAMETER :: EquationsSetField2UserNumber=41
- 
+
   !Program types
-  
+
   !Program variables
 
   INTEGER(CMISSIntg) :: NUMBER_OF_ARGUMENTS,ARGUMENT_LENGTH,STATUS
@@ -136,17 +136,17 @@ PROGRAM COUPLEDLAPLACE
   TYPE(cmfe_RegionType) :: Region1,Region2,WorldRegion
   TYPE(cmfe_SolverType) :: CoupledSolver
   TYPE(cmfe_SolverEquationsType) :: CoupledSolverEquations
-  
+
 #ifdef WIN32
   !Quickwin type
   LOGICAL :: QUICKWIN_STATUS=.FALSE.
   TYPE(WINDOWCONFIG) :: QUICKWIN_WINDOW_CONFIG
 #endif
-  
+
   !Generic CMISS variables
-  
+
   INTEGER(CMISSIntg) :: Err
-  
+
 #ifdef WIN32
   !Initialise QuickWin
   QUICKWIN_WINDOW_CONFIG%TITLE="General Output" !Window title
@@ -190,15 +190,19 @@ PROGRAM COUPLEDLAPLACE
 
   !Set error handling mode
   CALL cmfe_ErrorHandlingModeSet(CMFE_ERRORS_TRAP_ERROR,Err)
- 
+
   !Set diganostics for testing
   !CALL cmfe_DiagnosticsSetOn(CMFE_FROM_DIAG_TYPE,[1,2,3,4,5],"Diagnostics",["SOLVER_MAPPING_CALCULATE         ", &
   !  & "SOLVER_MATRIX_STRUCTURE_CALCULATE"],Err)
-  
+
   !Get the computational nodes information
   CALL cmfe_ComputationalNumberOfNodesGet(NumberOfComputationalNodes,Err)
   CALL cmfe_ComputationalNodeNumberGet(ComputationalNodeNumber,Err)
-  
+  IF(NumberOfComputationalNodes>1) THEN
+    CALL HANDLE_ERROR("Interface-coupled problems cannot be run in parallel! As of: August 7, 2017.")
+    STOP
+  END IF
+
   !Start the creation of a new RC coordinate system for the first region
   PRINT *, ' == >> CREATING COORDINATE SYSTEM(1) << == '
   CALL cmfe_CoordinateSystem_Initialise(CoordinateSystem1,Err)
@@ -226,7 +230,7 @@ PROGRAM COUPLEDLAPLACE
   ENDIF
   !Finish the creation of the coordinate system
   CALL cmfe_CoordinateSystem_CreateFinish(CoordinateSystem2,Err)
-  
+
   !Start the creation of a new RC coordinate system for the second region
   PRINT *, ' == >> CREATING COORDINATE SYSTEM(Interface) << == '
   CALL cmfe_CoordinateSystem_Initialise(CoordinateSystemInterface,Err)
@@ -240,7 +244,7 @@ PROGRAM COUPLEDLAPLACE
   ENDIF
   !Finish the creation of the coordinate system
   CALL cmfe_CoordinateSystem_CreateFinish(CoordinateSystemInterface,Err)
-  
+
   !Start the creation of the first region
   PRINT *, ' == >> CREATING REGION(1) << == '
   CALL cmfe_Region_Initialise(Region1,Err)
@@ -287,7 +291,7 @@ PROGRAM COUPLEDLAPLACE
   ENDIF
   !Finish the creation of the basis
   CALL cmfe_Basis_CreateFinish(Basis1,Err)
-   
+
   !Start the creation of a bI/tri-XXX-Lagrange basis
   PRINT *, ' == >> CREATING BASIS(2) << == '
   CALL cmfe_Basis_Initialise(Basis2,Err)
@@ -306,7 +310,7 @@ PROGRAM COUPLEDLAPLACE
   ENDIF
   !Finish the creation of the basis
   CALL cmfe_Basis_CreateFinish(Basis2,Err)
-  
+
   !Start the creation of a generated mesh in the first region
   PRINT *, ' == >> CREATING GENERATED MESH(1) << == '
   CALL cmfe_GeneratedMesh_Initialise(GeneratedMesh1,Err)
@@ -314,7 +318,7 @@ PROGRAM COUPLEDLAPLACE
   !Set up a regular x*y*z mesh
   CALL cmfe_GeneratedMesh_TypeSet(GeneratedMesh1,CMFE_GENERATED_MESH_REGULAR_MESH_TYPE,Err)
   !Set the default basis
-  CALL cmfe_GeneratedMesh_BasisSet(GeneratedMesh1,Basis1,Err)   
+  CALL cmfe_GeneratedMesh_BasisSet(GeneratedMesh1,Basis1,Err)
   !Define the mesh on the first region
   IF(NUMBER_GLOBAL_Z_ELEMENTS==0) THEN
     CALL cmfe_GeneratedMesh_ExtentSet(GeneratedMesh1,[WIDTH,HEIGHT],Err)
@@ -324,7 +328,7 @@ PROGRAM COUPLEDLAPLACE
     CALL cmfe_GeneratedMesh_ExtentSet(GeneratedMesh1,[WIDTH,HEIGHT,LENGTH],Err)
     CALL cmfe_GeneratedMesh_NumberOfElementsSet(GeneratedMesh1,[NUMBER_GLOBAL_X_ELEMENTS, &
       & NUMBER_GLOBAL_Y_ELEMENTS,NUMBER_GLOBAL_Z_ELEMENTS],Err)
-  ENDIF    
+  ENDIF
   !Finish the creation of a generated mesh in the first region
   CALL cmfe_Mesh_Initialise(Mesh1,Err)
   CALL cmfe_GeneratedMesh_CreateFinish(GeneratedMesh1,Mesh1UserNumber,Mesh1,Err)
@@ -336,7 +340,7 @@ PROGRAM COUPLEDLAPLACE
   !Set up a regular x*y*z mesh
   CALL cmfe_GeneratedMesh_TypeSet(GeneratedMesh2,CMFE_GENERATED_MESH_REGULAR_MESH_TYPE,Err)
   !Set the default basis
-  CALL cmfe_GeneratedMesh_BasisSet(GeneratedMesh2,Basis2,Err)   
+  CALL cmfe_GeneratedMesh_BasisSet(GeneratedMesh2,Basis2,Err)
   !Define the mesh on the second region
   IF(NUMBER_GLOBAL_Z_ELEMENTS==0) THEN
     CALL cmfe_GeneratedMesh_OriginSet(GeneratedMesh2,[WIDTH,0.0_CMISSRP],Err)
@@ -348,7 +352,7 @@ PROGRAM COUPLEDLAPLACE
     CALL cmfe_GeneratedMesh_ExtentSet(GeneratedMesh2,[WIDTH,HEIGHT,LENGTH],Err)
     CALL cmfe_GeneratedMesh_NumberOfElementsSet(GeneratedMesh2,[NUMBER_GLOBAL_X_ELEMENTS, &
       & NUMBER_GLOBAL_Y_ELEMENTS,NUMBER_GLOBAL_Z_ELEMENTS],Err)
-  ENDIF    
+  ENDIF
   !Finish the creation of a generated mesh in the second region
   CALL cmfe_Mesh_Initialise(Mesh2,Err)
   CALL cmfe_GeneratedMesh_CreateFinish(GeneratedMesh2,Mesh2UserNumber,Mesh2,Err)
@@ -385,7 +389,7 @@ PROGRAM COUPLEDLAPLACE
   PRINT *, ' == >> CREATING INTERFACE MAPPING BASIS << == '
   CALL cmfe_Basis_Initialise(InterfaceMappingBasis,Err)
   CALL cmfe_Basis_CreateStart(InterfaceMappingBasisUserNumber,InterfaceMappingBasis,Err)
-  IF(NUMBER_GLOBAL_Z_ELEMENTS==0) THEN  
+  IF(NUMBER_GLOBAL_Z_ELEMENTS==0) THEN
     !Set the basis to be a linear Lagrange basis
     CALL cmfe_Basis_NumberOfXiSet(InterfaceMappingBasis,1,Err)
     CALL cmfe_Basis_InterpolationXiSet(InterfaceMappingBasis,[INTERPOLATION_TYPE],Err)
@@ -396,7 +400,7 @@ PROGRAM COUPLEDLAPLACE
   ENDIF
   !Finish the creation of the basis
   CALL cmfe_Basis_CreateFinish(InterfaceMappingBasis,Err)
-  
+
   !Start the creation of a generated mesh for the interface
   PRINT *, ' == >> CREATING INTERFACE GENERATED MESH << == '
   CALL cmfe_GeneratedMesh_Initialise(InterfaceGeneratedMesh,Err)
@@ -404,7 +408,7 @@ PROGRAM COUPLEDLAPLACE
   !Set up a regular x*y*z mesh
   CALL cmfe_GeneratedMesh_TypeSet(InterfaceGeneratedMesh,CMFE_GENERATED_MESH_REGULAR_MESH_TYPE,Err)
   !Set the default basis
-  CALL cmfe_GeneratedMesh_BasisSet(InterfaceGeneratedMesh,InterfaceBasis,Err)   
+  CALL cmfe_GeneratedMesh_BasisSet(InterfaceGeneratedMesh,InterfaceBasis,Err)
   !Define the mesh on the interface
   IF(NUMBER_GLOBAL_Z_ELEMENTS==0) THEN
     CALL cmfe_GeneratedMesh_OriginSet(InterfaceGeneratedMesh,[WIDTH,0.0_CMISSRP],Err)
@@ -415,7 +419,7 @@ PROGRAM COUPLEDLAPLACE
     CALL cmfe_GeneratedMesh_ExtentSet(InterfaceGeneratedMesh,[0.0_CMISSRP,HEIGHT,LENGTH],Err)
     CALL cmfe_GeneratedMesh_NumberOfElementsSet(InterfaceGeneratedMesh,[NUMBER_GLOBAL_Y_ELEMENTS, &
       & NUMBER_GLOBAL_Z_ELEMENTS],Err)
-  ENDIF    
+  ENDIF
   !Finish the creation of a generated mesh in interface
   CALL cmfe_Mesh_Initialise(InterfaceMesh,Err)
   CALL cmfe_GeneratedMesh_CreateFinish(InterfaceGeneratedMesh,InterfaceMeshUserNumber,InterfaceMesh,Err)
@@ -433,12 +437,12 @@ PROGRAM COUPLEDLAPLACE
   CASE DEFAULT
     CALL HANDLE_ERROR("Invalid interpolation type.")
   END SELECT
-  IF(NUMBER_GLOBAL_Z_ELEMENTS==0) THEN   
+  IF(NUMBER_GLOBAL_Z_ELEMENTS==0) THEN
     DO y_element_idx=1,NUMBER_GLOBAL_Y_ELEMENTS
       IF (INTERPOLATION_TYPE==1) THEN
         !Map the interface element to the elements in mesh 1
         CALL cmfe_InterfaceMeshConnectivity_ElementNumberSet(InterfaceMeshConnectivity,y_element_idx,Mesh1Index, &
-          y_element_idx*NUMBER_GLOBAL_X_ELEMENTS,Err)
+          & y_element_idx*NUMBER_GLOBAL_X_ELEMENTS,Err)
         XI2 = [ 1.0_CMISSRP, 0.0_CMISSRP ]
         CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity,y_element_idx,Mesh1Index, &
           & y_element_idx*NUMBER_GLOBAL_X_ELEMENTS,1,1,XI2,Err)
@@ -482,74 +486,161 @@ PROGRAM COUPLEDLAPLACE
       END IF
     ENDDO !y_element_idx
   ELSE
-    WRITE(*,*) ">>>ERROR: Need to fix up interface mesh connectivity for 3D!"
-    STOP
     DO y_element_idx=1,NUMBER_GLOBAL_Y_ELEMENTS
       DO z_element_idx=1,NUMBER_GLOBAL_Z_ELEMENTS
-        !Map the interface element to the elements in mesh 1
-        CALL cmfe_InterfaceMeshConnectivity_ElementNumberSet(InterfaceMeshConnectivity, &
-          & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh1Index, &
-          y_element_idx*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS* &
-          & NUMBER_GLOBAL_Y_ELEMENTS,Err)
-        XI3 = [ 1.0_CMISSRP, 0.0_CMISSRP, 0.0_CMISSRP ]
-        CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity,y_element_idx+ &
-          & (z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh1Index,y_element_idx* &
-          & NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS* &
-          & NUMBER_GLOBAL_Y_ELEMENTS,1,1,XI3,Err)
-        XI3 = [ 1.0_CMISSRP, 1.0_CMISSRP, 0.0_CMISSRP ]
-        CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity,y_element_idx+ &
-          & (z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh1Index,y_element_idx* &
-          & NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS* &
-          & NUMBER_GLOBAL_Y_ELEMENTS,2,1,XI3,Err)
-        XI3 = [ 1.0_CMISSRP, 0.0_CMISSRP, 1.0_CMISSRP ]
-        CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity,y_element_idx+ &
-          & (z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh1Index,y_element_idx* &
-          & NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS* &
-          & NUMBER_GLOBAL_Y_ELEMENTS,3,1,XI3,Err)
-        XI3 = [ 1.0_CMISSRP, 1.0_CMISSRP, 1.0_CMISSRP ]
-        CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity,y_element_idx+ &
-          & (z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh1Index,y_element_idx* &
-          & NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS* &
-          & NUMBER_GLOBAL_Y_ELEMENTS,4,1,XI3,Err)
-        !Map the interface element to the elements in mesh 2
-        CALL cmfe_InterfaceMeshConnectivity_ElementNumberSet(InterfaceMeshConnectivity,y_element_idx+ &
-          & (z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh2Index,1+(y_element_idx-1)* &
-          & NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS* &
-          & NUMBER_GLOBAL_Y_ELEMENTS,Err)
-        DO mesh_local_y_node = 1,NUMBER_OF_NODE_XI-1
-          DO mesh_local_z_node = 1,NUMBER_OF_NODE_XI-1
-            XI3 = [ 0.0_CMISSRP,  &
-              & REAL(mesh_local_y_node-1,CMISSRP)/REAL(NUMBER_OF_NODE_XI-1,CMISSRP), &
-              & REAL(mesh_local_z_node-1,CMISSRP)/REAL(NUMBER_OF_NODE_XI-1,CMISSRP) ]
-            CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity,y_element_idx+ &
-              & (z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh2Index,1+(y_element_idx-1)* &
-              & NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS* &
-              & NUMBER_GLOBAL_Y_ELEMENTS,1,1,XI3,Err)
-            XI3 = [ 0.0_CMISSRP,  &
-              & REAL(mesh_local_y_node,CMISSRP)/REAL(NUMBER_OF_NODE_XI-1,CMISSRP), &
-              & REAL(mesh_local_z_node-1,CMISSRP)/REAL(NUMBER_OF_NODE_XI-1,CMISSRP) ]
-            CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity,y_element_idx+ &
-              & (z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh2Index,1+(y_element_idx-1)* &
-              & NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS* &
-              & NUMBER_GLOBAL_Y_ELEMENTS,2,1,XI3,Err)
-            XI3 = [ 0.0_CMISSRP,  &
-              & REAL(mesh_local_y_node-1,CMISSRP)/REAL(NUMBER_OF_NODE_XI-1,CMISSRP), &
-              & REAL(mesh_local_z_node,CMISSRP)/REAL(NUMBER_OF_NODE_XI-1,CMISSRP) ]
-            CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity,y_element_idx+ &
-              & (z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh2Index,1+(y_element_idx-1)* &
-              & NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS* &
-              & NUMBER_GLOBAL_Y_ELEMENTS,3,1,XI3,Err)
-            XI3 = [ 0.0_CMISSRP,  &
-              & REAL(mesh_local_y_node,CMISSRP)/REAL(NUMBER_OF_NODE_XI-1,CMISSRP), &
-              & REAL(mesh_local_z_node,CMISSRP)/REAL(NUMBER_OF_NODE_XI-1,CMISSRP) ]
-            CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity,y_element_idx+ &
-              & (z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh2Index,1+(y_element_idx-1)* &
-              & NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS* &
-              & NUMBER_GLOBAL_Y_ELEMENTS,4,1,XI3,Err)
-          ENDDO !mesh_local_z_node
-        ENDDO !mesh_local_y_node
+        IF (INTERPOLATION_TYPE==1) THEN
+          !Map the interface element to the elements in mesh 1
+          CALL cmfe_InterfaceMeshConnectivity_ElementNumberSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh1Index, &
+            & y_element_idx*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS,Err)
+          XI3 = [ 1.0_CMISSRP, 0.0_CMISSRP, 0.0_CMISSRP ]
+          CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh1Index, &
+            & y_element_idx*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS, &
+            & 1,1,XI3,Err)
+          XI3 = [ 1.0_CMISSRP, 1.0_CMISSRP, 0.0_CMISSRP ]
+          CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh1Index, &
+            & y_element_idx*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS, &
+            & 2,1,XI3,Err)
+          XI3 = [ 1.0_CMISSRP, 0.0_CMISSRP, 1.0_CMISSRP ]
+          CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh1Index, &
+            & y_element_idx*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS, &
+            & 3,1,XI3,Err)
+          XI3 = [ 1.0_CMISSRP, 1.0_CMISSRP, 1.0_CMISSRP ]
+          CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh1Index, &
+            & y_element_idx*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS, &
+            & 4,1,XI3,Err)
+          !Map the interface element to the elements in mesh 2
+          CALL cmfe_InterfaceMeshConnectivity_ElementNumberSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh2Index, &
+            & 1+(y_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS,Err)
+          XI3 = [ 0.0_CMISSRP, 0.0_CMISSRP, 0.0_CMISSRP ]
+          CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh2Index, &
+            & 1+(y_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS, &
+            & 1,1,XI3,Err)
+          XI3 = [ 0.0_CMISSRP, 1.0_CMISSRP, 0.0_CMISSRP ]
+          CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh2Index, &
+            & 1+(y_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS, &
+            & 2,1,XI3,Err)
+          XI3 = [ 0.0_CMISSRP, 0.0_CMISSRP, 1.0_CMISSRP ]
+          CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh2Index, &
+            & 1+(y_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS, &
+            & 3,1,XI3,Err)
+          XI3 = [ 0.0_CMISSRP, 1.0_CMISSRP, 1.0_CMISSRP ]
+          CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh2Index, &
+            & 1+(y_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS, &
+            & 4,1,XI3,Err)
+        ELSE IF (INTERPOLATION_TYPE==2) THEN
+          !Map the interface element to the elements in mesh 1
+          CALL cmfe_InterfaceMeshConnectivity_ElementNumberSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh1Index, &
+            & y_element_idx*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS,Err)
+          XI3 = [ 1.0_CMISSRP, 0.0_CMISSRP, 0.0_CMISSRP ]
+          CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh1Index, &
+            & y_element_idx*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS, &
+            & 1,1,XI3,Err)
+          XI3 = [ 1.0_CMISSRP, 0.5_CMISSRP, 0.0_CMISSRP ]
+          CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh1Index, &
+            & y_element_idx*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS, &
+            & 2,1,XI3,Err)
+          XI3 = [ 1.0_CMISSRP, 1.0_CMISSRP, 0.0_CMISSRP ]
+          CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh1Index, &
+            & y_element_idx*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS, &
+            & 3,1,XI3,Err)
+          XI3 = [ 1.0_CMISSRP, 0.0_CMISSRP, 0.5_CMISSRP ]
+          CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh1Index, &
+            & y_element_idx*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS, &
+            & 4,1,XI3,Err)
+          XI3 = [ 1.0_CMISSRP, 0.5_CMISSRP, 0.5_CMISSRP ]
+          CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh1Index, &
+            & y_element_idx*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS, &
+            & 5,1,XI3,Err)
+          XI3 = [ 1.0_CMISSRP, 1.0_CMISSRP, 0.5_CMISSRP ]
+          CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh1Index, &
+            & y_element_idx*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS, &
+            & 6,1,XI3,Err)
+          XI3 = [ 1.0_CMISSRP, 0.0_CMISSRP, 1.0_CMISSRP ]
+          CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh1Index, &
+            & y_element_idx*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS, &
+            & 7,1,XI3,Err)
+          XI3 = [ 1.0_CMISSRP, 0.5_CMISSRP, 1.0_CMISSRP ]
+          CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh1Index, &
+            & y_element_idx*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS, &
+            & 8,1,XI3,Err)
+          XI3 = [ 1.0_CMISSRP, 1.0_CMISSRP, 1.0_CMISSRP ]
+          CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh1Index, &
+            & y_element_idx*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS, &
+            & 9,1,XI3,Err)
+          !Map the interface element to the elements in mesh 2
+          CALL cmfe_InterfaceMeshConnectivity_ElementNumberSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh2Index, &
+            & 1+(y_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS,Err)
+          XI3 = [ 0.0_CMISSRP, 0.0_CMISSRP, 0.0_CMISSRP ]
+          CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh2Index, &
+            & 1+(y_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS, &
+            & 1,1,XI3,Err)
+          XI3 = [ 0.0_CMISSRP, 0.5_CMISSRP, 0.0_CMISSRP ]
+          CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh2Index, &
+            & 1+(y_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS, &
+            & 2,1,XI3,Err)
+          XI3 = [ 0.0_CMISSRP, 1.0_CMISSRP, 0.0_CMISSRP ]
+          CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh2Index, &
+            & 1+(y_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS, &
+            & 3,1,XI3,Err)
+          XI3 = [ 0.0_CMISSRP, 0.0_CMISSRP, 0.5_CMISSRP ]
+          CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh2Index, &
+            & 1+(y_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS, &
+            & 4,1,XI3,Err)
+          XI3 = [ 0.0_CMISSRP, 0.5_CMISSRP, 0.5_CMISSRP ]
+          CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh2Index, &
+            & 1+(y_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS, &
+            & 5,1,XI3,Err)
+          XI3 = [ 0.0_CMISSRP, 1.0_CMISSRP, 0.5_CMISSRP ]
+          CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh2Index, &
+            & 1+(y_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS, &
+            & 6,1,XI3,Err)
+          XI3 = [ 0.0_CMISSRP, 0.0_CMISSRP, 1.0_CMISSRP ]
+          CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh2Index, &
+            & 1+(y_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS, &
+            & 7,1,XI3,Err)
+          XI3 = [ 0.0_CMISSRP, 0.5_CMISSRP, 1.0_CMISSRP ]
+          CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh2Index, &
+            & 1+(y_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS, &
+            & 8,1,XI3,Err)
+          XI3 = [ 0.0_CMISSRP, 1.0_CMISSRP, 1.0_CMISSRP ]
+          CALL cmfe_InterfaceMeshConnectivity_ElementXiSet(InterfaceMeshConnectivity, &
+            & y_element_idx+(z_element_idx-1)*NUMBER_GLOBAL_Y_ELEMENTS,Mesh2Index, &
+            & 1+(y_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS+(z_element_idx-1)*NUMBER_GLOBAL_X_ELEMENTS*NUMBER_GLOBAL_Y_ELEMENTS, &
+            & 9,1,XI3,Err)
+        END IF
       ENDDO !z_element_idx
     ENDDO !y_element_idx
+    WRITE(*,*) ">>>ERROR: Need to fix up interface mesh connectivity for 3D!"
+    STOP
   ENDIF
   CALL cmfe_InterfaceMeshConnectivity_CreateFinish(InterfaceMeshConnectivity,Err)
 
@@ -574,7 +665,7 @@ PROGRAM COUPLEDLAPLACE
   CALL cmfe_Decomposition_CalculateFacesSet(Decomposition2,.TRUE.,Err)
   !Finish the decomposition
   CALL cmfe_Decomposition_CreateFinish(Decomposition2,Err)
-  
+
   !Create a decomposition for the interface mesh
   PRINT *, ' == >> CREATING INTERFACE DECOMPOSITION << == '
   CALL cmfe_Decomposition_Initialise(InterfaceDecomposition,Err)
@@ -665,10 +756,11 @@ PROGRAM COUPLEDLAPLACE
   CALL cmfe_Equations_Initialise(Equations1,Err)
   CALL cmfe_EquationsSet_EquationsCreateStart(EquationsSet1,Equations1,Err)
   !Set the equations matrices sparsity type
-  CALL cmfe_Equations_SparsityTypeSet(Equations1,CMFE_EQUATIONS_SPARSE_MATRICES,Err)
+  !CALL cmfe_Equations_SparsityTypeSet(Equations1,CMFE_EQUATIONS_SPARSE_MATRICES,Err)
+  CALL cmfe_Equations_SparsityTypeSet(Equations1,CMFE_EQUATIONS_FULL_MATRICES,Err)
   !Set the equations set output
-  !CALL cmfe_Equations_OutputTypeSet(Equations1,CMFE_EQUATIONS_NO_OUTPUT,Err)
-  CALL cmfe_Equations_OutputTypeSet(Equations1,CMFE_EQUATIONS_TIMING_OUTPUT,Err)
+  CALL cmfe_Equations_OutputTypeSet(Equations1,CMFE_EQUATIONS_NO_OUTPUT,Err)
+  !CALL cmfe_Equations_OutputTypeSet(Equations1,CMFE_EQUATIONS_TIMING_OUTPUT,Err)
   !CALL cmfe_Equations_OutputTypeSet(Equations1,CMFE_EQUATIONS_MATRIX_OUTPUT,Err)
   !CALL cmfe_Equations_OutputTypeSet(Equations1,CMFE_EQUATIONS_ELEMENT_MATRIX_OUTPUT,Err)
   !Finish the equations set equations
@@ -679,10 +771,11 @@ PROGRAM COUPLEDLAPLACE
   CALL cmfe_Equations_Initialise(Equations2,Err)
   CALL cmfe_EquationsSet_EquationsCreateStart(EquationsSet2,Equations2,Err)
   !Set the equations matrices sparsity type
-  CALL cmfe_Equations_SparsityTypeSet(Equations2,CMFE_EQUATIONS_SPARSE_MATRICES,Err)
+  !CALL cmfe_Equations_SparsityTypeSet(Equations2,CMFE_EQUATIONS_SPARSE_MATRICES,Err)
+  CALL cmfe_Equations_SparsityTypeSet(Equations2,CMFE_EQUATIONS_FULL_MATRICES,Err)
   !Set the equations set output
-  !CALL cmfe_Equations_OutputTypeSet(Equations2,CMFE_EQUATIONS_NO_OUTPUT,Err)
-  CALL cmfe_Equations_OutputTypeSet(Equations2,CMFE_EQUATIONS_TIMING_OUTPUT,Err)
+  CALL cmfe_Equations_OutputTypeSet(Equations2,CMFE_EQUATIONS_NO_OUTPUT,Err)
+  !CALL cmfe_Equations_OutputTypeSet(Equations2,CMFE_EQUATIONS_TIMING_OUTPUT,Err)
   !CALL cmfe_Equations_OutputTypeSet(Equations2,CMFE_EQUATIONS_MATRIX_OUTPUT,Err)
   !CALL cmfe_Equations_OutputTypeSet(Equations2,CMFE_EQUATIONS_ELEMENT_MATRIX_OUTPUT,Err)
   !Finish the equations set equations
@@ -737,12 +830,13 @@ PROGRAM COUPLEDLAPLACE
   CALL cmfe_InterfaceEquations_Initialise(InterfaceEquations,Err)
   CALL cmfe_InterfaceCondition_EquationsCreateStart(InterfaceCondition,InterfaceEquations,Err)
   !Set the interface equations sparsity
-  CALL cmfe_InterfaceEquations_SparsitySet(InterfaceEquations,CMFE_EQUATIONS_SPARSE_MATRICES,Err)
+  !CALL cmfe_InterfaceEquations_SparsitySet(InterfaceEquations,CMFE_EQUATIONS_SPARSE_MATRICES,Err)
+  CALL cmfe_InterfaceEquations_SparsitySet(InterfaceEquations,CMFE_EQUATIONS_FULL_MATRICES,Err)
   !Set the interface equations output
-  CALL cmfe_InterfaceEquations_OutputTypeSet(InterfaceEquations,CMFE_EQUATIONS_MATRIX_OUTPUT,Err)
+  CALL cmfe_InterfaceEquations_OutputTypeSet(InterfaceEquations,CMFE_EQUATIONS_NO_OUTPUT,Err)
   !Finish creating the interface equations
   CALL cmfe_InterfaceCondition_EquationsCreateFinish(InterfaceCondition,Err)
-  
+
   !Start the creation of a coupled problem.
   PRINT *, ' == >> CREATING PROBLEM << == '
   CALL cmfe_Problem_Initialise(CoupledProblem,Err)
@@ -756,18 +850,18 @@ PROGRAM COUPLEDLAPLACE
   CALL cmfe_Problem_ControlLoopCreateStart(CoupledProblem,Err)
   !Finish creating the problem control loop
   CALL cmfe_Problem_ControlLoopCreateFinish(CoupledProblem,Err)
- 
+
   !Start the creation of the problem solver for the coupled problem
   PRINT *, ' == >> CREATING PROBLEM SOLVERS << == '
   CALL cmfe_Solver_Initialise(CoupledSolver,Err)
   CALL cmfe_Problem_SolversCreateStart(CoupledProblem,Err)
   CALL cmfe_Problem_SolverGet(CoupledProblem,CMFE_CONTROL_LOOP_NODE,1,CoupledSolver,Err)
-  !CALL cmfe_Solver_OutputTypeSet(CoupledSolver,CMFE_SOLVER_NO_OUTPUT,Err)
+  CALL cmfe_Solver_OutputTypeSet(CoupledSolver,CMFE_SOLVER_NO_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(CoupledSolver,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(CoupledSolver,CMFE_SOLVER_TIMING_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(CoupledSolver,CMFE_SOLVER_SOLVER_OUTPUT,Err)
-  CALL cmfe_Solver_OutputTypeSet(CoupledSolver,CMFE_SOLVER_MATRIX_OUTPUT,Err)
-  CALL cmfe_Solver_LinearTypeSet(CoupledSolver,CMFE_SOLVER_LINEAR_DIRECT_SOLVE_TYPE,Err)
+  !CALL cmfe_Solver_OutputTypeSet(CoupledSolver,CMFE_SOLVER_MATRIX_OUTPUT,Err)
+  CALL cmfe_Solver_LinearTypeSet(CoupledSolver,CMFE_SOLVER_LINEAR_ITERATIVE_SOLVE_TYPE,Err)
   CALL cmfe_Solver_LibraryTypeSet(CoupledSolver,CMFE_SOLVER_MUMPS_LIBRARY,Err)
   !Finish the creation of the problem solver
   CALL cmfe_Problem_SolversCreateFinish(CoupledProblem,Err)
@@ -781,8 +875,8 @@ PROGRAM COUPLEDLAPLACE
   CALL cmfe_Problem_SolverGet(CoupledProblem,CMFE_CONTROL_LOOP_NODE,1,CoupledSolver,Err)
   CALL cmfe_Solver_SolverEquationsGet(CoupledSolver,CoupledSolverEquations,Err)
   !Set the solver equations sparsity
-  CALL cmfe_SolverEquations_SparsityTypeSet(CoupledSolverEquations,CMFE_SOLVER_SPARSE_MATRICES,Err)
-  !CALL cmfe_SolverEquations_SparsityTypeSet(CoupledSolverEquations,CMFE_SOLVER_FULL_MATRICES,Err)  
+  !CALL cmfe_SolverEquations_SparsityTypeSet(CoupledSolverEquations,CMFE_SOLVER_SPARSE_MATRICES,Err)
+  CALL cmfe_SolverEquations_SparsityTypeSet(CoupledSolverEquations,CMFE_SOLVER_FULL_MATRICES,Err)
   !Add in the first equations set
   CALL cmfe_SolverEquations_EquationsSetAdd(CoupledSolverEquations,EquationsSet1,EquationsSet1Index,Err)
   !Add in the second equations set
@@ -801,7 +895,7 @@ PROGRAM COUPLEDLAPLACE
   CALL cmfe_Decomposition_NodeDomainGet(Decomposition1,FirstNodeNumber,1,FirstNodeDomain,Err)
   IF(FirstNodeDomain==ComputationalNodeNumber) THEN
     CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,DependentField1,CMFE_FIELD_U_VARIABLE_TYPE,1,1,FirstNodeNumber,1, &
-      & CMFE_BOUNDARY_CONDITION_FIXED,0.0_CMISSRP,Err)
+      & CMFE_BOUNDARY_CONDITION_FIXED,-1.75_CMISSRP,Err)
   ENDIF
   !Set boundary conditions for second dependent field
   !Set the last node to 1.0
@@ -813,7 +907,6 @@ PROGRAM COUPLEDLAPLACE
     CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,DependentField2,CMFE_FIELD_U_VARIABLE_TYPE,1,1,LastNodeNumber,1, &
       & CMFE_BOUNDARY_CONDITION_FIXED,1.0_CMISSRP,Err)
   ENDIF
-  WRITE(*,*) "BC finish, proc ",ComputationalNodeNumber
   CALL cmfe_SolverEquations_BoundaryConditionsCreateFinish(CoupledSolverEquations,Err)
 
   !Solve the problem
@@ -837,14 +930,14 @@ PROGRAM COUPLEDLAPLACE
   CALL cmfe_Fields_NodesExport(InterfaceFields,"CoupledLaplace_Interface","FORTRAN",Err)
   CALL cmfe_Fields_ElementsExport(InterfaceFields,"CoupledLaplace_Interface","FORTRAN",Err)
   CALL cmfe_Fields_Finalise(InterfaceFields,Err)
-  
+
   !Finialise CMISS
   CALL cmfe_Finalise(Err)
 
-  WRITE(*,*) "Program successfully completed.",ComputationalNodeNumber
+  WRITE(*,'(A)') "Program successfully completed."
 
   STOP
- 
+
 CONTAINS
 
   SUBROUTINE HANDLE_ERROR(ERROR_STRING)
@@ -855,5 +948,5 @@ CONTAINS
     STOP
 
   END SUBROUTINE HANDLE_ERROR
-     
+
 END PROGRAM COUPLEDLAPLACE

@@ -1,3 +1,31 @@
+!###########################################################################################################################
+!###########################################################################################################################
+!#################                                  TODO SECTION:                                          #################
+!###########################################################################################################################
+!#################                     please note, what has to be changed, here:                          #################
+!#################                    if you're done, please remove the todo note.                         #################
+!###########################################################################################################################
+! 1. ALL:      PERIODD = ?   TO BE SET such that we have a single twitch from 0 to 0.1 ms 
+! 2. ALL:     TimeStop = ?   TO BE SET such that we have a single twitch from 0 to 0.1 ms
+! 3. NEHZAT: StimValue = ?   -1200 uA/cm^2 is THOMAS' SUGGESTION. Forget about old values. we changed many parameters!
+! 4. ALL:         VMax = ?   TO BE DISCUSSED. Is this used at all if we dont unse the pre-stretch?
+! 5. ALL:   TkLinParam = ?   TO BE DISCUSSED. Do we want/need this kind of model or not?!?
+! 6. THOMAS/ALL:             InitialStretch TO BE REMOVED COMPLETELY (with the whole tail and pre procedure):
+!       InitialStretch 
+! 7. AARON/THOMAS:   C = ?   From shorten, Razumova, Campbell, Heidlauf... get model straight!
+! 8. ALL:                    Do we use this because Thomas H. did in his paper, or do we just take an odd number to have a clear cell in the middle?:
+!   NumberOfNodesInXi1 = 16? if 16, then check which cell is stimulated. No. 8 or 9 (of 1 to 16)?
+!
+!###########################################################################################################################
+!                                                 other/ new issues:
+!###########################################################################################################################
+! -. none at the moment
+!###########################################################################################################################
+!###########################################################################################################################
+
+
+
+
 !> \file
 !> \author Adam Reeve
 !> \brief This is an example program to solve a finite elasticity equation using OpenCMISS calls.
@@ -72,34 +100,23 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   LOGICAL, PARAMETER :: DEBUGGING_PARALLEL_BARRIER = .FALSE.   ! execute a barrier where all processes wait when running in parallel, this is helpful to only debug the execution of single processes in a parallel scenario with gdb
   LOGICAL, PARAMETER :: DEBUGGING_PROBLEM_OUTPUT = .FALSE.     ! output the 'solver' object after it is created
   LOGICAL :: DebuggingOutput = .FALSE.    ! enable information from solvers
-  INTEGER(CMISSIntg) :: ModelType = 0     ! type of the model (was OldTomoMechanics): 0 = "3a","MultiPhysStrain", old version of tomo that works in parallel, 1 = "3","MultiPhysStrain", new version of tomo that is more stable in numerical sense, 2 = "4","Titin"
+  INTEGER(CMISSIntg) :: ModelType = 0 ! ### PAPERBRANCH SETTING     ! type of the model (was OldTomoMechanics): 0 = "3a","MultiPhysStrain", old version of tomo that works in parallel, 1 = "3","MultiPhysStrain", new version of tomo that is more stable in numerical sense, 2 = "4","Titin"
   LOGICAL :: EnableExportEMG = .FALSE.
   
   ! physical dimensions in [cm]
-  REAL(CMISSRP) :: PhysicalLength=3.0_CMISSRP ! (6)     X-direction
-  REAL(CMISSRP) :: PhysicalWidth= 3.0_CMISSRP ! (3)     Y-direction
-  REAL(CMISSRP) :: PhysicalHeight=1.5_CMISSRP ! (1.5)   Z-direction
-  REAL(CMISSRP) :: PhysicalStimulationLength = 0.1_CMISSRP  ! X-direction
+  REAL(CMISSRP) :: PhysicalLength=1.0_CMISSRP ! ### PAPERBRANCH SETTING !    X-direction
+  REAL(CMISSRP) :: PhysicalWidth= 1.0_CMISSRP ! ### PAPERBRANCH SETTING !    Y-direction
+  REAL(CMISSRP) :: PhysicalHeight=1.0_CMISSRP ! ### PAPERBRANCH SETTING !    Z-direction
+  REAL(CMISSRP) :: PhysicalStimulationLength = 0.001_CMISSRP  ! X-direction   ### PAPERBRANCH SETTING: a value small enough, such that ONLY ONE CELL is stimulated.
   
   !all times in [ms]
-  REAL(CMISSRP) :: time !=10.00_CMISSRP
-  REAL(CMISSRP), PARAMETER :: PERIODD=0.2_CMISSRP ! was 1
-  REAL(CMISSRP)            :: TimeStop=0.2_CMISSRP
+  REAL(CMISSRP) :: time
+  REAL(CMISSRP), PARAMETER :: PERIODD=0.2_CMISSRP                                               ! ### TO BE DISCUSSED. Want to have single twitch from 0 to 0.1 ms 
+  REAL(CMISSRP)            :: TimeStop=0.1_CMISSRP                                              ! ### TO BE DISCUSSED. Want to have single twitch from 0 to 0.1 ms 
 
-  REAL(CMISSRP) :: ElasticityTimeStep = 0.1000000000_CMISSRP !0.5_CMISSRP!0.05_CMISSRP!0.8_CMISSRP
-  REAL(CMISSRP) :: PDETimeStep = 0.005_CMISSRP              ! 0.005_CMISSRP
-  REAL(CMISSRP) :: ODETimeStep = 0.0001_CMISSRP!            ! set at '#timestepset'. 50 steps until DiHu - now to be set anew with proper DAE (integration) scheme.
-  
- !0.0001000_CMISSRP -> 50  !0.0001020_CMISSRP  !0.0001042_CMISSRP  !0.0001064_CMISSRP  !0.0001087_CMISSRP
- !0.0001111_CMISSRP -> 45  !0.0001136_CMISSRP  !0.0001163_CMISSRP  !0.0001190_CMISSRP  !0.0001220_CMISSRP 
- !0.0001250_CMISSRP -> 40  !0.0001282_CMISSRP  !0.0001316_CMISSRP  !0.0001351_CMISSRP  !0.0001389_CMISSRP
- !0.0001429_CMISSRP -> 35  !0.0001471_CMISSRP  !0.0001515_CMISSRP  !0.0001563_CMISSRP  !0.0001613_CMISSRP 
- !0.0001667_CMISSRP -> 30  !0.0001724_CMISSRP  !0.0001786_CMISSRP  !0.0001852_CMISSRP  !0.0001923_CMISSRP
- !0.0002_CMISSRP    -> 25  !0.0002083_CMISSRP  !0.0002174_CMISSRP  !0.0002273_CMISSRP  !0.0002381_CMISSRP
- !0.00025_CMISSRP   -> 20  !0.0002632_CMISSRP  !0.0002778_CMISSRP  !0.0002941_CMISSRP  !0.0003125_CMISSRP
- !0.0003333_CMISSRP -> 15  !0.0003571_CMISSRP  !0.0003846_CMISSRP  !0.0004167_CMISSRP  !0.0004545_CMISSRP
- !0.0005_CMISSRP    -> 10  !0.0005556_CMISSRP  !0.000625_CMISSRP   !0.0007143_CMISSRP  !0.0008333_CMISSRP
- !0.001_CMISSRP     -> 5   !0.00125_CMISSRP    !0.0016667_CMISSRP  !0.0025_CMISSRP     !0.005_CMISSRP     -> 1
+  REAL(CMISSRP) :: ElasticityTimeStep = 0.1_CMISSRP ! ### PAPERBRANCH SETTING
+  REAL(CMISSRP) :: PDETimeStep = 0.0005_CMISSRP ! ### PAPERBRANCH SETTING
+  REAL(CMISSRP) :: ODETimeStep = 0.0001_CMISSRP ! ### PAPERBRANCH SETTING
 
 !tomo keep ElasticityTimeStep and STIM_STOP at the same values
   REAL(CMISSRP), PARAMETER :: STIM_STOP=0.1_CMISSRP!ElasticityTimeStep   
@@ -110,61 +127,52 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !--------------------------------------------------------------------------------------------------------------------------------
 
   !stimulation current in [uA/cm^2]
-  REAL(CMISSRP) :: StimValue = 8000.0_CMISSRP     ! 20000.0_CMISSRP
+  REAL(CMISSRP) :: StimValue = 1200.0_CMISSRP ! ### 1200 [uA/cm^2] is THOMAS' SUGGESTION.       ! ### TO BE DISCUSSED --> NEHZAT.
 
-  REAL(CMISSRP) :: PMax=7.5_CMISSRP ! N/cm^2
+  REAL(CMISSRP) :: PMax=7.3_CMISSRP ! ### PAPERBRANCH SETTING ! N/cm^2
 
-  !condctivity in [mS/cm]
-!  REAL(CMISSRP), PARAMETER :: Conductivity=3.828_CMISSRP
-!  REAL(CMISSRP), PARAMETER :: Conductivity=1.0_CMISSRP
-  REAL(CMISSRP) :: Conductivity=0.5_CMISSRP
+  !condctivity in [mS/cm] - This is sigma
+  REAL(CMISSRP) :: Conductivity=3.828_CMISSRP ! ### PAPERBRANCH SETTING
 
   !surface area to volume ratio in [cm^-1]
-!  REAL(CMISSRP), PARAMETER :: Am=500.0_CMISSRP
-  REAL(CMISSRP) :: Am=1.0_CMISSRP
+  REAL(CMISSRP) :: Am=500.0_CMISSRP ! ### PAPERBRANCH SETTING
 
   !membrane capacitance in [uF/cm^2]
-  REAL(CMISSRP) :: CmFast=1.0_CMISSRP
-!  REAL(CMISSRP), PARAMETER :: CmSlow=0.58_CMISSRP
-  REAL(CMISSRP) :: CmSlow=1.0_CMISSRP
+  REAL(CMISSRP) :: CmFast=0.58_CMISSRP ! ### PAPERBRANCH SETTING: Which one is needed? fast/slow? I guess slow.
+  REAL(CMISSRP) :: CmSlow=0.58_CMISSRP ! ### PAPERBRANCH SETTING: Which one is needed? fast/slow? I guess slow.
 
-  !Material-Parameters C=[mu_1, mu_2, mu_3, alpha_1, alpha_2, alpha_3, mu_0, XB_stiffness]
+  !Material-Parameters C=[mu_1, mu_2, mu_3, alpha_1, alpha_2, alpha_3, mu_0, XB_stiffness (= e or \eta in different papers)]
   REAL(CMISSRP), PARAMETER, DIMENSION(8) :: C = &
-    & [0.0085_CMISSRP*5.0_CMISSRP,0.0_CMISSRP,0.0_CMISSRP, & ! [N/cm^2 = 10^4 J/m^3]
-    &  11.0_CMISSRP,1.0_CMISSRP,6.0_CMISSRP, &
-    &  1.0_CMISSRP,2.2e-9_CMISSRP]
+    & [0.0085_CMISSRP*5.0_CMISSRP,0.0_CMISSRP,0.0_CMISSRP, & ! [N/cm^2 = 10^4 J/m^3]            ! ### TO BE DISCUSSED.
+    &  11.0_CMISSRP,1.0_CMISSRP,6.0_CMISSRP, &                                                  ! ### TO BE DISCUSSED.
+    &  1.0_CMISSRP,2.2e-9_CMISSRP]                                                              ! ### TO BE DISCUSSED.
 
   !maximum contraction velocity in [cm/ms]
-  REAL(CMISSRP) :: VMax=-0.02_CMISSRP ! =0.2 m/s, rat GM
-  ! value for new mechanics: -0.2_CMISSRP
+  REAL(CMISSRP) :: VMax=-0.02_CMISSRP ! =0.2 m/s, rat GM                                        ! ### TO BE DISCUSSED. --> Benni.
 
-  !CAUTION - what are the units???
+  !CAUTION - what are the units???   ![N/cm^2]?
   REAL(CMISSRP), PARAMETER, DIMENSION(4) :: MAT_FE= &
-    &[0.0000000000635201_CMISSRP,0.3626712895523322_CMISSRP,0.0000027562837093_CMISSRP,43.372873938671383_CMISSRP]  ![N/cm^2]
-  !REAL(CMISSRP), PARAMETER, DIMENSION(4) :: MAT_FE= &
-  !  &[0.00000000635201_CMISSRP,36.26712895523322_CMISSRP,0.00027562837093_CMISSRP,4337.2873938671383_CMISSRP]  ![N/cm^2]
+    &[0.0000000000635201_CMISSRP,0.3626712895523322_CMISSRP,0.0000027562837093_CMISSRP,43.372873938671383_CMISSRP] ! ### PAPERBRANCH SETTING
 
-  REAL(CMISSRP) :: TkLinParam=1.0_CMISSRP ! 1: With Actin-Tintin Interaction 0: No Actin-Titin Interactions
+  REAL(CMISSRP) :: TkLinParam=1.0_CMISSRP ! 1: With Actin-Tintin Interaction 0: No Actin-Titin Interactions    ! ### TO BE DISCUSSED.
 
   !Inital Conditions
-  REAL(CMISSRP) :: InitialStretch=1.0_CMISSRP   ! previous value in new mechanical description: 1.2_CMISSRP
+  REAL(CMISSRP) :: InitialStretch=1.0_CMISSRP   ! previous value in new mechanical description: 1.2_CMISSRP    ! ### TO BE REMOVED.
   
-  INTEGER(CMISSIntg) :: ElasticityLoopMaximumNumberOfIterations = 5
-  INTEGER(CMISSIntg) :: NewtonMaximumNumberOfIterations = 500
-  REAL(CMISSRP) :: NewtonTolerance = 1.E-8_CMISSRP
-  REAL(CMISSRP) :: DAERelativeTolerance = 1.E-7_CMISSRP, DAEAbsoluteTolerance = 1.E-7_CMISSRP
+  INTEGER(CMISSIntg) :: ElasticityLoopMaximumNumberOfIterations = 5 ! ### Something we dont have to tell about.
+  INTEGER(CMISSIntg) :: NewtonMaximumNumberOfIterations = 500 ! ### Something we dont have to tell about.
+  REAL(CMISSRP) :: NewtonTolerance = 1.E-8_CMISSRP ! ### Something we dont have to tell about.
+  REAL(CMISSRP) :: DAERelativeTolerance = 1.E-7_CMISSRP, DAEAbsoluteTolerance = 1.E-7_CMISSRP! ### Something we dont have to tell about.
 
-!  REAL(CMISSRP), PARAMETER :: CONTRACTION_VELOCITY=-6.0e-1_CMISSRP ![cm/s]
-  
   !--------------------------------------------------------------------------------------------------------------------------------
 
-  INTEGER(CMISSIntg) :: NumberGlobalXElements = 3
-  INTEGER(CMISSIntg) :: NumberGlobalYElements = 4
-  INTEGER(CMISSIntg) :: NumberGlobalZElements = 1
-  INTEGER(CMISSIntg) :: NumberOfInSeriesFibres = 1
-  INTEGER(CMISSIntg) :: NumberOfNodesInXi1 = 31
-  INTEGER(CMISSIntg) :: NumberOfNodesInXi2 = 2
-  INTEGER(CMISSIntg) :: NumberOfNodesInXi3 = 3
+  INTEGER(CMISSIntg) :: NumberGlobalXElements = 2 ! ### PAPERBRANCH SETTING
+  INTEGER(CMISSIntg) :: NumberGlobalYElements = 2 ! ### PAPERBRANCH SETTING
+  INTEGER(CMISSIntg) :: NumberGlobalZElements = 2 ! ### PAPERBRANCH SETTING
+  INTEGER(CMISSIntg) :: NumberOfInSeriesFibres = 1 ! ### TO BE DISCUSSED? Only Benni will need this. Default 1 makes sense.  
+  INTEGER(CMISSIntg) :: NumberOfNodesInXi1 = 16 ! ### PAPERBRANCH SETTING     ! TO BE DISCUSSED    (which cell is stimulated? No. 8 or 9 (of 1 to 16)?)
+  INTEGER(CMISSIntg) :: NumberOfNodesInXi2 = 3 ! ### PAPERBRANCH SETTING
+  INTEGER(CMISSIntg) :: NumberOfNodesInXi3 = 3 ! ### PAPERBRANCH SETTING
   
   INTEGER(CMISSLIntg) :: NumberOfElementsFE
   INTEGER(CMISSIntg) :: NumberOfNodesM

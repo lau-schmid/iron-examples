@@ -7,6 +7,7 @@
 !###########################################################################################################################
 ! 1. ALL:      PERIODD = ?   TO BE SET such that we have a single twitch from 0 to 0.1 ms 
 ! 2. ALL:     TimeStop = ?   TO BE SET such that we have a single twitch from 0 to 0.1 ms
+! 2a ALL:    STIM_STOP = ?   TO BE SET When shall it end? ?0.5? ?0.2?
 ! 3. NEHZAT: StimValue = ?   -1200 uA/cm^2 is THOMAS' SUGGESTION. Forget about old values. we changed many parameters!
 ! 4. ALL:         VMax = ?   TO BE DISCUSSED. Is this used at all if we dont unse the pre-stretch?
 ! 5. ALL:   TkLinParam = ?   TO BE DISCUSSED. Do we want/need this kind of model or not?!?
@@ -119,7 +120,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   REAL(CMISSRP) :: ODETimeStep = 0.0001_CMISSRP ! ### PAPERBRANCH SETTING
 
 !tomo keep ElasticityTimeStep and STIM_STOP at the same values
-  REAL(CMISSRP), PARAMETER :: STIM_STOP=0.1_CMISSRP!ElasticityTimeStep   
+  REAL(CMISSRP), PARAMETER :: STIM_STOP=0.1_CMISSRP!ElasticityTimeStep                          ! ### TO BE DISCUSSED. Want to have single twitch from 0 to 0.1 ms and simulation until  ?0.5?
 
   INTEGER(CMISSIntg)  :: OutputTimestepStride=1  ! (10)
 

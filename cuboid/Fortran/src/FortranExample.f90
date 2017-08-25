@@ -3035,6 +3035,9 @@ SUBROUTINE InitializeCellML()
 
   IF (ModelType == 0) THEN    ! 3a, "MultiPhysStrain", old tomo mechanics
     CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex,"wal_environment/I_HH",Err)
+    CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex,"razumova/L_S",Err) !(= l_{hs})
+   ! muss theoretisch auch übergeben werden, ist aber noch nicht im subcell model enthalten:
+   ! CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex,"razumova/velo",Err) ( = d{l_{hs}} / d{t})
   ELSEIF (ModelType == 1) THEN ! 3, "MultiPhysStrain", numerically more stable
     CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex,"Aliev_Panfilov/I_HH",Err)
     CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex,"Razumova/l_hs",Err)
@@ -3044,7 +3047,6 @@ SUBROUTINE InitializeCellML()
     CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex,"Razumova/l_hs",Err)
     CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex,"Razumova/rel_velo",Err)
   ENDIF
-!  CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex,"razumova/L_S",Err)
 !  CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex,"razumova/rel_velo",Err)
 !
 !  CALL cmfe_CellML_VariableSetAsKnown(CellML,shortenModelIndex2,"wal_environment/I_HH",Err)
@@ -3059,6 +3061,7 @@ SUBROUTINE InitializeCellML()
   !,  --> set "razumova/stress" as wanted!
   !,  --> no need to set "wal_environment/vS" since all STATE variables are automatically set as wanted!
   IF (ModelType == 0) THEN    ! 3a, "MultiPhysStrain", old tomo mechanics
+  ! wird in CellML als Stress berechnet, dann aber als Rate ausgegeben. passt das so?: Achtung, Modell nicht implementiert in ModelType==0.
     CALL cmfe_CellML_VariableSetAsWanted(CellML,shortenModelIndex,"razumova/stress",Err)
   ELSEIF (ModelType == 2) THEN ! 4, "Titin"
     CALL cmfe_CellML_VariableSetAsWanted(CellML,shortenModelIndex,"Razumova/ActiveStress",Err)

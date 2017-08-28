@@ -112,8 +112,8 @@ PROGRAM MONODOMAINEXAMPLE
   
   INTEGER(CMISSIntg) :: OUTPUT_FREQUENCY = 1
   REAL(CMISSRP) :: STIM_VALUE
-  REAL(CMISSRP), PARAMETER :: STIM_STOP = 0.50_CMISSRP
-  REAL(CMISSRP) :: TIME_STOP = 5.0_CMISSRP
+  REAL(CMISSRP), PARAMETER :: STIM_STOP = 0.10_CMISSRP
+  REAL(CMISSRP) :: TIME_STOP = 10.0_CMISSRP
   REAL(CMISSRP) :: ODE_TIME_STEP
   REAL(CMISSRP) :: PDE_TIME_STEP
   REAL(CMISSRP), PARAMETER :: CONDUCTIVITY = 3.828_CMISSRP
@@ -227,9 +227,9 @@ PROGRAM MONODOMAINEXAMPLE
     SOLVER_TYPE=0
     !INTERPOLATION_TYPE=1
     
-    !INTERPOLATION_TYPE=CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION
-    INTERPOLATION_TYPE=CMFE_BASIS_QUADRATIC_LAGRANGE_INTERPOLATION
-!    INTERPOLATION_TYPE=CMFE_BASIS_CUBIC_LAGRANGE_INTERPOLATION 
+    INTERPOLATION_TYPE=CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION
+    !INTERPOLATION_TYPE=CMFE_BASIS_QUADRATIC_LAGRANGE_INTERPOLATION
+    !INTERPOLATION_TYPE=CMFE_BASIS_CUBIC_LAGRANGE_INTERPOLATION 
 
     ! BASIS_LINEAR_LAGRANGE_INTERPOLATION=1 !<Linear Lagrange interpolation specification \see BASIS_ROUTINES_InterpolationSpecifications,BASIS_ROUTINES
     ! BASIS_QUADRATIC_LAGRANGE_INTERPOLATION=2 !<Quadratic Lagrange interpolation specification \see BASIS_ROUTINES_InterpolationSpecifications,BASIS_ROUTINES
@@ -240,12 +240,14 @@ PROGRAM MONODOMAINEXAMPLE
     ! BASIS_LINEAR_SIMPLEX_INTERPOLATION=7 !<Linear Simplex interpolation specification \see BASIS_ROUTINES_InterpolationSpecifications,BASIS_ROUTINES
     ! BASIS_QUADRATIC_SIMPLEX_INTERPOLATION=8 !<Quadratic Simplex interpolation specification \see BASIS_ROUTINES_InterpolationSpecifications,BASIS_ROUTINES
     ! BASIS_CUBIC_SIMPLEX_INTERPOLATION=9 !<Cubic Simplex interpolation specification \see BASIS_ROUTINES_InterpolationSpecifications,BASIS_ROUTINES
-    PDE_TIME_STEP = 0.01_CMISSRP
-    ODE_TIME_STEP = 0.01_CMISSRP
-    TIME_STOP=5.00
+    
+    PDE_TIME_STEP = 0.0005_CMISSRP
+    ODE_TIME_STEP = 0.0001_CMISSRP
+    TIME_STOP=10.00
     OUTPUT_FREQUENCY=1
-    CellmlFile="hodgkin_huxley_1952.cellml"
-    SLOW_TWITCH=.FALSE.
+    !CellmlFile="hodgkin_huxley_1952.cellml"
+    CellmlFile="slow_TK_2014_12_08.xml"
+    SLOW_TWITCH=.TRUE.
   ENDIF
 
   ! determine file name for output files
@@ -401,8 +403,8 @@ PROGRAM MONODOMAINEXAMPLE
   ELSE  
     CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
     & 1.0_CMISSRP,Err)
-    IF(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE > 16) THEN
-      STIM_VALUE=(75.0_CMISSRP/16.0_CMISSRP)*(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE)
+    IF(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE > 6) THEN
+      STIM_VALUE=(75.0_CMISSRP/6.0_CMISSRP)*(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE)
     ELSE
       STIM_VALUE=75.0_CMISSRP
     ENDIF
@@ -526,13 +528,19 @@ PROGRAM MONODOMAINEXAMPLE
   
   !Start the creation of a problem.
   CALL cmfe_Problem_Initialise(Problem,Err)
-  !Set the Stimulus at half the bottom nodes
+  
+!!!test for STRANG-SPLITTING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!CALL cmfe_Problem_CreateStart(ProblemUserNumber,&
+  !!!  & [CMFE_PROBLEM_BIOELECTRICS_CLASS,CMFE_PROBLEM_MONODOMAIN_EQUATION_TYPE,CMFE_PROBLEM_MONODOMAIN_GUDUNOV_SPLIT_SUBTYPE],&
+  !!!  & Problem,Err)
   CALL cmfe_Problem_CreateStart(ProblemUserNumber,&
-    & [CMFE_PROBLEM_BIOELECTRICS_CLASS,CMFE_PROBLEM_MONODOMAIN_EQUATION_TYPE,CMFE_PROBLEM_MONODOMAIN_GUDUNOV_SPLIT_SUBTYPE],&
-    & Problem,Err)
+   & [CMFE_PROBLEM_BIOELECTRICS_CLASS,CMFE_PROBLEM_MONODOMAIN_EQUATION_TYPE,&
+   & CMFE_PROBLEM_MONODOMAIN_STRANG_SPLIT_SUBTYPE],Problem,Err)
+    
   !Finish the creation of a problem.
   CALL cmfe_Problem_CreateFinish(Problem,Err)
 
+   
   !Start the creation of the problem control loop
   !Loop in time for STIM_STOP with the Stimulus applied.
   CALL cmfe_Problem_ControlLoopCreateStart(Problem,Err)
@@ -550,27 +558,47 @@ PROGRAM MONODOMAINEXAMPLE
  
   !Start the creation of the problem solvers
   CALL cmfe_Problem_SolversCreateStart(Problem,Err)
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !Get the first (DAE) solver
   CALL cmfe_Solver_Initialise(Solver,Err)
   CALL cmfe_Problem_SolverGet(Problem,CMFE_CONTROL_LOOP_NODE,1,Solver,Err)
   !Set the DAE time step to be 10 us
   CALL cmfe_Solver_DAETimeStepSet(Solver,ODE_TIME_STEP,Err)
-  !CALL cmfe_Solver_DAESolverTypeSet(Solver,CMFE_SOLVER_DAE_EXTERNAL,Err)
+  
+  !!! changing to the Heun method for the Strang-Splitting
+  CALL cmfe_Solver_DAEEulerSolverTypeSet(Solver,CMFE_SOLVER_DAE_EULER_IMPROVED,Err)
+  
   CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_NO_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_TIMING_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_SOLVER_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_MATRIX_OUTPUT,Err)
+  
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !Get the second (Parabolic) solver
   CALL cmfe_Solver_Initialise(Solver,Err)
   CALL cmfe_Problem_SolverGet(Problem,CMFE_CONTROL_LOOP_NODE,2,Solver,Err)
+  
+  !!! changing to CRANK_NICOLSON
+  CALL cmfe_Solver_DynamicSchemeSet(Solver,CMFE_SOLVER_DYNAMIC_CRANK_NICOLSON_SCHEME,Err)
+  
   CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_NO_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_TIMING_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_SOLVER_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_MATRIX_OUTPUT,Err)
+  
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!! The third solver is created here(!?)
   !Finish the creation of the problem solver
   CALL cmfe_Problem_SolversCreateFinish(Problem,Err)
+  !!!test, perhaps does not work after finishing creation of solvers
+  CALL cmfe_Solver_Initialise(Solver,Err)
+  CALL cmfe_Problem_SolverGet(Problem,CMFE_CONTROL_LOOP_NODE,3,Solver,Err)
+  CALL cmfe_Solver_DAETimeStepSet(Solver,ODE_TIME_STEP,Err)
+  
+  !!! changing to the Heun method for the Strang-Splitting
+  CALL cmfe_Solver_DAEEulerSolverTypeSet(Solver,CMFE_SOLVER_DAE_EULER_IMPROVED,Err)
 
 ! TODO: this was copied from laplace example
 !  IF(SOLVER_TYPE==0) THEN
@@ -611,7 +639,10 @@ PROGRAM MONODOMAINEXAMPLE
   CALL cmfe_SolverEquations_EquationsSetAdd(SolverEquations,EquationsSet,EquationsSetIndex,Err)
   !Finish the creation of the problem solver equations
   CALL cmfe_Problem_SolverEquationsCreateFinish(Problem,Err)
-
+  
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!! The third solver to be created her!?
+  
   !Start the creation of the equations set boundary conditions
   CALL cmfe_BoundaryConditions_Initialise(BoundaryConditions,Err)
   CALL cmfe_SolverEquations_BoundaryConditionsCreateStart(SolverEquations,BoundaryConditions,Err)

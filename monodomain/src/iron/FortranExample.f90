@@ -411,6 +411,25 @@ PROGRAM MONODOMAINEXAMPLE
       ELSE
         STIM_VALUE=375.0_CMISSRP
       ENDIF
+    ENDIF    
+  ELSEIF(CellmlFile .EQ. "slow_TK_2014_12_08.xml") THEN
+    IF(SLOW_TWITCH) THEN
+      !Set Cm, slow-twitch
+      CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
+      & 0.58_CMISSRP,Err)
+      IF(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE > 10) THEN
+          STIM_VALUE=(375.0_CMISSRP/10.0_CMISSRP)*(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE)
+      ELSE
+          STIM_VALUE=375.0_CMISSRP
+      ENDIF
+    ELSE  
+      CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
+      & 1.0_CMISSRP,Err)
+      IF(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE > 12) THEN
+        STIM_VALUE=(375.0_CMISSRP/12.0_CMISSRP)*(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE)
+      ELSE
+        STIM_VALUE=375.0_CMISSRP
+      ENDIF
     ENDIF
   ENDIF
   
@@ -424,9 +443,17 @@ PROGRAM MONODOMAINEXAMPLE
   !Import a Noble 1998 model from a file
   CALL cmfe_CellML_ModelImport(CellML,CellmlFile,CellMLModelIndex,Err)
   
-  CALL cmfe_CellML_VariableSetAsKnown(CellML,CellMLModelIndex,"membrane/i_Stim ",Err)
-  CALL cmfe_CellML_VariableSetAsWanted(CellML,CellMLModelIndex,"membrane/i_Na",Err)
   
+  
+  ! To Include Shorten!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  IF(CellmlFile .EQ. "hodgkin_huxley_1952.cellml") THEN
+    CALL cmfe_CellML_VariableSetAsKnown(CellML,CellMLModelIndex,"membrane/i_Stim ",Err)
+    CALL cmfe_CellML_VariableSetAsWanted(CellML,CellMLModelIndex,"membrane/i_Na",Err)
+  ELSEIF(CellmlFile .EQ. "slow_TK_2014_12_08.xml") THEN
+    CALL cmfe_CellML_VariableSetAsKnown(CellML,CellMLModelIndex,"wal_environment/I_HH",Err)
+    CALL cmfe_CellML_VariableSetAsWanted(CellML,CellMLModelIndex,"wal_environment/I_Na",Err)
+  ENDIF
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
   !CALL cmfe_CellML_VariableSetAsKnown(CellML,CellMLModelIndex,"fast_sodium_current/g_Na ",Err)
   !CALL cmfe_CellML_VariableSetAsKnown(CellML,CellMLModelIndex,"membrane/IStim",Err)
@@ -448,16 +475,29 @@ PROGRAM MONODOMAINEXAMPLE
   CALL cmfe_CellML_FieldMapsCreateStart(CellML,Err)
   !Now we can set up the field variable component <--> CellML model variable mappings.
   !Map Vm
-  CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,DependentField,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE, &
-    & CellMLModelIndex,"membrane/V",CMFE_FIELD_VALUES_SET_TYPE,Err)
-  CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,CellMLModelIndex,"membrane/V",CMFE_FIELD_VALUES_SET_TYPE, &
-    & DependentField,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE,Err)
+  IF(CellmlFile .EQ. "hodgkin_huxley_1952.cellml") THEN
+    CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,DependentField,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE, &
+      & CellMLModelIndex,"membrane/V",CMFE_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,CellMLModelIndex,"membrane/V",CMFE_FIELD_VALUES_SET_TYPE, &
+      & DependentField,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE,Err)
+  ELSEIF(CellmlFile .EQ. "slow_TK_2014_12_08.xml") THEN
+    CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,DependentField,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE, &
+      & CellMLModelIndex,"wal_environment/vS",CMFE_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,CellMLModelIndex,"wal_environment/vS",CMFE_FIELD_VALUES_SET_TYPE, &
+      & DependentField,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE,Err)  
+  ENDIF
+  
   !Finish the creation of CellML <--> OpenCMISS field maps
   CALL cmfe_CellML_FieldMapsCreateFinish(CellML,Err)
 
-  !Set initial value for Vm
-  CALL cmfe_Field_ComponentValuesInitialise(DependentField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1, &
-    & -75.0_CMISSRP,Err)
+  !Set initial value for Vm 
+  IF(CellmlFile .EQ. "hodgkin_huxley_1952.cellml") THEN
+    CALL cmfe_Field_ComponentValuesInitialise(DependentField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1, &
+      & -75.0_CMISSRP,Err)
+  ELSEIF(CellmlFile .EQ. "slow_TK_2014_12_08.xml") THEN
+    CALL cmfe_Field_ComponentValuesInitialise(DependentField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1, &
+      & -79.974_CMISSRP,Err)
+  ENDIF
   !---------------------------------------------------------------------------------------------------------------------------------
   !Start the creation of the CellML models field
   !---------------------------------------------------------------------------------------------------------------------------------
@@ -503,7 +543,13 @@ PROGRAM MONODOMAINEXAMPLE
   CALL cmfe_Decomposition_NodeDomainGet(Decomposition,FirstNodeNumber,1,FirstNodeDomain,Err)
   CALL cmfe_Decomposition_NodeDomainGet(Decomposition,LastNodeNumber,1,LastNodeDomain,Err)
   
-  CALL cmfe_CellML_FieldComponentGet(CellML,CellMLModelIndex,CMFE_CELLML_PARAMETERS_FIELD,"membrane/i_Stim",StimComponent,Err)
+  IF(CellmlFile .EQ. "hodgkin_huxley_1952.cellml") THEN
+    CALL cmfe_CellML_FieldComponentGet(CellML,CellMLModelIndex,CMFE_CELLML_PARAMETERS_FIELD,"membrane/i_Stim",StimComponent,Err)
+  ELSEIF(CellmlFile .EQ. "slow_TK_2014_12_08.xml") THEN
+    CALL cmfe_CellML_FieldComponentGet(CellML,CellMLModelIndex,CMFE_CELLML_PARAMETERS_FIELD,"wal_environment/I_HH", &
+      & StimComponent,Err)
+  ENDIF
+  
   !turn stimulus on at central point
   StimulationNodeIdx = INT(CEILING(DBLE(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE+1)/2))
   !StimulationNodeIdx = 1

@@ -112,8 +112,8 @@ PROGRAM MONODOMAINEXAMPLE
   
   INTEGER(CMISSIntg) :: OUTPUT_FREQUENCY = 1
   REAL(CMISSRP) :: STIM_VALUE
-  REAL(CMISSRP), PARAMETER :: STIM_STOP = 0.50_CMISSRP
-  REAL(CMISSRP) :: TIME_STOP = 5.0_CMISSRP
+  REAL(CMISSRP), PARAMETER :: STIM_STOP = 0.10_CMISSRP
+  REAL(CMISSRP) :: TIME_STOP = 10.0_CMISSRP
   REAL(CMISSRP) :: ODE_TIME_STEP
   REAL(CMISSRP) :: PDE_TIME_STEP
   REAL(CMISSRP), PARAMETER :: CONDUCTIVITY = 3.828_CMISSRP
@@ -227,9 +227,9 @@ PROGRAM MONODOMAINEXAMPLE
     SOLVER_TYPE=0
     !INTERPOLATION_TYPE=1
     
-    !INTERPOLATION_TYPE=CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION
-    INTERPOLATION_TYPE=CMFE_BASIS_QUADRATIC_LAGRANGE_INTERPOLATION
-!    INTERPOLATION_TYPE=CMFE_BASIS_CUBIC_LAGRANGE_INTERPOLATION 
+    INTERPOLATION_TYPE=CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION
+    !INTERPOLATION_TYPE=CMFE_BASIS_QUADRATIC_LAGRANGE_INTERPOLATION
+    !INTERPOLATION_TYPE=CMFE_BASIS_CUBIC_LAGRANGE_INTERPOLATION 
 
     ! BASIS_LINEAR_LAGRANGE_INTERPOLATION=1 !<Linear Lagrange interpolation specification \see BASIS_ROUTINES_InterpolationSpecifications,BASIS_ROUTINES
     ! BASIS_QUADRATIC_LAGRANGE_INTERPOLATION=2 !<Quadratic Lagrange interpolation specification \see BASIS_ROUTINES_InterpolationSpecifications,BASIS_ROUTINES
@@ -240,12 +240,15 @@ PROGRAM MONODOMAINEXAMPLE
     ! BASIS_LINEAR_SIMPLEX_INTERPOLATION=7 !<Linear Simplex interpolation specification \see BASIS_ROUTINES_InterpolationSpecifications,BASIS_ROUTINES
     ! BASIS_QUADRATIC_SIMPLEX_INTERPOLATION=8 !<Quadratic Simplex interpolation specification \see BASIS_ROUTINES_InterpolationSpecifications,BASIS_ROUTINES
     ! BASIS_CUBIC_SIMPLEX_INTERPOLATION=9 !<Cubic Simplex interpolation specification \see BASIS_ROUTINES_InterpolationSpecifications,BASIS_ROUTINES
-    PDE_TIME_STEP = 0.01_CMISSRP
-    ODE_TIME_STEP = 0.01_CMISSRP
-    TIME_STOP=5.00
+    
+    PDE_TIME_STEP = 0.0005_CMISSRP
+    ODE_TIME_STEP = 0.0001_CMISSRP
+    
+    TIME_STOP=10.00
     OUTPUT_FREQUENCY=1
-    CellmlFile="hodgkin_huxley_1952.cellml"
-    SLOW_TWITCH=.FALSE.
+    CellmlFile="slow_TK_2014_12_08.xml"
+    !CellmlFile="hodgkin_huxley_1952.cellml"   
+    SLOW_TWITCH=.TRUE.
   ENDIF
 
   ! determine file name for output files
@@ -378,8 +381,9 @@ PROGRAM MONODOMAINEXAMPLE
   CALL cmfe_EquationsSet_DependentCreateStart(EquationsSet,DependentFieldUserNumber,DependentField,Err)
   !Finish the equations set dependent field variables
   CALL cmfe_EquationsSet_DependentCreateFinish(EquationsSet,Err)
-  
+  !---------------------------------------------------------------------------------------------------------------------------------
   !Create the equations set materials field variables
+  !---------------------------------------------------------------------------------------------------------------------------------
   CALL cmfe_Field_Initialise(MaterialsField,Err)
   CALL cmfe_EquationsSet_MaterialsCreateStart(EquationsSet,MaterialsFieldUserNumber,MaterialsField,Err)
   !Finish the equations set materials field variables
@@ -389,24 +393,26 @@ PROGRAM MONODOMAINEXAMPLE
   CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1, &
     & 500.0_CMISSRP,Err)
   
-  IF(SLOW_TWITCH) THEN
-  !Set Cm, slow-twitch
-    CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
+  IF(CellmlFile .EQ. "hodgkin_huxley_1952.cellml") THEN
+    IF(SLOW_TWITCH) THEN
+      !Set Cm, slow-twitch
+      CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
       & 0.58_CMISSRP,Err)
-    IF(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE > 10) THEN
-      STIM_VALUE=(75.0_CMISSRP/10.0_CMISSRP)*(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE)
-    ELSE
-      STIM_VALUE=75.0_CMISSRP
+      IF(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE > 8) THEN
+          STIM_VALUE=(225.0_CMISSRP/8.0_CMISSRP)*(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE)
+      ELSE
+          STIM_VALUE=225.0_CMISSRP
+      ENDIF
+    ELSE  
+      CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
+      & 1.0_CMISSRP,Err)
+      IF(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE > 16) THEN
+        STIM_VALUE=(375.0_CMISSRP/16.0_CMISSRP)*(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE)
+      ELSE
+        STIM_VALUE=375.0_CMISSRP
+      ENDIF
     ENDIF
-  ELSE  
-    CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
-    & 1.0_CMISSRP,Err)
-    IF(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE > 16) THEN
-      STIM_VALUE=(75.0_CMISSRP/16.0_CMISSRP)*(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE)
-    ELSE
-      STIM_VALUE=75.0_CMISSRP
-    ENDIF
-  ENDIF  
+  ENDIF
   
   !Set conductivity
   CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3, &
@@ -452,8 +458,9 @@ PROGRAM MONODOMAINEXAMPLE
   !Set initial value for Vm
   CALL cmfe_Field_ComponentValuesInitialise(DependentField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1, &
     & -75.0_CMISSRP,Err)
-  
+  !---------------------------------------------------------------------------------------------------------------------------------
   !Start the creation of the CellML models field
+  !---------------------------------------------------------------------------------------------------------------------------------
   CALL cmfe_Field_Initialise(CellMLModelsField,Err)
   CALL cmfe_CellML_ModelsFieldCreateStart(CellML,CellMLModelsFieldUserNumber,CellMLModelsField,Err)
   !Finish the creation of the CellML models field
@@ -523,10 +530,10 @@ PROGRAM MONODOMAINEXAMPLE
   !      & node_idx,gNacomponent,gNa_VALUE,Err)
   !  ENDIF
   !ENDDO
-  
+  !---------------------------------------------------------------------------------------------------------------------------------
   !Start the creation of a problem.
+  !---------------------------------------------------------------------------------------------------------------------------------
   CALL cmfe_Problem_Initialise(Problem,Err)
-  !Set the Stimulus at half the bottom nodes
   CALL cmfe_Problem_CreateStart(ProblemUserNumber,&
     & [CMFE_PROBLEM_BIOELECTRICS_CLASS,CMFE_PROBLEM_MONODOMAIN_EQUATION_TYPE,CMFE_PROBLEM_MONODOMAIN_GUDUNOV_SPLIT_SUBTYPE],&
     & Problem,Err)

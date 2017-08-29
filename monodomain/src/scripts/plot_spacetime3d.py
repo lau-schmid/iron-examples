@@ -68,8 +68,8 @@ def makeplot(x,y,z):
 #print foldername
 j_e=len(foldername)-1
 for j in range(j_e):
-    if foldername[j]=='s':
-       j_s=j+3
+    if foldername[j]=='t':
+       j_s=j+1
 
 time_step=float("0."+foldername[j_s:j_e])
 print "time_step",time_step

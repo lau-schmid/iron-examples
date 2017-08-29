@@ -17,8 +17,8 @@ if len(sys.argv) >1:
    gridsize=sys.argv[1]
    time=float(sys.argv[2])
 else:
-   gridsize=512
-   time=5.0
+   gridsize=64
+   time=3.0
 
 print "grid size: ", gridsize
 print "time: ", time
@@ -29,8 +29,8 @@ def get_timestep(foldername):
   j_e=len(foldername)
   #print j_e
   for j in range(j_e):
-    if foldername[j]=='s':
-      j_s=j+3
+    if foldername[j]=='t':
+      j_s=j+1
       #print j_s
   
   #print foldername[j_s:j_e]

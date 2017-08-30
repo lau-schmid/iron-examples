@@ -417,11 +417,12 @@ PROGRAM MONODOMAINEXAMPLE
       !Set Cm, slow-twitch
       CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
       & 0.58_CMISSRP,Err)
-      IF(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE > 10) THEN
-          STIM_VALUE=(375.0_CMISSRP/10.0_CMISSRP)*(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE)
-      ELSE
-          STIM_VALUE=375.0_CMISSRP
-      ENDIF
+      !!!IF(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE > 10) THEN
+      !!!    STIM_VALUE=(375.0_CMISSRP/10.0_CMISSRP)*(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE)
+      !!!ELSE
+      !!!    STIM_VALUE=375.0_CMISSRP
+      !!!ENDIF
+      STIM_VALUE=2400.0_CMISSRP
     ELSE  
       CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
       & 1.0_CMISSRP,Err)
@@ -549,8 +550,9 @@ PROGRAM MONODOMAINEXAMPLE
     CALL cmfe_CellML_FieldComponentGet(CellML,CellMLModelIndex,CMFE_CELLML_PARAMETERS_FIELD,"wal_environment/I_HH", &
       & StimComponent,Err)
   ENDIF
-  
+  !---------------------------------------------------------------------------------------------------------------------------------
   !turn stimulus on at central point
+  !---------------------------------------------------------------------------------------------------------------------------------
   StimulationNodeIdx = INT(CEILING(DBLE(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE+1)/2))
   !StimulationNodeIdx = 1
   CALL cmfe_Decomposition_NodeDomainGet(Decomposition,StimulationNodeIdx,1,NodeDomain,Err)
@@ -558,7 +560,7 @@ PROGRAM MONODOMAINEXAMPLE
     CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1, &
       & StimulationNodeIdx,StimComponent,STIM_VALUE,Err)
   ENDIF
-  
+  !---------------------------------------------------------------------------------------------------------------------------------
   !Set up the g_Na gradient
   !CALL cmfe_CellML_FieldComponentGet(CellML,CellMLModelIndex,CMFE_CELLML_PARAMETERS_FIELD,"fast_sodium_current/g_Na", &
   !  & gNacomponent,Err)
@@ -608,7 +610,8 @@ PROGRAM MONODOMAINEXAMPLE
   CALL cmfe_Problem_SolverGet(Problem,CMFE_CONTROL_LOOP_NODE,1,Solver,Err)
   !Set the DAE time step to be 10 us
   CALL cmfe_Solver_DAETimeStepSet(Solver,ODE_TIME_STEP,Err)
-  !CALL cmfe_Solver_DAESolverTypeSet(Solver,CMFE_SOLVER_DAE_EXTERNAL,Err)
+  CALL cmfe_Solver_DAESolverTypeSet(Solver,CMFE_SOLVER_DAE_EULER_IMPROVED,Err)
+  
   CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_NO_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_TIMING_OUTPUT,Err)

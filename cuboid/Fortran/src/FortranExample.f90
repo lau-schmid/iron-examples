@@ -1,21 +1,3 @@
-!###########################################################################################################################
-!###########################################################################################################################
-!#################                                  TODO SECTION:                                          #################
-!###########################################################################################################################
-!#################                     please note, what has to be changed, here:                          #################
-!#################                    if you're done, please remove the todo note.                         #################
-!###########################################################################################################################
-! 3. NEHZAT: StimValue = ?   1200 uA/cm^2 is THOMAS' SUGGESTION. Forget about old values. we changed many parameters!
-! 6. Benni:             InitialStretch TO BE REMOVED , only deactivated problem_solve until now.
-! 7. AARON/THOMAS:   C = ?   From shorten, Razumova, Campbell, Heidlauf... get model straight!
-!###########################################################################################################################
-!                                                 other/ new issues:
-!###########################################################################################################################
-! -. none at the moment
-!###########################################################################################################################
-!###########################################################################################################################
-
-
 !Y! temporary marks for cellml implementation. this is what is used in the actual RHS.:
 !Y! C_m = 0.58 (like in shortens paper);gam= 2.79 (slow twitch);R_a = 150y; tsi  = 0.000001y (xi aus shortens paper);tsi2= 0.0025y (xi);tsi3= 0.0005y(xi);FF = 96485y(Faradys constant);tau_K  = 559y(slow); tau_Na = 559y(slow);  f_T= 0.00174y(slow); tau_K2  = 40229.885y;  tau_Na2 = 40229.885y; 
 !Y! I_K_rest= 0.34y(slow); I_Na_rest = -0.43ys;alpha_h_bar = 0.0081y; alpha_m_bar = 0.288y; alpha_n_bar = 0.0131y; beta_h_bar = 4.38y;beta_m_bar = 1.38y;  beta_n_bar  = 0.067y; 
@@ -243,7 +225,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   REAL(CMISSRP) :: PhysicalLength=1.0_CMISSRP ! ### PAPERBRANCH SETTING !    X-direction
   REAL(CMISSRP) :: PhysicalWidth =1.0_CMISSRP ! ### PAPERBRANCH SETTING !    Y-direction
   REAL(CMISSRP) :: PhysicalHeight=1.0_CMISSRP ! ### PAPERBRANCH SETTING !    Z-direction
-  REAL(CMISSRP) :: PhysicalStimulationLength = 0.0016_CMISSRP  ! X-direction   ### PAPERBRANCH SETTING: a value small enough, such that ONLY ONE CELL is stimulated. !NMJ area: 200 (um)² -> NMJ diameter: 16 um = 0.0016cm. Based on Tse et al., 2014, The Neuromuscular Junction: Measuring Synapse Size, Fragmentation and Changes in Synaptic Protein Density Using Confocal Fluorescence Microscopy
+  REAL(CMISSRP) :: PhysicalStimulationLength = 0.03125_CMISSRP  ! X-direction   ### PAPERBRANCH SETTING: a value small enough, such that ONLY ONE CELL is stimulated. !NMJ area: 200 (um)² -> NMJ diameter: 16 um = 0.0016cm. Based on Tse et al., 2014, The Neuromuscular Junction: Measuring Synapse Size, Fragmentation and Changes in Synaptic Protein Density Using Confocal Fluorescence Microscopy
   
   !all times in [ms]
   REAL(CMISSRP) :: time
@@ -3492,7 +3474,6 @@ SUBROUTINE CreateSolvers()
     CASE(4) ! Crank-Nicolson, not stable yet
       CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_CRANK_NICOLSON,Err)
     CASE(5) ! improved Euler (Heun)
-      ! out of date: CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_HEUN,Err)
       CALL cmfe_Solver_DAEEulerSolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_EULER_IMPROVED,Err)
     CASE DEFAULT
       IF (ComputationalNodeNumber == 0) THEN

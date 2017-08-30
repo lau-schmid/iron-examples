@@ -610,7 +610,7 @@ PROGRAM MONODOMAINEXAMPLE
   CALL cmfe_Problem_SolverGet(Problem,CMFE_CONTROL_LOOP_NODE,1,Solver,Err)
   !Set the DAE time step to be 10 us
   CALL cmfe_Solver_DAETimeStepSet(Solver,ODE_TIME_STEP,Err)
-  CALL cmfe_Solver_DAESolverTypeSet(Solver,CMFE_SOLVER_DAE_EULER_IMPROVED,Err)
+  CALL cmfe_Solver_DAEEulerSolverTypeSet(Solver,CMFE_SOLVER_DAE_EULER_IMPROVED,Err)
   
   CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_NO_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_PROGRESS_OUTPUT,Err)

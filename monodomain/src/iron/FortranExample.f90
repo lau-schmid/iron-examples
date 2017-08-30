@@ -71,6 +71,7 @@ PROGRAM MONODOMAINEXAMPLE
   !Test program parameters
 
   REAL(CMISSRP), PARAMETER :: WIDTH=1.0_CMISSRP
+  REAL(CMISSRP) :: PhysicalStimulationLength = 0.03125_CMISSRP  ! X-direction   ### PAPERBRANCH SETTING: a value small enough, such that ONLY ONE CELL is stimulated. !NMJ area: 200 (um)² -> NMJ diameter: 16 um = 0.0016cm. Based on Tse et al., 2014, The Neuromuscular Junction: Measuring Synapse Size, Fragmentation and Changes in Synaptic Protein Density Using Confocal Fluorescence Microscopy
 
   INTEGER(CMISSIntg), PARAMETER :: CoordinateSystemUserNumber=1
   INTEGER(CMISSIntg), PARAMETER :: RegionUserNumber=2
@@ -142,7 +143,8 @@ PROGRAM MONODOMAINEXAMPLE
   !Generic CMISS variables
   
   INTEGER(CMISSIntg) :: NumberOfComputationalNodes,ComputationalNodeNumber
-  INTEGER(CMISSIntg) :: EquationsSetIndex,CellMLIndex,StimulationNodeIdx
+  INTEGER(CMISSIntg) :: EquationsSetIndex,CellMLIndex
+  INTEGER(CMISSIntg) :: JunctionNodeIdx,StimulatedNodeBegin,StimulatedNodeEnd,StimulationNodeIdx
   INTEGER(CMISSIntg) :: FirstNodeNumber,LastNodeNumber
   INTEGER(CMISSIntg) :: FirstNodeDomain,LastNodeDomain,NodeDomain
   INTEGER(CMISSIntg) :: Err
@@ -422,7 +424,7 @@ PROGRAM MONODOMAINEXAMPLE
       !!!ELSE
       !!!    STIM_VALUE=375.0_CMISSRP
       !!!ENDIF
-      STIM_VALUE=2400.0_CMISSRP
+      STIM_VALUE=1200.0_CMISSRP
     ELSE  
       CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
       & 1.0_CMISSRP,Err)
@@ -551,15 +553,28 @@ PROGRAM MONODOMAINEXAMPLE
       & StimComponent,Err)
   ENDIF
   !---------------------------------------------------------------------------------------------------------------------------------
-  !turn stimulus on at central point
+  ! compute number of bioelectric nodes that will be stimulated
   !---------------------------------------------------------------------------------------------------------------------------------
-  StimulationNodeIdx = INT(CEILING(DBLE(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE+1)/2))
-  !StimulationNodeIdx = 1
-  CALL cmfe_Decomposition_NodeDomainGet(Decomposition,StimulationNodeIdx,1,NodeDomain,Err)
-  IF(NodeDomain==ComputationalNodeNumber) THEN
-    CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1, &
-      & StimulationNodeIdx,StimComponent,STIM_VALUE,Err)
-  ENDIF
+  NumberStimulatedNodesPerFibre = MAX(1, NINT(DBLE(PhysicalStimulationLength) * &
+                                                 &((NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE+1) / WIDTH)))
+  PRINT *, "Number of Nodes which are stimulated per fibre: ", NumberStimulatedNodesPerFibre
+  
+  ! get middle point of fibre
+  JunctionNodeIdx = INT(CEILING(DBLE(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE+1)/2))
+  ! compute first node for stimulation
+  StimulatedNodeBegin = JunctionNodeIdx - NumberStimulatedNodesPerFibre/2
+  ! compute first node for stimulation
+  StimulatedNodeEnd = StimulatedNodeBegin + NumberStimulatedNodesPerFibre-1
+  
+  ! loop over nodes of the fibre to be stimulated
+  DO StimulationNodeIdx = StimulatedNodeBegin, StimulatedNodeEnd 
+    CALL cmfe_Decomposition_NodeDomainGet(Decomposition,StimulationNodeIdx,1,NodeDomain,Err)
+    !turn stimulus on at the stimulation point
+    IF(NodeDomain==ComputationalNodeNumber) THEN
+       CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1, &
+            & StimulationNodeIdx,StimComponent,STIM_VALUE,Err)
+    ENDIF
+  ENDDO
   !---------------------------------------------------------------------------------------------------------------------------------
   !Set up the g_Na gradient
   !CALL cmfe_CellML_FieldComponentGet(CellML,CellMLModelIndex,CMFE_CELLML_PARAMETERS_FIELD,"fast_sodium_current/g_Na", &

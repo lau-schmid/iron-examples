@@ -71,6 +71,7 @@ PROGRAM MONODOMAINEXAMPLE
   !Test program parameters
 
   REAL(CMISSRP), PARAMETER :: WIDTH=1.0_CMISSRP
+  REAL(CMISSRP) :: PhysicalStimulationLength =0.0016 !0.03125_CMISSRP  ! X-direction   ### PAPERBRANCH SETTING: a value small enough, such that ONLY ONE CELL is stimulated. !NMJ area: 200 (um)² -> NMJ diameter: 16 um = 0.0016cm. Based on Tse et al., 2014, The Neuromuscular Junction: Measuring Synapse Size, Fragmentation and Changes in Synaptic Protein Density Using Confocal Fluorescence Microscopy
 
   INTEGER(CMISSIntg), PARAMETER :: CoordinateSystemUserNumber=1
   INTEGER(CMISSIntg), PARAMETER :: RegionUserNumber=2
@@ -95,7 +96,7 @@ PROGRAM MONODOMAINEXAMPLE
   !Program variables
 
   INTEGER(CMISSIntg) :: NUMBER_OF_ARGUMENTS,ARGUMENT_LENGTH,STATUS
-  CHARACTER(LEN=25500) :: COMMAND_ARGUMENT,CellmlFile,Filename
+  CHARACTER(LEN=25500) :: COMMAND_ARGUMENT,CellmlFile,Filename,SplittingOrder
   LOGICAL :: fileExist
 
   INTEGER(CMISSIntg) :: NUMBER_GLOBAL_X_ELEMENTS
@@ -142,7 +143,8 @@ PROGRAM MONODOMAINEXAMPLE
   !Generic CMISS variables
   
   INTEGER(CMISSIntg) :: NumberOfComputationalNodes,ComputationalNodeNumber
-  INTEGER(CMISSIntg) :: EquationsSetIndex,CellMLIndex,StimulationNodeIdx
+  INTEGER(CMISSIntg) :: EquationsSetIndex,CellMLIndex
+  INTEGER(CMISSIntg) :: JunctionNodeIdx,NumberStimulatedNodesPerFibre,StimulatedNodeBegin,StimulatedNodeEnd,StimulationNodeIdx
   INTEGER(CMISSIntg) :: FirstNodeNumber,LastNodeNumber
   INTEGER(CMISSIntg) :: FirstNodeDomain,LastNodeDomain,NodeDomain
   INTEGER(CMISSIntg) :: Err
@@ -198,7 +200,6 @@ PROGRAM MONODOMAINEXAMPLE
 
     ! 7th argument cellml file
     CALL GET_COMMAND_ARGUMENT(7,COMMAND_ARGUMENT,ARGUMENT_LENGTH,STATUS)
-    !IF(STATUS>0) CALL HANDLE_ERROR("Error for command argument 8.")
     CellmlFile = adjustl(COMMAND_ARGUMENT)
     WRITE(*, '("CellML File: ", A)') TRIM(CellmlFile)
     
@@ -207,11 +208,16 @@ PROGRAM MONODOMAINEXAMPLE
     READ(COMMAND_ARGUMENT(1:ARGUMENT_LENGTH),*) SLOW_TWITCH
     WRITE(*, '("Slow Twitch: ", L)') SLOW_TWITCH
     
-     ! 9th argument ode time step
+    ! 9th argument ode time step
     CALL GET_COMMAND_ARGUMENT(9,COMMAND_ARGUMENT,ARGUMENT_LENGTH,STATUS)
     IF(STATUS>0) CALL HANDLE_ERROR("Error for command argument 9.")
     READ(COMMAND_ARGUMENT(1:ARGUMENT_LENGTH),*) ODE_TIME_STEP
     WRITE(*, '("ODE Step Size: ", E14.7)') ODE_TIME_STEP
+    
+    ! 10th argument ode time step
+    CALL GET_COMMAND_ARGUMENT(10,COMMAND_ARGUMENT,ARGUMENT_LENGTH,STATUS)
+    SplittingOrder=adjustl(COMMAND_ARGUMENT)
+    WRITE(*, '("Splitting order: ", A)') TRIM(SplittingOrder)
 
     inquire(file=CellmlFile, exist=fileExist)
     if (.not. fileExist) then
@@ -243,10 +249,11 @@ PROGRAM MONODOMAINEXAMPLE
     
     PDE_TIME_STEP = 0.0005_CMISSRP
     ODE_TIME_STEP = 0.0001_CMISSRP
+    
     TIME_STOP=10.00
     OUTPUT_FREQUENCY=1
-    !CellmlFile="hodgkin_huxley_1952.cellml"
     CellmlFile="slow_TK_2014_12_08.xml"
+    !CellmlFile="hodgkin_huxley_1952.cellml"   
     SLOW_TWITCH=.TRUE.
   ENDIF
 
@@ -380,8 +387,9 @@ PROGRAM MONODOMAINEXAMPLE
   CALL cmfe_EquationsSet_DependentCreateStart(EquationsSet,DependentFieldUserNumber,DependentField,Err)
   !Finish the equations set dependent field variables
   CALL cmfe_EquationsSet_DependentCreateFinish(EquationsSet,Err)
-  
+  !---------------------------------------------------------------------------------------------------------------------------------
   !Create the equations set materials field variables
+  !---------------------------------------------------------------------------------------------------------------------------------
   CALL cmfe_Field_Initialise(MaterialsField,Err)
   CALL cmfe_EquationsSet_MaterialsCreateStart(EquationsSet,MaterialsFieldUserNumber,MaterialsField,Err)
   !Finish the equations set materials field variables
@@ -391,24 +399,47 @@ PROGRAM MONODOMAINEXAMPLE
   CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1, &
     & 500.0_CMISSRP,Err)
   
-  IF(SLOW_TWITCH) THEN
-  !Set Cm, slow-twitch
-    CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
+  IF(CellmlFile .EQ. "hodgkin_huxley_1952.cellml") THEN
+    IF(SLOW_TWITCH) THEN
+      !Set Cm, slow-twitch
+      CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
       & 0.58_CMISSRP,Err)
-    IF(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE > 10) THEN
-      STIM_VALUE=(75.0_CMISSRP/10.0_CMISSRP)*(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE)
-    ELSE
-      STIM_VALUE=75.0_CMISSRP
+
+      IF(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE > 8) THEN
+          STIM_VALUE=(225.0_CMISSRP/8.0_CMISSRP)*(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE)
+      ELSE
+          STIM_VALUE=225.0_CMISSRP
+      ENDIF
+    ELSE  
+      CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
+      & 1.0_CMISSRP,Err)
+      IF(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE > 16) THEN
+        STIM_VALUE=(375.0_CMISSRP/16.0_CMISSRP)*(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE)
+      ELSE
+        STIM_VALUE=375.0_CMISSRP
+      ENDIF
+    ENDIF    
+  ELSEIF(CellmlFile .EQ. "slow_TK_2014_12_08.xml") THEN
+    IF(SLOW_TWITCH) THEN
+      !Set Cm, slow-twitch
+      CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
+      & 0.58_CMISSRP,Err)
+      !!!IF(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE > 10) THEN
+      !!!    STIM_VALUE=(375.0_CMISSRP/10.0_CMISSRP)*(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE)
+      !!!ELSE
+      !!!    STIM_VALUE=375.0_CMISSRP
+      !!!ENDIF
+      STIM_VALUE=1200.0_CMISSRP
+    ELSE  
+      CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
+      & 1.0_CMISSRP,Err)
+      IF(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE > 12) THEN
+        STIM_VALUE=(375.0_CMISSRP/12.0_CMISSRP)*(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE)
+      ELSE
+        STIM_VALUE=375.0_CMISSRP
+      ENDIF
     ENDIF
-  ELSE  
-    CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
-    & 1.0_CMISSRP,Err)
-    IF(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE > 6) THEN
-      STIM_VALUE=(75.0_CMISSRP/6.0_CMISSRP)*(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE)
-    ELSE
-      STIM_VALUE=75.0_CMISSRP
-    ENDIF
-  ENDIF  
+  ENDIF
   
   !Set conductivity
   CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3, &
@@ -420,9 +451,17 @@ PROGRAM MONODOMAINEXAMPLE
   !Import a Noble 1998 model from a file
   CALL cmfe_CellML_ModelImport(CellML,CellmlFile,CellMLModelIndex,Err)
   
-  CALL cmfe_CellML_VariableSetAsKnown(CellML,CellMLModelIndex,"membrane/i_Stim ",Err)
-  CALL cmfe_CellML_VariableSetAsWanted(CellML,CellMLModelIndex,"membrane/i_Na",Err)
   
+  !---------------------------------------------------------------------------------------------------------------------------------
+  ! To Include Shorten
+  IF(CellmlFile .EQ. "hodgkin_huxley_1952.cellml") THEN
+    CALL cmfe_CellML_VariableSetAsKnown(CellML,CellMLModelIndex,"membrane/i_Stim ",Err)
+    CALL cmfe_CellML_VariableSetAsWanted(CellML,CellMLModelIndex,"membrane/i_Na",Err)
+  ELSEIF(CellmlFile .EQ. "slow_TK_2014_12_08.xml") THEN
+    CALL cmfe_CellML_VariableSetAsKnown(CellML,CellMLModelIndex,"wal_environment/I_HH",Err)
+    CALL cmfe_CellML_VariableSetAsWanted(CellML,CellMLModelIndex,"wal_environment/I_Na",Err)
+  ENDIF
+  !---------------------------------------------------------------------------------------------------------------------------------
   
   !CALL cmfe_CellML_VariableSetAsKnown(CellML,CellMLModelIndex,"fast_sodium_current/g_Na ",Err)
   !CALL cmfe_CellML_VariableSetAsKnown(CellML,CellMLModelIndex,"membrane/IStim",Err)
@@ -444,18 +483,32 @@ PROGRAM MONODOMAINEXAMPLE
   CALL cmfe_CellML_FieldMapsCreateStart(CellML,Err)
   !Now we can set up the field variable component <--> CellML model variable mappings.
   !Map Vm
-  CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,DependentField,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE, &
-    & CellMLModelIndex,"membrane/V",CMFE_FIELD_VALUES_SET_TYPE,Err)
-  CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,CellMLModelIndex,"membrane/V",CMFE_FIELD_VALUES_SET_TYPE, &
-    & DependentField,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE,Err)
+  IF(CellmlFile .EQ. "hodgkin_huxley_1952.cellml") THEN
+    CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,DependentField,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE, &
+      & CellMLModelIndex,"membrane/V",CMFE_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,CellMLModelIndex,"membrane/V",CMFE_FIELD_VALUES_SET_TYPE, &
+      & DependentField,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE,Err)
+  ELSEIF(CellmlFile .EQ. "slow_TK_2014_12_08.xml") THEN
+    CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,DependentField,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE, &
+      & CellMLModelIndex,"wal_environment/vS",CMFE_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,CellMLModelIndex,"wal_environment/vS",CMFE_FIELD_VALUES_SET_TYPE, &
+      & DependentField,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_VALUES_SET_TYPE,Err)  
+  ENDIF
+  
   !Finish the creation of CellML <--> OpenCMISS field maps
   CALL cmfe_CellML_FieldMapsCreateFinish(CellML,Err)
 
-  !Set initial value for Vm
-  CALL cmfe_Field_ComponentValuesInitialise(DependentField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1, &
-    & -75.0_CMISSRP,Err)
-  
+  !Set initial value for Vm 
+  IF(CellmlFile .EQ. "hodgkin_huxley_1952.cellml") THEN
+    CALL cmfe_Field_ComponentValuesInitialise(DependentField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1, &
+      & -75.0_CMISSRP,Err)
+  ELSEIF(CellmlFile .EQ. "slow_TK_2014_12_08.xml") THEN
+    CALL cmfe_Field_ComponentValuesInitialise(DependentField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1, &
+      & -79.974_CMISSRP,Err)
+  ENDIF
+  !---------------------------------------------------------------------------------------------------------------------------------
   !Start the creation of the CellML models field
+  !---------------------------------------------------------------------------------------------------------------------------------
   CALL cmfe_Field_Initialise(CellMLModelsField,Err)
   CALL cmfe_CellML_ModelsFieldCreateStart(CellML,CellMLModelsFieldUserNumber,CellMLModelsField,Err)
   !Finish the creation of the CellML models field
@@ -498,16 +551,36 @@ PROGRAM MONODOMAINEXAMPLE
   CALL cmfe_Decomposition_NodeDomainGet(Decomposition,FirstNodeNumber,1,FirstNodeDomain,Err)
   CALL cmfe_Decomposition_NodeDomainGet(Decomposition,LastNodeNumber,1,LastNodeDomain,Err)
   
-  CALL cmfe_CellML_FieldComponentGet(CellML,CellMLModelIndex,CMFE_CELLML_PARAMETERS_FIELD,"membrane/i_Stim",StimComponent,Err)
-  !turn stimulus on at central point
-  StimulationNodeIdx = INT(CEILING(DBLE(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE+1)/2))
-  !StimulationNodeIdx = 1
-  CALL cmfe_Decomposition_NodeDomainGet(Decomposition,StimulationNodeIdx,1,NodeDomain,Err)
-  IF(NodeDomain==ComputationalNodeNumber) THEN
-    CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1, &
-      & StimulationNodeIdx,StimComponent,STIM_VALUE,Err)
+  IF(CellmlFile .EQ. "hodgkin_huxley_1952.cellml") THEN
+    CALL cmfe_CellML_FieldComponentGet(CellML,CellMLModelIndex,CMFE_CELLML_PARAMETERS_FIELD,"membrane/i_Stim",StimComponent,Err)
+  ELSEIF(CellmlFile .EQ. "slow_TK_2014_12_08.xml") THEN
+    CALL cmfe_CellML_FieldComponentGet(CellML,CellMLModelIndex,CMFE_CELLML_PARAMETERS_FIELD,"wal_environment/I_HH", &
+      & StimComponent,Err)
   ENDIF
+  !---------------------------------------------------------------------------------------------------------------------------------
+  ! compute number of bioelectric nodes that will be stimulated
+  !---------------------------------------------------------------------------------------------------------------------------------
+  NumberStimulatedNodesPerFibre = MAX(1, NINT(DBLE(PhysicalStimulationLength) * &
+                                                 &((NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE+1) / WIDTH)))
+  PRINT *, "Number of Nodes which are stimulated per fibre: ", NumberStimulatedNodesPerFibre
   
+  ! get middle point of fibre
+  JunctionNodeIdx = INT(CEILING(DBLE(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE+1)/2))
+  ! compute first node for stimulation
+  StimulatedNodeBegin = JunctionNodeIdx - NumberStimulatedNodesPerFibre/2
+  ! compute first node for stimulation
+  StimulatedNodeEnd = StimulatedNodeBegin + NumberStimulatedNodesPerFibre-1
+  
+  ! loop over nodes of the fibre to be stimulated
+  DO StimulationNodeIdx = StimulatedNodeBegin, StimulatedNodeEnd 
+    CALL cmfe_Decomposition_NodeDomainGet(Decomposition,StimulationNodeIdx,1,NodeDomain,Err)
+    !turn stimulus on at the stimulation point
+    IF(NodeDomain==ComputationalNodeNumber) THEN
+       CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1, &
+            & StimulationNodeIdx,StimComponent,STIM_VALUE,Err)
+    ENDIF
+  ENDDO
+  !---------------------------------------------------------------------------------------------------------------------------------
   !Set up the g_Na gradient
   !CALL cmfe_CellML_FieldComponentGet(CellML,CellMLModelIndex,CMFE_CELLML_PARAMETERS_FIELD,"fast_sodium_current/g_Na", &
   !  & gNacomponent,Err)
@@ -525,17 +598,23 @@ PROGRAM MONODOMAINEXAMPLE
   !      & node_idx,gNacomponent,gNa_VALUE,Err)
   !  ENDIF
   !ENDDO
-  
+  !---------------------------------------------------------------------------------------------------------------------------------
   !Start the creation of a problem.
+  !---------------------------------------------------------------------------------------------------------------------------------
   CALL cmfe_Problem_Initialise(Problem,Err)
   
-!!!test for STRANG-SPLITTING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !!!CALL cmfe_Problem_CreateStart(ProblemUserNumber,&
-  !!!  & [CMFE_PROBLEM_BIOELECTRICS_CLASS,CMFE_PROBLEM_MONODOMAIN_EQUATION_TYPE,CMFE_PROBLEM_MONODOMAIN_GUDUNOV_SPLIT_SUBTYPE],&
-  !!!  & Problem,Err)
-  CALL cmfe_Problem_CreateStart(ProblemUserNumber,&
-   & [CMFE_PROBLEM_BIOELECTRICS_CLASS,CMFE_PROBLEM_MONODOMAIN_EQUATION_TYPE,&
-   & CMFE_PROBLEM_MONODOMAIN_STRANG_SPLIT_SUBTYPE],Problem,Err)
+  
+  IF(SplittingOrder .EQ. "O1") THEN
+    CALL cmfe_Problem_CreateStart(ProblemUserNumber,&
+    & [CMFE_PROBLEM_BIOELECTRICS_CLASS,CMFE_PROBLEM_MONODOMAIN_EQUATION_TYPE,CMFE_PROBLEM_MONODOMAIN_GUDUNOV_SPLIT_SUBTYPE],&
+    & Problem,Err)
+    PRINT *,"Splitting: ", CMFE_PROBLEM_MONODOMAIN_GUDUNOV_SPLIT_SUBTYPE
+  ELSEIF(SplittingOrder.EQ. "O2") THEN
+    CALL cmfe_Problem_CreateStart(ProblemUserNumber,&
+    & [CMFE_PROBLEM_BIOELECTRICS_CLASS,CMFE_PROBLEM_MONODOMAIN_EQUATION_TYPE,&
+    & CMFE_PROBLEM_MONODOMAIN_STRANG_SPLIT_SUBTYPE],Problem,Err)
+    PRINT *, "Splitting: ",CMFE_PROBLEM_MONODOMAIN_STRANG_SPLIT_SUBTYPE
+  ENDIF
     
   !Finish the creation of a problem.
   CALL cmfe_Problem_CreateFinish(Problem,Err)
@@ -555,18 +634,21 @@ PROGRAM MONODOMAINEXAMPLE
   CALL cmfe_ControlLoop_TimeOutputSet(ControlLoop,OUTPUT_FREQUENCY,Err)
   !Finish creating the problem control loop
   CALL cmfe_Problem_ControlLoopCreateFinish(Problem,Err)
- 
+  !---------------------------------------------------------------------------------------------------------------------------------
   !Start the creation of the problem solvers
+  !---------------------------------------------------------------------------------------------------------------------------------
   CALL cmfe_Problem_SolversCreateStart(Problem,Err)
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
   !Get the first (DAE) solver
   CALL cmfe_Solver_Initialise(Solver,Err)
   CALL cmfe_Problem_SolverGet(Problem,CMFE_CONTROL_LOOP_NODE,1,Solver,Err)
-  !Set the DAE time step to be 10 us
+  !Set the DAE time step
   CALL cmfe_Solver_DAETimeStepSet(Solver,ODE_TIME_STEP,Err)
-  
-  !!! changing to the Heun method for the Strang-Splitting
-  CALL cmfe_Solver_DAEEulerSolverTypeSet(Solver,CMFE_SOLVER_DAE_EULER_IMPROVED,Err)
+ 
+  !changing to the Heun method for the Strang-Splitting
+  IF(SplittingOrder .EQ. "O2") THEN
+    CALL cmfe_Solver_DAEEulerSolverTypeSet(Solver,CMFE_SOLVER_DAE_EULER_IMPROVED,Err)
+  ENDIF
   
   CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_NO_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
@@ -574,7 +656,7 @@ PROGRAM MONODOMAINEXAMPLE
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_SOLVER_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_MATRIX_OUTPUT,Err)
   
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !---------------------------------------------------------------------------------------------------------------------------------
   !Get the second (Parabolic) solver
   CALL cmfe_Solver_Initialise(Solver,Err)
   CALL cmfe_Problem_SolverGet(Problem,CMFE_CONTROL_LOOP_NODE,2,Solver,Err)
@@ -588,17 +670,10 @@ PROGRAM MONODOMAINEXAMPLE
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_SOLVER_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_MATRIX_OUTPUT,Err)
   
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !!! The third solver is created here(!?)
+  !---------------------------------------------------------------------------------------------------------------------------------
+  !!! The third solver is created here(!)
   !Finish the creation of the problem solver
   CALL cmfe_Problem_SolversCreateFinish(Problem,Err)
-  !!!test, perhaps does not work after finishing creation of solvers
-  CALL cmfe_Solver_Initialise(Solver,Err)
-  CALL cmfe_Problem_SolverGet(Problem,CMFE_CONTROL_LOOP_NODE,3,Solver,Err)
-  CALL cmfe_Solver_DAETimeStepSet(Solver,ODE_TIME_STEP,Err)
-  
-  !!! changing to the Heun method for the Strang-Splitting
-  CALL cmfe_Solver_DAEEulerSolverTypeSet(Solver,CMFE_SOLVER_DAE_EULER_IMPROVED,Err)
 
 ! TODO: this was copied from laplace example
 !  IF(SOLVER_TYPE==0) THEN
@@ -639,9 +714,6 @@ PROGRAM MONODOMAINEXAMPLE
   CALL cmfe_SolverEquations_EquationsSetAdd(SolverEquations,EquationsSet,EquationsSetIndex,Err)
   !Finish the creation of the problem solver equations
   CALL cmfe_Problem_SolverEquationsCreateFinish(Problem,Err)
-  
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !!! The third solver to be created her!?
   
   !Start the creation of the equations set boundary conditions
   CALL cmfe_BoundaryConditions_Initialise(BoundaryConditions,Err)

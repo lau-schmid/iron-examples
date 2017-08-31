@@ -425,25 +425,25 @@ PROGRAM UNIAXIALEXTENSIONEXAMPLE
     & 0.0_CMISSRP,Err)
   CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,DependentField,CMFE_FIELD_U_VARIABLE_TYPE,1,1,2,1, &
     & CMFE_BOUNDARY_CONDITION_FIXED, &
-    & 1.1_CMISSRP,Err)
+    & 1.0_CMISSRP,Err)
   CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,DependentField,CMFE_FIELD_U_VARIABLE_TYPE,1,1,3,1, &
     & CMFE_BOUNDARY_CONDITION_FIXED, &
     & 0.0_CMISSRP,Err)
   CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,DependentField,CMFE_FIELD_U_VARIABLE_TYPE,1,1,4,1, &
     & CMFE_BOUNDARY_CONDITION_FIXED, &
-    & 1.1_CMISSRP,Err)
+    & 1.0_CMISSRP,Err)
   CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,DependentField,CMFE_FIELD_U_VARIABLE_TYPE,1,1,5,1, &
     & CMFE_BOUNDARY_CONDITION_FIXED, &
     & 0.0_CMISSRP,Err)
   CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,DependentField,CMFE_FIELD_U_VARIABLE_TYPE,1,1,6,1, &
     & CMFE_BOUNDARY_CONDITION_FIXED, &
-    & 1.1_CMISSRP,Err)
+    & 1.0_CMISSRP,Err)
   CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,DependentField,CMFE_FIELD_U_VARIABLE_TYPE,1,1,7,1, &
     & CMFE_BOUNDARY_CONDITION_FIXED, &
     & 0.0_CMISSRP,Err)
   CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,DependentField,CMFE_FIELD_U_VARIABLE_TYPE,1,1,8,1, &
     & CMFE_BOUNDARY_CONDITION_FIXED, &
-    & 1.1_CMISSRP,Err)
+    & 1.0_CMISSRP,Err)
 
   !Fix nodes 1,2,5,6 at y=0
   CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,DependentField,CMFE_FIELD_U_VARIABLE_TYPE,1,1,1,2, &

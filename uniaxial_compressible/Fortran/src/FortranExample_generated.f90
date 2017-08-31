@@ -414,7 +414,7 @@ PROGRAM UNIAXIALEXTENSIONEXAMPLE
         WRITE(*,*) "right ",NodeNumber
         CALL cmfe_BoundaryConditions_AddNode(BoundaryConditions,DependentField,CMFE_FIELD_DELUDELN_VARIABLE_TYPE,1,1,NodeNumber, &
           & component_idx,CMFE_BOUNDARY_CONDITION_FIXED, &
-          & 0.1_CMISSRP,Err)
+          & 0.0_CMISSRP,Err)
       ENDDO
     ENDIF
   ENDDO

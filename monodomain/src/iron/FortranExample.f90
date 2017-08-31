@@ -429,7 +429,7 @@ PROGRAM MONODOMAINEXAMPLE
       !!!ELSE
       !!!    STIM_VALUE=375.0_CMISSRP
       !!!ENDIF
-      STIM_VALUE=2000.0_CMISSRP
+      STIM_VALUE=1200.0_CMISSRP
     ELSE  
       CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
       & 1.0_CMISSRP,Err)
@@ -687,8 +687,9 @@ PROGRAM MONODOMAINEXAMPLE
 !    CALL cmfe_Solver_LinearIterativeRelativeToleranceSet(Solver,1.0E-12_CMISSRP,Err)
 !  ENDIF
   
-
+  !---------------------------------------------------------------------------------------------------------------------------------
   !Start the creation of the problem solver CellML equations
+  !---------------------------------------------------------------------------------------------------------------------------------
   CALL cmfe_Problem_CellMLEquationsCreateStart(Problem,Err)
   !Get the first solver  
   !Get the CellML equations
@@ -698,10 +699,23 @@ PROGRAM MONODOMAINEXAMPLE
   CALL cmfe_Solver_CellMLEquationsGet(Solver,CellMLEquations,Err)
   !Add in the CellML environement
   CALL cmfe_CellMLEquations_CellMLAdd(CellMLEquations,CellML,CellMLIndex,Err)
+  !---------------------------------------------------------------------------------------------------------------------------------
+  IF(SplittingOrder .EQ. "O2") THEN
+    !Get the first solver  
+    CALL cmfe_Solver_Initialise(Solver,Err)
+    CALL cmfe_Problem_SolverGet(Problem,CMFE_CONTROL_LOOP_NODE,3,Solver,Err)
+    !Get the CellML equations
+    CALL cmfe_CellMLEquations_Initialise(CellMLEquations,Err)
+    CALL cmfe_Solver_CellMLEquationsGet(Solver,CellMLEquations,Err)
+    !Add in the CellML environement
+    CALL cmfe_CellMLEquations_CellMLAdd(CellMLEquations,CellML,CellMLIndex,Err)  
+  ENDIF
+  !---------------------------------------------------------------------------------------------------------------------------------
   !Finish the creation of the problem solver CellML equations
   CALL cmfe_Problem_CellMLEquationsCreateFinish(Problem,Err)
-
-  !Start the creation of the problem solver equations
+  !---------------------------------------------------------------------------------------------------------------------------------
+  !Start the creation of the problem solver parabolic equations
+  !---------------------------------------------------------------------------------------------------------------------------------
   CALL cmfe_Problem_SolverEquationsCreateStart(Problem,Err)
   !Get the second solver  
   !Get the solver equations
@@ -716,7 +730,7 @@ PROGRAM MONODOMAINEXAMPLE
   CALL cmfe_SolverEquations_EquationsSetAdd(SolverEquations,EquationsSet,EquationsSetIndex,Err)
   !Finish the creation of the problem solver equations
   CALL cmfe_Problem_SolverEquationsCreateFinish(Problem,Err)
-  
+  !---------------------------------------------------------------------------------------------------------------------------------
   !Start the creation of the equations set boundary conditions
   CALL cmfe_BoundaryConditions_Initialise(BoundaryConditions,Err)
   CALL cmfe_SolverEquations_BoundaryConditionsCreateStart(SolverEquations,BoundaryConditions,Err)
@@ -731,8 +745,9 @@ PROGRAM MONODOMAINEXAMPLE
   ENDIF
   !Finish the creation of the equations set boundary conditions
   CALL cmfe_SolverEquations_BoundaryConditionsCreateFinish(SolverEquations,Err)
-
+  !---------------------------------------------------------------------------------------------------------------------------------
   !Solve the problem for the first STIM_STOP
+  !---------------------------------------------------------------------------------------------------------------------------------
   CALL cmfe_Problem_Solve(Problem,Err)
   !---------------------------------------------------------------------------------------------------------------------------------
   !Now turn the stimulus off
@@ -744,10 +759,10 @@ PROGRAM MONODOMAINEXAMPLE
         & StimulationNodeIdx,StimComponent,0.0_CMISSRP,Err)
     ENDIF
   ENDDO
-!-----------------------------------------------------------------------------------------------------------------------------------
+  !---------------------------------------------------------------------------------------------------------------------------------
   !Set the time loop from STIM_STOP to TIME_STOP
-  CALL cmfe_ControlLoop_TimesSet(ControlLoop,STIM_STOP,TIME_STOP,PDE_TIME_STEP,Err)
-  
+  !---------------------------------------------------------------------------------------------------------------------------------
+  CALL cmfe_ControlLoop_TimesSet(ControlLoop,STIM_STOP,TIME_STOP,PDE_TIME_STEP,Err)  
   !Solve the problem for the rest time
   CALL cmfe_Problem_Solve(Problem,Err)
   

@@ -144,7 +144,7 @@ PROGRAM MONODOMAINEXAMPLE
   
   INTEGER(CMISSIntg) :: NumberOfComputationalNodes,ComputationalNodeNumber
   INTEGER(CMISSIntg) :: EquationsSetIndex,CellMLIndex
-  INTEGER(CMISSIntg) :: JunctionNodeIdx,StimulatedNodeBegin,StimulatedNodeEnd,StimulationNodeIdx
+  INTEGER(CMISSIntg) :: JunctionNodeIdx,NumberStimulatedNodesPerFibre,StimulatedNodeBegin,StimulatedNodeEnd,StimulationNodeIdx
   INTEGER(CMISSIntg) :: FirstNodeNumber,LastNodeNumber
   INTEGER(CMISSIntg) :: FirstNodeDomain,LastNodeDomain,NodeDomain
   INTEGER(CMISSIntg) :: Err
@@ -419,12 +419,12 @@ PROGRAM MONODOMAINEXAMPLE
       !Set Cm, slow-twitch
       CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
       & 0.58_CMISSRP,Err)
-      !!!IF(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE > 10) THEN
-      !!!    STIM_VALUE=(375.0_CMISSRP/10.0_CMISSRP)*(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE)
-      !!!ELSE
-      !!!    STIM_VALUE=375.0_CMISSRP
-      !!!ENDIF
-      STIM_VALUE=1200.0_CMISSRP
+      IF(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE > 10) THEN
+          STIM_VALUE=(375.0_CMISSRP/10.0_CMISSRP)*(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE)
+      ELSE
+          STIM_VALUE=375.0_CMISSRP
+      ENDIF
+      !!!STIM_VALUE=1200.0_CMISSRP
     ELSE  
       CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
       & 1.0_CMISSRP,Err)
@@ -557,15 +557,19 @@ PROGRAM MONODOMAINEXAMPLE
   !---------------------------------------------------------------------------------------------------------------------------------
   NumberStimulatedNodesPerFibre = MAX(1, NINT(DBLE(PhysicalStimulationLength) * &
                                                  &((NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE+1) / WIDTH)))
-  PRINT *, "Number of Nodes which are stimulated per fibre: ", NumberStimulatedNodesPerFibre
+  !PRINT *, "Number of Nodes which are stimulated per fibre: ", NumberStimulatedNodesPerFibre
   
   ! get middle point of fibre
   JunctionNodeIdx = INT(CEILING(DBLE(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE+1)/2))
+  !PRINT *, "JunctionNodeIdx: ", JunctionNodeIdx
+  
   ! compute first node for stimulation
   StimulatedNodeBegin = JunctionNodeIdx - NumberStimulatedNodesPerFibre/2
-  ! compute first node for stimulation
+  !PRINT *, "StimulatedNodeBegin: ", StimulatedNodeBegin
+  !compute first node for stimulation
   StimulatedNodeEnd = StimulatedNodeBegin + NumberStimulatedNodesPerFibre-1
-  
+  !PRINT *, "StimulatedNodeEnd: ", StimulatedNodeEnd
+
   ! loop over nodes of the fibre to be stimulated
   DO StimulationNodeIdx = StimulatedNodeBegin, StimulatedNodeEnd 
     CALL cmfe_Decomposition_NodeDomainGet(Decomposition,StimulationNodeIdx,1,NodeDomain,Err)
@@ -625,7 +629,7 @@ PROGRAM MONODOMAINEXAMPLE
   CALL cmfe_Problem_SolverGet(Problem,CMFE_CONTROL_LOOP_NODE,1,Solver,Err)
   !Set the DAE time step to be 10 us
   CALL cmfe_Solver_DAETimeStepSet(Solver,ODE_TIME_STEP,Err)
-  CALL cmfe_Solver_DAEEulerSolverTypeSet(Solver,CMFE_SOLVER_DAE_EULER_IMPROVED,Err)
+  !!!CALL cmfe_Solver_DAEEulerSolverTypeSet(Solver,CMFE_SOLVER_DAE_EULER_IMPROVED,Err)
   
   CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_NO_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
@@ -700,15 +704,19 @@ PROGRAM MONODOMAINEXAMPLE
 
   !Solve the problem for the first STIM_STOP
   CALL cmfe_Problem_Solve(Problem,Err)
-
+  !---------------------------------------------------------------------------------------------------------------------------------
   !Now turn the stimulus off
-  !StimulationNodeIdx is set previously
-  CALL cmfe_Decomposition_NodeDomainGet(Decomposition,StimulationNodeIdx,1,NodeDomain,Err)
-  IF(NodeDomain==ComputationalNodeNumber) THEN
-    CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1, &
-      & StimulationNodeIdx,StimComponent,0.0_CMISSRP,Err)
-  ENDIF
-
+  !---------------------------------------------------------------------------------------------------------------------------------
+  ! StimulatedNodeBegin, StimulatedNodeEnd are set previously
+  ! loop over nodes of the fibre to be stimulated
+  DO StimulationNodeIdx = StimulatedNodeBegin, StimulatedNodeEnd
+    CALL cmfe_Decomposition_NodeDomainGet(Decomposition,StimulationNodeIdx,1,NodeDomain,Err)
+    IF(NodeDomain==ComputationalNodeNumber) THEN
+      CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1, &
+        & StimulationNodeIdx,StimComponent,0.0_CMISSRP,Err)
+    ENDIF
+  ENDDO
+  !---------------------------------------------------------------------------------------------------------------------------------
   !Set the time loop from STIM_STOP to TIME_STOP
   CALL cmfe_ControlLoop_TimesSet(ControlLoop,STIM_STOP,TIME_STOP,PDE_TIME_STEP,Err)
   

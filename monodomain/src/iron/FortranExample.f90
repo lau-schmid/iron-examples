@@ -71,7 +71,7 @@ PROGRAM MONODOMAINEXAMPLE
   !Test program parameters
 
   REAL(CMISSRP), PARAMETER :: WIDTH=1.0_CMISSRP
-  REAL(CMISSRP) :: PhysicalStimulationLength =0.0016 !0.03125_CMISSRP  ! X-direction   ### PAPERBRANCH SETTING: a value small enough, such that ONLY ONE CELL is stimulated. !NMJ area: 200 (um)² -> NMJ diameter: 16 um = 0.0016cm. Based on Tse et al., 2014, The Neuromuscular Junction: Measuring Synapse Size, Fragmentation and Changes in Synaptic Protein Density Using Confocal Fluorescence Microscopy
+  REAL(CMISSRP) :: PhysicalStimulationLength =0.03125_CMISSRP !0.0016_CMISSRP   ! X-direction   ### PAPERBRANCH SETTING: a value small enough, such that ONLY ONE CELL is stimulated. !NMJ area: 200 (um)² -> NMJ diameter: 16 um = 0.0016cm. Based on Tse et al., 2014, The Neuromuscular Junction: Measuring Synapse Size, Fragmentation and Changes in Synaptic Protein Density Using Confocal Fluorescence Microscopy
 
   INTEGER(CMISSIntg), PARAMETER :: CoordinateSystemUserNumber=1
   INTEGER(CMISSIntg), PARAMETER :: RegionUserNumber=2
@@ -429,7 +429,7 @@ PROGRAM MONODOMAINEXAMPLE
       !!!ELSE
       !!!    STIM_VALUE=375.0_CMISSRP
       !!!ENDIF
-      STIM_VALUE=1200.0_CMISSRP
+      STIM_VALUE=2000.0_CMISSRP
     ELSE  
       CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
       & 1.0_CMISSRP,Err)
@@ -661,8 +661,10 @@ PROGRAM MONODOMAINEXAMPLE
   CALL cmfe_Solver_Initialise(Solver,Err)
   CALL cmfe_Problem_SolverGet(Problem,CMFE_CONTROL_LOOP_NODE,2,Solver,Err)
   
-  !!! changing to CRANK_NICOLSON
-  CALL cmfe_Solver_DynamicSchemeSet(Solver,CMFE_SOLVER_DYNAMIC_CRANK_NICOLSON_SCHEME,Err)
+  IF(SplittingOrder .EQ. "O2") THEN
+    !!! changing to CRANK_NICOLSON
+    CALL cmfe_Solver_DynamicSchemeSet(Solver,CMFE_SOLVER_DYNAMIC_CRANK_NICOLSON_SCHEME,Err)
+  ENDIF
   
   CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_NO_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
@@ -732,19 +734,21 @@ PROGRAM MONODOMAINEXAMPLE
 
   !Solve the problem for the first STIM_STOP
   CALL cmfe_Problem_Solve(Problem,Err)
-
+  !---------------------------------------------------------------------------------------------------------------------------------
   !Now turn the stimulus off
-  !StimulationNodeIdx is set previously
-  CALL cmfe_Decomposition_NodeDomainGet(Decomposition,StimulationNodeIdx,1,NodeDomain,Err)
-  IF(NodeDomain==ComputationalNodeNumber) THEN
-    CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1, &
-      & StimulationNodeIdx,StimComponent,0.0_CMISSRP,Err)
-  ENDIF
-
+  ! StimulatedNodeBegin, StimulatedNodeEnd are set previously
+  DO StimulationNodeIdx = StimulatedNodeBegin, StimulatedNodeEnd
+    CALL cmfe_Decomposition_NodeDomainGet(Decomposition,StimulationNodeIdx,1,NodeDomain,Err)
+    IF(NodeDomain==ComputationalNodeNumber) THEN
+      CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1, &
+        & StimulationNodeIdx,StimComponent,0.0_CMISSRP,Err)
+    ENDIF
+  ENDDO
+!-----------------------------------------------------------------------------------------------------------------------------------
   !Set the time loop from STIM_STOP to TIME_STOP
   CALL cmfe_ControlLoop_TimesSet(ControlLoop,STIM_STOP,TIME_STOP,PDE_TIME_STEP,Err)
   
-  !Solve the problem for the next 900 ms
+  !Solve the problem for the rest time
   CALL cmfe_Problem_Solve(Problem,Err)
   
   !Export results

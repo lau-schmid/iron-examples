@@ -71,7 +71,7 @@ PROGRAM MONODOMAINEXAMPLE
   !Test program parameters
 
   REAL(CMISSRP), PARAMETER :: WIDTH=1.0_CMISSRP
-  REAL(CMISSRP) :: PhysicalStimulationLength = 0.03125_CMISSRP  ! X-direction   ### PAPERBRANCH SETTING: a value small enough, such that ONLY ONE CELL is stimulated. !NMJ area: 200 (um)² -> NMJ diameter: 16 um = 0.0016cm. Based on Tse et al., 2014, The Neuromuscular Junction: Measuring Synapse Size, Fragmentation and Changes in Synaptic Protein Density Using Confocal Fluorescence Microscopy
+  REAL(CMISSRP) :: PhysicalStimulationLength =0.03125_CMISSRP !0.0016_CMISSRP   ! X-direction   ### PAPERBRANCH SETTING: a value small enough, such that ONLY ONE CELL is stimulated. !NMJ area: 200 (um)² -> NMJ diameter: 16 um = 0.0016cm. Based on Tse et al., 2014, The Neuromuscular Junction: Measuring Synapse Size, Fragmentation and Changes in Synaptic Protein Density Using Confocal Fluorescence Microscopy
 
   INTEGER(CMISSIntg), PARAMETER :: CoordinateSystemUserNumber=1
   INTEGER(CMISSIntg), PARAMETER :: RegionUserNumber=2
@@ -96,7 +96,7 @@ PROGRAM MONODOMAINEXAMPLE
   !Program variables
 
   INTEGER(CMISSIntg) :: NUMBER_OF_ARGUMENTS,ARGUMENT_LENGTH,STATUS
-  CHARACTER(LEN=25500) :: COMMAND_ARGUMENT,CellmlFile,Filename
+  CHARACTER(LEN=25500) :: COMMAND_ARGUMENT,CellmlFile,Filename,SplittingOrder
   LOGICAL :: fileExist
 
   INTEGER(CMISSIntg) :: NUMBER_GLOBAL_X_ELEMENTS
@@ -200,7 +200,6 @@ PROGRAM MONODOMAINEXAMPLE
 
     ! 7th argument cellml file
     CALL GET_COMMAND_ARGUMENT(7,COMMAND_ARGUMENT,ARGUMENT_LENGTH,STATUS)
-    !IF(STATUS>0) CALL HANDLE_ERROR("Error for command argument 8.")
     CellmlFile = adjustl(COMMAND_ARGUMENT)
     WRITE(*, '("CellML File: ", A)') TRIM(CellmlFile)
     
@@ -209,11 +208,16 @@ PROGRAM MONODOMAINEXAMPLE
     READ(COMMAND_ARGUMENT(1:ARGUMENT_LENGTH),*) SLOW_TWITCH
     WRITE(*, '("Slow Twitch: ", L)') SLOW_TWITCH
     
-     ! 9th argument ode time step
+    ! 9th argument ode time step
     CALL GET_COMMAND_ARGUMENT(9,COMMAND_ARGUMENT,ARGUMENT_LENGTH,STATUS)
     IF(STATUS>0) CALL HANDLE_ERROR("Error for command argument 9.")
     READ(COMMAND_ARGUMENT(1:ARGUMENT_LENGTH),*) ODE_TIME_STEP
     WRITE(*, '("ODE Step Size: ", E14.7)') ODE_TIME_STEP
+    
+    ! 10th argument ode time step
+    CALL GET_COMMAND_ARGUMENT(10,COMMAND_ARGUMENT,ARGUMENT_LENGTH,STATUS)
+    SplittingOrder=adjustl(COMMAND_ARGUMENT)
+    WRITE(*, '("Splitting order: ", A)') TRIM(SplittingOrder)
 
     inquire(file=CellmlFile, exist=fileExist)
     if (.not. fileExist) then
@@ -400,6 +404,7 @@ PROGRAM MONODOMAINEXAMPLE
       !Set Cm, slow-twitch
       CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
       & 0.58_CMISSRP,Err)
+
       IF(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE > 8) THEN
           STIM_VALUE=(225.0_CMISSRP/8.0_CMISSRP)*(NUMBER_GLOBAL_X_ELEMENTS*INTERPOLATION_TYPE)
       ELSE
@@ -445,10 +450,9 @@ PROGRAM MONODOMAINEXAMPLE
   CALL cmfe_CellML_CreateStart(CellMLUserNumber,Region,CellML,Err)
   !Import a Noble 1998 model from a file
   CALL cmfe_CellML_ModelImport(CellML,CellmlFile,CellMLModelIndex,Err)
-  
-  
-  
-  ! To Include Shorten!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   
+  !---------------------------------------------------------------------------------------------------------------------------------
+  ! To Include Shorten
   IF(CellmlFile .EQ. "hodgkin_huxley_1952.cellml") THEN
     CALL cmfe_CellML_VariableSetAsKnown(CellML,CellMLModelIndex,"membrane/i_Stim ",Err)
     CALL cmfe_CellML_VariableSetAsWanted(CellML,CellMLModelIndex,"membrane/i_Na",Err)
@@ -456,7 +460,7 @@ PROGRAM MONODOMAINEXAMPLE
     CALL cmfe_CellML_VariableSetAsKnown(CellML,CellMLModelIndex,"wal_environment/I_HH",Err)
     CALL cmfe_CellML_VariableSetAsWanted(CellML,CellMLModelIndex,"wal_environment/I_Na",Err)
   ENDIF
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !---------------------------------------------------------------------------------------------------------------------------------
   
   !CALL cmfe_CellML_VariableSetAsKnown(CellML,CellMLModelIndex,"fast_sodium_current/g_Na ",Err)
   !CALL cmfe_CellML_VariableSetAsKnown(CellML,CellMLModelIndex,"membrane/IStim",Err)
@@ -601,12 +605,24 @@ PROGRAM MONODOMAINEXAMPLE
   !Start the creation of a problem.
   !---------------------------------------------------------------------------------------------------------------------------------
   CALL cmfe_Problem_Initialise(Problem,Err)
-  CALL cmfe_Problem_CreateStart(ProblemUserNumber,&
+  
+  
+  IF(SplittingOrder .EQ. "O1") THEN
+    CALL cmfe_Problem_CreateStart(ProblemUserNumber,&
     & [CMFE_PROBLEM_BIOELECTRICS_CLASS,CMFE_PROBLEM_MONODOMAIN_EQUATION_TYPE,CMFE_PROBLEM_MONODOMAIN_GUDUNOV_SPLIT_SUBTYPE],&
     & Problem,Err)
+    PRINT *,"Splitting: ", CMFE_PROBLEM_MONODOMAIN_GUDUNOV_SPLIT_SUBTYPE
+  ELSEIF(SplittingOrder.EQ. "O2") THEN
+    CALL cmfe_Problem_CreateStart(ProblemUserNumber,&
+    & [CMFE_PROBLEM_BIOELECTRICS_CLASS,CMFE_PROBLEM_MONODOMAIN_EQUATION_TYPE,&
+    & CMFE_PROBLEM_MONODOMAIN_STRANG_SPLIT_SUBTYPE],Problem,Err)
+    PRINT *, "Splitting: ",CMFE_PROBLEM_MONODOMAIN_STRANG_SPLIT_SUBTYPE
+  ENDIF
+    
   !Finish the creation of a problem.
   CALL cmfe_Problem_CreateFinish(Problem,Err)
 
+   
   !Start the creation of the problem control loop
   !Loop in time for STIM_STOP with the Stimulus applied.
   CALL cmfe_Problem_ControlLoopCreateStart(Problem,Err)
@@ -621,29 +637,45 @@ PROGRAM MONODOMAINEXAMPLE
   CALL cmfe_ControlLoop_TimeOutputSet(ControlLoop,OUTPUT_FREQUENCY,Err)
   !Finish creating the problem control loop
   CALL cmfe_Problem_ControlLoopCreateFinish(Problem,Err)
- 
+  !---------------------------------------------------------------------------------------------------------------------------------
   !Start the creation of the problem solvers
+  !---------------------------------------------------------------------------------------------------------------------------------
   CALL cmfe_Problem_SolversCreateStart(Problem,Err)
+
   !Get the first (DAE) solver
   CALL cmfe_Solver_Initialise(Solver,Err)
   CALL cmfe_Problem_SolverGet(Problem,CMFE_CONTROL_LOOP_NODE,1,Solver,Err)
-  !Set the DAE time step to be 10 us
-  CALL cmfe_Solver_DAETimeStepSet(Solver,ODE_TIME_STEP,Err)
-  !!!CALL cmfe_Solver_DAEEulerSolverTypeSet(Solver,CMFE_SOLVER_DAE_EULER_IMPROVED,Err)
+  !Set the DAE time step
+  CALL cmfe_Solver_DAETimeStepSet(Solver,ODE_TIME_STEP,Err) 
+  !changing to the Heun method for the Strang-Splitting
+  IF(SplittingOrder .EQ. "O2") THEN
+    CALL cmfe_Solver_DAEEulerSolverTypeSet(Solver,CMFE_SOLVER_DAE_EULER_IMPROVED,Err)
+  ENDIF
   
   CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_NO_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_TIMING_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_SOLVER_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_MATRIX_OUTPUT,Err)
+  
+  !---------------------------------------------------------------------------------------------------------------------------------
   !Get the second (Parabolic) solver
   CALL cmfe_Solver_Initialise(Solver,Err)
   CALL cmfe_Problem_SolverGet(Problem,CMFE_CONTROL_LOOP_NODE,2,Solver,Err)
+  
+  IF(SplittingOrder .EQ. "O2") THEN
+    !!! changing to CRANK_NICOLSON
+    CALL cmfe_Solver_DynamicSchemeSet(Solver,CMFE_SOLVER_DYNAMIC_CRANK_NICOLSON_SCHEME,Err)
+  ENDIF
+  
   CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_NO_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_TIMING_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_SOLVER_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_MATRIX_OUTPUT,Err)
+  
+  !---------------------------------------------------------------------------------------------------------------------------------
+  !!! The third solver is created here(!)
   !Finish the creation of the problem solver
   CALL cmfe_Problem_SolversCreateFinish(Problem,Err)
 
@@ -657,8 +689,9 @@ PROGRAM MONODOMAINEXAMPLE
 !    CALL cmfe_Solver_LinearIterativeRelativeToleranceSet(Solver,1.0E-12_CMISSRP,Err)
 !  ENDIF
   
-
+  !---------------------------------------------------------------------------------------------------------------------------------
   !Start the creation of the problem solver CellML equations
+  !---------------------------------------------------------------------------------------------------------------------------------
   CALL cmfe_Problem_CellMLEquationsCreateStart(Problem,Err)
   !Get the first solver  
   !Get the CellML equations
@@ -668,10 +701,23 @@ PROGRAM MONODOMAINEXAMPLE
   CALL cmfe_Solver_CellMLEquationsGet(Solver,CellMLEquations,Err)
   !Add in the CellML environement
   CALL cmfe_CellMLEquations_CellMLAdd(CellMLEquations,CellML,CellMLIndex,Err)
+  !---------------------------------------------------------------------------------------------------------------------------------
+  IF(SplittingOrder .EQ. "O2") THEN
+    !Get the first solver  
+    CALL cmfe_Solver_Initialise(Solver,Err)
+    CALL cmfe_Problem_SolverGet(Problem,CMFE_CONTROL_LOOP_NODE,3,Solver,Err)
+    !Get the CellML equations
+    CALL cmfe_CellMLEquations_Initialise(CellMLEquations,Err)
+    CALL cmfe_Solver_CellMLEquationsGet(Solver,CellMLEquations,Err)
+    !Add in the CellML environement
+    CALL cmfe_CellMLEquations_CellMLAdd(CellMLEquations,CellML,CellMLIndex,Err)  
+  ENDIF
+  !---------------------------------------------------------------------------------------------------------------------------------
   !Finish the creation of the problem solver CellML equations
   CALL cmfe_Problem_CellMLEquationsCreateFinish(Problem,Err)
-
-  !Start the creation of the problem solver equations
+  !---------------------------------------------------------------------------------------------------------------------------------
+  !Start the creation of the problem solver parabolic equations
+  !---------------------------------------------------------------------------------------------------------------------------------
   CALL cmfe_Problem_SolverEquationsCreateStart(Problem,Err)
   !Get the second solver  
   !Get the solver equations
@@ -686,7 +732,7 @@ PROGRAM MONODOMAINEXAMPLE
   CALL cmfe_SolverEquations_EquationsSetAdd(SolverEquations,EquationsSet,EquationsSetIndex,Err)
   !Finish the creation of the problem solver equations
   CALL cmfe_Problem_SolverEquationsCreateFinish(Problem,Err)
-
+  !---------------------------------------------------------------------------------------------------------------------------------
   !Start the creation of the equations set boundary conditions
   CALL cmfe_BoundaryConditions_Initialise(BoundaryConditions,Err)
   CALL cmfe_SolverEquations_BoundaryConditionsCreateStart(SolverEquations,BoundaryConditions,Err)
@@ -701,14 +747,13 @@ PROGRAM MONODOMAINEXAMPLE
   ENDIF
   !Finish the creation of the equations set boundary conditions
   CALL cmfe_SolverEquations_BoundaryConditionsCreateFinish(SolverEquations,Err)
-
+  !---------------------------------------------------------------------------------------------------------------------------------
   !Solve the problem for the first STIM_STOP
+  !---------------------------------------------------------------------------------------------------------------------------------
   CALL cmfe_Problem_Solve(Problem,Err)
   !---------------------------------------------------------------------------------------------------------------------------------
   !Now turn the stimulus off
-  !---------------------------------------------------------------------------------------------------------------------------------
   ! StimulatedNodeBegin, StimulatedNodeEnd are set previously
-  ! loop over nodes of the fibre to be stimulated
   DO StimulationNodeIdx = StimulatedNodeBegin, StimulatedNodeEnd
     CALL cmfe_Decomposition_NodeDomainGet(Decomposition,StimulationNodeIdx,1,NodeDomain,Err)
     IF(NodeDomain==ComputationalNodeNumber) THEN
@@ -718,9 +763,9 @@ PROGRAM MONODOMAINEXAMPLE
   ENDDO
   !---------------------------------------------------------------------------------------------------------------------------------
   !Set the time loop from STIM_STOP to TIME_STOP
-  CALL cmfe_ControlLoop_TimesSet(ControlLoop,STIM_STOP,TIME_STOP,PDE_TIME_STEP,Err)
-  
-  !Solve the problem for the next 900 ms
+  !---------------------------------------------------------------------------------------------------------------------------------
+  CALL cmfe_ControlLoop_TimesSet(ControlLoop,STIM_STOP,TIME_STOP,PDE_TIME_STEP,Err)  
+  !Solve the problem for the rest time
   CALL cmfe_Problem_Solve(Problem,Err)
   
   !Export results

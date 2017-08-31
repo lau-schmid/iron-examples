@@ -249,7 +249,8 @@ PROGRAM UNIAXIALEXTENSIONEXAMPLE
   CALL cmfe_Field_Initialise(GeometricField,Err)
   CALL cmfe_Field_CreateStart(FieldGeometryUserNumber,Region,GeometricField,Err)
   CALL cmfe_Field_MeshDecompositionSet(GeometricField,Decomposition,Err)
-  CALL cmfe_Field_TypeSet(GeometricField,CMFE_FIELD_GEOMETRIC_TYPE,Err)  
+  CALL cmfe_Field_TypeSet(GeometricField,CMFE_FIELD_GEOMETRIC_TYPE,Err)
+  CALL cmfe_Field_VariableLabelSet(GeometricField,CMFE_FIELD_U_VARIABLE_TYPE,"Geometry",Err)
   CALL cmfe_Field_NumberOfVariablesSet(GeometricField,FieldGeometryNumberOfVariables,Err)
   CALL cmfe_Field_NumberOfComponentsSet(GeometricField,CMFE_FIELD_U_VARIABLE_TYPE,FieldGeometryNumberOfComponents,Err)  
   CALL cmfe_Field_ComponentMeshComponentSet(GeometricField,CMFE_FIELD_U_VARIABLE_TYPE,1,MeshComponentNumber,Err)
@@ -265,6 +266,7 @@ PROGRAM UNIAXIALEXTENSIONEXAMPLE
   !Create a fibre field and attach it to the geometric field  
   CALL cmfe_Field_Initialise(FibreField,Err)
   CALL cmfe_Field_CreateStart(FieldFibreUserNumber,Region,FibreField,Err)
+  CALL cmfe_Field_VariableLabelSet(FibreField,CMFE_FIELD_U_VARIABLE_TYPE,"Fibre",Err)
   CALL cmfe_Field_TypeSet(FibreField,CMFE_FIELD_FIBRE_TYPE,Err)
   CALL cmfe_Field_MeshDecompositionSet(FibreField,Decomposition,Err)        
   CALL cmfe_Field_GeometricFieldSet(FibreField,GeometricField,Err)
@@ -280,6 +282,7 @@ PROGRAM UNIAXIALEXTENSIONEXAMPLE
   !Create a material field and attach it to the geometric field  
   CALL cmfe_Field_Initialise(MaterialField,Err)
   CALL cmfe_Field_CreateStart(FieldMaterialUserNumber,Region,MaterialField,Err)
+  CALL cmfe_Field_VariableLabelSet(MaterialField,CMFE_FIELD_U_VARIABLE_TYPE,"Material",Err)
   CALL cmfe_Field_TypeSet(MaterialField,CMFE_FIELD_MATERIAL_TYPE,Err)
   CALL cmfe_Field_MeshDecompositionSet(MaterialField,Decomposition,Err)        
   CALL cmfe_Field_GeometricFieldSet(MaterialField,GeometricField,Err)
@@ -301,6 +304,7 @@ PROGRAM UNIAXIALEXTENSIONEXAMPLE
   !Create a dependent field with two variables and four components
   CALL cmfe_Field_Initialise(DependentField,Err)
   CALL cmfe_Field_CreateStart(FieldDependentUserNumber,Region,DependentField,Err)
+  CALL cmfe_Field_VariableLabelSet(DependentField,CMFE_FIELD_U_VARIABLE_TYPE,"Dependent",Err)
   CALL cmfe_Field_TypeSet(DependentField,CMFE_FIELD_GEOMETRIC_GENERAL_TYPE,Err)  
   CALL cmfe_Field_MeshDecompositionSet(DependentField,Decomposition,Err)
   CALL cmfe_Field_GeometricFieldSet(DependentField,GeometricField,Err) 
@@ -410,7 +414,7 @@ PROGRAM UNIAXIALEXTENSIONEXAMPLE
         WRITE(*,*) "right ",NodeNumber
         CALL cmfe_BoundaryConditions_AddNode(BoundaryConditions,DependentField,CMFE_FIELD_DELUDELN_VARIABLE_TYPE,1,1,NodeNumber, &
           & component_idx,CMFE_BOUNDARY_CONDITION_FIXED, &
-          & 0.0_CMISSRP,Err)
+          & 0.1_CMISSRP,Err)
       ENDDO
     ENDIF
   ENDDO
@@ -449,8 +453,8 @@ PROGRAM UNIAXIALEXTENSIONEXAMPLE
   !Output solution  
   CALL cmfe_Fields_Initialise(Fields,Err)
   CALL cmfe_Fields_Create(Region,Fields,Err)
-  CALL cmfe_Fields_NodesExport(Fields,"UniaxialExtension","FORTRAN",Err)
-  CALL cmfe_Fields_ElementsExport(Fields,"UniaxialExtension","FORTRAN",Err)
+  CALL cmfe_Fields_NodesExport(Fields,"UniaxialExtension_generated","FORTRAN",Err)
+  CALL cmfe_Fields_ElementsExport(Fields,"UniaxialExtension_generated","FORTRAN",Err)
   CALL cmfe_Fields_Finalise(Fields,Err)
 
   CALL cmfe_Finalise(Err)

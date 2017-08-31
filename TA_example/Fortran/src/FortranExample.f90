@@ -75,8 +75,8 @@ PROGRAM EntireTAEXAMPLE
   REAL :: elapsed(2)     ! For receiving user and system time
 !  REAL :: total 
 
-  REAL(CMISSRP), PARAMETER :: P_max=7.5_CMISSRP ! N/cm^2  !with new CellML file
-!  REAL(CMISSRP), PARAMETER :: P_max=0.0_CMISSRP ! test (wrong)
+!  REAL(CMISSRP), PARAMETER :: P_max=7.5_CMISSRP ! N/cm^2  !with new CellML file
+  REAL(CMISSRP), PARAMETER :: P_max=0.0_CMISSRP ! test (wrong)
 
   LOGICAL, PARAMETER :: independent_field_auto_create=.FALSE.
   LOGICAL :: velo_subtype=.FALSE.
@@ -482,14 +482,14 @@ PROGRAM EntireTAEXAMPLE
   REAL(CMISSRP), PARAMETER :: STIM_STOP=0.1_CMISSRP
 !  REAL(CMISSRP), PARAMETER :: PERIODD=5.00_CMISSRP
   REAL(CMISSRP), PARAMETER :: PERIODD=1.00_CMISSRP
-  REAL(CMISSRP), PARAMETER :: TIME_STOP=1000.0_CMISSRP !10.0_CMISSRP !30.0_CMISSRP
+  REAL(CMISSRP), PARAMETER :: TIME_STOP=1.0_CMISSRP !10.0_CMISSRP !30.0_CMISSRP
   
   REAL(CMISSRP), PARAMETER :: ODE_TIME_STEP=0.0001_CMISSRP
   REAL(CMISSRP), PARAMETER :: PDE_TIME_STEP=0.0005_CMISSRP
   REAL(CMISSRP), PARAMETER :: ELASTICITY_TIME_STEP=0.10000000001_CMISSRP!0.5_CMISSRP!0.05_CMISSRP!0.8_CMISSRP
 !tomo keep ELASTICITY_TIME_STEP and STIM_STOP at the same values
 
-  INTEGER(CMISSIntg), PARAMETER :: OUTPUT_FREQUENCY=100
+  INTEGER(CMISSIntg), PARAMETER :: OUTPUT_FREQUENCY=1
   
   !--------------------------------------------------------------------------------------------------------------------------------
   !stimulation current in [uA/cm^2]
@@ -518,7 +518,8 @@ PROGRAM EntireTAEXAMPLE
   ! Define the set of continuum-mechanical material parameters
 !CAUTION - what are the units???
   REAL(CMISSRP), PARAMETER, DIMENSION(4) :: MAT_FE= &
-    & [0.0000000000635201_CMISSRP,0.3626712895523322_CMISSRP,0.0000027562837093_CMISSRP,43.372873938671383_CMISSRP] ![N/cm^2]  
+!    &[0.0000000000635201_CMISSRP,0.3626712895523322_CMISSRP,0.0000027562837093_CMISSRP,43.372873938671383_CMISSRP] ![N/cm^2]
+    & [0.0000000000635201_CMISSRP,0.3626712895523322_CMISSRP,0.0_CMISSRP,0.0_CMISSRP] ![N/cm^2]  
 
   REAL(CMISSRP) :: INIT_PRESSURE
 
@@ -674,8 +675,8 @@ PROGRAM EntireTAEXAMPLE
   if(less_info) then
     NumberOfNodesInXi1=50!500!240
     NumberOfNodesInXi1skin=10
-    NumberOfNodesInXi2=15
-    NumberOfNodesInXi3=15
+    NumberOfNodesInXi2=3
+    NumberOfNodesInXi3=3
   else
     NumberOfNodesInXi1=50!500
     NumberOfNodesInXi2=4
@@ -1815,8 +1816,8 @@ PROGRAM EntireTAEXAMPLE
   !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_TIMING_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_SOLVER_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(SolverFE,CMFE_SOLVER_MATRIX_OUTPUT,Err)
-  CALL cmfe_Solver_NewtonJacobianCalculationTypeSet(SolverFE,CMFE_SOLVER_NEWTON_JACOBIAN_FD_CALCULATED,Err)
-!  CALL cmfe_Solver_NewtonJacobianCalculationTypeSet(SolverFE,CMFE_SOLVER_NEWTON_JACOBIAN_EQUATIONS_CALCULATED,Err)
+!  CALL cmfe_Solver_NewtonJacobianCalculationTypeSet(SolverFE,CMFE_SOLVER_NEWTON_JACOBIAN_FD_CALCULATED,Err)
+  CALL cmfe_Solver_NewtonJacobianCalculationTypeSet(SolverFE,CMFE_SOLVER_NEWTON_JACOBIAN_EQUATIONS_CALCULATED,Err)
   CALL cmfe_Solver_NewtonMaximumIterationsSet(SolverFE,400,Err)
   CALL cmfe_Solver_NewtonAbsoluteToleranceSet(SolverFE,1.E-6_CMISSRP,Err) !6
   CALL cmfe_Solver_NewtonSolutionToleranceSet(SolverFE,2.E-6_CMISSRP,Err)
@@ -1958,19 +1959,19 @@ PROGRAM EntireTAEXAMPLE
   WRITE(*,*) etime_result
   WRITE(*,*) "!============= finished updating geometric field.."
 
-  EXPORT_FIELD=.FALSE.
+  EXPORT_FIELD=.TRUE.
   IF(EXPORT_FIELD) THEN
     CALL ETIME(tarray, etime_result)
     WRITE(*,*) "!============= BEFORE EXPORT: ",etime_result
     CALL cmfe_Fields_Initialise(Fields,Err)
     CALL cmfe_Fields_Create(RegionM,Fields,Err)
-    CALL cmfe_Fields_NodesExport(Fields,"EntireTAExample_M","FORTRAN",Err)
+!    CALL cmfe_Fields_NodesExport(Fields,"EntireTAExample_M","FORTRAN",Err)
     CALL cmfe_Fields_ElementsExport(Fields,"EntireTAExample_M","FORTRAN",Err)
     CALL cmfe_Fields_Finalise(Fields,Err)
 
     CALL cmfe_Fields_Initialise(Fields,Err)
     CALL cmfe_Fields_Create(RegionFE,Fields,Err)
-    CALL cmfe_Fields_NodesExport(Fields,"EntireTAExample_FE","FORTRAN",Err)
+!    CALL cmfe_Fields_NodesExport(Fields,"EntireTAExample_FE","FORTRAN",Err)
     CALL cmfe_Fields_ElementsExport(Fields,"EntireTAExample_FE","FORTRAN",Err)
     CALL cmfe_Fields_Finalise(Fields,Err)
     CALL ETIME(tarray, etime_result)
@@ -1987,6 +1988,21 @@ PROGRAM EntireTAEXAMPLE
   !Solve the problem -- bring to new length before applying the stimulus
   WRITE(*,'(A)') "Start solve before stimulation"
   CALL cmfe_Problem_Solve(Problem,Err)
+
+
+
+!  !Fix BOTTOM_NODES in all directions
+!  do i=1,21
+!    NodeNumber=BOTTOM_NODES(i)
+!    CALL cmfe_Decomposition_NodeDomainGet(DecompositionFE,NodeNumber,1,NodeDomain,Err)
+!    IF(NodeDomain==ComputationalNodeNumber) THEN
+!      CALL cmfe_Field_ParameterSetAddNode(DependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
+!        & 1,1,NodeNumber,3,0.01_CMISSRP,Err)
+!    ENDIF
+!  enddo
+
+
+
 
   !reset the relative contraction velocity to 0
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U2_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3, &
@@ -2039,64 +2055,64 @@ PROGRAM EntireTAEXAMPLE
   k=1
   do while(time <= TIME_STOP)
 
-  !--------------------------------------------------------------------------------------------------------------------------------
-  !Set the Stimulus for monodomain at the middle of the fibres
-  CALL cmfe_CellML_FieldComponentGet(CellML,shortenModelIndex,CMFE_CELLML_PARAMETERS_FIELD, &
-    & "wal_environment/I_HH",stimcomponent,Err)
+    !--------------------------------------------------------------------------------------------------------------------------------
+    !Set the Stimulus for monodomain at the middle of the fibres
+    CALL cmfe_CellML_FieldComponentGet(CellML,shortenModelIndex,CMFE_CELLML_PARAMETERS_FIELD, &
+      & "wal_environment/I_HH",stimcomponent,Err)
 
-  NodeNumber=NumberOfNodesInXi1/2
-  !loop over all neuromuscular junctions (middle point of the fibres)
-  DO WHILE(NodeNumber<NumberOfNodesMmuscle)
-    CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber+IZ_offset(m),1,NodeDomain,Err)
-    IF(NodeDomain==ComputationalNodeNumber) THEN
-      CALL cmfe_Field_ParameterSetGetNode(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1, &
-       & NodeNumber+IZ_offset(m),1,mu_nr,Err)
-      if((mu_nr.LE.0).OR.(mu_nr.GE.11)) then
-        mu_nr=11
-      else
-        val=FIRING_TIMES(k,mu_nr)
-        if(val==1) then
-          if(mu_nr.LE.6) then
-            CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
-              & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,NodeNumber+IZ_offset(m),stimcomponent,STIM_VALUE,Err)
-          else
-            CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
-              & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,NodeNumber+IZ_offset(m),stimcomponent,STIM_VALUE2,Err)
+    NodeNumber=NumberOfNodesInXi1/2
+    !loop over all neuromuscular junctions (middle point of the fibres)
+    DO WHILE(NodeNumber<NumberOfNodesMmuscle)
+      CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber+IZ_offset(m),1,NodeDomain,Err)
+      IF(NodeDomain==ComputationalNodeNumber) THEN
+        CALL cmfe_Field_ParameterSetGetNode(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1, &
+         & NodeNumber+IZ_offset(m),1,mu_nr,Err)
+        if((mu_nr.LE.0).OR.(mu_nr.GE.11)) then
+          mu_nr=11
+        else
+          val=FIRING_TIMES(k,mu_nr)
+          if(val==1) then
+            if(mu_nr.LE.6) then
+              CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
+                & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,NodeNumber+IZ_offset(m),stimcomponent,STIM_VALUE,Err)
+            else
+              CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
+                & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,NodeNumber+IZ_offset(m),stimcomponent,STIM_VALUE2,Err)
+            endif
           endif
         endif
-      endif
-    ENDIF
-    NodeNumber=NodeNumber+NumberOfNodesInXi1
-    m=m+1
-  ENDDO
-  m=m-NumberOfNodesInXi2*NumberOfNodesInXi3*12
+      ENDIF
+      NodeNumber=NodeNumber+NumberOfNodesInXi1
+      m=m+1
+    ENDDO
+    m=m-NumberOfNodesInXi2*NumberOfNodesInXi3*12
 
-  !--------------------------------------------------------------------------------------------------------------------------------
-  !Solve the problem for the stimulation time
-  CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time,time+STIM_STOP,ELASTICITY_TIME_STEP,Err)
-  CALL cmfe_Problem_Solve(Problem,Err)
+    !--------------------------------------------------------------------------------------------------------------------------------
+    !Solve the problem for the stimulation time
+    CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time,time+STIM_STOP,ELASTICITY_TIME_STEP,Err)
+    CALL cmfe_Problem_Solve(Problem,Err)
 
 
-  !--------------------------------------------------------------------------------------------------------------------------------
-  !Now turn the stimulus off
-  NodeNumber=NumberOfNodesInXi1/2
-  DO WHILE(NodeNumber<NumberOfNodesMmuscle)
-    CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber+IZ_offset(m),1,NodeDomain,Err)
-    IF(NodeDomain==ComputationalNodeNumber) CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, & 
-     & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,NodeNumber+IZ_offset(m),stimcomponent,0.0_CMISSRP,Err)
-    NodeNumber=NodeNumber+NumberOfNodesInXi1
-    m=m+1
-  ENDDO
-  m=m-NumberOfNodesInXi2*NumberOfNodesInXi3*12
+    !--------------------------------------------------------------------------------------------------------------------------------
+    !Now turn the stimulus off
+    NodeNumber=NumberOfNodesInXi1/2
+    DO WHILE(NodeNumber<NumberOfNodesMmuscle)
+      CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber+IZ_offset(m),1,NodeDomain,Err)
+      IF(NodeDomain==ComputationalNodeNumber) CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, & 
+       & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,NodeNumber+IZ_offset(m),stimcomponent,0.0_CMISSRP,Err)
+      NodeNumber=NodeNumber+NumberOfNodesInXi1
+      m=m+1
+    ENDDO
+    m=m-NumberOfNodesInXi2*NumberOfNodesInXi3*12
 
-  !--------------------------------------------------------------------------------------------------------------------------------
-  !Solve the problem for the rest of the period
-  CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time+STIM_STOP,time+PERIODD,ELASTICITY_TIME_STEP,Err)
-  CALL cmfe_Problem_Solve(Problem,Err)
+    !--------------------------------------------------------------------------------------------------------------------------------
+    !Solve the problem for the rest of the period
+    CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time+STIM_STOP,time+PERIODD,ELASTICITY_TIME_STEP,Err)
+    CALL cmfe_Problem_Solve(Problem,Err)
 
-  !--------------------------------------------------------------------------------------------------------------------------------
-  time = time + PERIODD
-  k=k+1
+    !--------------------------------------------------------------------------------------------------------------------------------
+    time = time + PERIODD
+    k=k+1
 
   end do
   

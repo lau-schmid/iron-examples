@@ -225,7 +225,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   REAL(CMISSRP) :: PhysicalLength=1.0_CMISSRP ! ### PAPERBRANCH SETTING !    X-direction
   REAL(CMISSRP) :: PhysicalWidth =1.0_CMISSRP ! ### PAPERBRANCH SETTING !    Y-direction
   REAL(CMISSRP) :: PhysicalHeight=1.0_CMISSRP ! ### PAPERBRANCH SETTING !    Z-direction
-  REAL(CMISSRP) :: PhysicalStimulationLength = 0.03125_CMISSRP  ! X-direction   ### PAPERBRANCH SETTING: a value small enough, such that ONLY ONE CELL is stimulated. !NMJ area: 200 (um)² -> NMJ diameter: 16 um = 0.0016cm. Based on Tse et al., 2014, The Neuromuscular Junction: Measuring Synapse Size, Fragmentation and Changes in Synaptic Protein Density Using Confocal Fluorescence Microscopy
+  REAL(CMISSRP) :: PhysicalStimulationLength = 0.03125_CMISSRP  ! X-direction   ### PAPERBRANCH SETTING: value 0.03125 is unphysical (roughly 20 times too large). !NMJ area: 200 (um)² -> NMJ diameter: 16 um = 0.0016cm. Based on Tse et al., 2014, The Neuromuscular Junction: Measuring Synapse Size, Fragmentation and Changes in Synaptic Protein Density Using Confocal Fluorescence Microscopy
   
   !all times in [ms]
   REAL(CMISSRP) :: time
@@ -245,7 +245,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !--------------------------------------------------------------------------------------------------------------------------------
 
   !stimulation current in [uA/cm^2]
-  REAL(CMISSRP) :: StimValue = 1200.0_CMISSRP ! ### 1200 [uA/cm^2] is THOMAS' SUGGESTION.       ! ### TO BE DISCUSSED --> NEHZAT.
+  REAL(CMISSRP) :: StimValue = 1200.0_CMISSRP ! ### PAPERBRANCH SETTING ! will be applied to all nodes in PhysicalStimulationLength.
 
   REAL(CMISSRP) :: PMax=7.3_CMISSRP ! ### PAPERBRANCH SETTING ! N/cm^2
 
@@ -269,8 +269,10 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   REAL(CMISSRP) :: VMax=-0.02_CMISSRP ! =0.2 m/s, rat GM                                        ! ### NOT RELEVANT FOR PAPER (isometric conditions)
 
   !CAUTION - what are the units???   ![N/cm^2]?
-  REAL(CMISSRP), PARAMETER, DIMENSION(4) :: MAT_FE= &
-    &[0.0000000000635201_CMISSRP,0.3626712895523322_CMISSRP,0.0000027562837093_CMISSRP,43.372873938671383_CMISSRP] ! ### PAPERBRANCH SETTING
+!  REAL(CMISSRP), PARAMETER, DIMENSION(4) :: MAT_FE= &
+!    &[0.0000000000635201_CMISSRP,0.3626712895523322_CMISSRP,0.0000027562837093_CMISSRP,43.372873938671383_CMISSRP] ! ### SKIPPED due to citation differences
+
+  REAL(CMISSRP), PARAMETER, DIMENSION(4) :: MAT_FE = [0.00000000006352_CMISSRP,0.3627_CMISSRP,0.000002756_CMISSRP,43.373_CMISSRP] ! ### PAPERBRANCH SETTING
 
   REAL(CMISSRP) :: TkLinParam=1.0_CMISSRP ! 1: With Actin-Tintin Interaction 0: No Actin-Titin Interactions    ! ### NOT RELEVANT FOR PAPER
 

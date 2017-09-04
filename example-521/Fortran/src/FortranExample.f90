@@ -65,7 +65,8 @@ PROGRAM PrasadsAwesomeExample
 
   LOGICAL                         :: compressible     = .FALSE.
   LOGICAL                         :: useGeneratedMesh = .FALSE.
-  LOGICAL                         :: zeroLoad         = .TRUE.
+  LOGICAL                         :: zeroLoad         = .FALSE.
+  LOGICAL                         :: useSimplex       = .TRUE.
   LOGICAL                         :: usePressureBasis = .FALSE.
 
   INTEGER(CMISSIntg)              :: numberOfGaussXi = 2
@@ -92,13 +93,13 @@ PROGRAM PrasadsAwesomeExample
   INTEGER(CMISSIntg)              :: numberGlobalZElements = 1
   INTEGER(CMISSIntg)              :: totalNumberOfNodes = 8
   INTEGER(CMISSIntg)              :: totalNumberOfElements = 1
-  INTEGER(CMISSIntg)              :: InterpolationType = 1
+  INTEGER(CMISSIntg)              :: InterpolationType
   INTEGER(CMISSIntg)              :: numberOfMeshComponents = 1
   INTEGER(CMISSIntg)              :: meshComponentNumber = 1
 
   INTEGER(CMISSIntg)              :: numberOfComputationalNodes,computationalNodeNumber
   INTEGER(CMISSIntg)              :: componentIdx,Err,numberOfMaterialComponents
-  INTEGER(CMISSIntg)              :: numberOfXi
+  INTEGER(CMISSIntg)              :: numberOfXi,quadratureOrder
 
   CHARACTER(LEN=255)              :: output_file,prefix
 
@@ -144,6 +145,14 @@ PROGRAM PrasadsAwesomeExample
     numberOfXi = 3
   END IF
 
+  IF (useSimplex) THEN
+    interpolationType = 7
+    quadratureOrder   = 3
+    IF (useGeneratedMesh) CALL HANDLE_ERROR("Generated simplex mesh not set up.")
+  ELSE
+    interpolationType = 1
+  END IF
+
   ! Get the number of computational nodes and this computational node number
   CALL cmfe_ComputationalNumberOfNodesGet(numberOfComputationalNodes,Err)
   CALL cmfe_ComputationalNodeNumberGet(computationalNodeNumber,Err)
@@ -166,29 +175,41 @@ PROGRAM PrasadsAwesomeExample
   SELECT CASE (interpolationType)
   CASE(1,2,3,4)
     CALL cmfe_Basis_TypeSet(basis,CMFE_BASIS_LAGRANGE_HERMITE_TP_TYPE,Err)
+    CALL cmfe_Basis_NumberOfXiSet(basis,numberOfXi,Err)
+    IF(numberGlobalZElements==0) THEN
+      CALL cmfe_Basis_InterpolationXiSet(basis, &
+        & [CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION, &
+        &  CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION],Err)
+    ELSE
+      CALL cmfe_Basis_InterpolationXiSet(basis, &
+         & [CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION, &
+         &  CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION, &
+         &  CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION],Err)
+    END IF
+    IF (numberOfGaussXi>0) THEN
+      IF(numberGlobalZElements==0) THEN
+        CALL cmfe_Basis_QuadratureNumberOfGaussXiSet(basis,[numberOfGaussXi,numberOfGaussXi],Err)
+      ELSE
+        CALL cmfe_Basis_QuadratureNumberOfGaussXiSet(basis,[numberOfGaussXi,numberOfGaussXi,numberOfGaussXi],Err)
+      END IF
+    END IF
   CASE(7,8,9)
     CALL cmfe_Basis_TypeSet(basis,CMFE_BASIS_SIMPLEX_TYPE,Err)
+    CALL cmfe_Basis_NumberOfXiSet(basis,numberOfXi,Err)
+    IF(numberGlobalZElements==0) THEN
+      CALL cmfe_Basis_InterpolationXiSet(basis, &
+        & [CMFE_BASIS_LINEAR_SIMPLEX_INTERPOLATION, &
+        &  CMFE_BASIS_LINEAR_SIMPLEX_INTERPOLATION],Err)
+    ELSE
+      CALL cmfe_Basis_InterpolationXiSet(basis, &
+         & [CMFE_BASIS_LINEAR_SIMPLEX_INTERPOLATION, &
+         &  CMFE_BASIS_LINEAR_SIMPLEX_INTERPOLATION, &
+         &  CMFE_BASIS_LINEAR_SIMPLEX_INTERPOLATION],Err)
+    END IF
+    CALL cmfe_Basis_QuadratureOrderSet(basis,quadratureOrder,Err)
   CASE DEFAULT
     CALL HANDLE_ERROR("Invalid interpolation type.")
   END SELECT
-  CALL cmfe_Basis_NumberOfXiSet(basis,numberOfXi,Err)
-  IF(numberGlobalZElements==0) THEN
-    CALL cmfe_Basis_InterpolationXiSet(basis, &
-      & [CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION, &
-      &  CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION],Err)
-  ELSE
-    CALL cmfe_Basis_InterpolationXiSet(basis, &
-       & [CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION, &
-       &  CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION, &
-       &  CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION],Err)
-  END IF
-  IF (numberOfGaussXi>0) THEN
-    IF(numberGlobalZElements==0) THEN
-      CALL cmfe_Basis_QuadratureNumberOfGaussXiSet(basis,[numberOfGaussXi,numberOfGaussXi],Err)
-    ELSE
-      CALL cmfe_Basis_QuadratureNumberOfGaussXiSet(basis,[numberOfGaussXi,numberOfGaussXi,numberOfGaussXi],Err)
-    END IF
-  END IF
   CALL cmfe_Basis_CreateFinish(basis,Err)
 
   IF (usePressureBasis) THEN
@@ -198,31 +219,43 @@ PROGRAM PrasadsAwesomeExample
     SELECT CASE (interpolationType)
     CASE(1,2,3,4)
       CALL cmfe_Basis_TypeSet(pressureBasis,CMFE_BASIS_LAGRANGE_HERMITE_TP_TYPE,Err)
+      CALL cmfe_Basis_NumberOfXiSet(pressureBasis,numberOfXi,Err)
+      IF(numberGlobalZElements==0) THEN
+        CALL cmfe_Basis_InterpolationXiSet(pressureBasis, &
+          & [CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION, &
+          &  CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION],Err)
+      ELSE
+        CALL cmfe_Basis_InterpolationXiSet(pressureBasis, &
+           & [CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION, &
+           &  CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION, &
+           &  CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION],Err)
+      ENDIF
+      IF (numberOfGaussXi>0) THEN
+        IF(numberGlobalZElements==0) THEN
+          CALL cmfe_Basis_QuadratureNumberOfGaussXiSet(pressureBasis, &
+            & [numberOfGaussXi,numberOfGaussXi],Err)
+        ELSE
+          CALL cmfe_Basis_QuadratureNumberOfGaussXiSet(pressureBasis, &
+            & [numberOfGaussXi,numberOfGaussXi,numberOfGaussXi],Err)
+        END IF
+      END IF
     CASE(7,8,9)
       CALL cmfe_Basis_TypeSet(pressureBasis,CMFE_BASIS_SIMPLEX_TYPE,Err)
+      CALL cmfe_Basis_NumberOfXiSet(pressureBasis,numberOfXi,Err)
+      IF(numberGlobalZElements==0) THEN
+        CALL cmfe_Basis_InterpolationXiSet(pressureBasis, &
+          & [CMFE_BASIS_LINEAR_SIMPLEX_INTERPOLATION, &
+          &  CMFE_BASIS_LINEAR_SIMPLEX_INTERPOLATION],Err)
+      ELSE
+        CALL cmfe_Basis_InterpolationXiSet(pressureBasis, &
+           & [CMFE_BASIS_LINEAR_SIMPLEX_INTERPOLATION, &
+           &  CMFE_BASIS_LINEAR_SIMPLEX_INTERPOLATION, &
+           &  CMFE_BASIS_LINEAR_SIMPLEX_INTERPOLATION],Err)
+      ENDIF
+    CALL cmfe_Basis_QuadratureOrderSet(pressureBasis,quadratureOrder,Err)
     CASE DEFAULT
       CALL HANDLE_ERROR("Invalid interpolation type.")
     END SELECT
-    CALL cmfe_Basis_NumberOfXiSet(pressureBasis,numberOfXi,Err)
-    IF(numberGlobalZElements==0) THEN
-      CALL cmfe_Basis_InterpolationXiSet(pressureBasis, &
-        & [CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION, &
-        &  CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION],Err)
-    ELSE
-      CALL cmfe_Basis_InterpolationXiSet(pressureBasis, &
-         & [CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION, &
-         &  CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION, &
-         &  CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION],Err)
-    ENDIF
-    IF (numberOfGaussXi>0) THEN
-      IF(numberGlobalZElements==0) THEN
-        CALL cmfe_Basis_QuadratureNumberOfGaussXiSet(pressureBasis, &
-          & [numberOfGaussXi,numberOfGaussXi],Err)
-      ELSE
-        CALL cmfe_Basis_QuadratureNumberOfGaussXiSet(pressureBasis, &
-          & [numberOfGaussXi,numberOfGaussXi,numberOfGaussXi],Err)
-      END IF
-    END IF
     CALL cmfe_Basis_CreateFinish(pressureBasis,Err)
   END IF
 
@@ -248,7 +281,11 @@ PROGRAM PrasadsAwesomeExample
     ! Start the creation of a manually generated mesh in the region
     CALL cmfe_Mesh_CreateStart(meshUserNumber,region,numberOfXi,mesh,Err)
     CALL cmfe_Mesh_NumberOfComponentsSet(mesh,numberOfMeshComponents,Err)
-    CALL cmfe_Mesh_NumberOfElementsSet(mesh,totalNumberOfElements,Err)
+    IF (useSimplex) THEN
+      CALL cmfe_Mesh_NumberOfElementsSet(mesh,totalNumberOfElements*5,Err)
+    ELSE
+      CALL cmfe_Mesh_NumberOfElementsSet(mesh,totalNumberOfElements,Err)
+    END IF
 
     ! Define nodes for the mesh
     CALL cmfe_Nodes_Initialise(nodes,Err)
@@ -257,7 +294,15 @@ PROGRAM PrasadsAwesomeExample
 
     CALL cmfe_MeshElements_Initialise(elements,Err)
     CALL cmfe_MeshElements_CreateStart(mesh,meshComponentNumber,basis,elements,Err)
-    CALL cmfe_MeshElements_NodesSet(elements,1,[1,2,3,4,5,6,7,8],Err)
+    IF (useSimplex) THEN
+      CALL cmfe_MeshElements_NodesSet(elements,1,[1,2,4,6],Err)
+      CALL cmfe_MeshElements_NodesSet(elements,2,[1,4,3,7],Err)
+      CALL cmfe_MeshElements_NodesSet(elements,3,[1,6,7,5],Err)
+      CALL cmfe_MeshElements_NodesSet(elements,4,[6,4,7,8],Err)
+      CALL cmfe_MeshElements_NodesSet(elements,5,[1,6,4,7],Err)
+    ELSE
+      CALL cmfe_MeshElements_NodesSet(elements,1,[1,2,3,4,5,6,7,8],Err)
+    END IF
     CALL cmfe_MeshElements_CreateFinish(elements,Err)
 
     CALL cmfe_Mesh_CreateFinish(mesh,Err)
@@ -604,7 +649,11 @@ PROGRAM PrasadsAwesomeExample
   IF (useGeneratedMesh) THEN
     output_file = "./solutions/unit-cube_generated_mesh"
   ELSE
-    output_file = "./solutions/unit-cube_manual_mesh"
+    IF (useSimplex) THEN
+      output_file = "./solutions/unit-cube_manual_mesh_simplex"
+    ELSE
+      output_file = "./solutions/unit-cube_manual_mesh"
+    END IF
   END IF
 
   prefix = ''

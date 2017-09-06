@@ -3891,10 +3891,13 @@ END SUBROUTINE ExportEMG
 SUBROUTINE SetStimulationAtNodes(StimValuePerNode)
   REAL(CMISSRP), INTENT(IN) :: StimValuePerNode
   INTEGER(CMISSIntg) :: StimulatedNodeBegin, StimulatedNodeEnd, StimulatedNodeNo
+  LOGICAL :: CurrentFibreFires
   
   NumberFiringFibres = 0
   !loop over all neuromuscular junctions (middle point of the fibres)
   DO FibreNo = 1, NumberOfFibres
+    CurrentFibreFires = .FALSE.
+    
     ! get middle point of fibre
     JunctionNodeNo = (FibreNo-1) * NumberOfNodesPerLongFibre + NumberOfNodesPerLongFibre/2
     
@@ -3929,13 +3932,16 @@ SUBROUTINE SetStimulationAtNodes(StimValuePerNode)
             !PRINT*, "Fibre ",FibreNo,": MU ", MotorUnitRank, " fires, StimulatedNodeNo=",StimulatedNodeNo, &
             !  & ", StimComponent=",StimComponent,", StimValue=", StimValue
 
-            NumberFiringFibres = NumberFiringFibres + 1
+            CurrentFibreFires = .TRUE.
             CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
               & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,StimulatedNodeNo,StimComponent,StimValuePerNode,Err)
           ENDIF
         ENDIF
       ENDIF
     ENDDO
+    
+    ! If there was a stimulated node in the current fibre, increase number of stimulated fibres counter for output
+    IF (CurrentFibreFires) NumberFiringFibres = NumberFiringFibres + 1
   ENDDO
 
 END SUBROUTINE SetStimulationAtNodes

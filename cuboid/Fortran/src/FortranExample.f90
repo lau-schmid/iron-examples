@@ -1,3 +1,149 @@
+!Y! temporary marks for cellml implementation. this is what is used in the actual RHS.:
+!Y! C_m = 0.58 (like in shortens paper);gam= 2.79 (slow twitch);R_a = 150y; tsi  = 0.000001y (xi aus shortens paper);tsi2= 0.0025y (xi);tsi3= 0.0005y(xi);FF = 96485y(Faradys constant);tau_K  = 559y(slow); tau_Na = 559y(slow);  f_T= 0.00174y(slow); tau_K2  = 40229.885y;  tau_Na2 = 40229.885y; 
+!Y! I_K_rest= 0.34y(slow); I_Na_rest = -0.43ys;alpha_h_bar = 0.0081y; alpha_m_bar = 0.288y; alpha_n_bar = 0.0131y; beta_h_bar = 4.38y;beta_m_bar = 1.38y;  beta_n_bar  = 0.067y; 
+!Y! V_m = -46y;  V_n  = -40y;  V_h  = -45y; V_a  = 70y;  V_S_inf = -68ys;  V_h_K_inf  = -40y;  A_a  = 150y;  A_S_inf  = 7.1ys;  A_h_K_inf = 7.5y;  K_alpha_h  = 14.7y;  K_beta_h  = 9y; 
+!Y! K_alpha_m = 10y;  K_alpha_n  = 7y;  K_beta_m  = 18y;  K_beta_n  = 40y; RR  = 8314.41y; TT  = 293y;  g_Cl_bar  = 3.275ys;  g_K_bar  = 10.8ys;  g_Na_bar  = 134ys; G_K  = 1.85y; 
+!Y! del  = 0.4y (delta);  Constant K_K  = 950y;  K_S  = 1y;  K_m_K  = 1y; K_m_Na = 13y; S_i  = 10y; J_NaK_bar  = 0.0001656y;  Constant V_tau = 70ys; 
+!/* Constant vS */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[0]*/ = -82.265452; 
+!/* Constant vT */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[1]*/ = -82.205709; 
+!/* Constant K_t */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[2]*/ = 6.137539; 
+!/* Constant K_i */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[3]*/ = 150.901412; 
+!/* Constant K_e */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[4]*/ = 5.891642; 
+!/* Constant Na_i */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[5]*/ = 12.699134; 
+!/* Constant Na_t */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[6]*/ = 132.186003; 
+!/* Constant Na_e */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[7]*/ = 133.009207; 
+!Y! eta_Cl  = 0.1y;  eta_IR  = 1.0y;  eta_DR  = 0.45y;  eta_Na = 0.1y; eta_NaK  = 0.1y; 
+!/* Constant I_HH */ 
+!DUMMY_ASSIGNMENT /*OC_KNOWN[0]*/ = 0.0; 
+!/* Constant n */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[8]*/ = 0.006824; 
+!/* Constant h_K */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[9]*/ = 0.995321; 
+!/* Constant m */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[10]*/ = 0.026848; 
+!/* Constant h */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[11]*/ = 0.598402; 
+!/* Constant S */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[12]*/ = 0.586035; 
+!/* Constant n_t */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[13]*/ = 0.006883; 
+!/* Constant h_K_t */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[14]*/ = 0.996416; 
+!/* Constant m_t */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[15]*/ = 0.027053; 
+!/* Constant h_t */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[16]*/ = 0.595856; 
+!/* Constant S_t */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[17]*/ = 0.586011; 
+!/* Constant O_0 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[18]*/ = 0.000002; 
+!/* Constant O_1 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[19]*/ = 0.000006; 
+!/* Constant O_2 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[20]*/ = 0.000007; 
+!/* Constant O_3 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[21]*/ = 0.000003; 
+!/* Constant O_4 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[22]*/ = 0.000001; 
+!Y! k_L  = 0.002y;  k_Lm  = 1000y;  f  = 0.2y;  alpha1  = 0.2y;  K  = 4.5y;  Vbar = -20y; 
+!/* Constant C_0 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[23]*/ = 0.883113; 
+!/* Constant C_1 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[24]*/ = 0.111480; 
+!/* Constant C_2 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[25]*/ = 0.005277; 
+!/* Constant C_3 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[26]*/ = 0.000111; 
+!/* Constant C_4 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[27]*/ = 0.000001; 
+!Y! nu_SR  = 2.4375ys;  K_SR  = 1; L_e  = 0.00004y;  tau_R  = 0.75y;tau_SR_R  = 0.75y;  L_S_0  = 1.0y (L_x in shortens paper); 
+!/* Constant L_S */ 
+!DUMMY_ASSIGNMENT /*OC_KNOWN[1]*/ = 1.0; 
+!Y! Constant R_R  = 0.5y; k_T_on  = 0.0885ys;  k_T_off = 0.115y;  T_tot_0 = 140y; k_P_on  = 0ys;  k_P_off  = 0ys;  P_tot  = 1500y;  k_Mg_on  = 0ys;  k_Mg_off  = 0s;  k_Cs_on  = 0.000004y; 
+!Y! k_Cs_off = 0.005y;  Cs_tot  = 31000y;  k_CATP_on  = 0.15y; k_CATP_off = 30y;  k_MATP_on  = 0.0015y;  k_MATP_off  = 0.15y;  tau_ATP  = 0.375y; tau_Mg  = 1.5y; k_0_on = 0y; 
+!Y! k_0_off  = 0.15y;  k_Ca_on  = 0.15y;  k_Ca_off  = 0.05y;  f_o  = 0.5ys; f_p  = 5ys;  h_o = 0.08ys;  h_p  = 0.06ys; g_o = 0.04ys; b_p = 0.00000394ys;  k_p = 0.00000362y;  A_p  = 1y; 
+!Y! B_p = 0.0001y;  PP  = 6y;
+! #################    Dynamics model:     ##########################
+! x_0  = 0.05;  x_1  = 0.000000;  x_2  = 0.050000;  eta  = 0.000107;
+! #######################   end  ####################################
+!/* Constant dummy */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[28]*/ = 0.0;
+! #################    Dynamics model:     ##########################
+! zeta  = 0.0021; 
+! #######################   end   ###################################
+!/* Constant Ca_1 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[29]*/ = 0.884732; 
+!/* Constant Ca_SR1 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[30]*/ = 1580.867624; 
+!/* Constant Ca_2 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[31]*/ = 0.399902; 
+!/* Constant Ca_SR2 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[32]*/ = 1581.712973; 
+!/* Constant Ca_T_2 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[33]*/ = 8.194027; 
+!/* Constant Ca_P1 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[34]*/ = 615.000000; 
+!/* Constant Ca_P2 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[35]*/ = 615.000000; 
+!/* Constant Mg_P1 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[36]*/ = 811.000000; 
+!/* Constant Mg_P2 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[37]*/ = 811.000000; 
+!/* Constant Ca_Cs1 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[38]*/ = 17306.257267; 
+!/* Constant Ca_Cs2 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[39]*/ = 17310.310128; 
+!/* Constant Ca_ATP1 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[40]*/ = 2.244070; 
+!/* Constant Ca_ATP2 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[41]*/ = 1.523121; 
+!/* Constant Mg_ATP1 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[42]*/ = 7242.253138; 
+!/* Constant Mg_ATP2 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[43]*/ = 7242.274705; 
+!/* Constant ATP1 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[44]*/ = 755.502793; 
+!/* Constant ATP2 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[45]*/ = 756.202174; 
+!/* Constant Mg1 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[46]*/ = 957.730848; 
+!/* Constant Mg2 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[47]*/ = 957.725457; 
+!/* Constant Ca_CaT2 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[48]*/ = 1.347074; 
+!/* Constant D_0 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[49]*/ = 0.343574; 
+!/* Constant D_1 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[50]*/ = 0.554181; 
+!/* Constant D_2 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[51]*/ = 1.342379; 
+!/* Constant A_1 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[52]*/ = 0.133380; 
+!/* Constant A_2 */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[53]*/ = 0.106577; 
+!/* Constant P */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[54]*/ = 0.231949; 
+!/* Constant P_SR */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[55]*/ = 0.284897; 
+!/* Constant P_C_SR */ 
+!DUMMY_ASSIGNMENT /*OC_STATE[56]*/ = 0.173921; 
+!Y! i2  = 60ys;
+! V_o_Eqn   =  0.950000 *L_S_0* 3.14159265358979*pow(R_R, 2.00000); 
+! V_SR_Eqn  =  0.0500000*L_S_0* 3.14159265358979*pow(R_R, 2.00000); 
+! V_1_Eqn   =  0.0100000*V_o_Eqn; 
+! V_2_Eqn   =  0.990000 *V_o_Eqn; 
+! V_SR1_Eqn =  0.0100000*V_SR_Eqn; 
+! V_SR2_Eqn =  0.990000 *V_SR_Eqn;
+!#######################################################################################
+
 !> \file
 !> \author Adam Reeve
 !> \brief This is an example program to solve a finite elasticity equation using OpenCMISS calls.
@@ -72,102 +218,83 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   LOGICAL, PARAMETER :: DEBUGGING_PARALLEL_BARRIER = .FALSE.   ! execute a barrier where all processes wait when running in parallel, this is helpful to only debug the execution of single processes in a parallel scenario with gdb
   LOGICAL, PARAMETER :: DEBUGGING_PROBLEM_OUTPUT = .FALSE.     ! output the 'solver' object after it is created
   LOGICAL :: DebuggingOutput = .FALSE.    ! enable information from solvers
-  INTEGER(CMISSIntg) :: ModelType = 0     ! type of the model (was OldTomoMechanics): 0 = "3a","MultiPhysStrain", old version of tomo that works in parallel, 1 = "3","MultiPhysStrain", new version of tomo that is more stable in numerical sense, 2 = "4","Titin"
-  LOGICAL :: OldTomoMechanics = .TRUE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
+  INTEGER(CMISSIntg) :: ModelType = 0 ! ### PAPERBRANCH SETTING     ! type of the model (was OldTomoMechanics): 0 = "3a","MultiPhysStrain", old version of tomo that works in parallel, 1 = "3","MultiPhysStrain", new version of tomo that is more stable in numerical sense, 2 = "4","Titin"
   LOGICAL :: EnableExportEMG = .FALSE.
   
   ! physical dimensions in [cm]
-  REAL(CMISSRP) :: PhysicalLength=3.0_CMISSRP ! (6)     X-direction
-  REAL(CMISSRP) :: PhysicalWidth= 3.0_CMISSRP ! (3)     Y-direction
-  REAL(CMISSRP) :: PhysicalHeight=1.5_CMISSRP ! (1.5)   Z-direction
-  REAL(CMISSRP) :: PhysicalStimulationLength = 0.1_CMISSRP  ! X-direction
+  REAL(CMISSRP) :: PhysicalLength=1.0_CMISSRP ! ### PAPERBRANCH SETTING !    X-direction
+  REAL(CMISSRP) :: PhysicalWidth =1.0_CMISSRP ! ### PAPERBRANCH SETTING !    Y-direction
+  REAL(CMISSRP) :: PhysicalHeight=1.0_CMISSRP ! ### PAPERBRANCH SETTING !    Z-direction
+  REAL(CMISSRP) :: PhysicalStimulationLength = 0.03125_CMISSRP  ! X-direction   ### PAPERBRANCH SETTING: value 0.03125 is unphysical (roughly 20 times too large). !NMJ area: 200 (um)² -> NMJ diameter: 16 um = 0.0016cm. Based on Tse et al., 2014, The Neuromuscular Junction: Measuring Synapse Size, Fragmentation and Changes in Synaptic Protein Density Using Confocal Fluorescence Microscopy
   
   !all times in [ms]
-  REAL(CMISSRP) :: time !=10.00_CMISSRP
-  REAL(CMISSRP), PARAMETER :: PERIODD=0.2_CMISSRP ! was 1
-  REAL(CMISSRP)            :: TimeStop=0.2_CMISSRP
+  REAL(CMISSRP) :: time
+  REAL(CMISSRP) :: StimPeriod=10.0_CMISSRP ! ### PAPERBRANCH SETTING
+  REAL(CMISSRP) :: TimeStop=10.0_CMISSRP ! ### PAPERBRANCH SETTING
 
-  REAL(CMISSRP) :: ElasticityTimeStep = 0.1000000000_CMISSRP !0.5_CMISSRP!0.05_CMISSRP!0.8_CMISSRP
-  REAL(CMISSRP) :: PDETimeStep = 0.005_CMISSRP              ! 0.005_CMISSRP
-  REAL(CMISSRP) :: ODETimeStep = 0.0001_CMISSRP!            ! set at '#timestepset'. 50 steps until DiHu - now to be set anew with proper DAE (integration) scheme.
-  INTEGER(CMISSIntg) :: OdeNSteps = -1 ! can be used to set ODETimeStep implicitly. 
+  REAL(CMISSRP) :: ODETimeStep = 0.0001_CMISSRP ! ### PAPERBRANCH SETTING: 0.0001
+  REAL(CMISSRP) :: PDETimeStep = 0.0005_CMISSRP ! ### PAPERBRANCH SETTING: 0.0005
+  REAL(CMISSRP) :: ElasticityTimeStep = 0.1_CMISSRP ! ### PAPERBRANCH SETTING
 
- !0.0001000_CMISSRP -> 50  !0.0001020_CMISSRP  !0.0001042_CMISSRP  !0.0001064_CMISSRP  !0.0001087_CMISSRP
- !0.0001111_CMISSRP -> 45  !0.0001136_CMISSRP  !0.0001163_CMISSRP  !0.0001190_CMISSRP  !0.0001220_CMISSRP 
- !0.0001250_CMISSRP -> 40  !0.0001282_CMISSRP  !0.0001316_CMISSRP  !0.0001351_CMISSRP  !0.0001389_CMISSRP
- !0.0001429_CMISSRP -> 35  !0.0001471_CMISSRP  !0.0001515_CMISSRP  !0.0001563_CMISSRP  !0.0001613_CMISSRP 
- !0.0001667_CMISSRP -> 30  !0.0001724_CMISSRP  !0.0001786_CMISSRP  !0.0001852_CMISSRP  !0.0001923_CMISSRP
- !0.0002_CMISSRP    -> 25  !0.0002083_CMISSRP  !0.0002174_CMISSRP  !0.0002273_CMISSRP  !0.0002381_CMISSRP
- !0.00025_CMISSRP   -> 20  !0.0002632_CMISSRP  !0.0002778_CMISSRP  !0.0002941_CMISSRP  !0.0003125_CMISSRP
- !0.0003333_CMISSRP -> 15  !0.0003571_CMISSRP  !0.0003846_CMISSRP  !0.0004167_CMISSRP  !0.0004545_CMISSRP
- !0.0005_CMISSRP    -> 10  !0.0005556_CMISSRP  !0.000625_CMISSRP   !0.0007143_CMISSRP  !0.0008333_CMISSRP
- !0.001_CMISSRP     -> 5   !0.00125_CMISSRP    !0.0016667_CMISSRP  !0.0025_CMISSRP     !0.005_CMISSRP     -> 1
+  REAL(CMISSRP) :: StimDuration=0.1_CMISSRP ! ### PAPERBRANCH SETTING ! should be the same as ElasticityTimeStep
 
-!tomo keep ElasticityTimeStep and STIM_STOP at the same values
-  REAL(CMISSRP), PARAMETER :: STIM_STOP=0.1_CMISSRP!ElasticityTimeStep   
-
-  INTEGER(CMISSIntg)  :: OutputTimestepStride=1  ! (10)
+  INTEGER(CMISSIntg)  :: OutputTimestepStride=10  ! (10)
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !--------------------------------------------------------------------------------------------------------------------------------
 
   !stimulation current in [uA/cm^2]
-  REAL(CMISSRP) :: StimValue = 8000.0_CMISSRP     ! 20000.0_CMISSRP
+  REAL(CMISSRP) :: StimValue = 1200.0_CMISSRP ! ### PAPERBRANCH SETTING ! will be applied to all nodes in PhysicalStimulationLength.
 
-  REAL(CMISSRP) :: PMax=7.5_CMISSRP ! N/cm^2
+  REAL(CMISSRP) :: PMax=7.3_CMISSRP ! ### PAPERBRANCH SETTING ! N/cm^2
 
-  !condctivity in [mS/cm]
-!  REAL(CMISSRP), PARAMETER :: Conductivity=3.828_CMISSRP
-!  REAL(CMISSRP), PARAMETER :: Conductivity=1.0_CMISSRP
-  REAL(CMISSRP) :: Conductivity=0.5_CMISSRP
+  !conductivity in [mS/cm] - This is sigma
+  REAL(CMISSRP) :: Conductivity=3.828_CMISSRP ! ### PAPERBRANCH SETTING
 
   !surface area to volume ratio in [cm^-1]
-!  REAL(CMISSRP), PARAMETER :: Am=500.0_CMISSRP
-  REAL(CMISSRP) :: Am=1.0_CMISSRP
+  REAL(CMISSRP) :: Am=500.0_CMISSRP ! ### PAPERBRANCH SETTING
 
   !membrane capacitance in [uF/cm^2]
-  REAL(CMISSRP) :: CmFast=1.0_CMISSRP
-!  REAL(CMISSRP), PARAMETER :: CmSlow=0.58_CMISSRP
-  REAL(CMISSRP) :: CmSlow=1.0_CMISSRP
+  REAL(CMISSRP) :: CmFast=0.58_CMISSRP ! ### PAPERBRANCH SETTING: Which one is needed? fast/slow? I guess slow.
+  REAL(CMISSRP) :: CmSlow=0.58_CMISSRP ! ### PAPERBRANCH SETTING: Which one is needed? fast/slow? I guess slow.
 
-  !Material-Parameters C=[mu_1, mu_2, mu_3, alpha_1, alpha_2, alpha_3, mu_0, XB_stiffness]
+  !Material-Parameters C=[mu_1, mu_2, mu_3, alpha_1, alpha_2, alpha_3, mu_0, XB_stiffness (= e or \eta in different papers)]
   REAL(CMISSRP), PARAMETER, DIMENSION(8) :: C = &
-    & [0.0085_CMISSRP*5.0_CMISSRP,0.0_CMISSRP,0.0_CMISSRP, & ! [N/cm^2 = 10^4 J/m^3]
-    &  11.0_CMISSRP,1.0_CMISSRP,6.0_CMISSRP, &
-    &  1.0_CMISSRP,2.2e-9_CMISSRP]
+    & [0.0085_CMISSRP*5.0_CMISSRP,0.0_CMISSRP,0.0_CMISSRP, & ! [N/cm^2 = 10^4 J/m^3]            ! ### NOT RELEVANT FOR PAPER (other scenario)
+    &  11.0_CMISSRP,1.0_CMISSRP,6.0_CMISSRP, &                                                  ! ### NOT RELEVANT FOR PAPER
+    &  1.0_CMISSRP,2.2e-9_CMISSRP]                                                              ! ### NOT RELEVANT FOR PAPER
 
-  !maximum contraction velocity in [cm/ms]
-  REAL(CMISSRP) :: VMax=-0.02_CMISSRP ! =0.2 m/s, rat GM
-  ! value for new mechanics: -0.2_CMISSRP
+  !maximum contraction velocity in [cm/ms] not relevant for paper
+  REAL(CMISSRP) :: VMax=-0.02_CMISSRP ! =0.2 m/s, rat GM                                        ! ### NOT RELEVANT FOR PAPER (isometric conditions)
 
-  !CAUTION - what are the units???
-  REAL(CMISSRP), PARAMETER, DIMENSION(4) :: MAT_FE= &
-    &[0.0000000000635201_CMISSRP,0.3626712895523322_CMISSRP,0.0000027562837093_CMISSRP,43.372873938671383_CMISSRP]  ![N/cm^2]
-  !REAL(CMISSRP), PARAMETER, DIMENSION(4) :: MAT_FE= &
-  !  &[0.00000000635201_CMISSRP,36.26712895523322_CMISSRP,0.00027562837093_CMISSRP,4337.2873938671383_CMISSRP]  ![N/cm^2]
+  !CAUTION - what are the units???   ![N/cm^2]?
+!  REAL(CMISSRP), PARAMETER, DIMENSION(4) :: MAT_FE= &
+!    &[0.0000000000635201_CMISSRP,0.3626712895523322_CMISSRP,0.0000027562837093_CMISSRP,43.372873938671383_CMISSRP] ! ### SKIPPED due to citation differences
 
-  REAL(CMISSRP) :: TkLinParam=1.0_CMISSRP ! 1: With Actin-Tintin Interaction 0: No Actin-Titin Interactions
+  REAL(CMISSRP), PARAMETER, DIMENSION(4) :: MAT_FE = [0.00000000006352_CMISSRP,0.3627_CMISSRP,0.000002756_CMISSRP,43.373_CMISSRP] ! ### PAPERBRANCH SETTING
+
+  REAL(CMISSRP) :: TkLinParam=1.0_CMISSRP ! 1: With Actin-Tintin Interaction 0: No Actin-Titin Interactions    ! ### NOT RELEVANT FOR PAPER
 
   !Inital Conditions
   REAL(CMISSRP) :: InitialStretch=1.0_CMISSRP   ! previous value in new mechanical description: 1.2_CMISSRP
   
-  INTEGER(CMISSIntg) :: ElasticityLoopMaximumNumberOfIterations = 5
-  INTEGER(CMISSIntg) :: NewtonMaximumNumberOfIterations = 500
-  REAL(CMISSRP) :: NewtonTolerance = 1.E-8_CMISSRP
-  REAL(CMISSRP) :: DAERelativeTolerance = 1.E-7_CMISSRP, DAEAbsoluteTolerance = 1.E-7_CMISSRP
+  INTEGER(CMISSIntg) :: ElasticityLoopMaximumNumberOfIterations = 5     ! only relevant if InitialStretch /= 1.0
+  INTEGER(CMISSIntg) :: NewtonMaximumNumberOfIterations = 500           ! 
+  REAL(CMISSRP) :: NewtonTolerance = 1.E-8_CMISSRP                      ! 
+  REAL(CMISSRP) :: DAERelativeTolerance = 1.E-7_CMISSRP, DAEAbsoluteTolerance = 1.E-7_CMISSRP   ! ### Something we dont have to tell about.
 
-!  REAL(CMISSRP), PARAMETER :: CONTRACTION_VELOCITY=-6.0e-1_CMISSRP ![cm/s]
-  
   !--------------------------------------------------------------------------------------------------------------------------------
 
-  INTEGER(CMISSIntg) :: NumberGlobalXElements = 3
-  INTEGER(CMISSIntg) :: NumberGlobalYElements = 4
-  INTEGER(CMISSIntg) :: NumberGlobalZElements = 1
-  INTEGER(CMISSIntg) :: NumberOfInSeriesFibres = 1
-  INTEGER(CMISSIntg) :: NumberOfNodesInXi1 = 31
-  INTEGER(CMISSIntg) :: NumberOfNodesInXi2 = 2
-  INTEGER(CMISSIntg) :: NumberOfNodesInXi3 = 3
-  
+  ! ### PAPERBRANCH SETTING DESCRIPTION:
+  ! we have 36 fibers spread over 2X2X2 FEM elements. Each fiber has 32 elements, 33 nodes (cells). The 16nth cell is stimulated (counting from 1 to 32):
+  INTEGER(CMISSIntg) :: NumberGlobalXElements      ! ### PAPERBRANCH SETTING, set later!
+  INTEGER(CMISSIntg) :: NumberGlobalYElements      ! ### PAPERBRANCH SETTING, set later!
+  INTEGER(CMISSIntg) :: NumberGlobalZElements      ! ### PAPERBRANCH SETTING, set later!
+  INTEGER(CMISSIntg) :: NumberOfInSeriesFibres = 1 ! ### has no good effect. (set /=1 to break code) TO BE DISCUSSED? Only Benni will need this. Default 1 makes sense.
+  INTEGER(CMISSIntg) :: NumberOfNodesInXi1 = 16    ! ### PAPERBRANCH SETTING, number of 1D elements per 3D element, i.e. number of nodes is +1 (but nodes on edges of 3d elements are shared)
+  INTEGER(CMISSIntg) :: NumberOfNodesInXi2 = 3     ! ### PAPERBRANCH SETTING
+  INTEGER(CMISSIntg) :: NumberOfNodesInXi3 = 3     ! ### PAPERBRANCH SETTING
+    
   INTEGER(CMISSLIntg) :: NumberOfElementsFE
   INTEGER(CMISSIntg) :: NumberOfNodesM
   INTEGER(CMISSIntg) :: NumberOfElementsM
@@ -182,7 +309,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   INTEGER(CMISSINTg) :: NumberOfFibreLinesPerGlobalElement
   INTEGER(CMISSIntg) :: NumberOfGlobalElementLines
   INTEGER(CMISSIntg) :: NumberOfFibreLinesTotal
-  INTEGER(CMISSIntg) :: NumberOfElementsMPerFibre
+  INTEGER(CMISSIntg) :: NumberOfElementsMPerFibre ! this is the total number of (0D sub-)cells (nodes) per global fibre.
   INTEGER(CMISSIntg) :: NumberOfElementsMPerFibreLine
   INTEGER(CMISSIntg) :: NumberOfNodesMPerFibreLine
   INTEGER(CMISSIntg) :: nSubdomainsX, nSubdomainsY, nSubdomainsZ
@@ -486,7 +613,11 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   !Solve the problem
 
   !Solve the problem -- bring to new length before applying the stimulus
-  IF (ComputationalNodeNumber == 0) PRINT *, "1.) Pre-stretch simulation, initial stretch =", InitialStretch
+  IF (InitialStretch == 1.0_CMISSRP) THEN
+    IF (ComputationalNodeNumber == 0) PRINT *, "1.) Pre-stretch disabled, initial stretch =", InitialStretch
+  ELSE
+    IF (ComputationalNodeNumber == 0) PRINT *, "1.) Pre-stretch simulation, initial stretch =", InitialStretch
+  ENDIF
   Temp = GetMemoryConsumption()
   CALL cmfe_CustomSolverInfoReset(Err)
   IF (DEBUGGING_PARALLEL_BARRIER) CALL gdbParallelDebuggingBarrier()
@@ -494,9 +625,11 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   ! store duration
   CALL ETIME(DurationSystemUser, DurationTotal)
   TimeInitFinshed = DurationSystemUser(2)
-
-  CALL cmfe_Problem_Solve(Problem,Err)
-
+  
+  IF (InitialStretch /= 1.0_CMISSRP) THEN
+    CALL cmfe_Problem_Solve(Problem,Err) ! ### PAPER SETTING: not necessary
+  ENDIF
+    
   ! store duration
   CALL ETIME(DurationSystemUser, DurationTotal)
   TimeStretchSimFinished = DurationSystemUser(2)
@@ -569,8 +702,8 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
         & "Aliev_Panfilov/I_HH",StimComponent,Err)
     ENDIF
 
-  !  VALUE = VALUE-ABS(Vmax)/20.0_CMISSRP*STIM_STOP
-  !!  VALUE = VALUE+ABS(Vmax)/10.0_CMISSRP*STIM_STOP
+  !  VALUE = VALUE-ABS(Vmax)/20.0_CMISSRP*StimDuration
+  !!  VALUE = VALUE+ABS(Vmax)/10.0_CMISSRP*StimDuration
   !  CALL cmfe_ControlLoop_BoundaryConditionUpdate(ControlLoopFE,1,1,VALUE,Err)
   !  DO NodeIdx=1,SIZE(LeftSurfaceNodes,1)
   !    NodeNumber=LeftSurfaceNodes(NodeIdx)
@@ -589,8 +722,8 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
 
     !-------------------------------------------------------------------------------------------------------------------------------
     !Solve the problem for the stimulation time
-    IF (ComputationalNodeNumber == 0) Print*, "  Solve with stimulation,    time span: ", time, " to ",time+STIM_STOP
-    CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time,time+STIM_STOP,ElasticityTimeStep,Err)
+    IF (ComputationalNodeNumber == 0) Print*, "  Solve with stimulation,    time span: ", time, " to ",time+StimDuration
+    CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time,time+StimDuration,ElasticityTimeStep,Err)
 
     CALL cmfe_CustomSolverInfoReset(Err)
     CALL cmfe_CustomProfilingStop("level 0: stimulation handling",Err)
@@ -609,8 +742,8 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
     
     !-------------------------------------------------------------------------------------------------------------------------------
     !Solve the problem for the rest of the period
-    IF (ComputationalNodeNumber == 0) PRINT*, "  Solve without stimulation, time span: ", time+STIM_STOP, " to ",time+PERIODD
-    CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time+STIM_STOP,time+PERIODD,ElasticityTimeStep,Err)
+    IF (ComputationalNodeNumber == 0) PRINT*, "  Solve without stimulation, time span: ", time+StimDuration, " to ",time+StimPeriod
+    CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time+StimDuration,time+StimPeriod,ElasticityTimeStep,Err)
 
     CALL cmfe_CustomSolverInfoReset(Err)    
     CALL cmfe_CustomProfilingStop("level 0: stimulation handling",Err)
@@ -618,9 +751,9 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
     CALL cmfe_Problem_Solve(Problem,Err)
     
     CALL cmfe_CustomProfilingStart("level 0: stimulation handling",Err)
-    CALL HandleSolverInfo(time+STIM_STOP)
+    CALL HandleSolverInfo(time+StimDuration)
     !-------------------------------------------------------------------------------------------------------------------------------
-    time = time + PERIODD
+    time = time + StimPeriod
     k = k+1
 
     IF (k == 2) THEN
@@ -936,6 +1069,10 @@ SUBROUTINE ParseAssignment(Line, LineNumber, ScenarioInputFile)
       READ(StrValue, *, IOSTAT=Stat) ElasticityTimeStep
     CASE ("stimvalue")
       READ(StrValue, *, IOSTAT=Stat) StimValue
+    CASE ("stimduration", "stimstop")
+      READ(StrValue, *, IOSTAT=Stat) StimDuration
+    CASE ("stimperiod", "periodd")
+      READ(StrValue, *, IOSTAT=Stat) StimPeriod
     CASE ("outputtimestepstride")
       READ(StrValue, *, IOSTAT=Stat) OutputTimeStepStride
     CASE ("xi1", "numberofnodesinxi1")
@@ -999,8 +1136,6 @@ SUBROUTINE ParseAssignment(Line, LineNumber, ScenarioInputFile)
       READ(StrValue, *, IOSTAT=Stat) Vmax
     CASE ("initialstretch")
       READ(StrValue, *, IOSTAT=Stat) InitialStretch
-    CASE ("odensteps")
-      READ(StrValue, *, IOSTAT=Stat) OdeNSteps
     CASE ("inputdirectory")
       InputDirectory = TRIM(ADJUSTL(StrValue))
       
@@ -1075,9 +1210,9 @@ SUBROUTINE ParseParameters()
   INTEGER(CMISSIntg) :: I
 
   ! Default values
-  NumberGlobalXElements = 3 !6
-  NumberGlobalYElements = 4 !4
-  NumberGlobalZElements = 1 !1
+  NumberGlobalXElements = 2 ! ### PAPER SETTING
+  NumberGlobalYElements = 2 ! ### PAPER SETTING
+  NumberGlobalZElements = 2 ! ### PAPER SETTING
   NumberOfInSeriesFibres = 1 !1
   NumberOfElementsInAtomX = 1
   NumberOfElementsInAtomY = 1
@@ -1126,9 +1261,7 @@ SUBROUTINE ParseParameters()
         READ(Arg,*,Iostat=Stat)  MonodomainSolverId
       CASE(9)
         READ(Arg,*,Iostat=Stat)  MonodomainPreconditionerId
-      CASE(10)
-        READ(Arg,*,Iostat=Stat)  OdeNSteps
-        
+      
       ENDSELECT
       
       ValueArgumentCount = ValueArgumentCount + 1
@@ -1144,10 +1277,8 @@ SUBROUTINE ParseParameters()
      & "2)   ./cuboid [<variable>=<value>] [<input.sce>] [<variable>=<value>] " // NEW_LINE('A') // &
      & "     See the example scenario file for file format and variable names. Variables will be set in order of the arguments."
   ENDIF
-!##################################################################################################################################
-  IF (OdeNSteps/=-1) THEN
-    ODETimeStep = PDETimeStep/OdeNSteps
-  END IF
+
+
 !##################################################################################################################################
 
   ! direction of fibres is in Xi1=Global X direction
@@ -1171,9 +1302,11 @@ SUBROUTINE ParseParameters()
   NumberOfElementsM = NumberOfElementsMPerFibre * NumberOfFibres
 
   ! compute number of bioelectric nodes that will be stimulated
-  NumberStimulatedNodesPerFibre = MAX(1, NINT(DBLE(PhysicalStimulationLength) / PhysicalWidth * NumberOfElementsMPerFibre))
-  StimValuePerNode = StimValue / NumberStimulatedNodesPerFibre
+  NumberStimulatedNodesPerFibre = MAX(1, NINT(DBLE(PhysicalStimulationLength) * (NumberOfElementsMPerFibre / PhysicalWidth)))
   
+  ! previous implementation changed:: StimValuePerNode = StimValue / NumberStimulatedNodesPerFibre to::
+  StimValuePerNode = StimValue
+  ! ^ This was done because we need to keep the stimulation in a cell constant, no matter, how many cells there are. the dynamic of a cell is independent of the spacial discretization. Checked by Nehzat, Thomas, Aaron
 !##################################################################################################################################
 !  fast_twitch=.true.
 !  if(fast_twitch) then
@@ -1275,8 +1408,8 @@ SUBROUTINE ParseParameters()
     PRINT *, "---------- Timing parameters -----------------------------------------------"
     PRINT *, "The time unit is 1 ms."
     PRINT "(A,F7.2,A,F5.2,A,F5.2)", "  Main loop, Δt = ", TimeStop, ", dt = ", ElasticityTimeStep
-    PRINT "(A,F5.2)", "  - stimulation enabled:  Δt = ", STIM_STOP
-    PRINT "(A,F5.2)", "  - stimulation disabled: Δt = ", (PERIODD - STIM_STOP)
+    PRINT "(A,F5.2)", "  - stimulation enabled:  Δt = ", StimDuration
+    PRINT "(A,F5.2)", "  - stimulation disabled: Δt = ", (StimPeriod - StimDuration)
     PRINT *, ""
 
     PRINT "(A,F7.2,A,F0.5,A,I5)", "- MAIN_TIME_LOOP,         Δt =", TimeStop, ", dt = ", ElasticityTimeStep, &
@@ -1295,7 +1428,7 @@ SUBROUTINE ParseParameters()
     IF (DebuggingOnlyRunShortPartOfSimulation) PRINT *, "Abort after first stimulation."
     PRINT *, "OutputTimeStepStride:", OutputTimeStepStride, ", EnableExportEMG:", EnableExportEMG
 
-    ! It should be ElasticityTimeStep = STIM_STOP
+    ! ElasticityTimeStep should be a integer multiple of StimDuration
 
     ! Output problem size information
     PRINT *, ""
@@ -1334,10 +1467,15 @@ SUBROUTINE ParseParameters()
     PRINT *, "---------- Physical parameters -----------------------------------------------"
     PRINT "(4(A,F5.2))", "       Dimensions [cm]: ",PhysicalLength,"x",PhysicalWidth,"x",PhysicalHeight,&
      & ",          InitialStretch: ", InitialStretch
-    PRINT "(A,F11.2,A,F5.2,A,I3,A,F9.2,A)", " Stimulation [uA/cm^2]: ",StimValue," on ",PhysicalStimulationLength," cm, i.e. ",&
-      & NumberStimulatedNodesPerFibre," nodes, ",StimValuePerNode, " per node"
-    PRINT "(3(A,F5.2))", " PMax:", PMax, ",      VMax: ", VMax, ", Conductivity: ", Conductivity
-    PRINT "(3(A,F5.2))", "   Am:", Am, ", Cm (fast):", CmFast, ",     Cm (slow):", CmSlow
+    IF (NumberStimulatedNodesPerFibre == 1) THEN
+      PRINT "(A,F11.2,A,F8.5,A,I3,A,F9.2,A)", " Stimulation [uA/cm^2]: ",StimValue," on ",PhysicalStimulationLength," cm, i.e. ",&
+        & NumberStimulatedNodesPerFibre," node"
+    ELSE
+      PRINT "(A,F11.2,A,F8.5,A,I3,A,F9.2,A)", " Stimulation [uA/cm^2]: ",StimValue," on ",PhysicalStimulationLength," cm, i.e. ",&
+        & NumberStimulatedNodesPerFibre," nodes, ",StimValuePerNode, " per node"
+    ENDIF
+    PRINT "(3(A,F5.2))", " PMax:", PMax, ",        VMax: ", VMax, ",   Conductivity: ", Conductivity
+    PRINT "(3(A,F7.2))", "   Am:", Am, ", Cm (fast):", CmFast, ",     Cm (slow):", CmSlow
     
     IF (ModelType == 0) THEN    ! 3a, "MultiPhysStrain", old tomo mechanics
       PRINT *, "ModelType: 0 (""3a"", MultiPhysStrain, Old mechanics formulation that works in parallel.)"
@@ -3274,7 +3412,7 @@ SUBROUTINE CreateControlLoops()
   CALL cmfe_ControlLoop_Initialise(ControlLoopMain,Err)
   CALL cmfe_Problem_ControlLoopGet(Problem,CMFE_CONTROL_LOOP_NODE,ControlLoopMain,Err)
   CALL cmfe_ControlLoop_LabelSet(ControlLoopMain,'MAIN_TIME_LOOP',Err)
-  !Loop in time for STIM_STOP with the Stimulus applied.
+  !Loop in time for StimDuration with the Stimulus applied.
   CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,0.0_CMISSRP,ElasticityTimeStep,ElasticityTimeStep,Err)
 
   CALL cmfe_ControlLoop_TimeOutputSet(ControlLoopMain,OutputTimeStepStride,Err)
@@ -3349,7 +3487,6 @@ SUBROUTINE CreateSolvers()
     CASE(4) ! Crank-Nicolson, not stable yet
       CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_CRANK_NICOLSON,Err)
     CASE(5) ! improved Euler (Heun)
-      ! out of date: CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_HEUN,Err)
       CALL cmfe_Solver_DAEEulerSolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_EULER_IMPROVED,Err)
     CASE DEFAULT
       IF (ComputationalNodeNumber == 0) THEN
@@ -3359,14 +3496,6 @@ SUBROUTINE CreateSolvers()
         PRINT *, ""
       ENDIF
   END SELECT
-  !-------------------------------------------------------------------------------------------  
-  !Set the Number of ODE time steps. CARE: This makes cmfe_Solver_DAETimeStepSet() obsolete!
-  IF(ODESolverId==1 .AND. OdeNSteps/=-1) THEN
-    CALL cmfe_Solver_DAEEulerForwardSetNSteps(SolverDAE,OdeNSteps,Err)
-  ELSEIF(ODESolverId==5 .AND. OdeNSteps/=-1) THEN
-    CALL cmfe_Solver_DAEEulerImprovedSetNSteps(SolverDAE,OdeNSteps,Err)
-  END IF
-  
   !> \todo or not-todo... solve the CellML equations on the GPU for efficiency (later)
   !CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_EXTERNAL,Err)
 
@@ -3762,10 +3891,13 @@ END SUBROUTINE ExportEMG
 SUBROUTINE SetStimulationAtNodes(StimValuePerNode)
   REAL(CMISSRP), INTENT(IN) :: StimValuePerNode
   INTEGER(CMISSIntg) :: StimulatedNodeBegin, StimulatedNodeEnd, StimulatedNodeNo
+  LOGICAL :: CurrentFibreFires
   
   NumberFiringFibres = 0
   !loop over all neuromuscular junctions (middle point of the fibres)
   DO FibreNo = 1, NumberOfFibres
+    CurrentFibreFires = .FALSE.
+    
     ! get middle point of fibre
     JunctionNodeNo = (FibreNo-1) * NumberOfNodesPerLongFibre + NumberOfNodesPerLongFibre/2
     
@@ -3800,13 +3932,16 @@ SUBROUTINE SetStimulationAtNodes(StimValuePerNode)
             !PRINT*, "Fibre ",FibreNo,": MU ", MotorUnitRank, " fires, StimulatedNodeNo=",StimulatedNodeNo, &
             !  & ", StimComponent=",StimComponent,", StimValue=", StimValue
 
-            NumberFiringFibres = NumberFiringFibres + 1
+            CurrentFibreFires = .TRUE.
             CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
               & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,StimulatedNodeNo,StimComponent,StimValuePerNode,Err)
           ENDIF
         ENDIF
       ENDIF
     ENDDO
+    
+    ! If there was a stimulated node in the current fibre, increase number of stimulated fibres counter for output
+    IF (CurrentFibreFires) NumberFiringFibres = NumberFiringFibres + 1
   ENDDO
 
 END SUBROUTINE SetStimulationAtNodes

@@ -1,12 +1,5 @@
 <?xml version="1.0"?>
-<!--  
-
-AUTHOR :  John Davidson
-          Bioengineering Institute
-          The University of Auckland
-          
-
---><model xmlns="http://www.cellml.org/cellml/1.0#" xmlns:cmeta="http://www.cellml.org/metadata/1.0#" xml:base="" cmeta:id="Slow_Twitch" name="Slow_Twitch">
+<model xmlns="http://www.cellml.org/cellml/1.0#" xmlns:cmeta="http://www.cellml.org/metadata/1.0#" xml:base="http://models.cellml.org/workspace/shorten_ocallaghan_davidson_soboleva_2007/@@xmlbase/4c0205a1ae8e1a89975a34734b0527f33b57a5cb//" cmeta:id="Fast_Twitch" name="Fast_Twitch">
 
 <documentation xmlns="http://cellml.org/tmp-documentation">
 <article>
@@ -16,14 +9,14 @@ AUTHOR :  John Davidson
     <firstname>Catherine</firstname>
           <surname>Lloyd</surname>
     <affiliation>
-      <shortaffil>Auckland Bioengineering Institute, The University of Auckland</shortaffil>
+      <shortaffil>Bioengineering Institute, University of Auckland</shortaffil>
     </affiliation>
   </author>
 </articleinfo>
   <section id="sec_status">
     <title>Model Status</title>
     <para>
-        This cellML model is known to run in OpenCell, JSim and COR to recreate the published results.  The units have been checked in COR and they are consistent in as much as they are known to be equivalent.  This particular version of the CellML model represents slow twitch muscle.
+        This cellML model is known to run in both PCEnv (0.4), JSIM and COR to recreate the published results.  The units have been checked in COR and they are consistent in as much as they are known to be equivalent.  This particular version of the CellML model represents fast twitch muscle.
           </para>
   </section>
 
@@ -87,12 +80,15 @@ The complete original paper reference is cited below:
 </para>
 
 <para>
-A mathematical model of fatigue in skeletal muscle force contraction, Paul R. Shorten, Paul O<emphasis>Journal of Muscle Research and Cell Motility</emphasis>, 28, 293-313. <ulink url="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=pubmed&amp;cmd=Retrieve&amp;dopt=AbstractPlus&amp;list_uids=18080210&amp;query_hl=1&amp;itool=pubmed_docsum">PubMed ID: 18080210</ulink>
+<ulink url="http://www.springerlink.com/content/4x762gj105253k68/">A mathematical model of fatigue in skeletal muscle force contraction</ulink>, Paul R. Shorten, Paul O<ulink url="http://www.springerlink.com/content/100194/?p=73bc34cbbdf84c958e8cc8658884650d&amp;pi=0">
+            <emphasis>Journal of Muscle Research and Cell Motility</emphasis>
+          </ulink>, 28, 293-313.  (<ulink url="http://www.springerlink.com/content/4x762gj105253k68/fulltext.html">Full text</ulink> and <ulink url="http://www.springerlink.com/content/4x762gj105253k68/fulltext.pdf">PDF</ulink> versions of the article are available to journal subscribers on the <emphasis>Journal of Muscle Research and Cell Motility</emphasis> website.)  <ulink url="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=pubmed&amp;cmd=Retrieve&amp;dopt=AbstractPlus&amp;list_uids=18080210&amp;query_hl=1&amp;itool=pubmed_docsum">PubMed ID: 18080210</ulink>
 </para>
 
 </sect1>
 </article>
 </documentation> 
+    
     
 <!-- units definition
 
@@ -302,20 +298,20 @@ tomo  end
 
 <component name="wal_environment">
 
-  <variable initial_value="0.58" name="C_m" units="microF_per_cm2"/>
-  <variable initial_value="2.79" name="gam" units="dimensionless"/>
+  <variable initial_value="1.0" name="C_m" units="microF_per_cm2"/>
+  <variable initial_value="4.8" name="gam" units="dimensionless"/>
   <variable initial_value="150" name="R_a" units="ohm_cm2"/>
   <variable initial_value="0.000001" name="tsi" units="centi_metre"/>
   <variable initial_value="0.0025" name="tsi2" units="centi_metre"/>
   <variable initial_value="0.0005" name="tsi3" units="centi_metre"/>
   <variable initial_value="96485" name="FF" private_interface="out" units="C_per_mol"/>
-  <variable initial_value="559" name="tau_K" units="millisecond"/>
-  <variable initial_value="559" name="tau_Na" units="millisecond"/>
-  <variable initial_value="0.00174" name="f_T" units="dimensionless"/>
-  <variable initial_value="40229.885" name="tau_K2" units="millisecond"/>
-  <variable initial_value="40229.885" name="tau_Na2" units="millisecond"/>
-  <variable initial_value="0.34" name="I_K_rest" units="microA_per_cm2"/>
-  <variable initial_value="-0.43" name="I_Na_rest" units="microA_per_cm2"/>
+  <variable initial_value="350" name="tau_K" units="millisecond"/>
+  <variable initial_value="350" name="tau_Na" units="millisecond"/>
+  <variable initial_value="0.0032" name="f_T" units="dimensionless"/>
+  <variable initial_value="21875" name="tau_K2" units="millisecond"/>
+  <variable initial_value="21875" name="tau_Na2" units="millisecond"/>
+  <variable initial_value="1.02" name="I_K_rest" units="microA_per_cm2"/>
+  <variable initial_value="-1.29" name="I_Na_rest" units="microA_per_cm2"/>
   <variable initial_value="0.0081" name="alpha_h_bar" private_interface="out" units="per_millisecond"/>
   <variable initial_value="0.288" name="alpha_m_bar" private_interface="out" units="per_millisecond_per_millivolt"/>
   <variable initial_value="0.0131" name="alpha_n_bar" private_interface="out" units="per_millisecond_per_millivolt"/>
@@ -326,10 +322,10 @@ tomo  end
   <variable initial_value="-40" name="V_n" private_interface="out" units="millivolt"/>
   <variable initial_value="-45" name="V_h" private_interface="out" units="millivolt"/>
   <variable initial_value="70" name="V_a" private_interface="out" units="millivolt"/>
-  <variable initial_value="-68" name="V_S_inf" private_interface="out" units="millivolt"/>
+  <variable initial_value="-78" name="V_S_inf" private_interface="out" units="millivolt"/>
   <variable initial_value="-40" name="V_h_K_inf" private_interface="out" units="millivolt"/>
   <variable initial_value="150" name="A_a" private_interface="out" units="millivolt"/>
-  <variable initial_value="7.1" name="A_S_inf" private_interface="out" units="millivolt"/>
+  <variable initial_value="5.8" name="A_S_inf" private_interface="out" units="millivolt"/>
   <variable initial_value="7.5" name="A_h_K_inf" private_interface="out" units="millivolt"/>
   <variable initial_value="14.7" name="K_alpha_h" private_interface="out" units="millivolt"/>
   <variable initial_value="9" name="K_beta_h" private_interface="out" units="millivolt"/>
@@ -339,32 +335,32 @@ tomo  end
   <variable initial_value="40" name="K_beta_n" private_interface="out" units="millivolt"/>
   <variable initial_value="8314.41" name="RR" private_interface="out" units="milliJ_per_degreeK_per_mol"/>
   <variable initial_value="293" name="TT" private_interface="out" units="degreeK"/>
-  <variable initial_value="3.275" name="g_Cl_bar" private_interface="out" units="milliS_per_cm2"/>
-  <variable initial_value="10.8" name="g_K_bar" private_interface="out" units="milliS_per_cm2"/>
-  <variable initial_value="134" name="g_Na_bar" private_interface="out" units="milliS_per_cm2"/>
-  <variable initial_value="1.85" name="G_K" private_interface="out" units="milliS_per_cm2"/>
+  <variable initial_value="19.65" name="g_Cl_bar" private_interface="out" units="milliS_per_cm2"/>
+  <variable initial_value="64.8" name="g_K_bar" private_interface="out" units="milliS_per_cm2"/>
+  <variable initial_value="804" name="g_Na_bar" private_interface="out" units="milliS_per_cm2"/>
+  <variable initial_value="11.1" name="G_K" private_interface="out" units="milliS_per_cm2"/>
   <variable initial_value="0.4" name="del" private_interface="out" units="dimensionless"/>
   <variable initial_value="950" name="K_K" private_interface="out" units="milliM2"/>
   <variable initial_value="1" name="K_S" private_interface="out" units="milliM2"/>
   <variable initial_value="1" name="K_m_K" private_interface="out" units="milliM"/>
   <variable initial_value="13" name="K_m_Na" private_interface="out" units="milliM"/>
   <variable initial_value="10" name="S_i" private_interface="out" units="milliM"/>
-  <variable initial_value="0.0001656" name="J_NaK_bar" private_interface="out" units="micro_mol_per_cm2_per_second"/>
-  <variable initial_value="70" name="V_tau" private_interface="out" units="millivolt"/>
+  <variable initial_value="0.000621" name="J_NaK_bar" private_interface="out" units="micro_mol_per_cm2_per_second"/>
+  <variable initial_value="90" name="V_tau" private_interface="out" units="millivolt"/>
   
   
   
   <variable name="I_T" private_interface="out" units="microA_per_cm2"/>
-  <variable initial_value="-82.265452" name="vS" private_interface="out" public_interface="out" units="millivolt"/>
-  <variable initial_value="-82.205709" name="vT" private_interface="out" public_interface="out" units="millivolt"/>
+  <variable initial_value="-79.974" name="vS" private_interface="out" public_interface="out" units="millivolt"/>
+  <variable initial_value="-80.2" name="vT" private_interface="out" public_interface="out" units="millivolt"/>
   <variable name="I_ionic_s" units="microA_per_cm2"/>
   <variable name="I_ionic_t" units="microA_per_cm2"/>
-  <variable initial_value="6.137539" name="K_t" private_interface="out" units="milliM"/>
-  <variable initial_value="150.901412" name="K_i" private_interface="out" units="milliM"/>
-  <variable initial_value="5.891642" name="K_e" private_interface="out" units="milliM"/>
-  <variable initial_value="12.699134" name="Na_i" private_interface="out" units="milliM"/>
-  <variable initial_value="132.186003" name="Na_t" private_interface="out" units="milliM"/>
-  <variable initial_value="133.009207" name="Na_e" private_interface="out" units="milliM"/>
+  <variable initial_value="5.9" name="K_t" private_interface="out" units="milliM"/>
+  <variable initial_value="150.9" name="K_i" private_interface="out" units="milliM"/>
+  <variable initial_value="5.9" name="K_e" private_interface="out" units="milliM"/>
+  <variable initial_value="12.7" name="Na_i" private_interface="out" units="milliM"/>
+  <variable initial_value="133" name="Na_t" private_interface="out" units="milliM"/>
+  <variable initial_value="133" name="Na_e" private_interface="out" units="milliM"/>
   <variable name="E_K" private_interface="out" units="millivolt"/>
   <variable name="E_K_t" private_interface="out" units="millivolt"/>
   <variable name="Cl_i" private_interface="out" units="milliM"/>
@@ -394,9 +390,6 @@ tomo  end
   <variable name="I_Na_t" private_interface="in" units="microA_per_cm2"/>
   <variable name="I_NaK_t" private_interface="in" units="microA_per_cm2"/>
   
-<!-- tomo
-  <variable name="I_HH" private_interface="out" units="microA_per_cm2"/>
--->
   <variable initial_value="0.0" name="I_HH" private_interface="out" units="microA_per_cm2"/>
   <variable name="time" private_interface="out" public_interface="in" units="millisecond"/>
   
@@ -1621,8 +1614,9 @@ tomo  end
 
 </math>
 	      
-<!-- tomo 
 
+
+<!--
 <math xmlns="http://www.w3.org/1998/Math/MathML">
 <apply id="I_HH_Eqn">
         <eq/> 
@@ -1659,1732 +1653,234 @@ tomo  end
       </apply>
       
     </piece>
-        
-    <otherwise>
     
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 0 </cn>
+    <piece>
+    
+      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
+	    
+      <apply>
+              <and/>
+    
+	<apply>
+                <geq/>
+	
+	  <ci> time </ci>
+	  
+	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 50 </cn>
+	  
+	</apply>
+	
+	<apply>
+                <lt/>
+	
+	  <ci> time </ci>
+	  
+	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 50.5 </cn>
+	  
+	</apply>
+	
+      </apply>
       
-    </otherwise>
+    </piece>
     
-  </piecewise>
-  
-</apply>
-
-</math>
-
--->
-
-<!--
-
-<math xmlns="http://www.w3.org/1998/Math/MathML">
-<apply id="I_HH_Eqn">
-        <eq/> 
-
-  <ci> I_HH </ci>
-  
-  <piecewise>
-  
-  <piece>
+    <piece>
+    
       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
+    
       <apply>
               <and/>
+    	
 	<apply>
                 <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond">   0.0 </cn>
+	
+	  <ci> time </ci>
+	  
+	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 100 </cn>
+	  
 	</apply>
+	
 	<apply>
                 <lt/>
+	
 	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond">   0.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond">  10.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond">  10.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond">  20.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond">  20.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond">  30.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond">  30.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond">  40.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond">  40.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond">  50.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond">  50.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond">  60.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond">  60.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond">  70.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond">  70.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond">  80.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond">  80.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond">  90.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond">  90.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 100.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
+	  
 	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 100.5 </cn>
+	  
 	</apply>
+	
       </apply>
+      
     </piece>
-
-  <piece>
+    <piece>
+    
       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
+    
       <apply>
               <and/>
+    	
 	<apply>
                 <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 110.0 </cn>
+	
+	  <ci> time </ci>
+	  
+	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 150 </cn>
+	  
 	</apply>
+	
 	<apply>
                 <lt/>
+	
 	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 110.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 120.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 120.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 130.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 130.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 140.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 140.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 150.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
+	  
 	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 150.5 </cn>
+	  
 	</apply>
+	
       </apply>
+      
     </piece>
-
-  <piece>
+    <piece>
+    
       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
+    
       <apply>
               <and/>
+    	
 	<apply>
                 <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 160.0 </cn>
+	
+	  <ci> time </ci>
+	  
+	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 200 </cn>
+	  
 	</apply>
+	
 	<apply>
                 <lt/>
+	
 	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 160.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 170.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 170.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 180.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 180.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 190.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 190.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 200.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
+	  
 	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 200.5 </cn>
+	  
 	</apply>
+	
       </apply>
+      
     </piece>
-
-  <piece>
+    <piece>
+    
       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
+    
       <apply>
               <and/>
+    	
 	<apply>
                 <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 210.0 </cn>
+	
+	  <ci> time </ci>
+	  
+	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 250 </cn>
+	  
 	</apply>
+	
 	<apply>
                 <lt/>
+	
 	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 210.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 220.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 220.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 230.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 230.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 240.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 240.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 250.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
+	  
 	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 250.5 </cn>
+	  
 	</apply>
+	
       </apply>
+      
     </piece>
-
-  <piece>
+    <piece>
+    
       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
+    
       <apply>
               <and/>
+    	
 	<apply>
                 <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 260.0 </cn>
+	
+	  <ci> time </ci>
+	  
+	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 300 </cn>
+	  
 	</apply>
+	
 	<apply>
                 <lt/>
+	
 	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 260.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 270.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 270.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 280.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 280.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 290.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 290.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 300.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
+	  
 	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 300.5 </cn>
+	  
 	</apply>
+	
       </apply>
+      
     </piece>
-
-  <piece>
+    <piece>
+    
       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
+    
       <apply>
               <and/>
+    	
 	<apply>
                 <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 310.0 </cn>
+	
+	  <ci> time </ci>
+	  
+	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 350 </cn>
+	  
 	</apply>
+	
 	<apply>
                 <lt/>
+	
 	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 310.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 320.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 320.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 330.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 330.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 340.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 340.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 350.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
+	  
 	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 350.5 </cn>
+	  
 	</apply>
+	
       </apply>
+      
     </piece>
-
-  <piece>
+    <piece>
+    
       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
+    
       <apply>
               <and/>
+    	
 	<apply>
                 <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 360.0 </cn>
+	
+	  <ci> time </ci>
+	  
+	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 400 </cn>
+	  
 	</apply>
+	
 	<apply>
                 <lt/>
+	
 	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 360.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 370.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 370.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 380.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 380.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 390.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 390.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 400.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
+	  
 	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 400.5 </cn>
+	  
 	</apply>
+	
       </apply>
+      
     </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 410.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 410.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 420.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 420.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 430.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 430.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 440.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 440.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 450.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 450.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 460.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 460.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 470.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 470.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 480.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 480.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 490.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 490.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 500.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 500.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 510.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 510.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 520.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 520.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 530.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 530.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 540.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 540.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 550.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 550.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 560.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 560.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 570.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 570.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 580.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 580.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 590.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 590.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 600.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 600.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 610.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 610.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 620.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 620.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 630.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 630.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 640.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 640.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 650.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 650.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 660.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 660.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 670.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 670.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 680.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 680.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 690.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 690.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 700.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 700.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 710.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 710.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 720.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 720.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 730.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 730.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 740.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 740.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 750.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 750.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 760.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 760.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 770.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 770.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 780.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 780.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 790.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 790.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 800.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 800.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 810.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 810.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 820.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 820.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 830.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 830.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 840.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 840.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 850.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 850.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 860.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 860.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 870.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 870.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 880.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 880.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 890.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 890.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 900.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 900.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 910.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 910.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 920.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 920.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 930.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 930.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 940.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 940.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 950.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 950.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 960.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 960.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 970.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 970.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 980.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 980.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-  <piece>
-      <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 150 </cn>
-      <apply>
-              <and/>
-	<apply>
-                <geq/>
-  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 990.0 </cn>
-	</apply>
-	<apply>
-                <lt/>
-	  <ci> time </ci>
-	  <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond"> 990.5 </cn>
-	</apply>
-      </apply>
-    </piece>
-
-
+    
+    
     <otherwise>
     
       <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="microA_per_cm2"> 0 </cn>
@@ -3396,7 +1892,8 @@ tomo  end
 </apply>
 
 </math>
--->
+-->         
+
 
 
 
@@ -3973,8 +2470,8 @@ tomo  end
   <variable name="V_h_K_inf" public_interface="in" units="millivolt"/>
   <variable name="A_h_K_inf" public_interface="in" units="millivolt"/>
   <variable name="tau_h_K" units="millisecond"/>
-  <variable initial_value="0.006824" name="n" units="dimensionless"/>
-  <variable initial_value="0.995321" name="h_K" units="dimensionless"/>
+  <variable initial_value="0.009466" name="n" units="dimensionless"/>
+  <variable initial_value="0.9952" name="h_K" units="dimensionless"/>
   <variable name="g_DR" units="milliS_per_cm2"/>
   <variable name="g_K_bar" public_interface="in" units="milliS_per_cm2"/>
   <variable name="I_DR" public_interface="out" units="microA_per_cm2"/>
@@ -4359,9 +2856,9 @@ tomo  end
   <variable name="TT" public_interface="in" units="degreeK"/>
   <variable name="tau_S" units="millisecond"/>
   <variable name="V_tau" public_interface="in" units="millivolt"/>
-  <variable initial_value="0.026848" name="m" units="dimensionless"/>
-  <variable initial_value="0.598402" name="h" units="dimensionless"/>
-  <variable initial_value="0.586035" name="S" units="dimensionless"/>
+  <variable initial_value="0.0358" name="m" units="dimensionless"/>
+  <variable initial_value="0.4981" name="h" units="dimensionless"/>
+  <variable initial_value="0.581" name="S" units="dimensionless"/>
   <variable name="g_Na" units="milliS_per_cm2"/>
   <variable name="g_Na_bar" public_interface="in" units="milliS_per_cm2"/>
   <variable name="J_Na" units="milliV_milliM"/>
@@ -5814,8 +4311,8 @@ tomo  end
   <variable name="V_h_K_inf" public_interface="in" units="millivolt"/>
   <variable name="A_h_K_inf" public_interface="in" units="millivolt"/>
   <variable name="tau_h_K_t" units="millisecond"/>
-  <variable initial_value="0.006883" name="n_t" units="dimensionless"/>
-  <variable initial_value="0.996416" name="h_K_t" units="dimensionless"/>
+  <variable initial_value="0.009466" name="n_t" units="dimensionless"/>
+  <variable initial_value="0.9952" name="h_K_t" units="dimensionless"/>
   <variable name="g_DR_t" units="milliS_per_cm2"/>
   <variable name="g_K_bar" public_interface="in" units="milliS_per_cm2"/>
   <variable name="I_DR_t" public_interface="out" units="microA_per_cm2"/>
@@ -6203,9 +4700,9 @@ tomo  end
   <variable name="TT" public_interface="in" units="degreeK"/>
   <variable name="tau_S_t" units="millisecond"/>
   <variable name="V_tau" public_interface="in" units="millivolt"/>
-  <variable initial_value="0.027053" name="m_t" units="dimensionless"/>
-  <variable initial_value="0.595856" name="h_t" units="dimensionless"/>
-  <variable initial_value="0.586011" name="S_t" units="dimensionless"/>
+  <variable initial_value="0.0358" name="m_t" units="dimensionless"/>
+  <variable initial_value="0.4981" name="h_t" units="dimensionless"/>
+  <variable initial_value="0.581" name="S_t" units="dimensionless"/>
   <variable name="g_Na_t" units="milliS_per_cm2"/>
   <variable name="g_Na_bar" public_interface="in" units="milliS_per_cm2"/>
   <variable name="J_Na_t" units="milliV_milliM"/>
@@ -7118,11 +5615,11 @@ Stern and Rios Component
 
   <!-- these variables are defined here and used in other components -->
   
-  <variable initial_value="0.000002" name="O_0" public_interface="out" units="dimensionless"/>
-  <variable initial_value="0.000006" name="O_1" public_interface="out" units="dimensionless"/>
-  <variable initial_value="0.000007" name="O_2" public_interface="out" units="dimensionless"/>
-  <variable initial_value="0.000003" name="O_3" public_interface="out" units="dimensionless"/>
-  <variable initial_value="0.000001" name="O_4" public_interface="out" units="dimensionless"/>
+  <variable initial_value="0" name="O_0" public_interface="out" units="dimensionless"/>
+  <variable initial_value="0" name="O_1" public_interface="out" units="dimensionless"/>
+  <variable initial_value="0" name="O_2" public_interface="out" units="dimensionless"/>
+  <variable initial_value="0" name="O_3" public_interface="out" units="dimensionless"/>
+  <variable initial_value="0" name="O_4" public_interface="out" units="dimensionless"/>
   
   <!-- these variables are defined here and only used internally -->
   
@@ -7133,11 +5630,11 @@ Stern and Rios Component
   <variable initial_value="4.5" name="K" units="millivolt"/>
   <variable initial_value="-20" name="Vbar" units="millivolt"/>
  
-  <variable initial_value="0.883113" name="C_0" units="dimensionless"/>
-  <variable initial_value="0.111480" name="C_1" units="dimensionless"/>
-  <variable initial_value="0.005277" name="C_2" units="dimensionless"/>
-  <variable initial_value="0.000111" name="C_3" units="dimensionless"/>
-  <variable initial_value="0.000001" name="C_4" units="dimensionless"/>
+  <variable initial_value="1" name="C_0" units="dimensionless"/>
+  <variable initial_value="0" name="C_1" units="dimensionless"/>
+  <variable initial_value="0" name="C_2" units="dimensionless"/>
+  <variable initial_value="0" name="C_3" units="dimensionless"/>
+  <variable initial_value="0" name="C_4" units="dimensionless"/>
   <variable name="k_C" units="per_millisecond"/>
   <variable name="k_Cm" units="per_millisecond"/>
   
@@ -8329,15 +6826,20 @@ Stern and Rios Component
   
   
   <!-- these variables are defined here and only used internally -->
-  <variable initial_value="2.4375" name="nu_SR" units="micromolar_per_millisecond_micrometre3"/>
+  <variable initial_value="4.875" name="nu_SR" units="micromolar_per_millisecond_micrometre3"/>
   <variable initial_value="1" name="K_SR" units="micromolar"/>
-  <variable initial_value="0.00004" name="L_e" units="micrometre3_per_millisecond"/>
+  <variable initial_value="0.00002" name="L_e" units="micrometre3_per_millisecond"/>
   <variable initial_value="0.75" name="tau_R" units="micrometre3_per_millisecond"/>
   <variable initial_value="0.75" name="tau_SR_R" units="micrometre3_per_millisecond"/>
-  <variable initial_value="1.0" name="L_S_0" units="micrometre"/>
-  <variable initial_value="1.0" name="L_S" units="micrometre"/>
-
+  <variable initial_value="1.1" name="L_S_0" units="micrometre"/>
+  <variable initial_value="1.1" name="L_S" units="micrometre"/>
   <variable initial_value="0.5" name="R_R" units="micrometre"/>
+
+  <variable initial_value="0.0" name="velo" units="micrometre_per_millisecond"/>
+  <variable initial_value="10000.0" name="eta" units="newton_per_m3"/>
+  <variable name="stress" public_interface="out" units="newton_per_m2"/>
+  <variable initial_value="0.0" name="dummy" units="newton_millisecond_per_m2"/>
+  <variable initial_value="8.21433817973327e-05" name="zeta" units="micrometre"/>
   
   <variable name="V_o" units="micrometre3"/>
   <variable name="V_1" units="micrometre3"/>
@@ -8346,14 +6848,15 @@ Stern and Rios Component
   <variable name="V_SR1" units="micrometre3"/>
   <variable name="V_SR2" units="micrometre3"/>
   
-  <variable initial_value="0.0885" name="k_T_on" units="per_micromolar_per_millisecond"/>
+  <variable initial_value="0.04425" name="k_T_on" units="per_micromolar_per_millisecond"/>
   <variable initial_value="0.115" name="k_T_off" units="per_millisecond"/>
   <variable initial_value="140" name="T_tot_0" units="micromolar"/>
-  <variable initial_value="0" name="k_P_on" units="per_micromolar_per_millisecond"/>
-  <variable initial_value="0" name="k_P_off" units="per_millisecond"/>
+  <variable name="T_tot" units="micromolar"/>
+  <variable initial_value="0.0417" name="k_P_on" units="per_micromolar_per_millisecond"/>
+  <variable initial_value="0.0005" name="k_P_off" units="per_millisecond"/>
   <variable initial_value="1500" name="P_tot" units="micromolar"/>
-  <variable initial_value="0" name="k_Mg_on" units="per_micromolar_per_millisecond"/>
-  <variable initial_value="0" name="k_Mg_off" units="per_millisecond"/>
+  <variable initial_value="0.000033" name="k_Mg_on" units="per_micromolar_per_millisecond"/>
+  <variable initial_value="0.003" name="k_Mg_off" units="per_millisecond"/>
   <variable initial_value="0.000004" name="k_Cs_on" units="per_micromolar_per_millisecond"/>
   <variable initial_value="0.005" name="k_Cs_off" units="per_millisecond"/>
   <variable initial_value="31000" name="Cs_tot" units="micromolar"/>
@@ -8367,64 +6870,47 @@ Stern and Rios Component
   <variable initial_value="0.15" name="k_0_off" units="per_millisecond"/>
   <variable initial_value="0.15" name="k_Ca_on" units="per_millisecond"/>
   <variable initial_value="0.05" name="k_Ca_off" units="per_millisecond"/>
-  <variable initial_value="0.5" name="f_o" units="per_millisecond"/> --&gt;
-  <variable initial_value="5" name="f_p" units="per_millisecond"/>
-  <variable initial_value="0.08" name="h_o" units="per_millisecond"/>
-  <variable initial_value="0.06" name="h_p" units="per_millisecond"/>
-  <variable initial_value="0.04" name="g_o" units="per_millisecond"/> --&gt;
-  <variable initial_value="0.00000394" name="b_p" units="per_millisecond"/>
+  <variable initial_value="1.5" name="f_o" units="per_millisecond"/>
+  <variable initial_value="15" name="f_p" units="per_millisecond"/>
+  <variable initial_value="0.24" name="h_o" units="per_millisecond"/>
+  <variable initial_value="0.18" name="h_p" units="per_millisecond"/>
+  <variable initial_value="0.12" name="g_o" units="per_millisecond"/>
+  <variable initial_value="0.00002867" name="b_p" units="per_millisecond"/>
   <variable initial_value="0.00000362" name="k_p" units="micrometre3_per_millisecond"/>
   <variable initial_value="1" name="A_p" units="per_milliM3_per_millisecond"/>
   <variable initial_value="0.0001" name="B_p" units="per_milliM2_per_millisecond"/>
   <variable initial_value="6" name="PP" units="milliM2"/>
-
-  <variable initial_value="0.05" name="x_0" units="micrometre"/>
-  <variable initial_value="0.000000" name="x_1" units="micrometre"/>
-  <variable initial_value="0.050000" name="x_2" units="micrometre"/>
-
-<!-- tomo -->
-<!--  <variable initial_value="0.000107" name="eta" units="newton_per_m3"/>-->
-<!--  <variable name="stress" public_interface="out" units="newton_per_m2"/>-->
-<!--  <variable initial_value="0.0" name="dummy" units="newton_millisecond_per_m2"/>-->
-<!--  <variable initial_value="0.000163" name="zeta" units="micrometre"/>-->
-  <variable initial_value="0.000107" name="eta" units="micrometre"/>
-  <variable name="stress" public_interface="out" units="dimensionless"/>
-  <variable initial_value="0.0" name="dummy" units="newton_millisecond_per_m2"/>
-<!--  <variable initial_value="0.00725" name="zeta" units="micrometre"/>-->
-<!--  <variable initial_value="0.0151" name="zeta" units="micrometre"/>-->
-  <variable initial_value="0.0021" name="zeta" units="micrometre"/>
-<!-- tomo end -->
-
+  
   <variable name="T_0" units="micromolar"/>
-  <variable initial_value="0.884732" name="Ca_1" public_interface="out" units="micromolar"/>
-  <variable initial_value="1580.867624" name="Ca_SR1" units="micromolar"/>
-  <variable initial_value="0.399902" name="Ca_2" units="micromolar"/>
-  <variable initial_value="1581.712973" name="Ca_SR2" units="micromolar"/>
-  <variable initial_value="8.194027" name="Ca_T_2" units="micromolar"/>
-  <variable initial_value="615.000000" name="Ca_P1" units="micromolar"/>
-  <variable initial_value="615.000000" name="Ca_P2" units="micromolar"/>
-  <variable initial_value="811.000000" name="Mg_P1" units="micromolar"/>
-  <variable initial_value="811.000000" name="Mg_P2" units="micromolar"/>
-  <variable initial_value="17306.257267" name="Ca_Cs1" units="micromolar"/>
-  <variable initial_value="17310.310128" name="Ca_Cs2" units="micromolar"/>
-  <variable initial_value="2.244070" name="Ca_ATP1" units="micromolar"/>
-  <variable initial_value="1.523121" name="Ca_ATP2" units="micromolar"/>
-  <variable initial_value="7242.253138" name="Mg_ATP1" units="micromolar"/>
-  <variable initial_value="7242.274705" name="Mg_ATP2" units="micromolar"/>
-  <variable initial_value="755.502793" name="ATP1" units="micromolar"/>
-  <variable initial_value="756.202174" name="ATP2" units="micromolar"/>
-  <variable initial_value="957.730848" name="Mg1" units="micromolar"/>
-  <variable initial_value="957.725457" name="Mg2" units="micromolar"/>
-  <variable initial_value="1.347074" name="Ca_CaT2" units="micromolar"/>
-  <variable initial_value="0.343574" name="D_0" units="micromolar"/>
-  <variable initial_value="0.554181" name="D_1" units="micromolar"/>
-  <variable initial_value="1.342379" name="D_2" units="micromolar"/>
-  <variable initial_value="0.133380" name="A_1" units="micromolar"/>
-  <variable initial_value="0.106577" name="A_2" units="micromolar"/>
-  <variable initial_value="0.231949" name="P" units="milliM"/>
-  <variable initial_value="0.284897" name="P_SR" units="milliM"/>
-  <variable initial_value="0.173921" name="P_C_SR" units="milliM"/>
-  <variable initial_value="60" name="i2" units="micrometre3_per_millisecond"/>
+  <variable initial_value="0.1" name="Ca_1" public_interface="out" units="micromolar"/>
+  <variable initial_value="1500" name="Ca_SR1" units="micromolar"/>
+  <variable initial_value="0.1" name="Ca_2" units="micromolar"/>
+  <variable initial_value="1500" name="Ca_SR2" units="micromolar"/>
+  <variable initial_value="25" name="Ca_T_2" units="micromolar"/>
+  <variable initial_value="615" name="Ca_P1" units="micromolar"/>
+  <variable initial_value="615" name="Ca_P2" units="micromolar"/>
+  <variable initial_value="811" name="Mg_P1" units="micromolar"/>
+  <variable initial_value="811" name="Mg_P2" units="micromolar"/>
+  <variable initial_value="16900" name="Ca_Cs1" units="micromolar"/>
+  <variable initial_value="16900" name="Ca_Cs2" units="micromolar"/>
+  <variable initial_value="0.4" name="Ca_ATP1" units="micromolar"/>
+  <variable initial_value="0.4" name="Ca_ATP2" units="micromolar"/>
+  <variable initial_value="7200" name="Mg_ATP1" units="micromolar"/>
+  <variable initial_value="7200" name="Mg_ATP2" units="micromolar"/>
+  <variable initial_value="799.6" name="ATP1" units="micromolar"/>
+  <variable initial_value="799.6" name="ATP2" units="micromolar"/>
+  <variable initial_value="1000" name="Mg1" units="micromolar"/>
+  <variable initial_value="1000" name="Mg2" units="micromolar"/>
+  <variable initial_value="3" name="Ca_CaT2" units="micromolar"/>
+  <variable initial_value="0.8" name="D_0" units="micromolar"/>
+  <variable initial_value="1.2" name="D_1" units="micromolar"/>
+  <variable initial_value="3" name="D_2" units="micromolar"/>
+  <variable initial_value="0.3" name="A_1" units="micromolar"/>
+  <variable initial_value="0.23" name="A_2" units="micromolar"/>
+  <variable initial_value="0.23" name="P" units="milliM"/>
+  <variable initial_value="0.23" name="P_SR" units="milliM"/>
+  <variable initial_value="0.23" name="P_C_SR" units="milliM"/>
+  <variable initial_value="300" name="i2" units="micrometre3_per_millisecond"/>
  
   <!-- these variables are imported from other components -->
   
@@ -8435,7 +6921,16 @@ Stern and Rios Component
   <variable name="O_3" public_interface="in" units="dimensionless"/>
   <variable name="O_4" public_interface="in" units="dimensionless"/>
   
-
+<!--
+tomo
+-->        
+  <variable initial_value="0.05" name="x_0" units="micrometre"/>
+  <variable initial_value="0.00" name="x_1" units="micrometre"/>
+  <variable initial_value="0.05" name="x_2" units="micrometre"/>
+<!--
+tomo end
+-->        
+  
 
 
 <!-- 
@@ -8446,11 +6941,9 @@ Sub (The Cannell Part)
 tomo
 -->
 
-<!--<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="T_tot_Eqn"><eq/><ci>T_tot</ci><piecewise><piece><apply><times/><apply><plus/><apply><minus/><apply><plus/><apply><minus/><apply><times/><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="per_micrometre4">0.073164682539683</cn><apply><power/><apply><times/><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">2</cn><ci>L_S</ci></apply><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">4</cn></apply></apply><apply><times/><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="per_micrometre3">0.702380952380952</cn><apply><power/><apply><times/><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">2</cn><ci>L_S</ci></apply><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">3</cn></apply></apply></apply><apply><times/><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="per_micrometre2">1.950644841269842</cn><apply><power/><apply><times/><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">2</cn><ci>L_S</ci></apply><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">2</cn></apply></apply></apply><apply><times/><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="per_micrometre">1.271666666666668</cn><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">2</cn><ci>L_S</ci></apply></apply><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="per_micrometre">0.09857142857143</cn></apply><ci>T_tot_0</ci></apply><apply><and/><apply><geq/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">0.4</cn></apply><apply><lt/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">2</cn></apply></apply></piece><otherwise><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micromolar">0</cn></otherwise></piecewise></apply></math> 
+<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="T_tot_Eqn"><eq/><ci>T_tot</ci><piecewise><piece><apply><times/><apply><minus/><apply><plus/><apply><minus/><apply><times/><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="per_micrometre4">0.073164682539683</cn><apply><power/><apply><times/><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">2</cn><ci>L_S</ci></apply><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">4</cn></apply></apply><apply><times/><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="per_micrometre3">0.702380952380952</cn><apply><power/><apply><times/><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">2</cn><ci>L_S</ci></apply><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">3</cn></apply></apply></apply><apply><times/><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="per_micrometre2">1.950644841269842</cn><apply><power/><apply><times/><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">2</cn><ci>L_S</ci></apply><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">2</cn></apply></apply></apply><apply><times/><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="per_micrometre">1.271666666666668</cn><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">2</cn><ci>L_S</ci></apply></apply><ci>T_tot_0</ci></apply><apply><and/><apply><geq/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">0.4</cn></apply><apply><lt/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">2</cn></apply></apply></piece><otherwise><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micromolar">0</cn></otherwise></piecewise></apply></math> 
 
-<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="T_tot_Eqn"><eq/><ci>T_tot</ci><piecewise><piece><apply><times/><apply><minus/><apply><plus/><apply><minus/><apply><plus/><apply><times/><apply><minus/><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="per_micrometre4">19.204389574759201</cn></apply><apply><power/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">4</cn></apply></apply><apply><times/><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="per_micrometre3">92.181069958843494</cn><apply><power/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">3</cn></apply></apply></apply><apply><times/><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="per_micrometre2">166.975308641966905</cn><apply><power/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">2</cn></apply></apply></apply><apply><times/><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="per_micrometre">135.259259259252303</cn><ci>L_S</ci></apply></apply><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="per_micrometre">40.333333333331304</cn></apply><ci>T_tot_0</ci></apply><apply><and/><apply><geq/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">0.75</cn></apply><apply><leq/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">1.65</cn></apply></apply></piece><otherwise><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micromolar">0</cn></otherwise></piecewise></apply></math> 
-
-
+<!--
 tomo end
 -->
  
@@ -8536,7 +7029,7 @@ tomo end
           <times/>
   
     <cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless"> 0.05 </cn>
-    
+   
     <ci> L_S_0 </ci>
     
     <pi/>
@@ -8599,11 +7092,9 @@ tomo end
 
 </math>
 
-<!--T_tot-->
-<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="T_0_Eqn"><eq/><ci>T_0</ci><piecewise><piece><apply><plus/><ci>T_tot_0</ci><apply><minus/><ci>Ca_T_2</ci></apply><apply><minus/><ci>Ca_CaT2</ci></apply><apply><minus/><ci>D_0</ci></apply><apply><minus/><ci>D_1</ci></apply><apply><minus/><ci>D_2</ci></apply><apply><minus/><ci>A_1</ci></apply><apply><minus/><ci>A_2</ci></apply></apply><apply><gt/><apply><plus/><ci>T_tot_0</ci><apply><minus/><ci>Ca_T_2</ci></apply><apply><minus/><ci>Ca_CaT2</ci></apply><apply><minus/><ci>D_0</ci></apply><apply><minus/><ci>D_1</ci></apply><apply><minus/><ci>D_2</ci></apply><apply><minus/><ci>A_1</ci></apply><apply><minus/><ci>A_2</ci></apply></apply><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micromolar">0</cn></apply></piece><otherwise><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micromolar">0</cn></otherwise></piecewise></apply></math>
 
-<!--T_tot_0-->
-<!--<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="T_0_Eqn"><eq/><ci>T_0</ci><piecewise><piece><apply><plus/><ci>T_tot_0</ci><apply><minus/><ci>Ca_T_2</ci></apply><apply><minus/><ci>Ca_CaT2</ci></apply><apply><minus/><ci>D_0</ci></apply><apply><minus/><ci>D_1</ci></apply><apply><minus/><ci>D_2</ci></apply><apply><minus/><ci>A_1</ci></apply><apply><minus/><ci>A_2</ci></apply></apply><apply><gt/><apply><plus/><ci>T_tot_0</ci><apply><minus/><ci>Ca_T_2</ci></apply><apply><minus/><ci>Ca_CaT2</ci></apply><apply><minus/><ci>D_0</ci></apply><apply><minus/><ci>D_1</ci></apply><apply><minus/><ci>D_2</ci></apply><apply><minus/><ci>A_1</ci></apply><apply><minus/><ci>A_2</ci></apply></apply><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micromolar">0</cn></apply></piece><otherwise><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micromolar">0</cn></otherwise></piecewise></apply></math>-->
+<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="T_0_Eqn"><eq/><ci>T_0</ci><piecewise><piece><apply><plus/><ci>T_tot</ci><apply><minus/><ci>Ca_T_2</ci></apply><apply><minus/><ci>Ca_CaT2</ci></apply><apply><minus/><ci>D_0</ci></apply><apply><minus/><ci>D_1</ci></apply><apply><minus/><ci>D_2</ci></apply><apply><minus/><ci>A_1</ci></apply><apply><minus/><ci>A_2</ci></apply></apply><apply><gt/><apply><plus/><ci>T_tot</ci><apply><minus/><ci>Ca_T_2</ci></apply><apply><minus/><ci>Ca_CaT2</ci></apply><apply><minus/><ci>D_0</ci></apply><apply><minus/><ci>D_1</ci></apply><apply><minus/><ci>D_2</ci></apply><apply><minus/><ci>A_1</ci></apply><apply><minus/><ci>A_2</ci></apply></apply><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micromolar">0</cn></apply></piece><otherwise><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micromolar">0</cn></otherwise></piecewise></apply></math>
+
 
 
 
@@ -10482,24 +8973,6 @@ Sub (The Razumova Part)
 
 
 
-<!-- 
-tomo
-
-<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="f_o_Eqn"><eq/><ci>f_o</ci><apply><times/><ci>f_ast</ci><apply><power/><apply><plus/><cn>1</cn><apply><times/><apply><divide/><ci>A_1</ci><ci>T_tot_0</ci></apply><apply><minus/><apply><exp/><apply><times/><apply><divide/><ci>x_1</ci><ci>x_0</ci></apply><apply><minus/><ci>nu</ci><cn>1</cn></apply></apply></apply><cn>1</cn></apply></apply><apply><times/><apply><divide/><ci>A_2</ci><ci>T_tot_0</ci></apply><apply><minus/><apply><exp/><apply><times/><apply><divide/><ci>x_2</ci><ci>x_0</ci></apply><apply><minus/><ci>nu</ci><cn>1</cn></apply></apply></apply><cn>1</cn></apply></apply></apply><cn>2</cn></apply></apply></apply></math> 
--->
-
-<!--
-<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="sigma_g_Eqn"><eq/><ci>sigma_g</ci><piecewise><piece><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">8</cn><apply><gt/><ci>x_2</ci><ci>x_0</ci></apply></piece><otherwise><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">1</cn></otherwise></piecewise></apply></math> 
--->
-
-<!-- 
-<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="g_o_Eqn"><eq/><ci>g_o</ci><apply><times/><ci>g_ast</ci><apply><exp/><apply><times/><ci>sigma_g</ci><apply><power/><apply><minus/><ci>x_2</ci><ci>x_0</ci></apply><cn>2</cn></apply></apply></apply></apply></apply></math> 
-
-tomo end
--->
-
-
-
 <math xmlns="http://www.w3.org/1998/Math/MathML"> 
 <apply id="dD_2_Eqn">
         <eq/> 
@@ -10885,9 +9358,6 @@ tomo end
         
         </piecewise>
 	
-	
-	
-	
       </apply>
     </apply>
     
@@ -11050,49 +9520,25 @@ tomo end
 </apply>
 </math>
     
-  <!--
+<!--
 tomo
 -->        
 
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+<apply id="dx_1_Eqn"><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>x_1</ci></apply><apply><plus/><apply><times/><apply><minus/><apply><plus/><apply><divide/><apply><times/><ci>f_o</ci><ci>D_2</ci></apply><ci>A_1</ci></apply><apply><divide/><apply><times/><ci>h_p</ci><ci>A_2</ci></apply><ci>A_1</ci></apply></apply></apply><ci>x_1</ci></apply><apply><times/><ci>h_p</ci><apply><divide/><ci>A_2</ci><ci>A_1</ci></apply><apply><minus/><ci>x_2</ci><ci>x_0</ci></apply></apply><apply><divide/><ci>velo</ci><cn>2</cn></apply></apply></apply>
+</math>
+
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+<apply id="dx_2_Eqn"><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>x_2</ci></apply><apply><plus/><apply><times/><apply><minus/><apply><divide/><apply><times/><ci>h_o</ci><ci>A_1</ci></apply><ci>A_2</ci></apply></apply><apply><minus/><ci>x_2</ci><apply><plus/><ci>x_1</ci><ci>x_0</ci></apply></apply></apply><apply><divide/><ci>velo</ci><cn>2</cn></apply></apply></apply>
+</math>
+
+<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="stress_Eqn"><eq/><ci>stress</ci><apply><times/><ci>eta</ci><apply><minus/><apply><plus/><apply><times/><apply><divide/><ci>A_1</ci><ci>T_tot_0</ci></apply><ci>x_1</ci></apply><apply><times/><apply><divide/><ci>A_2</ci><ci>T_tot_0</ci></apply><ci>x_2</ci></apply></apply><ci>zeta</ci></apply></apply></apply></math>
+
+<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="dummy_Eqn"><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>dummy</ci></apply><ci>stress</ci></apply></math></component>
+
 <!--
-<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="rel_velo_Eqn"><eq/><ci>rel_velo</ci><piecewise><piece><apply><minus/><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">0.1</cn></apply><apply><and/><apply><geq/><ci>time</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond">500</cn></apply><apply><lt/><ci>time</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond">1000</cn></apply></apply></piece><otherwise><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">0</cn></otherwise></piecewise></apply></math>
-
-
-<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="velo_Eqn"><eq/><ci>velo</ci><apply><times/><ci>rel_velo</ci><ci>velo_max</ci></apply></apply></math>
-
-
-
-<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="dL_S_Eqn"><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>L_S</ci></apply><ci>velo</ci></apply></math>
--->
-
-
-<!--<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="dx_1_Eqn"><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>x_1</ci></apply><apply><minus/><apply><plus/><apply><times/><apply><minus/><apply><plus/><apply><divide/><apply><times/><ci>f_o</ci><ci>D_2</ci></apply><ci>A_1</ci></apply><apply><divide/><apply><times/><ci>h_p</ci><ci>A_2</ci></apply><ci>A_1</ci></apply></apply></apply><ci>x_1</ci></apply><apply><times/><ci>h_p</ci><apply><divide/><ci>A_2</ci><ci>A_1</ci></apply><apply><minus/><ci>x_2</ci><ci>x_0</ci></apply></apply></apply><apply><divide/><ci>velo</ci><cn>2</cn></apply></apply></apply></math>-->
-<!--
-<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="dx_1_Eqn"><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>x_1</ci></apply><apply><plus/><apply><times/><apply><minus/><apply><plus/><apply><divide/><apply><times/><ci>f_o</ci><ci>D_2</ci></apply><ci>A_1</ci></apply><apply><divide/><apply><times/><ci>h_p</ci><ci>A_2</ci></apply><ci>A_1</ci></apply></apply></apply><ci>x_1</ci></apply><apply><times/><ci>h_p</ci><apply><divide/><ci>A_2</ci><ci>A_1</ci></apply><apply><minus/><ci>x_2</ci><ci>x_0</ci></apply></apply><apply><divide/><ci>velo</ci><cn>2</cn></apply></apply></apply></math>
--->
-
-<!--<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="dx_2_Eqn"><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>x_2</ci></apply><apply><minus/><apply><times/><apply><minus/><apply><divide/><apply><times/><ci>h_o</ci><ci>A_1</ci></apply><ci>A_2</ci></apply></apply><apply><minus/><ci>x_2</ci><apply><plus/><ci>x_1</ci><ci>x_0</ci></apply></apply></apply><apply><divide/><ci>velo</ci><cn>2</cn></apply></apply></apply></math>-->
-<!--
-<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="dx_2_Eqn"><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>x_2</ci></apply><apply><plus/><apply><times/><apply><minus/><apply><divide/><apply><times/><ci>h_o</ci><ci>A_1</ci></apply><ci>A_2</ci></apply></apply><apply><minus/><ci>x_2</ci><apply><plus/><ci>x_1</ci><ci>x_0</ci></apply></apply></apply><ci>velo</ci></apply></apply></math>
-
-<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="stress_Eqn"><eq/><ci>stress</ci><apply><divide/><apply><times/><apply><divide/><apply><minus/><apply><plus/><apply><times/><apply><divide/><ci>A_1</ci><ci>T_tot_0</ci></apply><ci>x_1</ci></apply><apply><times/><apply><divide/><ci>A_2</ci><ci>T_tot_0</ci></apply><ci>x_2</ci></apply></apply><ci>eta</ci></apply><ci>zeta</ci></apply><ci>T_tot</ci></apply><ci>T_tot_0</ci></apply></apply></math>
-
-<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="dummy_Eqn"><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>dummy</ci></apply><ci>stress</ci></apply></math>
-
-
 tomo end
 -->        
-
-<!--<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="stress_Eqn"><eq/><ci>stress</ci><apply><divide/><apply><minus/><apply><plus/><apply><times/><apply><divide/><ci>A_1</ci><ci>T_tot_0</ci></apply><ci>x_1</ci></apply><apply><times/><apply><divide/><ci>A_2</ci><ci>T_tot_0</ci></apply><ci>x_2</ci></apply></apply><ci>eta</ci></apply><ci>zeta</ci></apply></apply></math>-->
-
-<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="stress_Eqn"><eq/><ci>stress</ci><apply><times/><apply><divide/><apply><minus/><apply><plus/><apply><times/><apply><divide/><ci>A_1</ci><ci>T_tot_0</ci></apply><ci>x_1</ci></apply><apply><times/><apply><divide/><ci>A_2</ci><ci>T_tot_0</ci></apply><ci>x_2</ci></apply></apply><ci>eta</ci></apply><ci>zeta</ci></apply><piecewise><piece><apply><times/><apply><divide/><cn>0.7</cn><apply><minus/><cn>0.85</cn><cn>0.635</cn></apply></apply><apply><minus/><ci>L_S</ci><cn>0.635</cn></apply></apply><apply><and/><apply><geq/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">0.635</cn></apply><apply><leq/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">0.85</cn></apply></apply></piece><piece><apply><plus/><cn>0.7</cn><apply><times/><apply><divide/><cn>0.3</cn><apply><minus/><cn>1.17</cn><cn>0.85</cn></apply></apply><apply><minus/><ci>L_S</ci><cn>0.85</cn></apply></apply></apply><apply><and/><apply><gt/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">0.85</cn></apply><apply><leq/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">1.17</cn></apply></apply></piece><piece><cn>1</cn><apply><and/><apply><gt/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">1.17</cn></apply><apply><leq/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">1.255</cn></apply></apply></piece><piece><apply><minus/><cn>1</cn><apply><times/><apply><divide/><cn>1</cn><apply><minus/><cn>1.97</cn><cn>1.255</cn></apply></apply><apply><minus/><ci>L_S</ci><cn>1.255</cn></apply></apply></apply><apply><and/><apply><gt/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">1.255</cn></apply><apply><leq/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">1.97</cn></apply></apply></piece><otherwise><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micromolar">0</cn></otherwise></piecewise></apply></apply></math>
-
-
-<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="dummy_Eqn"><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>dummy</ci></apply><ci>stress</ci></apply></math>
-
-
-</component>
-
 
 <group>
   
@@ -11374,8 +9820,5 @@ tomo end
 
 
 
-<!--
-</model>
--->
-<units name="meter_liter_per_micromol"><unit units="meter"/><unit exponent="-1" units="micromolar"/></units><units name="newton_per_meter"><unit units="newton"/><unit exponent="-1" units="meter"/></units><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description rdf:about="rdf:#e338712e-acc1-4b1b-a7c6-7b7ddea351eb"><Given xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">John</Given><Family xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Davidson</Family><Other xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">B</Other></rdf:Description><rdf:Description rdf:about="rdf:#c1882186-e4b4-4198-98b3-992db03eb285"><rdf:type><rdf:Description rdf:about="http://www.cellml.org/bqs/1.0#Person"/></rdf:type><N xmlns="http://www.w3.org/2001/vcard-rdf/3.0#"><rdf:Description rdf:about="rdf:#a9476cd0-9aa4-4dcb-b34b-0d98dee82c03"/></N></rdf:Description><rdf:Description rdf:about="rdf:#9f27f24f-c56a-4fbf-bf78-f8ef1fea7e19"><W3CDTF xmlns="http://purl.org/dc/terms/" xml:lang="en">2008-05-26T00:00:00+00:00</W3CDTF></rdf:Description><rdf:Description rdf:nodeID="n1"><rdf:type><rdf:Description rdf:about="http://www.w3.org/1999/02/22-rdf-syntax-ns#Bag"/></rdf:type><rdf:_1 xml:lang="en">excitation-contraction coupling</rdf:_1></rdf:Description><rdf:Description rdf:about="rdf:#6cc6ac24-6032-4652-92bc-ee43edec87cd"><N xmlns="http://www.w3.org/2001/vcard-rdf/3.0#"><rdf:Description rdf:about="rdf:#e338712e-acc1-4b1b-a7c6-7b7ddea351eb"/></N><ORG xmlns="http://www.w3.org/2001/vcard-rdf/3.0#"><rdf:Description rdf:about="rdf:#9f7d3b71-3ae1-468d-82fe-b9e16afdaf16"/></ORG><EMAIL xmlns="http://www.w3.org/2001/vcard-rdf/3.0#"><rdf:Description rdf:about="rdf:#5e507b7c-8add-40a2-a84a-4030125a8bd7"/></EMAIL></rdf:Description><rdf:Description rdf:about="rdf:#316589ff-d141-41c6-b5b9-e7edf5359c82"><Pubmed_id xmlns="http://www.cellml.org/bqs/1.0#" xml:lang="en">18080210</Pubmed_id><JournalArticle xmlns="http://www.cellml.org/bqs/1.0#"><rdf:Description rdf:about="rdf:#4315812c-7ff0-44d4-ae0d-e6f112530b69"/></JournalArticle></rdf:Description><rdf:Description rdf:nodeID="n2"><maximumStepSize xmlns="http://www.cellml.org/metadata/simulation/1.0#" xml:lang="en">0.1</maximumStepSize><endingValue xmlns="http://www.cellml.org/metadata/simulation/1.0#" xml:lang="en">1000</endingValue></rdf:Description><rdf:Description rdf:about="rdf:#e589a0a5-59ae-445e-a771-307e70e42365"><FN xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Catherine Lloyd</FN></rdf:Description><rdf:Description rdf:about="rdf:#d60d740c-86ba-4c05-8aa5-5e49d609432b"><Given xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Paul</Given><Family xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Shorten</Family><Other xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">R</Other></rdf:Description><rdf:Description rdf:nodeID="n3"><subject xmlns="http://purl.org/dc/elements/1.1/"><rdf:Description rdf:nodeID="n4"/></subject></rdf:Description><rdf:Description rdf:about="rdf:#63d96787-7bc6-4dc6-8f68-1f481dd6873f"><rdf:type><rdf:Description rdf:about="http://www.cellml.org/bqs/1.0#Person"/></rdf:type><N xmlns="http://www.w3.org/2001/vcard-rdf/3.0#"><rdf:Description rdf:about="rdf:#9b86b023-0efd-4680-9ef3-ac349bcbe0a3"/></N></rdf:Description><rdf:Description rdf:about="rdf:#de31a6a3-0afc-420a-980f-9ddc941bb6be"><W3CDTF xmlns="http://purl.org/dc/terms/" xml:lang="en">2007-00-00 00:00</W3CDTF></rdf:Description><rdf:Description rdf:about="rdf:#b443f7bf-386c-47c9-9b04-e6e17a20a37b"><Given xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">John</Given><Family xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Davidson </Family><Other xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">B</Other></rdf:Description><rdf:Description rdf:about="rdf:#9b86b023-0efd-4680-9ef3-ac349bcbe0a3"><Given xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">John</Given><Family xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Davidson</Family><Other xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">B</Other></rdf:Description><rdf:Description rdf:about="rdf:#6a395a10-250f-40c1-8413-3c336ccccc9b"><N xmlns="http://www.w3.org/2001/vcard-rdf/3.0#"><rdf:Description rdf:about="rdf:#b443f7bf-386c-47c9-9b04-e6e17a20a37b"/></N></rdf:Description><rdf:Description rdf:about="rdf:#4315812c-7ff0-44d4-ae0d-e6f112530b69"><creator xmlns="http://purl.org/dc/elements/1.1/"><rdf:Description rdf:about="rdf:#8edcae8f-29c4-4bb0-952b-9e986673097e"/></creator><title xmlns="http://purl.org/dc/elements/1.1/" xml:lang="en">A mathematical model of fatigue in skeletal muscle force contraction</title><volume xmlns="http://www.cellml.org/bqs/1.0#" xml:lang="en">28</volume><first_page xmlns="http://www.cellml.org/bqs/1.0#" xml:lang="en">293</first_page><issued xmlns="http://purl.org/dc/terms/"><rdf:Description rdf:about="rdf:#de31a6a3-0afc-420a-980f-9ddc941bb6be"/></issued><last_page xmlns="http://www.cellml.org/bqs/1.0#" xml:lang="en">313</last_page><Journal xmlns="http://www.cellml.org/bqs/1.0#"><rdf:Description rdf:about="rdf:#0cb47d69-6153-4d58-945f-ba3253f36797"/></Journal></rdf:Description><rdf:Description rdf:about="rdf:#9f7d3b71-3ae1-468d-82fe-b9e16afdaf16"><Orgname xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">The University of Auckland</Orgname><Orgunit xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Auckland Bioengineering Institute</Orgunit></rdf:Description><rdf:Description rdf:about="rdf:#865ab0fa-a280-4eff-9d0d-8fc518a43c61"><W3CDTF xmlns="http://purl.org/dc/terms/" xml:lang="en">2008-06-16T09:33:31+12:00</W3CDTF></rdf:Description><rdf:Description rdf:about="rdf:#5e507b7c-8add-40a2-a84a-4030125a8bd7"><rdf:type><rdf:Description rdf:about="http://imc.org/vCard/3.0#internet"/></rdf:type><rdf:value xml:lang="en">j.davidson@auckland.ac.nz</rdf:value></rdf:Description><rdf:Description rdf:about="rdf:#a9476cd0-9aa4-4dcb-b34b-0d98dee82c03"><Given xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Tanya</Given><Family xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Soboleva</Family><Other xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">K</Other></rdf:Description><rdf:Description rdf:about="rdf:#10574c1e-e2d2-4c0d-8f81-5a74453cf83f"><rdf:value xml:lang="en"/><creator xmlns="http://purl.org/dc/elements/1.1/"><rdf:Description rdf:about="rdf:#62797b8c-2602-4a74-b0f0-1938580d3a44"/></creator></rdf:Description><rdf:Description rdf:about="rdf:#0cb47d69-6153-4d58-945f-ba3253f36797"><title xmlns="http://purl.org/dc/elements/1.1/" xml:lang="en">Journal of Muscle Research and Cell Motility</title></rdf:Description><rdf:Description rdf:nodeID="n4"><rdf:value><rdf:Description rdf:nodeID="n1"/></rdf:value><subject_type xmlns="http://www.cellml.org/bqs/1.0#" xml:lang="en">keyword</subject_type></rdf:Description><rdf:Description rdf:nodeID="n5"><rdf:rest><rdf:Description rdf:about="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/></rdf:rest><rdf:first><rdf:Description rdf:nodeID="n2"/></rdf:first></rdf:Description><rdf:Description rdf:about="rdf:#4d626140-c5b5-4901-930e-c8928572a480"><W3CDTF xmlns="http://purl.org/dc/terms/" xml:lang="en">2008-05-26T13:00:58+12:00</W3CDTF></rdf:Description><rdf:Description rdf:about="rdf:#47f7404b-ec61-425c-8a6e-daea5eb6bfcb"><rdf:value xml:lang="en">Removed some variables which were defined as constants but which were not used anywhere else in the model.</rdf:value><modified xmlns="http://purl.org/dc/terms/"><rdf:Description rdf:about="rdf:#4d626140-c5b5-4901-930e-c8928572a480"/></modified><cmeta:modifier><rdf:Description rdf:about="rdf:#e34db315-bb4c-4eda-b4dc-959698aa7396"/></cmeta:modifier></rdf:Description><rdf:Description rdf:about="rdf:#c54bc728-a493-48e9-aec8-4bde6e8ceafe"><rdf:type><rdf:Description rdf:about="http://www.cellml.org/bqs/1.0#Person"/></rdf:type><N xmlns="http://www.w3.org/2001/vcard-rdf/3.0#"><rdf:Description rdf:about="rdf:#d60d740c-86ba-4c05-8aa5-5e49d609432b"/></N></rdf:Description><rdf:Description rdf:about="rdf:#62797b8c-2602-4a74-b0f0-1938580d3a44"><FN xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en"/></rdf:Description><rdf:Description rdf:about="rdf:#571d3981-cf12-4435-9a1f-48a26d0fc5da"><rdf:value xml:lang="en">This cellML model is known to run in PCEnv (0.4), COR and JSim to recreate the published results.  The units have been checked and they are consistent in as much as they are known to be equivalent.  This particular version of the CellML model represents slow twitch muscle.</rdf:value><creator xmlns="http://purl.org/dc/elements/1.1/"><rdf:Description rdf:about="rdf:#e589a0a5-59ae-445e-a771-307e70e42365"/></creator></rdf:Description><rdf:Description rdf:about=""><creator xmlns="http://purl.org/dc/elements/1.1/"><rdf:Description rdf:about="rdf:#6cc6ac24-6032-4652-92bc-ee43edec87cd"/></creator><title xmlns="http://purl.org/dc/elements/1.1/" xml:lang="en">A mathematical model of fatigue in skeletal muscle force contraction: slow-twitch muscle</title><publisher xmlns="http://purl.org/dc/elements/1.1/" xml:lang="en">The University of Auckland, Auckland Bioengineering Institute</publisher><cmeta:modification><rdf:Description rdf:about="rdf:#47f7404b-ec61-425c-8a6e-daea5eb6bfcb"/></cmeta:modification><cmeta:modification><rdf:Description rdf:about="rdf:#6b3ac2a0-7bc5-45d3-82db-2c219d0a8b52"/></cmeta:modification><cmeta:comment><rdf:Description rdf:about="rdf:#571d3981-cf12-4435-9a1f-48a26d0fc5da"/></cmeta:comment><created xmlns="http://purl.org/dc/terms/"><rdf:Description rdf:about="rdf:#9f27f24f-c56a-4fbf-bf78-f8ef1fea7e19"/></created></rdf:Description><rdf:Description rdf:about="rdf:#aca58b7c-3db3-4845-bc58-868e073d2a3b"><rdf:type><rdf:Description rdf:about="http://www.cellml.org/bqs/1.0#Person"/></rdf:type><N xmlns="http://www.w3.org/2001/vcard-rdf/3.0#"><rdf:Description rdf:about="rdf:#fecc3d95-47e2-4e02-bd13-1395bc335bd3"/></N></rdf:Description><rdf:Description rdf:about="rdf:#e34db315-bb4c-4eda-b4dc-959698aa7396"><N xmlns="http://www.w3.org/2001/vcard-rdf/3.0#"><rdf:Description rdf:about="rdf:#82f93635-0168-48e6-aed0-f2a91b1a8432"/></N></rdf:Description><rdf:Description rdf:about="rdf:#fecc3d95-47e2-4e02-bd13-1395bc335bd3"><Given xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Paul</Given><Family xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">O'Callaghan</Family></rdf:Description><rdf:Description rdf:about="rdf:#82f93635-0168-48e6-aed0-f2a91b1a8432"><Given xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Catherine</Given><Family xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Lloyd</Family><Other xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">May</Other></rdf:Description><rdf:Description rdf:about="#Slow_Twitch"><cmeta:comment><rdf:Description rdf:about="rdf:#10574c1e-e2d2-4c0d-8f81-5a74453cf83f"/></cmeta:comment><simulation xmlns="http://www.cellml.org/metadata/simulation/1.0#"><rdf:Description rdf:nodeID="n6"/></simulation><reference xmlns="http://www.cellml.org/bqs/1.0#"><rdf:Description rdf:nodeID="n3"/></reference><reference xmlns="http://www.cellml.org/bqs/1.0#"><rdf:Description rdf:about="rdf:#316589ff-d141-41c6-b5b9-e7edf5359c82"/></reference></rdf:Description><rdf:Description rdf:nodeID="n6"><boundIntervals xmlns="http://www.cellml.org/metadata/simulation/1.0#"><rdf:Description rdf:nodeID="n5"/></boundIntervals></rdf:Description><rdf:Description rdf:about="rdf:#6b3ac2a0-7bc5-45d3-82db-2c219d0a8b52"><rdf:value xml:lang="en">Fixed units such that the model now runs in JSim without any need for automated unit correction.</rdf:value><modified xmlns="http://purl.org/dc/terms/"><rdf:Description rdf:about="rdf:#865ab0fa-a280-4eff-9d0d-8fc518a43c61"/></modified><cmeta:modifier><rdf:Description rdf:about="rdf:#6a395a10-250f-40c1-8413-3c336ccccc9b"/></cmeta:modifier></rdf:Description><rdf:Description rdf:about="rdf:#8edcae8f-29c4-4bb0-952b-9e986673097e"><rdf:type><rdf:Description rdf:about="http://www.w3.org/1999/02/22-rdf-syntax-ns#Seq"/></rdf:type><rdf:_1><rdf:Description rdf:about="rdf:#c54bc728-a493-48e9-aec8-4bde6e8ceafe"/></rdf:_1><rdf:_2><rdf:Description rdf:about="rdf:#aca58b7c-3db3-4845-bc58-868e073d2a3b"/></rdf:_2><rdf:_3><rdf:Description rdf:about="rdf:#63d96787-7bc6-4dc6-8f68-1f481dd6873f"/></rdf:_3><rdf:_4><rdf:Description rdf:about="rdf:#c1882186-e4b4-4198-98b3-992db03eb285"/></rdf:_4></rdf:Description></rdf:RDF></model>
 
+<units name="meter_liter_per_micromol"><unit units="meter"/><unit exponent="-1" units="micromolar"/></units><units name="newton_per_meter"><unit units="newton"/><unit exponent="-1" units="meter"/></units><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description rdf:about=""><creator xmlns="http://purl.org/dc/elements/1.1/"><rdf:Description rdf:about="rdf:#49ac37e6-a8a4-4d2d-84f3-abde43b1907c"/></creator><publisher xmlns="http://purl.org/dc/elements/1.1/" xml:lang="en">The University of Auckland, Bioengineering Institute</publisher><cmeta:comment><rdf:Description rdf:about="rdf:#67960142-5306-40e0-b3ad-4f6c6cd21034"/></cmeta:comment><created xmlns="http://purl.org/dc/terms/"><rdf:Description rdf:about="rdf:#781e166a-2b27-483a-96e1-014e71a21ffa"/></created><cmeta:modification><rdf:Description rdf:about="rdf:#216d94c7-d658-492c-893f-80848bd31423"/></cmeta:modification></rdf:Description><rdf:Description rdf:about="rdf:#216d94c7-d658-492c-893f-80848bd31423"><rdf:value xml:lang="en">Fixed the units such that the model now runs in JSIM without the programme having to carry out any unit modifications.</rdf:value><modified xmlns="http://purl.org/dc/terms/"><rdf:Description rdf:about="rdf:#0f240673-629b-422c-b94f-0edbb10a1916"/></modified><cmeta:modifier><rdf:Description rdf:about="rdf:#260d22ac-3d2d-483c-a68f-3cfec656836c"/></cmeta:modifier></rdf:Description><rdf:Description rdf:about="rdf:#781e166a-2b27-483a-96e1-014e71a21ffa"><W3CDTF xmlns="http://purl.org/dc/terms/" xml:lang="en">2008-05-26T00:00:00+00:00</W3CDTF></rdf:Description><rdf:Description rdf:nodeID="n1"><maximumStepSize xmlns="http://www.cellml.org/metadata/simulation/1.0#" xml:lang="en">0.01</maximumStepSize><endingValue xmlns="http://www.cellml.org/metadata/simulation/1.0#" xml:lang="en">100</endingValue><pointDensity xmlns="http://www.cellml.org/metadata/simulation/1.0#nonstandard-" xml:lang="en">10000</pointDensity></rdf:Description><rdf:Description rdf:about="rdf:#c2ad5391-2011-4f1e-80f6-5dac13ffdce7"><rdf:type><rdf:Description rdf:about="//www.cellml.org/bqs/1.0#Person"/></rdf:type><N xmlns="http://www.w3.org/2001/vcard-rdf/3.0#"><rdf:Description rdf:about="rdf:#81e0493a-7164-46af-be74-a48f5c2e0f8b"/></N></rdf:Description><rdf:Description rdf:nodeID="n2"><rdf:rest><rdf:Description rdf:about="//www.w3.org/1999/02/22-rdf-syntax-ns#nil"/></rdf:rest><rdf:first><rdf:Description rdf:nodeID="n1"/></rdf:first></rdf:Description><rdf:Description rdf:about="rdf:#b6c508c8-5aef-49e3-ac5c-b007682606bd"><Given xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">John</Given><Family xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Davidson</Family><Other xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">B</Other></rdf:Description><rdf:Description rdf:about="rdf:#49ac37e6-a8a4-4d2d-84f3-abde43b1907c"><N xmlns="http://www.w3.org/2001/vcard-rdf/3.0#"><rdf:Description rdf:about="rdf:#b6c508c8-5aef-49e3-ac5c-b007682606bd"/></N><ORG xmlns="http://www.w3.org/2001/vcard-rdf/3.0#"><rdf:Description rdf:about="rdf:#1598a58b-670f-48ab-96d7-99b4eb3fb6a7"/></ORG><EMAIL xmlns="http://www.w3.org/2001/vcard-rdf/3.0#"><rdf:Description rdf:about="rdf:#5c9c17a8-88e5-4e20-aa70-a6423499c48f"/></EMAIL></rdf:Description><rdf:Description rdf:nodeID="n3"><boundIntervals xmlns="http://www.cellml.org/metadata/simulation/1.0#"><rdf:Description rdf:nodeID="n2"/></boundIntervals></rdf:Description><rdf:Description rdf:about="rdf:#3fdf6fbc-4f63-4f46-876d-b7fa9706d218"><FN xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en"/></rdf:Description><rdf:Description rdf:about="#Fast_Twitch"><cmeta:comment><rdf:Description rdf:about="rdf:#b5262107-6fed-4a7d-9e9e-c04489c8e57f"/></cmeta:comment><simulation xmlns="http://www.cellml.org/metadata/simulation/1.0#"><rdf:Description rdf:nodeID="n3"/></simulation><reference xmlns="http://www.cellml.org/bqs/1.0#"><rdf:Description rdf:about="rdf:#2bda435c-5db7-4fa6-a2cd-8e7c99dc92ab"/></reference></rdf:Description><rdf:Description rdf:about="rdf:#f76bd961-d93d-4857-b013-a9541767b78a"><Given xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">John</Given><Family xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Davidson</Family><Other xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">B</Other></rdf:Description><rdf:Description rdf:about="rdf:#737f4338-f93d-467a-aa09-7e58cf110b74"><rdf:type><rdf:Description rdf:about="//www.cellml.org/bqs/1.0#Person"/></rdf:type><N xmlns="http://www.w3.org/2001/vcard-rdf/3.0#"><rdf:Description rdf:about="rdf:#f76bd961-d93d-4857-b013-a9541767b78a"/></N></rdf:Description><rdf:Description rdf:about="rdf:#988c0e3f-76e7-4503-8742-997cd5c8bbc0"><rdf:type><rdf:Description rdf:about="//www.cellml.org/bqs/1.0#Person"/></rdf:type><N xmlns="http://www.w3.org/2001/vcard-rdf/3.0#"><rdf:Description rdf:about="rdf:#8d1544f5-3734-4b52-8ba3-12d318fc3522"/></N></rdf:Description><rdf:Description rdf:about="rdf:#9079d423-03b1-42df-acab-7e7ee102fc66"><rdf:type><rdf:Description rdf:about="//www.cellml.org/bqs/1.0#Person"/></rdf:type><N xmlns="http://www.w3.org/2001/vcard-rdf/3.0#"><rdf:Description rdf:about="rdf:#7f7af6ad-ce52-4bf2-9390-9461390d1ef3"/></N></rdf:Description><rdf:Description rdf:about="rdf:#7cf7c116-b250-4616-bc52-3da06cd18217"><title xmlns="http://purl.org/dc/elements/1.1/" xml:lang="en">A mathematical model of fatigue in skeletal muscle force contraction</title><creator xmlns="http://purl.org/dc/elements/1.1/"><rdf:Description rdf:about="rdf:#8f1ccf4c-f074-4b76-bb01-4b2ea5ad7aca"/></creator><volume xmlns="http://www.cellml.org/bqs/1.0#" xml:lang="en">28</volume><first_page xmlns="http://www.cellml.org/bqs/1.0#" xml:lang="en">293</first_page><issued xmlns="http://purl.org/dc/terms/"><rdf:Description rdf:about="rdf:#62c45700-8baa-4129-abd7-17dc3dfc9f49"/></issued><last_page xmlns="http://www.cellml.org/bqs/1.0#" xml:lang="en">313</last_page><Journal xmlns="http://www.cellml.org/bqs/1.0#"><rdf:Description rdf:about="rdf:#762c7ad0-6c58-433a-b95e-afb9698afc4e"/></Journal></rdf:Description><rdf:Description rdf:about="rdf:#81e0493a-7164-46af-be74-a48f5c2e0f8b"><Given xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Paul</Given><Family xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Shorten</Family><Other xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">R</Other></rdf:Description><rdf:Description rdf:about="rdf:#7f7af6ad-ce52-4bf2-9390-9461390d1ef3"><Given xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Paul</Given><Family xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">O'Callaghan</Family></rdf:Description><rdf:Description rdf:about="rdf:#8d1544f5-3734-4b52-8ba3-12d318fc3522"><Given xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Tanya</Given><Family xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Soboleva</Family><Other xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">K</Other></rdf:Description><rdf:Description rdf:about="rdf:#62c45700-8baa-4129-abd7-17dc3dfc9f49"><W3CDTF xmlns="http://purl.org/dc/terms/" xml:lang="en">2007-00-00 00:00</W3CDTF></rdf:Description><rdf:Description rdf:about="rdf:#5c9c17a8-88e5-4e20-aa70-a6423499c48f"><rdf:type><rdf:Description rdf:about="//imc.org/vCard/3.0#internet"/></rdf:type><rdf:value xml:lang="en">j.davidson@auckland.ac.nz</rdf:value></rdf:Description><rdf:Description rdf:about="rdf:#725fc9c8-12e1-4ac0-91a1-dceb38da8b1e"><FN xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Catherine Lloyd</FN></rdf:Description><rdf:Description rdf:about="rdf:#b5262107-6fed-4a7d-9e9e-c04489c8e57f"><creator xmlns="http://purl.org/dc/elements/1.1/"><rdf:Description rdf:about="rdf:#3fdf6fbc-4f63-4f46-876d-b7fa9706d218"/></creator><rdf:value xml:lang="en"/></rdf:Description><rdf:Description rdf:about="rdf:#1598a58b-670f-48ab-96d7-99b4eb3fb6a7"><Orgname xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">The University of Auckland</Orgname><Orgunit xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">The Bioengineering Institute</Orgunit></rdf:Description><rdf:Description rdf:about="rdf:#8f1ccf4c-f074-4b76-bb01-4b2ea5ad7aca"><rdf:type><rdf:Description rdf:about="//www.w3.org/1999/02/22-rdf-syntax-ns#Seq"/></rdf:type><rdf:_1><rdf:Description rdf:about="rdf:#c2ad5391-2011-4f1e-80f6-5dac13ffdce7"/></rdf:_1><rdf:_2><rdf:Description rdf:about="rdf:#9079d423-03b1-42df-acab-7e7ee102fc66"/></rdf:_2><rdf:_3><rdf:Description rdf:about="rdf:#737f4338-f93d-467a-aa09-7e58cf110b74"/></rdf:_3><rdf:_4><rdf:Description rdf:about="rdf:#988c0e3f-76e7-4503-8742-997cd5c8bbc0"/></rdf:_4></rdf:Description><rdf:Description rdf:about="rdf:#a6253d7c-6652-4e32-9247-fafa4d962e72"><Given xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">John</Given><Family xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">Davidson </Family><Other xmlns="http://www.w3.org/2001/vcard-rdf/3.0#" xml:lang="en">B</Other></rdf:Description><rdf:Description rdf:about="rdf:#67960142-5306-40e0-b3ad-4f6c6cd21034"><creator xmlns="http://purl.org/dc/elements/1.1/"><rdf:Description rdf:about="rdf:#725fc9c8-12e1-4ac0-91a1-dceb38da8b1e"/></creator><rdf:value xml:lang="en">This cellML model is known to run in PCEnv (0.4), COR and JSim to to recreate the published results.  The units have been checked and they are consistent in as much as they are known to be equivalent.  This particular version of the CellML model represents fast twitch muscle.</rdf:value></rdf:Description><rdf:Description rdf:about="rdf:#762c7ad0-6c58-433a-b95e-afb9698afc4e"><title xmlns="http://purl.org/dc/elements/1.1/" xml:lang="en">Journal of Muscle Research and Cell Motility</title></rdf:Description><rdf:Description rdf:about="rdf:#0f240673-629b-422c-b94f-0edbb10a1916"><W3CDTF xmlns="http://purl.org/dc/terms/" xml:lang="en">2008-06-16T09:25:49+12:00</W3CDTF></rdf:Description><rdf:Description rdf:about="rdf:#2bda435c-5db7-4fa6-a2cd-8e7c99dc92ab"><Pubmed_id xmlns="http://www.cellml.org/bqs/1.0#" xml:lang="en">18080210</Pubmed_id><JournalArticle xmlns="http://www.cellml.org/bqs/1.0#"><rdf:Description rdf:about="rdf:#7cf7c116-b250-4616-bc52-3da06cd18217"/></JournalArticle></rdf:Description><rdf:Description rdf:about="rdf:#260d22ac-3d2d-483c-a68f-3cfec656836c"><N xmlns="http://www.w3.org/2001/vcard-rdf/3.0#"><rdf:Description rdf:about="rdf:#a6253d7c-6652-4e32-9247-fafa4d962e72"/></N></rdf:Description></rdf:RDF></model>

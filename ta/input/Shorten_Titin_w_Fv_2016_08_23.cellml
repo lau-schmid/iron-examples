@@ -8367,16 +8367,21 @@ Stern and Rios Component
   <variable initial_value="0.15" name="k_0_off" units="per_millisecond"/>
   <variable initial_value="0.15" name="k_Ca_on" units="per_millisecond"/>
   <variable initial_value="0.05" name="k_Ca_off" units="per_millisecond"/>
-  <variable initial_value="0.5" name="f_o" units="per_millisecond"/> --&gt;
+  <variable initial_value="0.5" name="f_o" units="per_millisecond"/>
   <variable initial_value="5" name="f_p" units="per_millisecond"/>
   <variable initial_value="0.08" name="h_o" units="per_millisecond"/>
   <variable initial_value="0.06" name="h_p" units="per_millisecond"/>
-  <variable initial_value="0.04" name="g_o" units="per_millisecond"/> --&gt;
+  <variable initial_value="0.04" name="g_o" units="per_millisecond"/>
   <variable initial_value="0.00000394" name="b_p" units="per_millisecond"/>
   <variable initial_value="0.00000362" name="k_p" units="micrometre3_per_millisecond"/>
   <variable initial_value="1" name="A_p" units="per_milliM3_per_millisecond"/>
   <variable initial_value="0.0001" name="B_p" units="per_milliM2_per_millisecond"/>
   <variable initial_value="6" name="PP" units="milliM2"/>
+
+  <variable initial_value="-0.1" name="rel_velo" units="dimensionless"/>
+<!--  <variable name="rel_velo" units="dimensionless"/>-->
+  <variable name="velo" units="micrometre_per_millisecond"/>
+  <variable initial_value="0.01" name="velo_max" units="micrometre_per_millisecond"/>
 
   <variable initial_value="0.05" name="x_0" units="micrometre"/>
   <variable initial_value="0.000000" name="x_1" units="micrometre"/>
@@ -8387,9 +8392,11 @@ Stern and Rios Component
 <!--  <variable name="stress" public_interface="out" units="newton_per_m2"/>-->
 <!--  <variable initial_value="0.0" name="dummy" units="newton_millisecond_per_m2"/>-->
 <!--  <variable initial_value="0.000163" name="zeta" units="micrometre"/>-->
-  <variable initial_value="0.000107" name="eta" units="micrometre"/>
-  <variable name="stress" public_interface="out" units="dimensionless"/>
+  <variable initial_value="0.000107" name="eta" units="newton_per_m3"/>
+  <variable name="stress" public_interface="out" units="newton_per_m2"/>
+  <variable name="activation" public_interface="out" units="newton_per_m2"/>
   <variable initial_value="0.0" name="dummy" units="newton_millisecond_per_m2"/>
+  <variable initial_value="0.0" name="dummy2" units="newton_millisecond_per_m2"/>
 <!--  <variable initial_value="0.00725" name="zeta" units="micrometre"/>-->
 <!--  <variable initial_value="0.0151" name="zeta" units="micrometre"/>-->
   <variable initial_value="0.0021" name="zeta" units="micrometre"/>
@@ -11056,25 +11063,26 @@ tomo
 
 <!--
 <math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="rel_velo_Eqn"><eq/><ci>rel_velo</ci><piecewise><piece><apply><minus/><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">0.1</cn></apply><apply><and/><apply><geq/><ci>time</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond">500</cn></apply><apply><lt/><ci>time</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="millisecond">1000</cn></apply></apply></piece><otherwise><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="dimensionless">0</cn></otherwise></piecewise></apply></math>
-
+-->
 
 <math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="velo_Eqn"><eq/><ci>velo</ci><apply><times/><ci>rel_velo</ci><ci>velo_max</ci></apply></apply></math>
 
 
-
+<!--
 <math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="dL_S_Eqn"><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>L_S</ci></apply><ci>velo</ci></apply></math>
 -->
 
 
 <!--<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="dx_1_Eqn"><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>x_1</ci></apply><apply><minus/><apply><plus/><apply><times/><apply><minus/><apply><plus/><apply><divide/><apply><times/><ci>f_o</ci><ci>D_2</ci></apply><ci>A_1</ci></apply><apply><divide/><apply><times/><ci>h_p</ci><ci>A_2</ci></apply><ci>A_1</ci></apply></apply></apply><ci>x_1</ci></apply><apply><times/><ci>h_p</ci><apply><divide/><ci>A_2</ci><ci>A_1</ci></apply><apply><minus/><ci>x_2</ci><ci>x_0</ci></apply></apply></apply><apply><divide/><ci>velo</ci><cn>2</cn></apply></apply></apply></math>-->
-<!--
+
 <math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="dx_1_Eqn"><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>x_1</ci></apply><apply><plus/><apply><times/><apply><minus/><apply><plus/><apply><divide/><apply><times/><ci>f_o</ci><ci>D_2</ci></apply><ci>A_1</ci></apply><apply><divide/><apply><times/><ci>h_p</ci><ci>A_2</ci></apply><ci>A_1</ci></apply></apply></apply><ci>x_1</ci></apply><apply><times/><ci>h_p</ci><apply><divide/><ci>A_2</ci><ci>A_1</ci></apply><apply><minus/><ci>x_2</ci><ci>x_0</ci></apply></apply><apply><divide/><ci>velo</ci><cn>2</cn></apply></apply></apply></math>
--->
+
 
 <!--<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="dx_2_Eqn"><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>x_2</ci></apply><apply><minus/><apply><times/><apply><minus/><apply><divide/><apply><times/><ci>h_o</ci><ci>A_1</ci></apply><ci>A_2</ci></apply></apply><apply><minus/><ci>x_2</ci><apply><plus/><ci>x_1</ci><ci>x_0</ci></apply></apply></apply><apply><divide/><ci>velo</ci><cn>2</cn></apply></apply></apply></math>-->
-<!--
+
 <math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="dx_2_Eqn"><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>x_2</ci></apply><apply><plus/><apply><times/><apply><minus/><apply><divide/><apply><times/><ci>h_o</ci><ci>A_1</ci></apply><ci>A_2</ci></apply></apply><apply><minus/><ci>x_2</ci><apply><plus/><ci>x_1</ci><ci>x_0</ci></apply></apply></apply><ci>velo</ci></apply></apply></math>
 
+<!--
 <math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="stress_Eqn"><eq/><ci>stress</ci><apply><divide/><apply><times/><apply><divide/><apply><minus/><apply><plus/><apply><times/><apply><divide/><ci>A_1</ci><ci>T_tot_0</ci></apply><ci>x_1</ci></apply><apply><times/><apply><divide/><ci>A_2</ci><ci>T_tot_0</ci></apply><ci>x_2</ci></apply></apply><ci>eta</ci></apply><ci>zeta</ci></apply><ci>T_tot</ci></apply><ci>T_tot_0</ci></apply></apply></math>
 
 <math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="dummy_Eqn"><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>dummy</ci></apply><ci>stress</ci></apply></math>
@@ -11085,10 +11093,16 @@ tomo end
 
 <!--<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="stress_Eqn"><eq/><ci>stress</ci><apply><divide/><apply><minus/><apply><plus/><apply><times/><apply><divide/><ci>A_1</ci><ci>T_tot_0</ci></apply><ci>x_1</ci></apply><apply><times/><apply><divide/><ci>A_2</ci><ci>T_tot_0</ci></apply><ci>x_2</ci></apply></apply><ci>eta</ci></apply><ci>zeta</ci></apply></apply></math>-->
 
-<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="stress_Eqn"><eq/><ci>stress</ci><apply><times/><apply><divide/><apply><minus/><apply><plus/><apply><times/><apply><divide/><ci>A_1</ci><ci>T_tot_0</ci></apply><ci>x_1</ci></apply><apply><times/><apply><divide/><ci>A_2</ci><ci>T_tot_0</ci></apply><ci>x_2</ci></apply></apply><ci>eta</ci></apply><ci>zeta</ci></apply><piecewise><piece><apply><times/><apply><divide/><cn>0.7</cn><apply><minus/><cn>0.85</cn><cn>0.635</cn></apply></apply><apply><minus/><ci>L_S</ci><cn>0.635</cn></apply></apply><apply><and/><apply><geq/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">0.635</cn></apply><apply><leq/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">0.85</cn></apply></apply></piece><piece><apply><plus/><cn>0.7</cn><apply><times/><apply><divide/><cn>0.3</cn><apply><minus/><cn>1.17</cn><cn>0.85</cn></apply></apply><apply><minus/><ci>L_S</ci><cn>0.85</cn></apply></apply></apply><apply><and/><apply><gt/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">0.85</cn></apply><apply><leq/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">1.17</cn></apply></apply></piece><piece><cn>1</cn><apply><and/><apply><gt/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">1.17</cn></apply><apply><leq/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">1.255</cn></apply></apply></piece><piece><apply><minus/><cn>1</cn><apply><times/><apply><divide/><cn>1</cn><apply><minus/><cn>1.97</cn><cn>1.255</cn></apply></apply><apply><minus/><ci>L_S</ci><cn>1.255</cn></apply></apply></apply><apply><and/><apply><gt/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">1.255</cn></apply><apply><leq/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">1.97</cn></apply></apply></piece><otherwise><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micromolar">0</cn></otherwise></piecewise></apply></apply></math>
+<!--<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="stress_Eqn"><eq/><ci>stress</ci><apply><times/><apply><divide/><apply><minus/><apply><plus/><apply><times/><apply><divide/><ci>A_1</ci><ci>T_tot_0</ci></apply><ci>x_1</ci></apply><apply><times/><apply><divide/><ci>A_2</ci><ci>T_tot_0</ci></apply><ci>x_2</ci></apply></apply><ci>eta</ci></apply><ci>zeta</ci></apply><piecewise><piece><apply><times/><apply><divide/><cn>0.7 </cn><apply><minus/><cn>0.85 </cn><cn>0.635</cn></apply></apply><apply><minus/><ci>L_S</ci><cn>0.635</cn></apply></apply><apply><and/><apply><geq/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">0.635</cn></apply><apply><leq/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">0.85 </cn></apply></apply></piece><piece><apply><plus/><cn>0.7 </cn><apply><times/><apply><divide/><cn>0.3 </cn><apply><minus/><cn>1.17</cn><cn>0.85</cn></apply></apply><apply><minus/><ci>L_S</ci><cn>0.85</cn></apply></apply></apply><apply><and/><apply><gt/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">0.85</cn></apply><apply><leq/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">1.17</cn></apply></apply></piece><piece><cn>1</cn><apply><and/><apply><gt/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">1.17</cn></apply><apply><leq/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">1.255</cn></apply></apply></piece><piece><apply><minus/><cn>1</cn><apply><times/><apply><divide/><cn>1</cn><apply><minus/><cn>1.97</cn><cn>1.255</cn></apply></apply><apply><minus/><ci>L_S</ci><cn>1.255</cn></apply></apply></apply><apply><and/><apply><gt/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">1.255</cn></apply><apply><leq/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">1.97</cn></apply></apply></piece><otherwise><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micromolar">0</cn></otherwise></piecewise></apply></apply></math>-->
+    <math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="activation_Eqn"><eq/><ci>activation</ci><apply><divide/><apply><minus/><apply><plus/><apply><times/><apply><divide/><ci>A_1</ci><ci>T_tot_0</ci></apply><ci>x_1</ci></apply><apply><times/><apply><divide/><ci>A_2</ci><ci>T_tot_0</ci></apply><ci>x_2</ci></apply></apply><ci>eta</ci></apply><ci>zeta</ci></apply></apply></math>
+
+
+    <math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="stress_Eqn"><eq/><ci>stress</ci><apply><times/><apply><divide/><apply><minus/><apply><plus/><apply><times/><apply><divide/><ci>A_1</ci><ci>T_tot_0</ci></apply><ci>x_1</ci></apply><apply><times/><apply><divide/><ci>A_2</ci><ci>T_tot_0</ci></apply><ci>x_2</ci></apply></apply><ci>eta</ci></apply><ci>zeta</ci></apply><piecewise><piece><apply><times/><apply><divide/><cn>0.84</cn><apply><minus/><cn>0.835</cn><cn>0.635</cn></apply></apply><apply><minus/><ci>L_S</ci><cn>0.635</cn></apply></apply><apply><and/><apply><geq/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">0.635</cn></apply><apply><leq/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">0.835</cn></apply></apply></piece><piece><apply><plus/><cn>0.84</cn><apply><times/><apply><divide/><cn>0.16</cn><apply><minus/><cn>1</cn><cn>0.835</cn></apply></apply><apply><minus/><ci>L_S</ci><cn>0.835</cn></apply></apply></apply><apply><and/><apply><gt/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">0.835</cn></apply><apply><leq/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">1</cn></apply></apply></piece><piece><cn>1</cn><apply><and/><apply><gt/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">1</cn></apply><apply><leq/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">1.125</cn></apply></apply></piece><piece><apply><minus/><cn>1</cn><apply><times/><apply><divide/><cn>1</cn><apply><minus/><cn>1.825</cn><cn>1.125</cn></apply></apply><apply><minus/><ci>L_S</ci><cn>1.125</cn></apply></apply></apply><apply><and/><apply><gt/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">1.125</cn></apply><apply><leq/><ci>L_S</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micrometre">1.825</cn></apply></apply></piece><otherwise><cn xmlns:cellml="http://www.cellml.org/cellml/1.0#" cellml:units="micromolar">0</cn></otherwise></piecewise></apply></apply></math>
 
 
 <math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="dummy_Eqn"><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>dummy</ci></apply><ci>stress</ci></apply></math>
+
+<math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="dummy2_Eqn"><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>dummy2</ci></apply><ci>activation</ci></apply></math>
 
 
 </component>

@@ -73,6 +73,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   LOGICAL, PARAMETER :: DEBUGGING_PROBLEM_OUTPUT = .FALSE.     ! output the 'solver' object after it is created
   LOGICAL :: DebuggingOutput = .FALSE.    ! enable information from solvers
   INTEGER(CMISSIntg) :: ModelType = 0     ! type of the model (was OldTomoMechanics): 0 = "3a","MultiPhysStrain", old version of tomo that works in parallel, 1 = "3","MultiPhysStrain", new version of tomo that is more stable in numerical sense, 2 = "4","Titin"
+  LOGICAL :: OldTomoMechanics = .TRUE.    ! whether to use the old mechanical description of Thomas Heidlauf that works also in parallel
   LOGICAL :: EnableExportEMG = .FALSE.
   
   ! physical dimensions in [cm]
@@ -89,7 +90,8 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   REAL(CMISSRP) :: ElasticityTimeStep = 0.1000000000_CMISSRP !0.5_CMISSRP!0.05_CMISSRP!0.8_CMISSRP
   REAL(CMISSRP) :: PDETimeStep = 0.005_CMISSRP              ! 0.005_CMISSRP
   REAL(CMISSRP) :: ODETimeStep = 0.0001_CMISSRP!            ! set at '#timestepset'. 50 steps until DiHu - now to be set anew with proper DAE (integration) scheme.
-  
+  INTEGER(CMISSIntg) :: OdeNSteps = -1 ! can be used to set ODETimeStep implicitly. 
+
  !0.0001000_CMISSRP -> 50  !0.0001020_CMISSRP  !0.0001042_CMISSRP  !0.0001064_CMISSRP  !0.0001087_CMISSRP
  !0.0001111_CMISSRP -> 45  !0.0001136_CMISSRP  !0.0001163_CMISSRP  !0.0001190_CMISSRP  !0.0001220_CMISSRP 
  !0.0001250_CMISSRP -> 40  !0.0001282_CMISSRP  !0.0001316_CMISSRP  !0.0001351_CMISSRP  !0.0001389_CMISSRP
@@ -997,6 +999,8 @@ SUBROUTINE ParseAssignment(Line, LineNumber, ScenarioInputFile)
       READ(StrValue, *, IOSTAT=Stat) Vmax
     CASE ("initialstretch")
       READ(StrValue, *, IOSTAT=Stat) InitialStretch
+    CASE ("odensteps")
+      READ(StrValue, *, IOSTAT=Stat) OdeNSteps
     CASE ("inputdirectory")
       InputDirectory = TRIM(ADJUSTL(StrValue))
       
@@ -1122,7 +1126,9 @@ SUBROUTINE ParseParameters()
         READ(Arg,*,Iostat=Stat)  MonodomainSolverId
       CASE(9)
         READ(Arg,*,Iostat=Stat)  MonodomainPreconditionerId
-      
+      CASE(10)
+        READ(Arg,*,Iostat=Stat)  OdeNSteps
+        
       ENDSELECT
       
       ValueArgumentCount = ValueArgumentCount + 1
@@ -1138,8 +1144,10 @@ SUBROUTINE ParseParameters()
      & "2)   ./cuboid [<variable>=<value>] [<input.sce>] [<variable>=<value>] " // NEW_LINE('A') // &
      & "     See the example scenario file for file format and variable names. Variables will be set in order of the arguments."
   ENDIF
-
-
+!##################################################################################################################################
+  IF (OdeNSteps/=-1) THEN
+    ODETimeStep = PDETimeStep/OdeNSteps
+  END IF
 !##################################################################################################################################
 
   ! direction of fibres is in Xi1=Global X direction
@@ -3351,6 +3359,14 @@ SUBROUTINE CreateSolvers()
         PRINT *, ""
       ENDIF
   END SELECT
+  !-------------------------------------------------------------------------------------------  
+  !Set the Number of ODE time steps. CARE: This makes cmfe_Solver_DAETimeStepSet() obsolete!
+  IF(ODESolverId==1 .AND. OdeNSteps/=-1) THEN
+    CALL cmfe_Solver_DAEEulerForwardSetNSteps(SolverDAE,OdeNSteps,Err)
+  ELSEIF(ODESolverId==5 .AND. OdeNSteps/=-1) THEN
+    CALL cmfe_Solver_DAEEulerImprovedSetNSteps(SolverDAE,OdeNSteps,Err)
+  END IF
+  
   !> \todo or not-todo... solve the CellML equations on the GPU for efficiency (later)
   !CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_EXTERNAL,Err)
 

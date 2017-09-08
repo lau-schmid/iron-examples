@@ -1296,7 +1296,7 @@ SUBROUTINE ParseParameters()
   NumberOfGlobalElementLines = NumberGlobalYElements * NumberGlobalZElements
   NumberOfFibreLinesTotal = NumberOfFibreLinesPerGlobalElement * NumberOfGlobalElementLines
   NumberOfFibres = NumberOfFibreLinesTotal * NumberOfInSeriesFibres
-  NumberOfElementsMInXi1 = NumberOfNodesInXi1
+  NumberOfElementsMInXi1 = NumberOfNodesInXi1 - 1
   NumberOfElementsMPerFibreLine = NumberOfElementsMInXi1 * NumberGlobalXElements
   NumberOfElementsMPerFibre = NumberOfElementsMPerFibreLine / NumberOfInSeriesFibres
   NumberOfNodesPerShortFibre = NumberOfElementsMPerFibre
@@ -3914,7 +3914,7 @@ SUBROUTINE SetStimulationAtNodes(StimValuePerNode)
     CurrentFibreFires = .FALSE.
     
     ! get middle point of fibre
-    JunctionNodeNo = (FibreNo-1) * NumberOfNodesPerLongFibre + NumberOfNodesPerLongFibre/2
+    JunctionNodeNo = (FibreNo-1) * NumberOfNodesPerLongFibre + NumberOfNodesPerLongFibre/2 + 1
     
     ! add innervation zone offset
     JunctionNodeNo = JunctionNodeNo + InnervationZoneOffset(FibreNo)

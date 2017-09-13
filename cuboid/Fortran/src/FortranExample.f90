@@ -1322,7 +1322,7 @@ SUBROUTINE ParseParameters()
  
   IF (TRIM(CellMLModelFilename) == "standard") THEN
     IF (ModelType == 0) THEN    ! 3a, "MultiPhysStrain", old tomo mechanics
-      CellMLModelFilename = TRIM(inputDirectory) // "slow_TK_2014_12_08.xml"
+      CellMLModelFilename = TRIM(inputDirectory) // "new_slow_TK_2014_12_08.cellml"
       !StimValue = 20000.0_CMISSRP !700.0_CMISSRP!700.0_CMISSRP
 
     ELSEIF (ModelType == 1) THEN ! 3, , "MultiPhysStrain", numerically more stable

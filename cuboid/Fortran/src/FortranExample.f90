@@ -220,6 +220,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   LOGICAL :: DebuggingOutput = .FALSE.    ! enable information from solvers
   INTEGER(CMISSIntg) :: ModelType = 0 ! ### PAPERBRANCH SETTING     ! type of the model (was OldTomoMechanics): 0 = "3a","MultiPhysStrain", old version of tomo that works in parallel, 1 = "3","MultiPhysStrain", new version of tomo that is more stable in numerical sense, 2 = "4","Titin"
   LOGICAL :: EnableExportEMG = .FALSE.
+  LOGICAL :: ElasticityDisabled = .FALSE. ! do create the elasticity control loop
   
   ! physical dimensions in [cm]
   REAL(CMISSRP) :: PhysicalLength=1.0_CMISSRP ! ### PAPERBRANCH SETTING !    X-direction
@@ -1114,6 +1115,8 @@ SUBROUTINE ParseAssignment(Line, LineNumber, ScenarioInputFile)
       READ(StrValue, *, IOSTAT=Stat) DebuggingOutput
     CASE ("debuggingonlyrunshortpartofsimulation")
       READ(StrValue, *, IOSTAT=Stat) DebuggingOnlyRunShortPartOfSimulation
+    CASE ("elasticitydisabled")
+      READ(StrValue, *, IOSTAT=Stat) ElasticityDisabled
     CASE ("physicallength")
       READ(StrValue, *, IOSTAT=Stat) PhysicalLength
     CASE ("physicalwidth")
@@ -1419,12 +1422,18 @@ SUBROUTINE ParseParameters()
     PRINT "(A,F0.5,A,I5)", "    - SolverDAE,                      dt = ", ODETimeStep, &
       & ", # Iter: ", CEILING(PDETimeStep/ODETimeStep)
     PRINT "(A,F0.4)", "    - SolverParabolic"
-    PRINT "(A,I5)",               "  - ELASTICITY_LOOP,                               # Iter: ",&
-      & ElasticityLoopMaximumNumberOfIterations
-    PRINT "(A,I4,A,E10.4)", "    - SolverFE,                 # Iter (max): ", NewtonMaximumNumberOfIterations, &
-      & ", Tol.: ",NewtonTolerance
-    PRINT "(A,I4)", "      - LinearSolverFE"
-    PRINT *, ""
+    
+    IF (ElasticityDisabled) THEN
+      PRINT "(A)",               "  - ELASTICITY_LOOP     (disabled) "
+    ELSE
+      PRINT "(A,I5)",               "  - ELASTICITY_LOOP,                               # Iter: ",&
+        & ElasticityLoopMaximumNumberOfIterations
+      PRINT "(A,I4,A,E10.4)", "    - SolverFE,                 # Iter (max): ", NewtonMaximumNumberOfIterations, &
+        & ", Tol.: ",NewtonTolerance
+      PRINT "(A,I4)", "      - LinearSolverFE"
+      PRINT *, ""
+    ENDIF
+    
     IF (DebuggingOnlyRunShortPartOfSimulation) PRINT *, "Abort after first stimulation."
     PRINT *, "OutputTimeStepStride:", OutputTimeStepStride, ", EnableExportEMG:", EnableExportEMG
 
@@ -3025,7 +3034,7 @@ SUBROUTINE InitializeFieldMonodomain()
     ! loop over elements of fibre, for each element, the right node is considered, except for the first element (on ElementIdx=0), then the left node of the first element is considered
     DO ElementIdx = 0, NumberOfElementsMPerFibre
       
-      ! compute the bioelectric element user number      
+      ! compute the bioelectric element user number
       IF (ElementIdx == 0) THEN   ! index 0 and 1 are both for the first element, but first for the left node, then for the right node
         MElementUserNumber = (FibreNo-1) * NumberOfElementsMPerFibre + 1
       ELSE
@@ -3442,21 +3451,24 @@ SUBROUTINE CreateControlLoops()
     !CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopM,CMFE_CONTROL_LOOP_NO_OUTPUT,Err)
   ELSE
     CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopM,CMFE_CONTROL_LOOP_NO_OUTPUT,Err)
+    CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopM,CMFE_CONTROL_LOOP_FILE_OUTPUT,Err)
   ENDIF
 
   !set the finite elasticity loop (simple type)
-  CALL cmfe_ControlLoop_Initialise(ControlLoopFE,Err)
-  CALL cmfe_Problem_ControlLoopGet(Problem,[ControlLoopElasticityNumber,CMFE_CONTROL_LOOP_NODE],ControlLoopFE,Err)
-  CALL cmfe_ControlLoop_TypeSet(ControlLoopFE,CMFE_PROBLEM_CONTROL_LOAD_INCREMENT_LOOP_TYPE,Err)
-  CALL cmfe_ControlLoop_MaximumIterationsSet(ControlLoopFE,ElasticityLoopMaximumNumberOfIterations,Err)
-  CALL cmfe_ControlLoop_LabelSet(ControlLoopFE,'ELASTICITY_LOOP',Err)
+  IF (.NOT. elasticityDisabled) THEN
+    CALL cmfe_ControlLoop_Initialise(ControlLoopFE,Err)
+    CALL cmfe_Problem_ControlLoopGet(Problem,[ControlLoopElasticityNumber,CMFE_CONTROL_LOOP_NODE],ControlLoopFE,Err)
+    CALL cmfe_ControlLoop_TypeSet(ControlLoopFE,CMFE_PROBLEM_CONTROL_LOAD_INCREMENT_LOOP_TYPE,Err)
+    CALL cmfe_ControlLoop_MaximumIterationsSet(ControlLoopFE,ElasticityLoopMaximumNumberOfIterations,Err)
+    CALL cmfe_ControlLoop_LabelSet(ControlLoopFE,'ELASTICITY_LOOP',Err)
 
-  IF (DebuggingOutput) THEN
-    CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopFE,CMFE_CONTROL_LOOP_TIMING_OUTPUT,Err)
-  ELSE
-    CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopFE,CMFE_CONTROL_LOOP_NO_OUTPUT,Err)
+    IF (DebuggingOutput) THEN
+      CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopFE,CMFE_CONTROL_LOOP_TIMING_OUTPUT,Err)
+    ELSE
+      CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopFE,CMFE_CONTROL_LOOP_NO_OUTPUT,Err)
+    ENDIF
   ENDIF
-
+    
   CALL cmfe_Problem_ControlLoopCreateFinish(Problem,Err)
 
 END SUBROUTINE CreateControlLoops

@@ -235,6 +235,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   REAL(CMISSRP) :: ODETimeStep = 0.0001_CMISSRP ! ### PAPERBRANCH SETTING: 0.0001
   REAL(CMISSRP) :: PDETimeStep = 0.0005_CMISSRP ! ### PAPERBRANCH SETTING: 0.0005
   REAL(CMISSRP) :: ElasticityTimeStep = 0.1_CMISSRP ! ### PAPERBRANCH SETTING
+  INTEGER(CMISSIntg) :: OdeNSteps = -1 ! can be used to set ODETimeStep implicitly. 
 
   REAL(CMISSRP) :: StimDuration=0.1_CMISSRP ! ### PAPERBRANCH SETTING ! should be the same as ElasticityTimeStep
 
@@ -1151,6 +1152,8 @@ SUBROUTINE ParseAssignment(Line, LineNumber, ScenarioInputFile)
       READ(StrValue, *, IOSTAT=Stat) Vmax
     CASE ("initialstretch")
       READ(StrValue, *, IOSTAT=Stat) InitialStretch
+    CASE ("odensteps")
+      READ(StrValue, *, IOSTAT=Stat) OdeNSteps
     CASE ("inputdirectory")
       InputDirectory = TRIM(ADJUSTL(StrValue))
       
@@ -1276,7 +1279,9 @@ SUBROUTINE ParseParameters()
         READ(Arg,*,Iostat=Stat)  MonodomainSolverId
       CASE(9)
         READ(Arg,*,Iostat=Stat)  MonodomainPreconditionerId
-      
+      CASE(10)
+        READ(Arg,*,Iostat=Stat)  OdeNSteps
+        
       ENDSELECT
       
       ValueArgumentCount = ValueArgumentCount + 1
@@ -1292,8 +1297,10 @@ SUBROUTINE ParseParameters()
      & "2)   ./cuboid [<variable>=<value>] [<input.sce>] [<variable>=<value>] " // NEW_LINE('A') // &
      & "     See the example scenario file for file format and variable names. Variables will be set in order of the arguments."
   ENDIF
-
-
+!#################### the following is only necessary to correct user output, i think. ############################################
+  IF (OdeNSteps/=-1) THEN
+    ODETimeStep = PDETimeStep/OdeNSteps
+  END IF
 !##################################################################################################################################
 
   ! direction of fibres is in Xi1=Global X direction
@@ -1304,7 +1311,7 @@ SUBROUTINE ParseParameters()
   NumberOfGlobalElementLines = NumberGlobalYElements * NumberGlobalZElements
   NumberOfFibreLinesTotal = NumberOfFibreLinesPerGlobalElement * NumberOfGlobalElementLines
   NumberOfFibres = NumberOfFibreLinesTotal * NumberOfInSeriesFibres
-  NumberOfElementsMInXi1 = NumberOfNodesInXi1
+  NumberOfElementsMInXi1 = NumberOfNodesInXi1 - 1
   NumberOfElementsMPerFibreLine = NumberOfElementsMInXi1 * NumberGlobalXElements
   NumberOfElementsMPerFibre = NumberOfElementsMPerFibreLine / NumberOfInSeriesFibres
   NumberOfNodesPerShortFibre = NumberOfElementsMPerFibre
@@ -1330,7 +1337,7 @@ SUBROUTINE ParseParameters()
  
   IF (TRIM(CellMLModelFilename) == "standard") THEN
     IF (ModelType == 0) THEN    ! 3a, "MultiPhysStrain", old tomo mechanics
-      CellMLModelFilename = TRIM(inputDirectory) // "slow_TK_2014_12_08.xml"
+      CellMLModelFilename = TRIM(inputDirectory) // "new_slow_TK_2014_12_08.cellml"
       !StimValue = 20000.0_CMISSRP !700.0_CMISSRP!700.0_CMISSRP
 
     ELSEIF (ModelType == 1) THEN ! 3, , "MultiPhysStrain", numerically more stable
@@ -3605,6 +3612,14 @@ SUBROUTINE CreateSolvers()
         PRINT *, ""
       ENDIF
   END SELECT
+  !-------------------------------------------------------------------------------------------  
+  !Set the Number of ODE time steps. CARE: This makes cmfe_Solver_DAETimeStepSet() obsolete!
+  IF(ODESolverId==1 .AND. OdeNSteps/=-1) THEN
+    CALL cmfe_Solver_DAEEulerForwardSetNSteps(SolverDAE,OdeNSteps,Err)
+  ELSEIF(ODESolverId==5 .AND. OdeNSteps/=-1) THEN
+    CALL cmfe_Solver_DAEEulerImprovedSetNSteps(SolverDAE,OdeNSteps,Err)
+  END IF
+  
   !> \todo or not-todo... solve the CellML equations on the GPU for efficiency (later)
   !CALL cmfe_Solver_DAESolverTypeSet(SolverDAE,CMFE_SOLVER_DAE_EXTERNAL,Err)
 
@@ -4008,7 +4023,7 @@ SUBROUTINE SetStimulationAtNodes(StimValuePerNode)
     CurrentFibreFires = .FALSE.
     
     ! get middle point of fibre
-    JunctionNodeNo = (FibreNo-1) * NumberOfNodesPerLongFibre + NumberOfNodesPerLongFibre/2
+    JunctionNodeNo = (FibreNo-1) * NumberOfNodesPerLongFibre + NumberOfNodesPerLongFibre/2 + 1
     
     ! add innervation zone offset
     JunctionNodeNo = JunctionNodeNo + InnervationZoneOffset(FibreNo)

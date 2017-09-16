@@ -333,6 +333,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   CHARACTER(len=1024) :: FibreDistributionFile = "MU_fibre_distribution_4050.txt"
   CHARACTER(len=256) :: MemoryConsumption1StTimeStep = "", MemoryConsumptionBeforeSim, Temp
   CHARACTER(len=10000) :: WorkingDirectory
+  CHARACTER(len=1024) :: ScenarioName = ""
   
   LOGICAL :: CustomProfilingEnabled !< If custom profiling is compiled in
   LOGICAL :: TauProfilingEnabled !< If TAU profiling is compiled in
@@ -1177,6 +1178,8 @@ SUBROUTINE ParseAssignment(Line, LineNumber, ScenarioInputFile)
       FibreDistributionFile = TRIM(ADJUSTL(StrValue))
     CASE ("cellmlmodelfilename")
       CellMLModelFilename = TRIM(ADJUSTL(StrValue))
+    CASE ("scenarioname")
+      ScenarioName = TRIM(ADJUSTL(StrValue))
     CASE DEFAULT
       Read(LineNumber, *, IOSTAT=Stat) StrValue
       WRITE(*,'(A)') TRIM(ScenarioInputFile) // ":" // TRIM(StrValue) // ": Unrecognized variable """ // TRIM(VariableName) // """."
@@ -1431,6 +1434,7 @@ SUBROUTINE ParseParameters()
   ! output scenario information
   IF (ComputationalNodeNumber == 0) THEN
     PRINT *, "CellML file: """ // TRIM(CellMLModelFilename) // """"
+    PRINT *, "Scenario name: """ // TRIM(ScenarioName) // """"
     PRINT *, ""
     PRINT *, "---------- Timing parameters -----------------------------------------------"
     PRINT *, "The time unit is 1 ms."
@@ -1440,19 +1444,25 @@ SUBROUTINE ParseParameters()
     PRINT *, ""
 
     PRINT "(A,F7.2,A,F0.5,A,I5)", "- MAIN_TIME_LOOP,         Δt =", TimeStop, ", dt = ", ElasticityTimeStep, &
-      & ", # Iter: ", CEILING(TimeStop/ElasticityTimeStep)
-    PRINT "(A,F0.4,A,F0.5,A,I5)", "  - MONODOMAIN_TIME_LOOP, Δt = ", ElasticityTimeStep, ", dt = ", PDETimeStep,&
-      & ", # Iter: ", CEILING(ElasticityTimeStep/PDETimeStep)
-    PRINT "(A,F0.5,A,I5)", "    - SolverDAE,                      dt = ", ODETimeStep, &
-      & ", # Iter: ", CEILING(PDETimeStep/ODETimeStep)
+      & ", N. Iter: ", CEILING(TimeStop/ElasticityTimeStep)
+    PRINT "(A,F0.4,A,F0.5,A,I5)", "  - MONODOMAIN_TIME_LOOP, Δt = ", ElasticityTimeStep, ",  dt = ", PDETimeStep,&
+      & ", N. Iter: ", CEILING(ElasticityTimeStep/PDETimeStep)
+    IF (OdeNSteps /= -1) THEN
+      PRINT "(A,F0.5,A,I5,A,I5,A)", "    - SolverDAE,                       dt = ", ODETimeStep, &
+        & ", N. Iter: ", CEILING(PDETimeStep/ODETimeStep), " (set by OdeNSteps=", OdeNSteps, ")"
+    ELSE 
+      PRINT "(A,F0.5,A,I5,A,I5,A)", "    - SolverDAE,                       dt = ", ODETimeStep, &
+        & ", N. Iter: ", CEILING(PDETimeStep/ODETimeStep)
+    ENDIF
+    
     PRINT "(A,F0.4)", "    - SolverParabolic"
     
     IF (ElasticityDisabled) THEN
       PRINT "(A)",               "  - ELASTICITY_LOOP     (disabled) "
     ELSE
-      PRINT "(A,I5)",               "  - ELASTICITY_LOOP,                               # Iter: ",&
+      PRINT "(A,I5)",               "  - ELASTICITY_LOOP,                                N. Iter: ",&
         & ElasticityLoopMaximumNumberOfIterations
-      PRINT "(A,I4,A,E10.4)", "    - SolverFE,                 # Iter (max): ", NewtonMaximumNumberOfIterations, &
+      PRINT "(A,I4,A,E10.4)", "    - SolverFE,                 N. Iter (max): ", NewtonMaximumNumberOfIterations, &
         & ", Tol.: ",NewtonTolerance
       PRINT "(A,I4)", "      - LinearSolverFE"
       PRINT *, ""
@@ -3601,7 +3611,7 @@ SUBROUTINE CreateControlLoops()
     !CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopM,CMFE_CONTROL_LOOP_NO_OUTPUT,Err)
   ELSE
     CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopM,CMFE_CONTROL_LOOP_NO_OUTPUT,Err)
-    CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopM,CMFE_CONTROL_LOOP_FILE_OUTPUT,Err)
+    !CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopM,CMFE_CONTROL_LOOP_FILE_OUTPUT,Err)
   ENDIF
 
   !set the finite elasticity loop (simple type)
@@ -4328,7 +4338,7 @@ SUBROUTINE WriteTimingFile()
       & 'duration FileOutputPreLoad (user); duration export EMG user; duration export EMG system; duration FileOutput (user); ' // &
       & 'duration FileOutput (system); duration FileOutputPreload (system); MonodomainSolverId; MonodomainPreconditionerId; ' // &
       & 'ODESolverId; NumberOfElementsInAtomX; NumberOfElementsInAtomY; NumberOfElementsInAtomZ; NumberOfSubdomainsX; ' // & 
-      & 'NumberOfSubdomainsY; NumberOfSubdomainsZ; ModelType'
+      & 'NumberOfSubdomainsY; NumberOfSubdomainsZ; ModelType; ScenarioName'
       
     CLOSE(unit=123)
   ENDIF
@@ -4350,7 +4360,7 @@ SUBROUTINE WriteTimingFile()
 
   IF (CustomProfilingEnabled) THEN
 
-    WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),21(F25.13,A),A,A,9(F8.3,A),3(I2,A),6(I8,A),I1)") &
+    WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),21(F25.13,A),A,A,9(F8.3,A),3(I2,A),6(I8,A),I1,2A)") &
       & TRIM(TimeStampStr), ';', &
       & TRIM(Hostname(1:22)), ';', &          ! end of 4A
       & NumberOfComputationalNodes, ';', &
@@ -4449,11 +4459,12 @@ SUBROUTINE WriteTimingFile()
       & NumberOfSubdomainsX, ';', &
       & NumberOfSubdomainsY, ';', &
       & NumberOfSubdomainsZ, ';', &                            ! end of 6(I8,A)
-      & ModelType                                       ! I1
+      & ModelType, ';', &                                       ! I1
+      & TRIM(ScenarioName)
 
   ELSE  ! custom profiling is disabled
     
-    WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),9(F8.3,A),3(I2,A),6(I8,A),I1)") &
+    WRITE(123,"(4A,7(I11,A),(F8.3,A),11(F0.8,A),2(A,A),8(I7,A),9(F8.3,A),3(I2,A),6(I8,A),I1,2A)") &
       & TRIM(TimeStampStr), ';', &
       & TRIM(Hostname(1:22)), ';', &                    ! end of 4A
       & NumberOfComputationalNodes, ';', &
@@ -4503,7 +4514,8 @@ SUBROUTINE WriteTimingFile()
       & NumberOfSubdomainsX, ';', &
       & NumberOfSubdomainsY, ';', &
       & NumberOfSubdomainsZ, ';', &                          ! end of 6(I8,A)
-      & ModelType                                     ! I1
+      & ModelType, ';', &                                     ! I1
+      & TRIM(ScenarioName)
   ENDIF
 
   CLOSE(unit=123)

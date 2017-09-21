@@ -1,151 +1,5 @@
-!Y! temporary marks for cellml implementation. this is what is used in the actual RHS.:
-!Y! C_m = 0.58 (like in shortens paper);gam= 2.79 (slow twitch);R_a = 150y; tsi  = 0.000001y (xi aus shortens paper);tsi2= 0.0025y (xi);tsi3= 0.0005y(xi);FF = 96485y(Faradys constant);tau_K  = 559y(slow); tau_Na = 559y(slow);  f_T= 0.00174y(slow); tau_K2  = 40229.885y;  tau_Na2 = 40229.885y; 
-!Y! I_K_rest= 0.34y(slow); I_Na_rest = -0.43ys;alpha_h_bar = 0.0081y; alpha_m_bar = 0.288y; alpha_n_bar = 0.0131y; beta_h_bar = 4.38y;beta_m_bar = 1.38y;  beta_n_bar  = 0.067y; 
-!Y! V_m = -46y;  V_n  = -40y;  V_h  = -45y; V_a  = 70y;  V_S_inf = -68ys;  V_h_K_inf  = -40y;  A_a  = 150y;  A_S_inf  = 7.1ys;  A_h_K_inf = 7.5y;  K_alpha_h  = 14.7y;  K_beta_h  = 9y; 
-!Y! K_alpha_m = 10y;  K_alpha_n  = 7y;  K_beta_m  = 18y;  K_beta_n  = 40y; RR  = 8314.41y; TT  = 293y;  g_Cl_bar  = 3.275ys;  g_K_bar  = 10.8ys;  g_Na_bar  = 134ys; G_K  = 1.85y; 
-!Y! del  = 0.4y (delta);  Constant K_K  = 950y;  K_S  = 1y;  K_m_K  = 1y; K_m_Na = 13y; S_i  = 10y; J_NaK_bar  = 0.0001656y;  Constant V_tau = 70ys; 
-!/* Constant vS */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[0]*/ = -82.265452; 
-!/* Constant vT */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[1]*/ = -82.205709; 
-!/* Constant K_t */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[2]*/ = 6.137539; 
-!/* Constant K_i */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[3]*/ = 150.901412; 
-!/* Constant K_e */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[4]*/ = 5.891642; 
-!/* Constant Na_i */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[5]*/ = 12.699134; 
-!/* Constant Na_t */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[6]*/ = 132.186003; 
-!/* Constant Na_e */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[7]*/ = 133.009207; 
-!Y! eta_Cl  = 0.1y;  eta_IR  = 1.0y;  eta_DR  = 0.45y;  eta_Na = 0.1y; eta_NaK  = 0.1y; 
-!/* Constant I_HH */ 
-!DUMMY_ASSIGNMENT /*OC_KNOWN[0]*/ = 0.0; 
-!/* Constant n */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[8]*/ = 0.006824; 
-!/* Constant h_K */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[9]*/ = 0.995321; 
-!/* Constant m */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[10]*/ = 0.026848; 
-!/* Constant h */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[11]*/ = 0.598402; 
-!/* Constant S */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[12]*/ = 0.586035; 
-!/* Constant n_t */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[13]*/ = 0.006883; 
-!/* Constant h_K_t */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[14]*/ = 0.996416; 
-!/* Constant m_t */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[15]*/ = 0.027053; 
-!/* Constant h_t */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[16]*/ = 0.595856; 
-!/* Constant S_t */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[17]*/ = 0.586011; 
-!/* Constant O_0 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[18]*/ = 0.000002; 
-!/* Constant O_1 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[19]*/ = 0.000006; 
-!/* Constant O_2 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[20]*/ = 0.000007; 
-!/* Constant O_3 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[21]*/ = 0.000003; 
-!/* Constant O_4 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[22]*/ = 0.000001; 
-!Y! k_L  = 0.002y;  k_Lm  = 1000y;  f  = 0.2y;  alpha1  = 0.2y;  K  = 4.5y;  Vbar = -20y; 
-!/* Constant C_0 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[23]*/ = 0.883113; 
-!/* Constant C_1 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[24]*/ = 0.111480; 
-!/* Constant C_2 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[25]*/ = 0.005277; 
-!/* Constant C_3 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[26]*/ = 0.000111; 
-!/* Constant C_4 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[27]*/ = 0.000001; 
-!Y! nu_SR  = 2.4375ys;  K_SR  = 1; L_e  = 0.00004y;  tau_R  = 0.75y;tau_SR_R  = 0.75y;  L_S_0  = 1.0y (L_x in shortens paper); 
-!/* Constant L_S */ 
-!DUMMY_ASSIGNMENT /*OC_KNOWN[1]*/ = 1.0; 
-!Y! Constant R_R  = 0.5y; k_T_on  = 0.0885ys;  k_T_off = 0.115y;  T_tot_0 = 140y; k_P_on  = 0ys;  k_P_off  = 0ys;  P_tot  = 1500y;  k_Mg_on  = 0ys;  k_Mg_off  = 0s;  k_Cs_on  = 0.000004y; 
-!Y! k_Cs_off = 0.005y;  Cs_tot  = 31000y;  k_CATP_on  = 0.15y; k_CATP_off = 30y;  k_MATP_on  = 0.0015y;  k_MATP_off  = 0.15y;  tau_ATP  = 0.375y; tau_Mg  = 1.5y; k_0_on = 0y; 
-!Y! k_0_off  = 0.15y;  k_Ca_on  = 0.15y;  k_Ca_off  = 0.05y;  f_o  = 0.5ys; f_p  = 5ys;  h_o = 0.08ys;  h_p  = 0.06ys; g_o = 0.04ys; b_p = 0.00000394ys;  k_p = 0.00000362y;  A_p  = 1y; 
-!Y! B_p = 0.0001y;  PP  = 6y;
-! #################    Dynamics model:     ##########################
-! x_0  = 0.05;  x_1  = 0.000000;  x_2  = 0.050000;  eta  = 0.000107;
-! #######################   end  ####################################
-!/* Constant dummy */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[28]*/ = 0.0;
-! #################    Dynamics model:     ##########################
-! zeta  = 0.0021; 
-! #######################   end   ###################################
-!/* Constant Ca_1 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[29]*/ = 0.884732; 
-!/* Constant Ca_SR1 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[30]*/ = 1580.867624; 
-!/* Constant Ca_2 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[31]*/ = 0.399902; 
-!/* Constant Ca_SR2 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[32]*/ = 1581.712973; 
-!/* Constant Ca_T_2 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[33]*/ = 8.194027; 
-!/* Constant Ca_P1 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[34]*/ = 615.000000; 
-!/* Constant Ca_P2 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[35]*/ = 615.000000; 
-!/* Constant Mg_P1 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[36]*/ = 811.000000; 
-!/* Constant Mg_P2 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[37]*/ = 811.000000; 
-!/* Constant Ca_Cs1 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[38]*/ = 17306.257267; 
-!/* Constant Ca_Cs2 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[39]*/ = 17310.310128; 
-!/* Constant Ca_ATP1 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[40]*/ = 2.244070; 
-!/* Constant Ca_ATP2 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[41]*/ = 1.523121; 
-!/* Constant Mg_ATP1 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[42]*/ = 7242.253138; 
-!/* Constant Mg_ATP2 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[43]*/ = 7242.274705; 
-!/* Constant ATP1 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[44]*/ = 755.502793; 
-!/* Constant ATP2 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[45]*/ = 756.202174; 
-!/* Constant Mg1 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[46]*/ = 957.730848; 
-!/* Constant Mg2 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[47]*/ = 957.725457; 
-!/* Constant Ca_CaT2 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[48]*/ = 1.347074; 
-!/* Constant D_0 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[49]*/ = 0.343574; 
-!/* Constant D_1 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[50]*/ = 0.554181; 
-!/* Constant D_2 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[51]*/ = 1.342379; 
-!/* Constant A_1 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[52]*/ = 0.133380; 
-!/* Constant A_2 */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[53]*/ = 0.106577; 
-!/* Constant P */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[54]*/ = 0.231949; 
-!/* Constant P_SR */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[55]*/ = 0.284897; 
-!/* Constant P_C_SR */ 
-!DUMMY_ASSIGNMENT /*OC_STATE[56]*/ = 0.173921; 
-!Y! i2  = 60ys;
-! V_o_Eqn   =  0.950000 *L_S_0* 3.14159265358979*pow(R_R, 2.00000); 
-! V_SR_Eqn  =  0.0500000*L_S_0* 3.14159265358979*pow(R_R, 2.00000); 
-! V_1_Eqn   =  0.0100000*V_o_Eqn; 
-! V_2_Eqn   =  0.990000 *V_o_Eqn; 
-! V_SR1_Eqn =  0.0100000*V_SR_Eqn; 
-! V_SR2_Eqn =  0.990000 *V_SR_Eqn;
-!#######################################################################################
-
 !> \file
-!> \author Adam Reeve
+!> \author Adam Reeve, Benjamin Maier, Nehzat Emamy, Aaron Krämer, Thomas Klotz
 !> \brief This is an example program to solve a finite elasticity equation using OpenCMISS calls.
 !>
 !> \section LICENSE
@@ -233,10 +87,12 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   REAL(CMISSRP) :: StimPeriod=10.0_CMISSRP ! ### PAPERBRANCH SETTING
   REAL(CMISSRP) :: TimeStop=10.0_CMISSRP ! ### PAPERBRANCH SETTING
 
+  ! time discretizatzion settings
   REAL(CMISSRP) :: ODETimeStep = 0.0001_CMISSRP ! ### PAPERBRANCH SETTING: 0.0001
   REAL(CMISSRP) :: PDETimeStep = 0.0005_CMISSRP ! ### PAPERBRANCH SETTING: 0.0005
   REAL(CMISSRP) :: ElasticityTimeStep = 0.1_CMISSRP ! ### PAPERBRANCH SETTING
-  INTEGER(CMISSIntg) :: OdeNSteps = -1 ! can be used to set ODETimeStep implicitly. 
+  INTEGER(CMISSIntg) :: OdeNSteps = -1 ! can be used to set ODETimeStep implicitly.
+  LOGICAL :: UseStrangSplitting = .TRUE.
 
   REAL(CMISSRP) :: StimDuration=0.1_CMISSRP ! ### PAPERBRANCH SETTING ! should be the same as ElasticityTimeStep
 
@@ -554,7 +410,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   TimeStart = DurationSystemUser(2)
     
   CALL ParseParameters()
-
+    
   !================================================================================================================================
   !  G E N E R A L   F E A T U R E S
   !================================================================================================================================
@@ -1157,6 +1013,8 @@ SUBROUTINE ParseAssignment(Line, LineNumber, ScenarioInputFile)
       READ(StrValue, *, IOSTAT=Stat) InitialStretch
     CASE ("odensteps")
       READ(StrValue, *, IOSTAT=Stat) OdeNSteps
+    CASE ("usestrangsplitting")
+      READ(StrValue, *, IOSTAT=Stat) UseStrangSplitting
     CASE ("inputdirectory")
       InputDirectory = TRIM(ADJUSTL(StrValue))
       
@@ -1284,6 +1142,8 @@ SUBROUTINE ParseParameters()
         READ(Arg,*,Iostat=Stat)  MonodomainPreconditionerId
       CASE(10)
         READ(Arg,*,Iostat=Stat)  OdeNSteps
+      CASE(11)
+        READ(Arg,*,Iostat=Stat)  UseStrangSplitting        
         
       ENDSELECT
       
@@ -1595,6 +1455,12 @@ SUBROUTINE ParseParameters()
     STOP
   ENDIF
 
+  IF (ODESolverId/=5 .AND. UseStrangSplitting) THEN
+    PRINT *, "Strang-Splitting must be used with Improved Euler method! &
+     & Use ODESolverId=5 instead."
+    STOP
+  ENDIF
+  
 END SUBROUTINE ParseParameters
 
 SUBROUTINE PrintWorkingDirectory()
@@ -3505,21 +3371,29 @@ SUBROUTINE CreateProblem()
   CALL cmfe_Problem_Initialise(Problem,Err)
 
   IF (ModelType == 0) THEN    ! 3a, "MultiPhysStrain", old tomo mechanics
-    CALL cmfe_Problem_CreateStart(ProblemUserNumber,[CMFE_PROBLEM_MULTI_PHYSICS_CLASS, &
-      & CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE,CMFE_PROBLEM_GUDUNOV_MONODOMAIN_1D3D_ELASTICITY_SUBTYPE],Problem,Err)
-      
+    IF(UseStrangSplitting)THEN
+      CALL cmfe_Problem_CreateStart(ProblemUserNumber,[CMFE_PROBLEM_MULTI_PHYSICS_CLASS, &
+        & CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE,CMFE_PROBLEM_STRANG_MONODOMAIN_1D3D_ELASTICITY_SUBTYPE],Problem,Err)
+    ELSE
+      CALL cmfe_Problem_CreateStart(ProblemUserNumber,[CMFE_PROBLEM_MULTI_PHYSICS_CLASS, &
+        & CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE,CMFE_PROBLEM_GUDUNOV_MONODOMAIN_1D3D_ELASTICITY_SUBTYPE],Problem,Err)
+    ENDIF
   ELSEIF (ModelType == 1) THEN ! 3, , "MultiPhysStrain", numerically more stable
-    CALL cmfe_Problem_CreateStart(ProblemUserNumber,[CMFE_PROBLEM_MULTI_PHYSICS_CLASS, &
-      & CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE,CMFE_PROBLEM_MONODOMAIN_1D3D_ACTIVE_STRAIN_SUBTYPE],Problem,Err)
-  !  CALL cmfe_Problem_SpecificationSet(Problem,CMFE_PROBLEM_MULTI_PHYSICS_CLASS,CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE, &
-  !   & CMFE_PROBLEM_MONODOMAIN_1D3D_ACTIVE_STRAIN_SUBTYPE,Err)
-
+    IF(UseStrangSplitting)THEN
+      CALL cmfe_Problem_CreateStart(ProblemUserNumber,[CMFE_PROBLEM_MULTI_PHYSICS_CLASS, &
+        & CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE,CMFE_PROBLEM_STRANG_MONODOMAIN_1D3D_ACTIVE_STRAIN_SUBTYPE],Problem,Err)
+    ELSE
+      CALL cmfe_Problem_CreateStart(ProblemUserNumber,[CMFE_PROBLEM_MULTI_PHYSICS_CLASS, &
+        & CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE,CMFE_PROBLEM_GUDUNOV_MONODOMAIN_1D3D_ACTIVE_STRAIN_SUBTYPE],Problem,Err)
+    ENDIF
   ELSEIF (ModelType == 2) THEN ! 4, "Titin"
-    CALL cmfe_Problem_CreateStart(ProblemUserNumber,[CMFE_PROBLEM_MULTI_PHYSICS_CLASS, &
-     & CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE,CMFE_PROBLEM_MONODOMAIN_ELASTICITY_W_TITIN_SUBTYPE],Problem,Err)
-  !  CALL cmfe_Problem_SpecificationSet(Problem,CMFE_PROBLEM_MULTI_PHYSICS_CLASS,CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE, &
-  !   & CMFE_PROBLEM_MONODOMAIN_ELASTICITY_W_TITIN_SUBTYPE,Err)
-
+       IF(UseStrangSplitting)THEN
+      CALL cmfe_Problem_CreateStart(ProblemUserNumber,[CMFE_PROBLEM_MULTI_PHYSICS_CLASS, &
+        & CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE,CMFE_PROBLEM_STRANG_MONODOMAIN_ELASTICITY_W_TITIN_SUBTYPE],Problem,Err)
+    ELSE
+      CALL cmfe_Problem_CreateStart(ProblemUserNumber,[CMFE_PROBLEM_MULTI_PHYSICS_CLASS, &
+        & CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE,CMFE_PROBLEM_GUDUNOV_MONODOMAIN_ELASTICITY_W_TITIN_SUBTYPE],Problem,Err)
+    ENDIF
   ENDIF
 
 

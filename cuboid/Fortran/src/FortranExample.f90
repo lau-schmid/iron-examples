@@ -92,7 +92,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   REAL(CMISSRP) :: PDETimeStep = 0.0005_CMISSRP ! ### PAPERBRANCH SETTING: 0.0005
   REAL(CMISSRP) :: ElasticityTimeStep = 0.1_CMISSRP ! ### PAPERBRANCH SETTING
   INTEGER(CMISSIntg) :: OdeNSteps = -1 ! can be used to set ODETimeStep implicitly.
-  LOGICAL :: UseStrangSplitting = .TRUE.
+  LOGICAL :: UseStrangSplitting = .FALSE.
 
   REAL(CMISSRP) :: StimDuration=0.1_CMISSRP ! ### PAPERBRANCH SETTING ! should be the same as ElasticityTimeStep
 
@@ -593,7 +593,6 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
     
     CALL cmfe_CustomProfilingStart("level 0: stimulation handling",Err)
     CALL HandleSolverInfo(time)
-
     Temp = GetMemoryConsumption()
     IF (DebuggingOnlyRunShortPartOfSimulation) EXIT
 
@@ -1174,7 +1173,7 @@ SUBROUTINE ParseParameters()
   NumberOfGlobalElementLines = NumberGlobalYElements * NumberGlobalZElements
   NumberOfFibreLinesTotal = NumberOfFibreLinesPerGlobalElement * NumberOfGlobalElementLines
   NumberOfFibres = NumberOfFibreLinesTotal * NumberOfInSeriesFibres
-  NumberOfElementsMInXi1 = NumberOfNodesInXi1
+  NumberOfElementsMInXi1 = NumberOfNodesInXi1 - 1
   NumberOfElementsMPerFibreLine = NumberOfElementsMInXi1 * NumberGlobalXElements
   NumberOfElementsMPerFibre = NumberOfElementsMPerFibreLine / NumberOfInSeriesFibres
   NumberOfNodesPerShortFibre = NumberOfElementsMPerFibre
@@ -3524,8 +3523,12 @@ SUBROUTINE CreateSolvers()
   CALL cmfe_Problem_SolverGet(Problem,[ControlLoopMonodomainNumber,CMFE_CONTROL_LOOP_NODE], &
    & SolverParabolicIndex,SolverParabolic,Err)
   
-  CALL cmfe_Solver_DynamicSchemeSet(SolverParabolic,CMFE_SOLVER_DYNAMIC_BACKWARD_EULER_SCHEME,Err)
   
+  IF(UseStrangSplitting)THEN
+    CALL cmfe_Solver_DynamicSchemeSet(SolverParabolic,CMFE_SOLVER_DYNAMIC_CRANK_NICOLSON_SCHEME,Err)
+  ELSE
+    CALL cmfe_Solver_DynamicSchemeSet(SolverParabolic,CMFE_SOLVER_DYNAMIC_BACKWARD_EULER_SCHEME,Err)
+  ENDIF
   
   ! data structure is as follows:
   ! SolverParabolic
@@ -3909,7 +3912,7 @@ SUBROUTINE SetStimulationAtNodes(StimValuePerNode)
     CurrentFibreFires = .FALSE.
     
     ! get middle point of fibre
-    JunctionNodeNo = (FibreNo-1) * NumberOfNodesPerLongFibre + NumberOfNodesPerLongFibre/2 + 1
+    JunctionNodeNo = (FibreNo-1) * NumberOfNodesPerLongFibre + (NumberOfNodesPerLongFibre+1)/2
     
     ! add innervation zone offset
     JunctionNodeNo = JunctionNodeNo + InnervationZoneOffset(FibreNo)

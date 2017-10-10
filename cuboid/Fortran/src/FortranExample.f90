@@ -238,6 +238,7 @@ PROGRAM LARGEUNIAXIALEXTENSIONEXAMPLE
   REAL(CMISSRP) :: PDETimeStep = 0.0005_CMISSRP ! ### PAPERBRANCH SETTING: 0.0005
   REAL(CMISSRP) :: ElasticityTimeStep = 0.1_CMISSRP ! ### PAPERBRANCH SETTING
   INTEGER(CMISSIntg) :: OdeNSteps = -1 ! can be used to set ODETimeStep implicitly. 
+  INTEGER(CMISSIntg) :: PdeNSteps = -1  ! overrides PDETimeStep 
 
   REAL(CMISSRP) :: StimDuration=0.1_CMISSRP ! ### PAPERBRANCH SETTING ! should be the same as ElasticityTimeStep
 
@@ -1160,6 +1161,8 @@ SUBROUTINE ParseAssignment(Line, LineNumber, ScenarioInputFile)
       READ(StrValue, *, IOSTAT=Stat) InitialStretch
     CASE ("odensteps","nodesteps","nstepsode","nsteps")
       READ(StrValue, *, IOSTAT=Stat) OdeNSteps
+    CASE ("pdensteps","npdesteps","nstepspde")
+      READ(StrValue, *, IOSTAT=Stat) PdeNSteps
     CASE ("inputdirectory")
       InputDirectory = TRIM(ADJUSTL(StrValue))
       
@@ -1306,6 +1309,9 @@ SUBROUTINE ParseParameters()
      & "     See the example scenario file for file format and variable names. Variables will be set in order of the arguments."
   ENDIF
 !#################### the following is only necessary to correct user output, i think. ############################################
+  IF (PdeNSteps/=-1) THEN
+    PDETimeStep = ElasticityTimeStep/PdeNSteps
+  ENDIF
   IF (OdeNSteps/=-1) THEN
     ODETimeStep = PDETimeStep/OdeNSteps
   END IF
@@ -1445,8 +1451,16 @@ SUBROUTINE ParseParameters()
 
     PRINT "(A,F7.2,A,F0.5,A,I5)", "- MAIN_TIME_LOOP,         Δt =", TimeStop, ", dt = ", ElasticityTimeStep, &
       & ", N. Iter: ", CEILING(TimeStop/ElasticityTimeStep)
-    PRINT "(A,F0.4,A,F0.5,A,I5)", "  - MONODOMAIN_TIME_LOOP, Δt = ", ElasticityTimeStep, ",  dt = ", PDETimeStep,&
-      & ", N. Iter: ", CEILING(ElasticityTimeStep/PDETimeStep)
+    
+    
+    IF (PdeNSteps /= -1) THEN
+      PRINT "(A,F0.4,A,F0.5,2(A,I5),A)", "  - MONODOMAIN_TIME_LOOP, Δt = ", ElasticityTimeStep, ",  dt = ", PDETimeStep,&
+        & ", N. Iter: ", CEILING(ElasticityTimeStep/PDETimeStep), " (set by PdeNSteps=", PdeNSteps, ")"
+    ELSE
+      PRINT "(A,F0.4,A,F0.5,A,I5)", "  - MONODOMAIN_TIME_LOOP, Δt = ", ElasticityTimeStep, ",  dt = ", PDETimeStep,&
+        & ", N. Iter: ", CEILING(ElasticityTimeStep/PDETimeStep)
+    ENDIF
+      
     IF (OdeNSteps /= -1) THEN
       PRINT "(A,F0.5,A,I5,A,I5,A)", "    - SolverDAE,                       dt = ", ODETimeStep, &
         & ", N. Iter: ", CEILING(PDETimeStep/ODETimeStep), " (set by OdeNSteps=", OdeNSteps, ")"
@@ -3606,6 +3620,10 @@ SUBROUTINE CreateControlLoops()
   CALL cmfe_ControlLoop_LabelSet(ControlLoopM,'MONODOMAIN_TIME_LOOP',Err)
   CALL cmfe_ControlLoop_TimesSet(ControlLoopM,0.0_CMISSRP,ElasticityTimeStep,PDETimeStep,Err)
 
+  IF (PdeNSteps /= -1) THEN
+    CALL cmfe_ControlLoop_NumberOfIterationsSet(ControlLoopM,PdeNSteps,Err)
+  ENDIF
+  
   IF (DebuggingOutput) THEN
     CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopM,CMFE_CONTROL_LOOP_TIMING_OUTPUT,Err)
     !CALL cmfe_ControlLoop_OutputTypeSet(ControlLoopM,CMFE_CONTROL_LOOP_NO_OUTPUT,Err)

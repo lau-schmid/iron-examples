@@ -61,9 +61,9 @@ PROGRAM ANALYTIC1DDIFFUSIONEXAMPLE
 
   REAL(CMISSRP), PARAMETER ::    PI=3.141592653589793238462643383279502884197_CMISSRP
 
-  INTEGER(CMISSIntg), PARAMETER :: NUMBER_GLOBAL_X_ELEMENTS=6
+  INTEGER(CMISSIntg), PARAMETER :: NUMBER_GLOBAL_X_ELEMENTS=600
   REAL(CMISSRP), PARAMETER :: LENGTH=3.0_CMISSRP
-  REAL(CMISSRP), PARAMETER :: END_TIME=0.1_CMISSRP
+  REAL(CMISSRP), PARAMETER :: END_TIME=1.0_CMISSRP
   REAL(CMISSRP), PARAMETER :: TIME_STEP=0.01_CMISSRP
   REAL(CMISSRP), PARAMETER :: A=1.0_CMISSRP
   REAL(CMISSRP), PARAMETER :: B=PI/2.0_CMISSRP
@@ -86,6 +86,13 @@ PROGRAM ANALYTIC1DDIFFUSIONEXAMPLE
   !Program types
   
   !Program variables
+  INTEGER(CMISSIntg) :: NumberOfIterations
+  REAL(CMISSDP) :: startTime
+  REAL(CMISSDP) :: stopTime 
+  REAL(CMISSDP) :: timeIncrement
+  REAL(CMISSDP) :: currentTime
+  INTEGER(CMISSINTG) :: currentLoopIteration
+  INTEGER(CMISSINTG) :: outputIterationNumber
   
   !CMISS variables
 
@@ -241,10 +248,10 @@ PROGRAM ANALYTIC1DDIFFUSIONEXAMPLE
   !Set the equations matrices sparsity type
   CALL cmfe_Equations_SparsityTypeSet(Equations,CMFE_EQUATIONS_SPARSE_MATRICES,Err)
   !Set the equations set output
-  !CALL cmfe_Equations_OutputTypeSet(Equations,CMFE_EQUATIONS_NO_OUTPUT,Err)
+  CALL cmfe_Equations_OutputTypeSet(Equations,CMFE_EQUATIONS_NO_OUTPUT,Err)
   !CALL cmfe_Equations_OutputTypeSet(Equations,CMFE_EQUATIONS_TIMING_OUTPUT,Err)
   !CALL cmfe_Equations_OutputTypeSet(Equations,CMFE_EQUATIONS_MATRIX_OUTPUT,Err)
-  CALL cmfe_Equations_OutputTypeSet(Equations,CMFE_EQUATIONS_ELEMENT_MATRIX_OUTPUT,Err)
+  !CALL cmfe_Equations_OutputTypeSet(Equations,CMFE_EQUATIONS_ELEMENT_MATRIX_OUTPUT,Err)
   !Finish the equations set equations
   CALL cmfe_EquationsSet_EquationsCreateFinish(EquationsSet,Err)
 
@@ -262,6 +269,9 @@ PROGRAM ANALYTIC1DDIFFUSIONEXAMPLE
   CALL cmfe_Problem_ControlLoopGet(Problem,CMFE_CONTROL_LOOP_NODE,ControlLoop,Err)
   !Set the times
   CALL cmfe_ControlLoop_TimesSet(ControlLoop,0.0_CMISSRP,END_TIME,TIME_STEP,Err)
+  CALL cmfe_ControlLoop_NumberOfIterationsSet(ControlLoop, 101, Err)
+  CALL cmfe_ControlLoop_NumberOfIterationsGet(ControlLoop, NumberOfIterations, Err)
+  PRINT *, "NumberOfIterations=",NumberOfIterations
   !Finish creating the problem control loop
   CALL cmfe_Problem_ControlLoopCreateFinish(Problem,Err)
 
@@ -271,10 +281,10 @@ PROGRAM ANALYTIC1DDIFFUSIONEXAMPLE
   CALL cmfe_Problem_SolversCreateStart(Problem,Err)
   CALL cmfe_Problem_SolverGet(Problem,CMFE_CONTROL_LOOP_NODE,1,Solver,Err)
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_NO_OUTPUT,Err)
-  !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
+  CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_TIMING_OUTPUT,Err)
   !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_SOLVER_OUTPUT,Err)
-  CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_MATRIX_OUTPUT,Err)
+  !CALL cmfe_Solver_OutputTypeSet(Solver,CMFE_SOLVER_MATRIX_OUTPUT,Err)
   CALL cmfe_Solver_DynamicLinearSolverGet(Solver,LinearSolver,Err)
   CALL cmfe_Solver_OutputTypeSet(LinearSolver,CMFE_SOLVER_PROGRESS_OUTPUT,Err)
   !Finish the creation of the problem solver
@@ -304,6 +314,19 @@ PROGRAM ANALYTIC1DDIFFUSIONEXAMPLE
   !Solve the problem
   CALL cmfe_Problem_Solve(Problem,Err)
 
+  CALL cmfe_ControlLoop_NumberOfIterationsGet(ControlLoop, NumberOfIterations, Err)
+  PRINT *, "NumberOfIterations=",NumberOfIterations
+  
+  CALL cmfe_ControlLoop_TimesGet(ControlLoop, startTime,stopTime,timeIncrement, &
+    & currentTime,currentLoopIteration,outputIterationNumber, Err)
+  
+  PRINT *, "startTime: ", startTime
+  PRINT *, "stopTime: ", stopTime
+  PRINT *, "timeIncrement: ", timeIncrement
+  PRINT *, "currentTime: ", currentTime
+  PRINT *, "currentLoopIteration: ", currentLoopIteration
+  PRINT *, "outputIterationNumber: ", outputIterationNumber
+  
   !Output Analytic analysis
   !CALL cmfe_EquationsSet_AnalyticTimeSet(EquationsSet,END_TIME,Err)
   !CALL cmfe_EquationsSet_AnalyticEvaluate(EquationsSet,Err)

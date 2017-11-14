@@ -1147,8 +1147,6 @@ SUBROUTINE ParseParameters()
         READ(Arg,*,Iostat=Stat)  MonodomainPreconditionerId
       CASE(10)
         READ(Arg,*,Iostat=Stat)  OdeNSteps
-      CASE(11)
-        READ(Arg,*,Iostat=Stat)  UseStrangSplitting        
         
       ENDSELECT
       
@@ -1488,7 +1486,7 @@ SUBROUTINE ParseParameters()
     STOP
   ENDIF
 
-  IF (ODESolverId/=5 .AND. UseStrangSplitting) THEN
+  IF (ODESolverId/=5 .AND. SplittingType==1) THEN
     PRINT *, "Strang-Splitting must be used with Improved Euler method! &
      & Use ODESolverId=5 instead."
     STOP

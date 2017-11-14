@@ -3657,21 +3657,21 @@ SUBROUTINE CreateSolvers()
     
   ENDIF
   
-  IF (DEBUGGING_PROBLEM_OUTPUT) THEN
-    PRINT*, ""
-    PRINT*, "before cmfe_Solver_LinearTypeSet"
-    CALL cmfe_PrintSolver(SolverParabolic, 5, 10, Err)
-  ENDIF
+  !IF (DEBUGGING_PROBLEM_OUTPUT) THEN
+  !  PRINT*, ""
+  !  PRINT*, "before cmfe_Solver_LinearTypeSet"
+  !  CALL cmfe_PrintSolver(SolverParabolic, 5, 10, Err)
+  !ENDIF
   
   ! Recreate linearSolver subtype as direct solver (instead of iterative solver)
   !CALL cmfe_Solver_LinearTypeSet(linearSolver, CMFE_SOLVER_LINEAR_DIRECT_SOLVE_TYPE, Err)
   
-  IF (DEBUGGING_PROBLEM_OUTPUT) THEN
-    PRINT*, ""
-    PRINT*, "========================================================================="
-    PRINT*, "After cmfe_Solver_LinearTypeSet"
-    CALL cmfe_PrintSolver(SolverParabolic, 5, 10, Err)
-  ENDIF
+  !IF (DEBUGGING_PROBLEM_OUTPUT) THEN
+  !  PRINT*, ""
+  !  PRINT*, "========================================================================="
+  !  PRINT*, "After cmfe_Solver_LinearTypeSet"
+  !  CALL cmfe_PrintSolver(SolverParabolic, 5, 10, Err)
+  !ENDIF
   
   !SOLVER_LINEAR_DIRECT_TYPE_SET
   
@@ -3801,6 +3801,12 @@ SUBROUTINE CreateSolvers()
   !SolverFE%solver%NONLINEAR_SOLVER%NEWTON_SOLVER%LINEAR_SOLVER%OUTPUT_TYPE = SOLVER_MATRIX_OUTPUT
   
   !STOP
+  
+  IF (DEBUGGING_PROBLEM_OUTPUT) THEN
+    PRINT*, ""
+    PRINT*, "after_cmfe_Problem_SolverEquationsCreateFinish"
+    CALL cmfe_PrintSolver(SolverParabolic, 5, 10, Err)
+  ENDIF
   
 END SUBROUTINE CreateSolvers
 

@@ -1146,7 +1146,13 @@ SUBROUTINE ParseParameters()
       CASE(9)
         READ(Arg,*,Iostat=Stat)  MonodomainPreconditionerId
       CASE(10)
-        READ(Arg,*,Iostat=Stat)  OdeNSteps
+        READ(Arg,*,Iostat=Stat)  OdeNSteps       
+      CASE(11)
+        READ(Arg,*,Iostat=Stat)  SplittingType 
+      CASE(12)
+        READ(Arg,*,Iostat=Stat)  PDETimeStep
+      CASE(13)
+        READ(Arg,*,Iostat=Stat)  ODETimeStep
         
       ENDSELECT
       

@@ -1,1 +1,2 @@
-ccc && cmake -DOPENCMISS_BUILD_TYPE=DEBUG -DCMAKE_BUILD_TYPE=DEBUG  .. && make clean && make all
+#ccc && cmake -DOPENCMISS_BUILD_TYPE=DEBUG -DCMAKE_BUILD_TYPE=DEBUG  .. && make all
+cmake -DOPENCMISS_BUILD_TYPE=DEBUG -DCMAKE_BUILD_TYPE=DEBUG  .. && make all

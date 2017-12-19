@@ -1,5 +1,20 @@
 # Add example executable
-add_executable(cuboid src/FortranExample.f90)
+add_executable(cuboid 
+  src/main.f90 
+  src/cellml.f90
+  src/control_loop.f90
+  src/decomposition.f90
+  src/equations.f90
+  src/fields_equations_set.f90
+  src/opencmiss_variables.f90
+  src/parameters.f90
+  src/problem.f90
+  src/region_mesh.f90
+  src/solvers.f90
+  src/stimulation_boundary_conditions.f90
+  src/utility.f90
+  src/setup_parameters.f90
+)
 #add_executable(cuboid src/FortranExample_3.f90)
 
 # Turn on Fortran preprocessing (#include directives)

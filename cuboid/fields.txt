@@ -129,3 +129,17 @@ IndependentFieldFE  // Eingabevariablen, kommen von anderem Modell oder sind kon
     4)  1=fibre starts in this element (0=does not)
     5)  number of in series fibres
   
+
+======================= CellML variables =============================
+3a MultiPhysStrain, old tomo mechanics
+known: Eingabe an CellML
+wanted: Ausgabe von CellML
+
+OC_STATE[0] - OC_STATE[56]: states (OpenCMISS name: States)
+
+OC_KNOWN[0]: wal_environment/I_HH (I_Stim)   (OpenCMISS name: Parameter)
+OC_KNOWN[1]: razumova/L_S (l_hs)
+
+OC_WANTED[0]: razumova/stress  (gamma) (OpenCMISS name: Intermediate)
+ (wird in OpenCMISS über Rate ausgegeben, weil es direkt irgendwie nicht funktioniert)
+OC_RATE[28] <- OC_WANTED[0]

@@ -1,0 +1,39 @@
+
+The following specifier are set during computation, if compiled with USE_CUSTOM_PROFILING.
+
+
+"level 0: problem solve"          Contains walltime of computation (without setting stimulus values, without pre-stretch computation)
+"level 0: stimulation handling"   Contains the duration of settings the stimulus values.
+
+----------------------------------------------
+                                  
+"level 1: MAIN_TIME_LOOP overhead"        Overhead should be negligible.
+"level 1: MONODOMAIN_TIME_LOOP overhead"
+"level 1: ELASTICITY_LOOP overhead"
+
+
+"level 1: SolverDAE solve"                Calls to the problem solvers from within the control loops (i.e. CALL PROBLEM_SOLVER_SOLVE())
+"level 1: SolverParabolic solve"
+"level 1: SolverFE solve"         (this is only the solution process, not with interpolation)
+
+"level 1: interpolate 1D->3D"   (called in pre loop of SolverFE, also includes compute_titin for ModelType=2)
+"level 1: interpolate 3D->1D"   (called in post loop of SolverFE)
+
+"level 1: file output"  (at post control loop of MONODOMAIN_TIME_LOOP)
+
+----------------------------------------------
+
+"level 2: solver overhead" (pre and post solver loops, shared for all solvers, but almost nothing in it)
+
+"level 2: 0D solve"   (CALL PROBLEM_CELLML_EQUATIONS_SOLVE)
+"level 2: 1D solve"   (CALL Problem_SolverEquationsDynamicLinearSolve)
+"level 2: 3D solve"   (CALL Problem_SolverEquationsStaticNonlinearSolve)
+
+----------------------------------------------
+
+"level 3: 1D other"
+"level 3: 1D assembly"
+"level 3: 1D solve"
+"level 3: 3D other"
+"level 3: 3D assembly"
+"level 3: 3D solve"

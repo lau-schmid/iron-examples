@@ -41,7 +41,7 @@ MODULE PARAMETERS
   
   !all times in [ms]
   REAL(CMISSRP) :: time
-  REAL(CMISSRP) :: StimPeriod=10.0_CMISSRP ! ### PAPERBRANCH SETTING
+  REAL(CMISSRP) :: StimPeriod=1.0_CMISSRP ! ### PAPERBRANCH SETTING
   REAL(CMISSRP) :: TimeStop=10.0_CMISSRP ! ### PAPERBRANCH SETTING
 
   ! time discretizatzion settings

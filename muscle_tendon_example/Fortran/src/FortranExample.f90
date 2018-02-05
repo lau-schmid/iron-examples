@@ -73,12 +73,13 @@ PROGRAM TITINEXAMPLE
   real :: total 
 
 !  REAL(CMISSRP), PARAMETER :: P_max=2.7_CMISSRP ! N/cm^2
- REAL(CMISSRP), PARAMETER :: P_max=7.3_CMISSRP ! N/cm^2
+!  REAL(CMISSRP), PARAMETER :: P_max=7.3_CMISSRP ! N/cm^2
 !  REAL(CMISSRP), PARAMETER :: P_max=27.0_CMISSRP ! N/cm^2
+	 REAL(CMISSRP), PARAMETER :: P_max=0.0_CMISSRP ! N/cm^2
 
-  REAL(CMISSRP), PARAMETER :: WITH_ATI=1.0_CMISSRP ! 1: With Actin-Titin Interaction 0: No Actin-Titin Interactions
+  REAL(CMISSRP), PARAMETER :: WITH_ATI=0.0_CMISSRP ! 1: With Actin-Tintin Interaction 0: No Actin-Titin Interactions
   REAL(CMISSRP), PARAMETER :: tol=1.0E-8_CMISSRP
-  REAL(CMISSRP), PARAMETER :: init_stretch = 1.1_CMISSRP ! Define the initial stretch
+  REAL(CMISSRP), PARAMETER :: init_stretch = 1.03_CMISSRP ! Define the initial stretch
   
   LOGICAL :: independent_field_auto_create=.FALSE.
 
@@ -135,27 +136,30 @@ PROGRAM TITINEXAMPLE
   REAL(CMISSRP), PARAMETER :: Am=1.0_CMISSRP !500.0_CMISSRP
 
   !membrane capacitance in [uF/cm^2]
-  REAL(CMISSRP), PARAMETER :: Cm_fast=0.5_CMISSRP !1.0_CMISSRP 
-  REAL(CMISSRP), PARAMETER :: Cm_slow=0.5_CMISSRP !0.58_CMISSRP
+  REAL(CMISSRP), PARAMETER :: Cm_fast=1.0_CMISSRP !1.0_CMISSRP 
+  REAL(CMISSRP), PARAMETER :: Cm_slow=1.0_CMISSRP !0.58_CMISSRP
   
 
   !maximum contraction velocity in [cm/ms]
   REAL(CMISSRP), PARAMETER :: Vmax=-0.005_CMISSRP !-0.015_CMISSRP !-0.02_CMISSRP !-0.1_CMISSRP ! =0.2 m/s, rat GM
 !  REAL(CMISSRP), PARAMETER :: Vmax=-0.2_CMISSRP !to stabilise...
   
-  REAL(CMISSRP), PARAMETER :: alpha=5.0_CMISSRP   !5.0_CMISSRP to stabilize
+  REAL(CMISSRP), PARAMETER :: alpha=1.0_CMISSRP   !5.0_CMISSRP to stabilize
   REAL(CMISSRP), PARAMETER :: beta=1.0_CMISSRP
   REAL(CMISSRP), PARAMETER :: gama=1.0_CMISSRP
   !CAUTION - what are the units???
-  REAL(CMISSRP), PARAMETER, DIMENSION(4) :: MAT_FE_MUSCLE= &
+  REAL(CMISSRP), PARAMETER, DIMENSION(2) :: MAT_FE_MUSCLE= &
+!		& [1.0_CMISSRP, 2.0_CMISSRP] !new values TOMO [N/cm^2] 
+		& [alpha*0.01643_CMISSRP, alpha*162.9_CMISSRP] !new values TOMO [N/cm^2]
+!  & [1.0_CMISSRP, 2.0_CMISSRP] !new values TOMO [N/cm^2] 
 !    & [0.0000000000635201_CMISSRP,0.3626712895523322_CMISSRP,0.0000027562837093_CMISSRP,43.372873938671383_CMISSRP] !original values TOMO [N/cm^2]
-    & [alpha*0.0000000000635201_CMISSRP,alpha*0.3626712895523322_CMISSRP,beta*1.074519943356914_CMISSRP, &
-      & gama*9.173311371574769_CMISSRP] !new values TOMO [N/cm^2]
+    !& [alpha*0.0000000000635201_CMISSRP,alpha*0.3626712895523322_CMISSRP,beta*1.074519943356914_CMISSRP, &
+    !  & gama*9.173311371574769_CMISSRP] !new values TOMO [N/cm^2]
       
-  REAL(CMISSRP), PARAMETER, DIMENSION(4) :: MAT_FE_TENDON= &  
-    & [alpha*0.0000000000635201_CMISSRP,alpha*0.3626712895523322_CMISSRP,beta*1.074519943356914_CMISSRP, &
-      & gama*9.173311371574769_CMISSRP] !new values TOMO [N/cm^2]  
-   
+  REAL(CMISSRP), PARAMETER, DIMENSION(2) :: MAT_FE_TENDON= & 
+	 ! & [alpha*0.0000000000635201_CMISSRP,alpha*0.3626712895523322_CMISSRP] 
+ 		  & [alpha*0.01643_CMISSRP, alpha*162.9_CMISSRP] !new values TOMO [N/cm^2]  
+  !  & [1.0_CMISSRP, 2.0_CMISSRP] !new values TOMO [N/cm^2] 
 
   REAL(CMISSRP) :: INIT_PRESSURE
 
@@ -373,7 +377,7 @@ PROGRAM TITINEXAMPLE
 !##################################################################################################################################
 !  fast_twitch=.true.
 !  if(fast_twitch) then
-    pathname = "/data/home/schmidla/opencmiss/examples/multiscale_muscle_tendon/input/"
+    pathname = "/data/home/schmidla/opencmiss/examples/iron-examples/muscle_tendon_example/input/"
 !    filename = trim(pathname)//"Shorten_Titin_w_Fv_2016_08_23.cellml"
     filename = trim(pathname)//"Aliev_Panfilov_Razumova_Titin_2016_10_10.cellml"
 !     "/home/heidlauf/OpenCMISS/OpenCMISS/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles/slow_TK_2015_06_25.xml"
@@ -635,7 +639,7 @@ PROGRAM TITINEXAMPLE
   CALL cmfe_Field_GeometricFieldSet(MaterialFieldFE,GeometricFieldFE,Err)
   CALL cmfe_Field_NumberOfVariablesSet(MaterialFieldFE,FieldMaterialNumberOfVariablesFE,Err)
   CALL cmfe_Field_VariableTypesSet(MaterialFieldFE,[CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_V_VARIABLE_TYPE],Err)
-  CALL cmfe_Field_NumberOfComponentsSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,7,Err)
+  CALL cmfe_Field_NumberOfComponentsSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,5,Err)
   CALL cmfe_Field_NumberOfComponentsSet(MaterialFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,FieldMaterialNumberOfComponentsFE2,Err)
 
 !  CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
@@ -654,10 +658,7 @@ PROGRAM TITINEXAMPLE
     & Err)
   CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,5,CMFE_FIELD_ELEMENT_BASED_INTERPOLATION, &
     & Err)
-  CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,6,CMFE_FIELD_ELEMENT_BASED_INTERPOLATION, &
-    & Err)
-  CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,7,CMFE_FIELD_ELEMENT_BASED_INTERPOLATION, &
-    & Err)
+
 
   CALL cmfe_Field_ComponentInterpolationSet(MaterialFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,1,CMFE_FIELD_CONSTANT_INTERPOLATION,Err)
   CALL cmfe_Field_VariableLabelSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,"MaterialFE",Err)
@@ -669,15 +670,11 @@ PROGRAM TITINEXAMPLE
   CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
     & MAT_FE_MUSCLE(2),Err)
   CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3, &
-    & MAT_FE_MUSCLE(3),Err)
-  CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,4, &
-    & MAT_FE_MUSCLE(4),Err)
-  CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,5, &
     & 0.0_CMISSRP,Err)
-  CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,6, &
-    & P_max,Err)
-  CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,7, &
-    & WITH_ATI,Err) ! 
+	CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,4, &
+	  & P_max,Err) !0.0_CMISSRP,Err)
+  CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,5, &
+    & WITH_ATI,Err) !0.0_CMISSRP,Err) 
 !  CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,0.0_CMISSRP,Err)
 
 	
@@ -689,14 +686,10 @@ PROGRAM TITINEXAMPLE
     	 		& elem_idx,1,MAT_FE_TENDON(1),Err)
 				CALL cmfe_Field_ParameterSetUpdateElement(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
     	 		& elem_idx,2,MAT_FE_TENDON(2),Err)  
-				CALL cmfe_Field_ParameterSetUpdateElement(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
-    	 		& elem_idx,3,MAT_FE_TENDON(3),Err)
-				CALL cmfe_Field_ParameterSetUpdateElement(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
-    	 		& elem_idx,4,MAT_FE_TENDON(4),Err)
     	  CALL cmfe_Field_ParameterSetUpdateElement(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
-    	 		& elem_idx,6,0.0_CMISSRP,Err) ! No Titin in tendon
+    	 		& elem_idx,4,0.0_CMISSRP,Err) ! No Titin in tendon
         CALL cmfe_Field_ParameterSetUpdateElement(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
-    	 		& elem_idx,7,0.0_CMISSRP,Err) ! No Titin in tendon   	 
+    	 		& elem_idx,5,0.0_CMISSRP,Err) ! No Titin in tendon   	 
 		ENDIF
 	END DO
 ! --------------------------------------------------------------------------------------------------------------------------------------
@@ -744,7 +737,7 @@ PROGRAM TITINEXAMPLE
     CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,6,Err)
     CALL cmfe_Field_NumberOfComponentsSet(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,4,Err)
     CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,1, &
-     & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) ! acive force
+     & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err)
     CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,2, &
      & CMFE_FIELD_GAUSS_POINT_BASED_INTERPOLATION,Err) ! titin force (unbound)
     CALL cmfe_Field_ComponentInterpolationSet(IndependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,3, &
@@ -930,7 +923,8 @@ PROGRAM TITINEXAMPLE
   CALL cmfe_Field_Initialise(EquationsSetFieldFE,Err)
   CALL cmfe_EquationsSet_Initialise(EquationsSetFE,Err)
   CALL cmfe_EquationsSet_CreateStart(EquationsSetsUserNumberFE,RegionFE,FibreField,[CMFE_EQUATIONS_SET_ELASTICITY_CLASS, &
-   & CMFE_EQUATIONS_SET_FINITE_ELASTICITY_TYPE,CMFE_EQUATIONS_SET_MONODOMAIN_ELASTICITY_W_TITIN_SUBTYPE], & 
+!   & CMFE_EQUATIONS_SET_FINITE_ELASTICITY_TYPE,CMFE_EQUATIONS_SET_MONODOMAIN_ELASTICITY_W_TITIN_SUBTYPE], & 
+   & CMFE_EQUATIONS_SET_FINITE_ELASTICITY_TYPE,CMFE_EQUATIONS_SET_MONODOMAIN_ELASTICITY_MUSCLE_TENDON_SUBTYPE], & 
    & EquationsSetFieldUserNumberFE,EquationsSetFieldFE,EquationsSetFE,Err)
   CALL cmfe_EquationsSet_CreateFinish(EquationsSetFE,Err)
 
@@ -953,7 +947,8 @@ PROGRAM TITINEXAMPLE
   !Set the equations set to be a Monodomain equations set
   !> \todo solve the monodomain problem on the fibre field rather than on the geometric field: GeometricField <--> FibreField
   CALL cmfe_EquationsSet_CreateStart(EquationsSetsUserNumberM,RegionM,GeometricFieldM,[CMFE_EQUATIONS_SET_BIOELECTRICS_CLASS, &
-   & CMFE_EQUATIONS_SET_MONODOMAIN_EQUATION_TYPE,CMFE_EQUATIONS_SET_MONODOMAIN_ELASTICITY_W_TITIN_SUBTYPE], &
+!   & CMFE_EQUATIONS_SET_MONODOMAIN_EQUATION_TYPE,CMFE_EQUATIONS_SET_MONODOMAIN_ELASTICITY_W_TITIN_SUBTYPE], &
+   & CMFE_EQUATIONS_SET_MONODOMAIN_EQUATION_TYPE,CMFE_EQUATIONS_SET_MONODOMAIN_ELASTICITY_MUSCLE_TENDON_SUBTYPE], &
    & EquationsSetFieldUserNumberM,EquationsSetFieldM,EquationsSetM,Err)
   CALL cmfe_EquationsSet_CreateFinish(EquationsSetM,Err)
 
@@ -1219,14 +1214,16 @@ PROGRAM TITINEXAMPLE
    & CMFE_FIELD_VALUES_SET_TYPE,2,DependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2,Err)
   CALL cmfe_Field_ParametersToFieldParametersComponentCopy(GeometricFieldFE,CMFE_FIELD_U_VARIABLE_TYPE, &
    & CMFE_FIELD_VALUES_SET_TYPE,3,DependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3,Err)
-  INIT_PRESSURE=-2.0_CMISSRP*MAT_FE_MUSCLE(2)-MAT_FE_MUSCLE(1) ! TODO setup for heterogenious material parameters
+ ! INIT_PRESSURE=-2.0_CMISSRP*MAT_FE_MUSCLE(2)-MAT_FE_MUSCLE(1) ! TODO Define inital conditions for p (that the reference configuration is stress free)
+	 INIT_PRESSURE=-1.0_CMISSRP*MAT_FE_TENDON(1)*1.0_CMISSRP**(-0.5_CMISSRP*MAT_FE_TENDON(2))
+ !INIT_PRESSURE=0.0_CMISSRP
   CALL cmfe_Field_ComponentValuesInitialise(DependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,4, & 
    & INIT_PRESSURE,Err)
 !   & -8.0_CMISSRP,Err)
-  ! Change init pressure in tendon (According to the material parameters
+! Change init pressure in tendon (According to the material parameters)
 !  DO elem_idx=1,NumberOfElementsFE
 !		IF(elem_idx.GE.5) THEN! .OR. elem_idx==7 .OR. elem_idx==8) THEN
-!		  INIT_PRESSURE=-2.0_CMISSRP*MAT_FE_TENDON(2)-MAT_FE_TENDON(1)
+!		  INIT_PRESSURE=-1.0_CMISSRP*MAT_FE_TENDON(1)*1.0_CMISSRP**(-0.5_CMISSRP*MAT_FE_TENDON(2))
 !    	CALL cmfe_Field_ParameterSetUpdateElement(DependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
 !    		& elem_idx,4,INIT_PRESSURE,Err)  	 
 !		ENDIF
@@ -1272,7 +1269,8 @@ PROGRAM TITINEXAMPLE
   !Define the problem
   CALL cmfe_Problem_Initialise(Problem,Err)
   CALL cmfe_Problem_CreateStart(ProblemUserNumber,[CMFE_PROBLEM_MULTI_PHYSICS_CLASS, &
-   & CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE,CMFE_PROBLEM_MONODOMAIN_ELASTICITY_W_TITIN_SUBTYPE],Problem,Err)
+!   & CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE,CMFE_PROBLEM_MONODOMAIN_ELASTICITY_W_TITIN_SUBTYPE],Problem,Err)
+   & CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE,CMFE_PROBLEM_MONODOMAIN_ELASTICITY_MUSCLE_TENDON_SUBTYPE],Problem,Err)
 !  CALL cmfe_Problem_SpecificationSet(Problem,CMFE_PROBLEM_MULTI_PHYSICS_CLASS,CMFE_PROBLEM_BIOELECTRIC_FINITE_ELASTICITY_TYPE, &
 !   & CMFE_PROBLEM_MONODOMAIN_ELASTICITY_W_TITIN_SUBTYPE,Err)
   CALL cmfe_Problem_CreateFinish(Problem,Err)
@@ -1507,7 +1505,7 @@ PROGRAM TITINEXAMPLE
 		ELSE
 			VALUE=P_max
 		ENDIF
-		DO comp_idx=5,5
+		DO comp_idx=3,3
    	  CALL cmfe_Field_ParameterSetUpdateElement(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
    	 		& elem_idx,comp_idx,VALUE,Err) 
  		END DO
@@ -1631,6 +1629,5 @@ PROGRAM TITINEXAMPLE
   STOP
   
 END PROGRAM TITINEXAMPLE
-
 
 

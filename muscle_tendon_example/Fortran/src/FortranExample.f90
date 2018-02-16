@@ -66,21 +66,24 @@ PROGRAM TITINEXAMPLE
 #endif
 
 
-  !--------------------------------------------------------------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------------------------------------------------------
   !Test program parameters
 !  real etime          ! Declare the type of etime()
   real :: elapsed(2)     ! For receiving user and system time
   real :: total 
 
 !  REAL(CMISSRP), PARAMETER :: P_max=2.7_CMISSRP ! N/cm^2
-!  REAL(CMISSRP), PARAMETER :: P_max=7.3_CMISSRP ! N/cm^2
+  REAL(CMISSRP), PARAMETER :: P_max=7.3_CMISSRP ! N/cm^2
 !  REAL(CMISSRP), PARAMETER :: P_max=27.0_CMISSRP ! N/cm^2
-	 REAL(CMISSRP), PARAMETER :: P_max=0.0_CMISSRP ! N/cm^2
+!  REAL(CMISSRP), PARAMETER :: P_max=0.0_CMISSRP ! N/cm^2
 
-  REAL(CMISSRP), PARAMETER :: WITH_ATI=0.0_CMISSRP ! 1: With Actin-Tintin Interaction 0: No Actin-Titin Interactions
+  REAL(CMISSRP), PARAMETER :: WITH_ATI=1.0_CMISSRP ! 1: With Actin-Tintin Interaction 0: No Actin-Titin Interactions
   REAL(CMISSRP), PARAMETER :: tol=1.0E-8_CMISSRP
-  REAL(CMISSRP), PARAMETER :: init_stretch = 1.03_CMISSRP ! Define the initial stretch
+  REAL(CMISSRP), PARAMETER :: init_stretch = 1.0_CMISSRP ! Define the initial stretch
   
+	!Define number of elements in muscle
+	INTEGER(CMISSIntg) :: elem_m=4
+
   LOGICAL :: independent_field_auto_create=.FALSE.
 
   INTEGER(CMISSIntg) :: NumberOfElementsFE
@@ -150,15 +153,16 @@ PROGRAM TITINEXAMPLE
   !CAUTION - what are the units???
   REAL(CMISSRP), PARAMETER, DIMENSION(2) :: MAT_FE_MUSCLE= &
 !		& [1.0_CMISSRP, 2.0_CMISSRP] !new values TOMO [N/cm^2] 
-		& [alpha*0.01643_CMISSRP, alpha*162.9_CMISSRP] !new values TOMO [N/cm^2]
-!  & [1.0_CMISSRP, 2.0_CMISSRP] !new values TOMO [N/cm^2] 
+	!	& [9.071_CMISSRP, 19.06_CMISSRP] !tendon [N/cm^2]
+		& [0.8894_CMISSRP, 8.536_CMISSRP] !muscle [N/cm^2]
 !    & [0.0000000000635201_CMISSRP,0.3626712895523322_CMISSRP,0.0000027562837093_CMISSRP,43.372873938671383_CMISSRP] !original values TOMO [N/cm^2]
     !& [alpha*0.0000000000635201_CMISSRP,alpha*0.3626712895523322_CMISSRP,beta*1.074519943356914_CMISSRP, &
     !  & gama*9.173311371574769_CMISSRP] !new values TOMO [N/cm^2]
       
   REAL(CMISSRP), PARAMETER, DIMENSION(2) :: MAT_FE_TENDON= & 
 	 ! & [alpha*0.0000000000635201_CMISSRP,alpha*0.3626712895523322_CMISSRP] 
- 		  & [alpha*0.01643_CMISSRP, alpha*162.9_CMISSRP] !new values TOMO [N/cm^2]  
+ 		  & [0.5*9.071_CMISSRP, 19.06_CMISSRP] !tendon [N/cm^2] 
+		!	& [0.8894_CMISSRP, 8.536_CMISSRP] !muscle [N/cm^2] 
   !  & [1.0_CMISSRP, 2.0_CMISSRP] !new values TOMO [N/cm^2] 
 
   REAL(CMISSRP) :: INIT_PRESSURE
@@ -368,7 +372,7 @@ PROGRAM TITINEXAMPLE
 
 !  NumberOfNodesPerFibre=(NumberOfNodesInXi1-1)*NumberGlobalXElements/NumberOfInSeriesFibres+1
   ! Here the muscle fibre length needs to be specified, according to the Muscle/Tendon Lengths
-  NumberOfNodesPerFibre=(NumberOfNodesInXi1-1)*NumberGlobalXElements/3+1 !TK Hardcoded
+  NumberOfNodesPerFibre=(NumberOfNodesInXi1-1)*NumberGlobalXElements*elem_m/12+1 !TK Hardcoded
   NumberOfNodesM=NumberOfNodesPerFibre*NumberOfInSeriesFibres*NumberGlobalYElements*NumberGlobalZElements*NumberOfNodesInXi2* &
     & NumberOfNodesInXi3
   NumberOfElementsM=(NumberOfNodesPerFibre-1)*NumberOfInSeriesFibres*NumberGlobalYElements*NumberGlobalZElements* &
@@ -681,7 +685,7 @@ PROGRAM TITINEXAMPLE
 ! --------------------------------------------------------------------------------------------------------------------------------------
   ! Change the material parameters in the tendon tissue
   DO elem_idx=1,NumberOfElementsFE
-		IF(elem_idx.GE.5) THEN! .OR. elem_idx==7 .OR. elem_idx==8) THEN
+		IF(elem_idx.GE.elem_m+1) THEN! .OR. elem_idx==7 .OR. elem_idx==8) THEN
     	  CALL cmfe_Field_ParameterSetUpdateElement(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
     	 		& elem_idx,1,MAT_FE_TENDON(1),Err)
 				CALL cmfe_Field_ParameterSetUpdateElement(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
@@ -1060,7 +1064,7 @@ PROGRAM TITINEXAMPLE
   ENDDO
   
   ! No Fibres in Tendon Tissue (Loop over all Tendon Elements)  
-  DO elem_idx=5,12
+  DO elem_idx=elem_m+1,12
     CALL cmfe_Decomposition_ElementDomainGet(DecompositionFE,elem_idx,ElementDomain,Err)
     IF(ElementDomain==ComputationalNodeNumber) THEN
       CALL cmfe_Field_ParameterSetUpdateElement(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
@@ -1215,8 +1219,8 @@ PROGRAM TITINEXAMPLE
   CALL cmfe_Field_ParametersToFieldParametersComponentCopy(GeometricFieldFE,CMFE_FIELD_U_VARIABLE_TYPE, &
    & CMFE_FIELD_VALUES_SET_TYPE,3,DependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3,Err)
  ! INIT_PRESSURE=-2.0_CMISSRP*MAT_FE_MUSCLE(2)-MAT_FE_MUSCLE(1) ! TODO Define inital conditions for p (that the reference configuration is stress free)
-	 INIT_PRESSURE=-1.0_CMISSRP*MAT_FE_TENDON(1)*1.0_CMISSRP**(-0.5_CMISSRP*MAT_FE_TENDON(2))
- !INIT_PRESSURE=0.0_CMISSRP
+	! INIT_PRESSURE=-1.0_CMISSRP*MAT_FE_TENDON(1)*1.0_CMISSRP**(-0.5_CMISSRP*MAT_FE_TENDON(2))
+ INIT_PRESSURE=0.0_CMISSRP
   CALL cmfe_Field_ComponentValuesInitialise(DependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,4, & 
    & INIT_PRESSURE,Err)
 !   & -8.0_CMISSRP,Err)
@@ -1299,7 +1303,7 @@ PROGRAM TITINEXAMPLE
   CALL cmfe_ControlLoop_Initialise(ControlLoopFE,Err)
   CALL cmfe_Problem_ControlLoopGet(Problem,[ControlLoopElasticityNumber,CMFE_CONTROL_LOOP_NODE],ControlLoopFE,Err)
   CALL cmfe_ControlLoop_TypeSet(ControlLoopFE,CMFE_PROBLEM_CONTROL_LOAD_INCREMENT_LOOP_TYPE,Err)
-  CALL cmfe_ControlLoop_MaximumIterationsSet(ControlLoopFE,5,Err) ! tomo
+  CALL cmfe_ControlLoop_MaximumIterationsSet(ControlLoopFE,20,Err) ! tomo
 !  CALL cmfe_ControlLoop_MaximumIterationsSet(ControlLoopFE,1,Err)
   CALL cmfe_ControlLoop_LabelSet(ControlLoopFE,'ELASTICITY_LOOP',Err)
 
@@ -1500,7 +1504,7 @@ PROGRAM TITINEXAMPLE
 ! ------------------------------------------------------------------------------------------
 	! Set Maximum Isometric Tension -> P_max in muscle tissue, 0.0 in tendon tissue  
 	DO elem_idx=1,NumberOfElementsFE
-		IF(elem_idx.GE.5) THEN! .OR. elem_idx==7 .OR. elem_idx==8) THEN
+		IF(elem_idx.GE.elem_m+1) THEN! .OR. elem_idx==7 .OR. elem_idx==8) THEN
 			VALUE=0.0_CMISSRP
 		ELSE
 			VALUE=P_max

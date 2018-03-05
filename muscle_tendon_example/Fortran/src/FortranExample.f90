@@ -73,16 +73,17 @@ PROGRAM TITINEXAMPLE
   real :: total 
 
 !  REAL(CMISSRP), PARAMETER :: P_max=2.7_CMISSRP ! N/cm^2
-  REAL(CMISSRP), PARAMETER :: P_max=7.3_CMISSRP ! N/cm^2
+ ! REAL(CMISSRP), PARAMETER :: P_max=7.3_CMISSRP ! N/cm^2
 !  REAL(CMISSRP), PARAMETER :: P_max=27.0_CMISSRP ! N/cm^2
-!  REAL(CMISSRP), PARAMETER :: P_max=0.0_CMISSRP ! N/cm^2
+ ! REAL(CMISSRP), PARAMETER :: P_max=0.0_CMISSRP ! N/cm^2
+  REAL(CMISSRP), PARAMETER :: P_max=20.0_CMISSRP ! N/cm^2
 
   REAL(CMISSRP), PARAMETER :: WITH_ATI=1.0_CMISSRP ! 1: With Actin-Tintin Interaction 0: No Actin-Titin Interactions
   REAL(CMISSRP), PARAMETER :: tol=1.0E-8_CMISSRP
-  REAL(CMISSRP), PARAMETER :: init_stretch = 1.0_CMISSRP ! Define the initial stretch
+  REAL(CMISSRP), PARAMETER :: init_stretch = 0.9_CMISSRP ! Define the initial stretch
   
-	!Define number of elements in muscle
-	INTEGER(CMISSIntg) :: elem_m=4
+	!Define number of muscle elements in modell
+	INTEGER(CMISSIntg) :: elem_m=7
 
   LOGICAL :: independent_field_auto_create=.FALSE.
 
@@ -113,9 +114,9 @@ PROGRAM TITINEXAMPLE
   !all times in [ms]
   REAL(CMISSRP) :: time !=10.00_CMISSRP 
 !  REAL(CMISSRP), PARAMETER :: PERIODD=10.00_CMISSRP
-  REAL(CMISSRP), PARAMETER :: PERIODD=20.0_CMISSRP !20.00_CMISSRP
+  REAL(CMISSRP), PARAMETER :: PERIODD=300.0_CMISSRP !20.00_CMISSRP
 !  REAL(CMISSRP), PARAMETER :: TIME_STOP=300.0_CMISSRP
-  REAL(CMISSRP), PARAMETER :: TIME_STOP=20.0_CMISSRP
+  REAL(CMISSRP), PARAMETER :: TIME_STOP=300.0_CMISSRP
   !REAL(CMISSRP), PARAMETER :: TIME_STOP_2=600.0_CMISSRP !time the muscle is stimulated at fixed length + stretch
 !  REAL(CMISSRP), PARAMETER :: ODE_TIME_STEP=0.00001_CMISSRP
   REAL(CMISSRP), PARAMETER :: ODE_TIME_STEP=0.0001_CMISSRP
@@ -133,10 +134,10 @@ PROGRAM TITINEXAMPLE
   REAL(CMISSRP) :: STIM_VALUE
 
   !condctivity in [mS/cm]
-  REAL(CMISSRP), PARAMETER :: CONDUCTIVITY=0.5_CMISSRP !3.828_CMISSRP
+  REAL(CMISSRP), PARAMETER :: CONDUCTIVITY=3.828_CMISSRP !0.5_CMISSRP
 
   !surface area to volume ratio in [cm^-1]
-  REAL(CMISSRP), PARAMETER :: Am=1.0_CMISSRP !500.0_CMISSRP
+  REAL(CMISSRP), PARAMETER :: Am=500.0_CMISSRP !1.0_CMISSRP
 
   !membrane capacitance in [uF/cm^2]
   REAL(CMISSRP), PARAMETER :: Cm_fast=1.0_CMISSRP !1.0_CMISSRP 
@@ -147,12 +148,11 @@ PROGRAM TITINEXAMPLE
   REAL(CMISSRP), PARAMETER :: Vmax=-0.005_CMISSRP !-0.015_CMISSRP !-0.02_CMISSRP !-0.1_CMISSRP ! =0.2 m/s, rat GM
 !  REAL(CMISSRP), PARAMETER :: Vmax=-0.2_CMISSRP !to stabilise...
   
-  REAL(CMISSRP), PARAMETER :: alpha=1.0_CMISSRP   !5.0_CMISSRP to stabilize
+  REAL(CMISSRP), PARAMETER :: alpha=0.218_CMISSRP   !5.0_CMISSRP to stabilize
   REAL(CMISSRP), PARAMETER :: beta=1.0_CMISSRP
   REAL(CMISSRP), PARAMETER :: gama=1.0_CMISSRP
   !CAUTION - what are the units???
   REAL(CMISSRP), PARAMETER, DIMENSION(2) :: MAT_FE_MUSCLE= &
-!		& [1.0_CMISSRP, 2.0_CMISSRP] !new values TOMO [N/cm^2] 
 	!	& [9.071_CMISSRP, 19.06_CMISSRP] !tendon [N/cm^2]
 		& [0.8894_CMISSRP, 8.536_CMISSRP] !muscle [N/cm^2]
 !    & [0.0000000000635201_CMISSRP,0.3626712895523322_CMISSRP,0.0000027562837093_CMISSRP,43.372873938671383_CMISSRP] !original values TOMO [N/cm^2]
@@ -161,9 +161,8 @@ PROGRAM TITINEXAMPLE
       
   REAL(CMISSRP), PARAMETER, DIMENSION(2) :: MAT_FE_TENDON= & 
 	 ! & [alpha*0.0000000000635201_CMISSRP,alpha*0.3626712895523322_CMISSRP] 
- 		  & [0.5*9.071_CMISSRP, 19.06_CMISSRP] !tendon [N/cm^2] 
+ 		  & [alpha*9.071_CMISSRP, 19.06_CMISSRP] !tendon [N/cm^2] 
 		!	& [0.8894_CMISSRP, 8.536_CMISSRP] !muscle [N/cm^2] 
-  !  & [1.0_CMISSRP, 2.0_CMISSRP] !new values TOMO [N/cm^2] 
 
   REAL(CMISSRP) :: INIT_PRESSURE
 
@@ -287,7 +286,9 @@ PROGRAM TITINEXAMPLE
   TYPE(cmfe_CellMLType) :: CellML
   TYPE(cmfe_CellMLEquationsType) :: CellMLEquations
   TYPE(cmfe_ControlLoopType) :: ControlLoopMain
-  TYPE(cmfe_ControlLoopType) :: ControlLoopM,ControlLoopFE
+  TYPE(cmfe_ControlLoopType) :: ControlLoopM
+  TYPE(cmfe_ControlLoopType) :: ControlLoopFE
+  
   TYPE(cmfe_CoordinateSystemType) :: CoordinateSystemFE,CoordinateSystemM,WorldCoordinateSystem
   TYPE(cmfe_DecompositionType) :: DecompositionFE,DecompositionM
   TYPE(cmfe_EquationsType) :: EquationsM,EquationsFE
@@ -340,6 +341,7 @@ PROGRAM TITINEXAMPLE
   NumberGlobalYElements=1
   NumberGlobalZElements=1
   NumberOfElementsFE=NumberGlobalXElements*NumberGlobalYElements*NumberGlobalZElements
+  
 
 !##################################################################################################################################
   less_info = .false.!.true.!
@@ -372,7 +374,7 @@ PROGRAM TITINEXAMPLE
 
 !  NumberOfNodesPerFibre=(NumberOfNodesInXi1-1)*NumberGlobalXElements/NumberOfInSeriesFibres+1
   ! Here the muscle fibre length needs to be specified, according to the Muscle/Tendon Lengths
-  NumberOfNodesPerFibre=(NumberOfNodesInXi1-1)*NumberGlobalXElements*elem_m/12+1 !TK Hardcoded
+  NumberOfNodesPerFibre=(NumberOfNodesInXi1-1)*elem_m+1 
   NumberOfNodesM=NumberOfNodesPerFibre*NumberOfInSeriesFibres*NumberGlobalYElements*NumberGlobalZElements*NumberOfNodesInXi2* &
     & NumberOfNodesInXi3
   NumberOfElementsM=(NumberOfNodesPerFibre-1)*NumberOfInSeriesFibres*NumberGlobalYElements*NumberGlobalZElements* &
@@ -381,7 +383,7 @@ PROGRAM TITINEXAMPLE
 !##################################################################################################################################
 !  fast_twitch=.true.
 !  if(fast_twitch) then
-    pathname = "/data/home/schmidla/opencmiss/examples/iron-examples/muscle_tendon_example/input/"
+    pathname = "/home/schmidla/opencmiss/examples/iron-examples/muscle_tendon_example/input/"
 !    filename = trim(pathname)//"Shorten_Titin_w_Fv_2016_08_23.cellml"
     filename = trim(pathname)//"Aliev_Panfilov_Razumova_Titin_2016_10_10.cellml"
 !     "/home/heidlauf/OpenCMISS/OpenCMISS/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles/slow_TK_2015_06_25.xml"
@@ -668,7 +670,7 @@ PROGRAM TITINEXAMPLE
   CALL cmfe_Field_VariableLabelSet(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,"MaterialFE",Err)
   CALL cmfe_Field_VariableLabelSet(MaterialFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,"Gravity",Err)
   CALL cmfe_Field_CreateFinish(MaterialFieldFE,Err)
-  !Set Mooney-Rivlin constants c10 and c01.
+  !set muscle material parameters.
   CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1, &
     & MAT_FE_MUSCLE(1),Err)
   CALL cmfe_Field_ComponentValuesInitialise(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2, &
@@ -684,8 +686,10 @@ PROGRAM TITINEXAMPLE
 	
 ! --------------------------------------------------------------------------------------------------------------------------------------
   ! Change the material parameters in the tendon tissue
-  DO elem_idx=1,NumberOfElementsFE
+  DO elem_idx=elem_m+1,NumberGlobalXElements
 		IF(elem_idx.GE.elem_m+1) THEN! .OR. elem_idx==7 .OR. elem_idx==8) THEN
+		!IF(((elem_idx.GE.15).AND.(elem_idx.LE.24)).OR.((elem_idx.GE.39).AND.(elem_idx.LE.48)) &
+		!& .OR.((elem_idx.GE.63).AND.(elem_idx.LE.72)).OR.((elem_idx.GE.87).AND.(elem_idx.LE.96))) THEN
     	  CALL cmfe_Field_ParameterSetUpdateElement(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
     	 		& elem_idx,1,MAT_FE_TENDON(1),Err)
 				CALL cmfe_Field_ParameterSetUpdateElement(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
@@ -695,7 +699,7 @@ PROGRAM TITINEXAMPLE
         CALL cmfe_Field_ParameterSetUpdateElement(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
     	 		& elem_idx,5,0.0_CMISSRP,Err) ! No Titin in tendon   	 
 		ENDIF
-	END DO
+	ENDDO
 ! --------------------------------------------------------------------------------------------------------------------------------------
 
   !Create the dependent field for FE with 2 variables and * components 
@@ -1007,7 +1011,7 @@ PROGRAM TITINEXAMPLE
 !   & 1.0_CMISSRP,Err)
    & stretch_sarcolength_ratio,Err)
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3, &
-   & LENGTH/3.0_CMISSRP/NumberOfInSeriesFibres/(NumberOfNodesPerFibre-1),Err)
+   & LENGTH/NumberGlobalXElements*elem_m/NumberOfInSeriesFibres/(NumberOfNodesPerFibre-1),Err)
   CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldM,CMFE_FIELD_U1_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,4, &
    & 1.0_CMISSRP,Err)
 !   & stretch_sarcolength_ratio,Err)
@@ -1064,16 +1068,20 @@ PROGRAM TITINEXAMPLE
   ENDDO
   
   ! No Fibres in Tendon Tissue (Loop over all Tendon Elements)  
-  DO elem_idx=elem_m+1,12
-    CALL cmfe_Decomposition_ElementDomainGet(DecompositionFE,elem_idx,ElementDomain,Err)
-    IF(ElementDomain==ComputationalNodeNumber) THEN
-      CALL cmfe_Field_ParameterSetUpdateElement(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
-       & elem_idx,1,0,Err)
-      CALL cmfe_Field_ParameterSetUpdateElement(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
-       & elem_idx,2,0,Err)
-      CALL cmfe_Field_ParameterSetUpdateElement(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
-       & elem_idx,3,0,Err)
-    ENDIF
+  DO elem_idx=elem_m+1,NumberGlobalXElements
+  !DO elem_idx = 1, NumberOfElementsFE
+     !IF(((elem_idx.GE.15).AND.(elem_idx.LE.24)).OR.((elem_idx.GE.39).AND.(elem_idx.LE.48)) &
+	!& .OR.((elem_idx.GE.63).AND.(elem_idx.LE.72)).OR.((elem_idx.GE.87).AND.(elem_idx.LE.96))) THEN
+    	CALL cmfe_Decomposition_ElementDomainGet(DecompositionFE,elem_idx,ElementDomain,Err)
+    	IF(ElementDomain==ComputationalNodeNumber) THEN
+      	CALL cmfe_Field_ParameterSetUpdateElement(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
+       	& elem_idx,1,0,Err)
+      	CALL cmfe_Field_ParameterSetUpdateElement(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
+       	& elem_idx,2,0,Err)
+      	CALL cmfe_Field_ParameterSetUpdateElement(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
+       	& elem_idx,3,0,Err)
+     !ENDIF
+     ENDIF
   ENDDO
 
 !!  CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,4,0,Err)
@@ -1219,7 +1227,7 @@ PROGRAM TITINEXAMPLE
   CALL cmfe_Field_ParametersToFieldParametersComponentCopy(GeometricFieldFE,CMFE_FIELD_U_VARIABLE_TYPE, &
    & CMFE_FIELD_VALUES_SET_TYPE,3,DependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3,Err)
  ! INIT_PRESSURE=-2.0_CMISSRP*MAT_FE_MUSCLE(2)-MAT_FE_MUSCLE(1) ! TODO Define inital conditions for p (that the reference configuration is stress free)
-	! INIT_PRESSURE=-1.0_CMISSRP*MAT_FE_TENDON(1)*1.0_CMISSRP**(-0.5_CMISSRP*MAT_FE_TENDON(2))
+ !	 INIT_PRESSURE=-1.0_CMISSRP*MAT_FE_TENDON(1)*1.0_CMISSRP**(-0.5_CMISSRP*MAT_FE_TENDON(2))
  INIT_PRESSURE=0.0_CMISSRP
   CALL cmfe_Field_ComponentValuesInitialise(DependentFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,4, & 
    & INIT_PRESSURE,Err)
@@ -1303,7 +1311,7 @@ PROGRAM TITINEXAMPLE
   CALL cmfe_ControlLoop_Initialise(ControlLoopFE,Err)
   CALL cmfe_Problem_ControlLoopGet(Problem,[ControlLoopElasticityNumber,CMFE_CONTROL_LOOP_NODE],ControlLoopFE,Err)
   CALL cmfe_ControlLoop_TypeSet(ControlLoopFE,CMFE_PROBLEM_CONTROL_LOAD_INCREMENT_LOOP_TYPE,Err)
-  CALL cmfe_ControlLoop_MaximumIterationsSet(ControlLoopFE,20,Err) ! tomo
+  CALL cmfe_ControlLoop_MaximumIterationsSet(ControlLoopFE,30,Err) ! tomo
 !  CALL cmfe_ControlLoop_MaximumIterationsSet(ControlLoopFE,1,Err)
   CALL cmfe_ControlLoop_LabelSet(ControlLoopFE,'ELASTICITY_LOOP',Err)
 
@@ -1505,6 +1513,8 @@ PROGRAM TITINEXAMPLE
 	! Set Maximum Isometric Tension -> P_max in muscle tissue, 0.0 in tendon tissue  
 	DO elem_idx=1,NumberOfElementsFE
 		IF(elem_idx.GE.elem_m+1) THEN! .OR. elem_idx==7 .OR. elem_idx==8) THEN
+		 !IF(((elem_idx.GE.15).AND.(elem_idx.LE.24)).OR.((elem_idx.GE.39).AND.(elem_idx.LE.48)) &
+		!& .OR.((elem_idx.GE.63).AND.(elem_idx.LE.72)).OR.((elem_idx.GE.87).AND.(elem_idx.LE.96))) THEN
 			VALUE=0.0_CMISSRP
 		ELSE
 			VALUE=P_max

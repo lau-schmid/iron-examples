@@ -80,7 +80,6 @@ PROGRAM TITINEXAMPLE
 
   REAL(CMISSRP), PARAMETER :: WITH_ATI=1.0_CMISSRP ! 1: With Actin-Tintin Interaction 0: No Actin-Titin Interactions
   REAL(CMISSRP), PARAMETER :: tol=1.0E-8_CMISSRP
-  REAL(CMISSRP), PARAMETER :: init_stretch = 0.9_CMISSRP ! Define the initial stretch
   
 	!Define number of muscle elements in modell
 	INTEGER(CMISSIntg) :: elem_m=7
@@ -101,6 +100,10 @@ PROGRAM TITINEXAMPLE
   INTEGER(CMISSIntg) :: mu_nr,Ftype,fibre_nr,NearestGP,InElement
   
   logical :: less_info,fast_twitch
+
+	! command line variables
+  REAL(CMISSRP) :: init_stretch != 0.9_CMISSRP ! Define in command line (first)
+	INTEGER(CMISSIntg) :: numberofcontrolloopiterations !Define in command line (second)
 
   
   !--------------------------------------------------------------------------------------------------------------------------------
@@ -165,7 +168,7 @@ PROGRAM TITINEXAMPLE
 		!	& [0.8894_CMISSRP, 8.536_CMISSRP] !muscle [N/cm^2] 
 
   REAL(CMISSRP) :: INIT_PRESSURE
-
+  
   !--------------------------------------------------------------------------------------------------------------------------------
   INTEGER(CMISSIntg), PARAMETER :: CoordinateSystemUserNumberFE=1
   INTEGER(CMISSIntg), PARAMETER :: CoordinateSystemUserNumberM=2
@@ -313,6 +316,27 @@ PROGRAM TITINEXAMPLE
   TYPE(cmfe_MeshElementsType) :: LinearElements
   TYPE(cmfe_MeshElementsType) :: ElementsM
 
+!--------------------------------------------------------------------------------------------------------------------------------
+	!!!!!!!! Command Line Variables !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ 	INTEGER(CMISSIntg) :: NUMBER_OF_ARGUMENTS,ARGUMENT_LENGTH,STATUS
+	CHARACTER(LEN=255) :: COMMAND_ARGUMENT	
+	!!!!!!!! Command Line Interface !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	NUMBER_OF_ARGUMENTS = COMMAND_ARGUMENT_COUNT()
+  IF(NUMBER_OF_ARGUMENTS >= 2) THEN
+    ! get init stretch
+    CALL GET_COMMAND_ARGUMENT(1,COMMAND_ARGUMENT,ARGUMENT_LENGTH,STATUS)
+    READ(COMMAND_ARGUMENT(1:ARGUMENT_LENGTH),*) init_stretch
+		IF(WIDTH<=0) CALL HANDLE_ERROR("Invalid init stretch.")
+ 		! get number of control loop iterations
+    CALL GET_COMMAND_ARGUMENT(2,COMMAND_ARGUMENT,ARGUMENT_LENGTH,STATUS)
+    READ(COMMAND_ARGUMENT(1:ARGUMENT_LENGTH),*) numberofcontrolloopiterations
+		IF(WIDTH<=0) CALL HANDLE_ERROR("Invalid number of control loop iterations.")
+	ELSE
+    ! defaults for input arguments
+    init_stretch                  = 1.0_CMISSRP
+		numberofcontrolloopiterations = 20.0
+	ENDIF
+!---------------------------------------------------------------------------------------------------------------------------------------
 
 #ifdef WIN32
   !Quickwin type
@@ -383,7 +407,7 @@ PROGRAM TITINEXAMPLE
 !##################################################################################################################################
 !  fast_twitch=.true.
 !  if(fast_twitch) then
-    pathname = "/home/schmidla/opencmiss/examples/iron-examples/muscle_tendon_example/input/"
+    pathname = "/data/home/schmidla/opencmiss/examples/iron-examples/muscle_tendon_example/input/"
 !    filename = trim(pathname)//"Shorten_Titin_w_Fv_2016_08_23.cellml"
     filename = trim(pathname)//"Aliev_Panfilov_Razumova_Titin_2016_10_10.cellml"
 !     "/home/heidlauf/OpenCMISS/OpenCMISS/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles/slow_TK_2015_06_25.xml"
@@ -1311,7 +1335,7 @@ PROGRAM TITINEXAMPLE
   CALL cmfe_ControlLoop_Initialise(ControlLoopFE,Err)
   CALL cmfe_Problem_ControlLoopGet(Problem,[ControlLoopElasticityNumber,CMFE_CONTROL_LOOP_NODE],ControlLoopFE,Err)
   CALL cmfe_ControlLoop_TypeSet(ControlLoopFE,CMFE_PROBLEM_CONTROL_LOAD_INCREMENT_LOOP_TYPE,Err)
-  CALL cmfe_ControlLoop_MaximumIterationsSet(ControlLoopFE,30,Err) ! tomo
+  CALL cmfe_ControlLoop_MaximumIterationsSet(ControlLoopFE,numberofcontrolloopiterations,Err) ! tomo
 !  CALL cmfe_ControlLoop_MaximumIterationsSet(ControlLoopFE,1,Err)
   CALL cmfe_ControlLoop_LabelSet(ControlLoopFE,'ELASTICITY_LOOP',Err)
 

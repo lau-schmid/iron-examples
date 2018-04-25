@@ -72,17 +72,19 @@ PROGRAM TITINEXAMPLE
   real :: elapsed(2)     ! For receiving user and system time
   real :: total 
 
-!  REAL(CMISSRP), PARAMETER :: P_max=2.7_CMISSRP ! N/cm^2
+ ! REAL(CMISSRP), PARAMETER :: P_max=2.7_CMISSRP ! N/cm^2
  ! REAL(CMISSRP), PARAMETER :: P_max=7.3_CMISSRP ! N/cm^2
-!  REAL(CMISSRP), PARAMETER :: P_max=27.0_CMISSRP ! N/cm^2
+ ! REAL(CMISSRP), PARAMETER :: P_max=27.0_CMISSRP ! N/cm^2
  ! REAL(CMISSRP), PARAMETER :: P_max=0.0_CMISSRP ! N/cm^2
-  REAL(CMISSRP), PARAMETER :: P_max=20.0_CMISSRP ! N/cm^2
+ ! REAL(CMISSRP), PARAMETER :: P_max=20.0_CMISSRP ! N/cm^2
+  REAL(CMISSRP), PARAMETER :: P_max=10.0_CMISSRP ! N/cm^2
+ ! REAL(CMISSRP), PARAMETER :: P_max=12.0_CMISSRP ! N/cm^2
 
   REAL(CMISSRP), PARAMETER :: WITH_ATI=1.0_CMISSRP ! 1: With Actin-Tintin Interaction 0: No Actin-Titin Interactions
   REAL(CMISSRP), PARAMETER :: tol=1.0E-8_CMISSRP
   
 	!Define number of muscle elements in modell
-	INTEGER(CMISSIntg) :: elem_m=7
+	INTEGER(CMISSIntg) :: elem_m=4.0_CMISSRP
 
   LOGICAL :: independent_field_auto_create=.FALSE.
 
@@ -117,9 +119,9 @@ PROGRAM TITINEXAMPLE
   !all times in [ms]
   REAL(CMISSRP) :: time !=10.00_CMISSRP 
 !  REAL(CMISSRP), PARAMETER :: PERIODD=10.00_CMISSRP
-  REAL(CMISSRP), PARAMETER :: PERIODD=300.0_CMISSRP !20.00_CMISSRP
+  REAL(CMISSRP), PARAMETER :: PERIODD=100.0_CMISSRP !20.00_CMISSRP
 !  REAL(CMISSRP), PARAMETER :: TIME_STOP=300.0_CMISSRP
-  REAL(CMISSRP), PARAMETER :: TIME_STOP=300.0_CMISSRP
+  REAL(CMISSRP), PARAMETER :: TIME_STOP=100.0_CMISSRP
   !REAL(CMISSRP), PARAMETER :: TIME_STOP_2=600.0_CMISSRP !time the muscle is stimulated at fixed length + stretch
 !  REAL(CMISSRP), PARAMETER :: ODE_TIME_STEP=0.00001_CMISSRP
   REAL(CMISSRP), PARAMETER :: ODE_TIME_STEP=0.0001_CMISSRP
@@ -127,9 +129,17 @@ PROGRAM TITINEXAMPLE
   REAL(CMISSRP), PARAMETER :: ELASTICITY_TIME_STEP=0.10000000001_CMISSRP!0.5_CMISSRP!0.05_CMISSRP!0.8_CMISSRP
 !tomo keep ELASTICITY_TIME_STEP and STIM_STOP at the same values
   REAL(CMISSRP), PARAMETER :: STIM_STOP=0.1_CMISSRP!ELASTICITY_TIME_STEP
+  
+  !For arbitrary stimulation times
+  LOGICAL (CMISSRP), DIMENSION(1001) :: stimulation=.FALSE.	!Set dimension to TIME_STOP*10+1
+  !Stimulation time steps (more need to be added later in code
+  INTEGER(CMISSRP), PARAMETER :: STIM_TIME_A=0.0_CMISSRP	!STIM_TIME in 0.1 ms
+  INTEGER(CMISSRP), PARAMETER :: STIM_TIME_B=100.0_CMISSRP
+
 
   INTEGER(CMISSIntg), PARAMETER :: OUTPUT_FREQUENCY=1 !1
   
+
   REAL(CMISSRP) :: stretch_sarcolength_ratio
   
   !--------------------------------------------------------------------------------------------------------------------------------
@@ -151,12 +161,13 @@ PROGRAM TITINEXAMPLE
   REAL(CMISSRP), PARAMETER :: Vmax=-0.005_CMISSRP !-0.015_CMISSRP !-0.02_CMISSRP !-0.1_CMISSRP ! =0.2 m/s, rat GM
 !  REAL(CMISSRP), PARAMETER :: Vmax=-0.2_CMISSRP !to stabilise...
   
-  REAL(CMISSRP), PARAMETER :: alpha=0.218_CMISSRP   !5.0_CMISSRP to stabilize
+  REAL(CMISSRP), PARAMETER :: alpha=0.0018_CMISSRP   !5.0_CMISSRP to stabilize
   REAL(CMISSRP), PARAMETER :: beta=1.0_CMISSRP
   REAL(CMISSRP), PARAMETER :: gama=1.0_CMISSRP
   !CAUTION - what are the units???
   REAL(CMISSRP), PARAMETER, DIMENSION(2) :: MAT_FE_MUSCLE= &
 	!	& [9.071_CMISSRP, 19.06_CMISSRP] !tendon [N/cm^2]
+	!	& [5*0.08024_CMISSRP, 15.27_CMISSRP] !muscle-tendon-unit [N/cm^2]
 		& [0.8894_CMISSRP, 8.536_CMISSRP] !muscle [N/cm^2]
 !    & [0.0000000000635201_CMISSRP,0.3626712895523322_CMISSRP,0.0000027562837093_CMISSRP,43.372873938671383_CMISSRP] !original values TOMO [N/cm^2]
     !& [alpha*0.0000000000635201_CMISSRP,alpha*0.3626712895523322_CMISSRP,beta*1.074519943356914_CMISSRP, &
@@ -164,8 +175,9 @@ PROGRAM TITINEXAMPLE
       
   REAL(CMISSRP), PARAMETER, DIMENSION(2) :: MAT_FE_TENDON= & 
 	 ! & [alpha*0.0000000000635201_CMISSRP,alpha*0.3626712895523322_CMISSRP] 
- 		  & [alpha*9.071_CMISSRP, 19.06_CMISSRP] !tendon [N/cm^2] 
-		!	& [0.8894_CMISSRP, 8.536_CMISSRP] !muscle [N/cm^2] 
+ 		 & [alpha*9.071_CMISSRP, 19.06_CMISSRP] !tendon [N/cm^2] 
+		!& [0.8894_CMISSRP, 8.536_CMISSRP] !muscle [N/cm^2] 
+		!& [5*0.08024_CMISSRP, 15.27_CMISSRP] !muscle-tendon-unit [N/cm^2]
 
   REAL(CMISSRP) :: INIT_PRESSURE
   
@@ -332,9 +344,9 @@ PROGRAM TITINEXAMPLE
     READ(COMMAND_ARGUMENT(1:ARGUMENT_LENGTH),*) numberofcontrolloopiterations
 		IF(WIDTH<=0) CALL HANDLE_ERROR("Invalid number of control loop iterations.")
 	ELSE
-    ! defaults for input arguments
-    init_stretch                  = 1.0_CMISSRP
-		numberofcontrolloopiterations = 20.0
+    	!defaults for input arguments
+    	init_stretch=1.0_CMISSRP
+	numberofcontrolloopiterations=20.0
 	ENDIF
 !---------------------------------------------------------------------------------------------------------------------------------------
 
@@ -398,7 +410,7 @@ PROGRAM TITINEXAMPLE
 
 !  NumberOfNodesPerFibre=(NumberOfNodesInXi1-1)*NumberGlobalXElements/NumberOfInSeriesFibres+1
   ! Here the muscle fibre length needs to be specified, according to the Muscle/Tendon Lengths
-  NumberOfNodesPerFibre=(NumberOfNodesInXi1-1)*elem_m+1 
+  NumberOfNodesPerFibre=(NumberOfNodesInXi1-1)*elem_m/NumberOfInSeriesFibres+1 
   NumberOfNodesM=NumberOfNodesPerFibre*NumberOfInSeriesFibres*NumberGlobalYElements*NumberGlobalZElements*NumberOfNodesInXi2* &
     & NumberOfNodesInXi3
   NumberOfElementsM=(NumberOfNodesPerFibre-1)*NumberOfInSeriesFibres*NumberGlobalYElements*NumberGlobalZElements* &
@@ -407,9 +419,11 @@ PROGRAM TITINEXAMPLE
 !##################################################################################################################################
 !  fast_twitch=.true.
 !  if(fast_twitch) then
-    pathname = "/data/home/schmidla/opencmiss/examples/iron-examples/muscle_tendon_example/input/"
+    pathname = "/home/schmidla/opencmiss/examples/iron-examples/muscle_tendon_example/input/"
 !    filename = trim(pathname)//"Shorten_Titin_w_Fv_2016_08_23.cellml"
     filename = trim(pathname)//"Aliev_Panfilov_Razumova_Titin_2016_10_10.cellml"
+  !  filename = trim(pathname)//"Aliev_Panfilov_Razumova_Titin_2016_10_10_no_fl.cellml"
+  !  filename = trim(pathname)//"Aliev_Panfilov_Razumova_Titin_2016_10_10_noFv.cellml"
 !     "/home/heidlauf/OpenCMISS/OpenCMISS/examples/MultiPhysics/BioelectricFiniteElasticity/cellModelFiles/slow_TK_2015_06_25.xml"
 
 !    STIM_VALUE=1200.0_CMISSRP
@@ -710,10 +724,12 @@ PROGRAM TITINEXAMPLE
 	
 ! --------------------------------------------------------------------------------------------------------------------------------------
   ! Change the material parameters in the tendon tissue
-  DO elem_idx=elem_m+1,NumberGlobalXElements
+  DO elem_idx=elem_m+1,NumberOfElementsFE
 		IF(elem_idx.GE.elem_m+1) THEN! .OR. elem_idx==7 .OR. elem_idx==8) THEN
-		!IF(((elem_idx.GE.15).AND.(elem_idx.LE.24)).OR.((elem_idx.GE.39).AND.(elem_idx.LE.48)) &
-		!& .OR.((elem_idx.GE.63).AND.(elem_idx.LE.72)).OR.((elem_idx.GE.87).AND.(elem_idx.LE.96))) THEN
+		     !IF(((elem_idx.GE.elem_m+1).AND.(elem_idx.LE.NumberGlobalXElements)) &
+     			!& .OR.((elem_idx.GE.NumberGlobalXElements+elem_m+1).AND.(elem_idx.LE.2*NumberGlobalXElements)) &
+			!& .OR.((elem_idx.GE.2*NumberGlobalXElements+elem_m+1).AND.(elem_idx.LE.3*NumberGlobalXElements)) &
+			!& .OR.((elem_idx.GE.3*NumberGlobalXElements+elem_m+1).AND.(elem_idx.LE.4*NumberGlobalXElements))) THEN
     	  CALL cmfe_Field_ParameterSetUpdateElement(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
     	 		& elem_idx,1,MAT_FE_TENDON(1),Err)
 				CALL cmfe_Field_ParameterSetUpdateElement(MaterialFieldFE,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
@@ -1094,8 +1110,10 @@ PROGRAM TITINEXAMPLE
   ! No Fibres in Tendon Tissue (Loop over all Tendon Elements)  
   DO elem_idx=elem_m+1,NumberGlobalXElements
   !DO elem_idx = 1, NumberOfElementsFE
-     !IF(((elem_idx.GE.15).AND.(elem_idx.LE.24)).OR.((elem_idx.GE.39).AND.(elem_idx.LE.48)) &
-	!& .OR.((elem_idx.GE.63).AND.(elem_idx.LE.72)).OR.((elem_idx.GE.87).AND.(elem_idx.LE.96))) THEN
+     !IF(((elem_idx.GE.elem_m+1).AND.(elem_idx.LE.NumberGlobalXElements)) &
+     	!& .OR.((elem_idx.GE.NumberGlobalXElements+elem_m+1).AND.(elem_idx.LE.2*NumberGlobalXElements)) &
+	!& .OR.((elem_idx.GE.2*NumberGlobalXElements+elem_m+1).AND.(elem_idx.LE.3*NumberGlobalXElements)) &
+	!& .OR.((elem_idx.GE.3*NumberGlobalXElements+elem_m+1).AND.(elem_idx.LE.4*NumberGlobalXElements))) THEN
     	CALL cmfe_Decomposition_ElementDomainGet(DecompositionFE,elem_idx,ElementDomain,Err)
     	IF(ElementDomain==ComputationalNodeNumber) THEN
       	CALL cmfe_Field_ParameterSetUpdateElement(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
@@ -1104,8 +1122,8 @@ PROGRAM TITINEXAMPLE
        	& elem_idx,2,0,Err)
       	CALL cmfe_Field_ParameterSetUpdateElement(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
        	& elem_idx,3,0,Err)
-     !ENDIF
      ENDIF
+     !ENDIF
   ENDDO
 
 !!  CALL cmfe_Field_ComponentValuesInitialise(IndependentFieldFE,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,4,0,Err)
@@ -1537,8 +1555,10 @@ PROGRAM TITINEXAMPLE
 	! Set Maximum Isometric Tension -> P_max in muscle tissue, 0.0 in tendon tissue  
 	DO elem_idx=1,NumberOfElementsFE
 		IF(elem_idx.GE.elem_m+1) THEN! .OR. elem_idx==7 .OR. elem_idx==8) THEN
-		 !IF(((elem_idx.GE.15).AND.(elem_idx.LE.24)).OR.((elem_idx.GE.39).AND.(elem_idx.LE.48)) &
-		!& .OR.((elem_idx.GE.63).AND.(elem_idx.LE.72)).OR.((elem_idx.GE.87).AND.(elem_idx.LE.96))) THEN
+		      !IF(((elem_idx.GE.elem_m+1).AND.(elem_idx.LE.NumberGlobalXElements)) &
+     			!& .OR.((elem_idx.GE.NumberGlobalXElements+elem_m+1).AND.(elem_idx.LE.2*NumberGlobalXElements)) &
+			!& .OR.((elem_idx.GE.2*NumberGlobalXElements+elem_m+1).AND.(elem_idx.LE.3*NumberGlobalXElements)) &
+			!& .OR.((elem_idx.GE.3*NumberGlobalXElements+elem_m+1).AND.(elem_idx.LE.4*NumberGlobalXElements))) THEN
 			VALUE=0.0_CMISSRP
 		ELSE
 			VALUE=P_max
@@ -1569,15 +1589,79 @@ PROGRAM TITINEXAMPLE
 
 
   !--------------------------------------------------------------------------------------------------------------------------------
+  !PERIODIC STIMULATION
   !--------------------------------------------------------------------------------------------------------------------------------
-  k = -1
+  !k = -1
+  !time = 0.0_CMISSRP 
+  !STIM_VALUE=90.0_CMISSRP !1200.0_CMISSRP
+  !!first activate without stretching
+  !do while(time <= TIME_STOP)
+
+  !k = k+1
+
+  
+  !NodeNumber=(NumberOfNodesPerFibre+1)/2
+  !DO WHILE(NodeNumber<NumberOfNodesM)
+    !CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber,1,NodeDomain,Err)
+    !IF(NodeDomain==ComputationalNodeNumber) CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
+     !& CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,NodeNumber,stimcomponent,STIM_VALUE,Err)
+    !NodeNumber=NodeNumber+NumberOfNodesPerFibre
+  !ENDDO
+  
+  !CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time,time+STIM_STOP,ELASTICITY_TIME_STEP,Err)
+
+  !Solve the problem for the stimulation time
+  !WRITE(*,'(A)') "Start solve with stimulation"
+  !CALL cmfe_Problem_Solve(Problem,Err)
+
+  !time = time+STIM_STOP
+  
+
+  !--------------------------------------------------------------------------------------------------------------------------------
+  
+  !Now turn the stimulus off
+  !NodeNumber=(NumberOfNodesPerFibre+1)/2
+  !DO WHILE(NodeNumber<NumberOfNodesM)
+    !CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber,1,NodeDomain,Err)
+    !IF(NodeDomain==ComputationalNodeNumber) CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
+     !& CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,NodeNumber,stimcomponent,0.0_CMISSRP,Err)
+    !NodeNumber=NodeNumber+NumberOfNodesPerFibre
+  !ENDDO
+
+  !WRITE(*,'(A)') "Start solve without stimulation"
+
+  !do while(time <= (k+1)*PERIODD)
+
+    !CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time,time+STIM_STOP,ELASTICITY_TIME_STEP,Err)
+
+    !Solve the problem for the rest of the period
+    !CALL cmfe_Problem_Solve(Problem,Err)
+  
+    !time = time+STIM_STOP
+  
+  !end do !time <= PERIODD
+
+  !time = time+PERIODD
+  !end do !time <= TIME_STOP
+  
+  !--------------------------------------------------------------------------------------------------------------------------------
+  !ARBITRARY STIUMLATION TIMES
+  !--------------------------------------------------------------------------------------------------------------------------------
+ stimulation(STIM_TIME_A+1)=.TRUE.
+ stimulation(STIM_TIME_B+1)=.TRUE. 
+ k = -1
   time = 0.0_CMISSRP 
-  STIM_VALUE=90.0_CMISSRP !1200.0_CMISSRP
-  !first activate without stretching
+  
   do while(time <= TIME_STOP)
-
   k = k+1
-
+  
+  IF(stimulation(k+1).EQV..TRUE.) THEN
+  	STIM_VALUE=90.0_CMISSRP !1200.0_CMISSRP
+  	WRITE(*,'(A)') "Start solve with stimulation"
+  ELSE
+  	STIM_VALUE=0.0_CMISSRP
+	WRITE(*,'(A)') "Start solve without stimulation"
+  END IF
 
   NodeNumber=(NumberOfNodesPerFibre+1)/2
   DO WHILE(NodeNumber<NumberOfNodesM)
@@ -1588,41 +1672,11 @@ PROGRAM TITINEXAMPLE
   ENDDO
   
   CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time,time+STIM_STOP,ELASTICITY_TIME_STEP,Err)
-
-  !Solve the problem for the stimulation time
-  WRITE(*,'(A)') "Start solve with stimulation"
   CALL cmfe_Problem_Solve(Problem,Err)
-
-  time = time+STIM_STOP
-
-  !--------------------------------------------------------------------------------------------------------------------------------
-  !Now turn the stimulus off
-  NodeNumber=(NumberOfNodesPerFibre+1)/2
-  DO WHILE(NodeNumber<NumberOfNodesM)
-    CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber,1,NodeDomain,Err)
-    IF(NodeDomain==ComputationalNodeNumber) CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
-     & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,NodeNumber,stimcomponent,0.0_CMISSRP,Err)
-    NodeNumber=NodeNumber+NumberOfNodesPerFibre
-  ENDDO
-
-  WRITE(*,'(A)') "Start solve without stimulation"
-
-  do while(time <= (k+1)*PERIODD)
-
-    CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time,time+STIM_STOP,ELASTICITY_TIME_STEP,Err)
-
-    !Solve the problem for the rest of the period
-    CALL cmfe_Problem_Solve(Problem,Err)
   
-    time = time+STIM_STOP
-    
-  end do !time <= PERIODD
-
-!  time = time+PERIODD
-  end do !time <= TIME_STOP
-  !--------------------------------------------------------------------------------------------------------------------------------
-
-
+  time = time+STIM_STOP
+  
+  end do
   
   !--------------------------------------------------------------------------------------------------------------------------------
 !  EXPORT_FIELD=.TRUE.

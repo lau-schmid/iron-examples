@@ -76,8 +76,8 @@ PROGRAM TITINEXAMPLE
  ! REAL(CMISSRP), PARAMETER :: P_max=7.3_CMISSRP ! N/cm^2
  ! REAL(CMISSRP), PARAMETER :: P_max=27.0_CMISSRP ! N/cm^2
  ! REAL(CMISSRP), PARAMETER :: P_max=0.0_CMISSRP ! N/cm^2
- ! REAL(CMISSRP), PARAMETER :: P_max=20.0_CMISSRP ! N/cm^2
-  REAL(CMISSRP), PARAMETER :: P_max=10.0_CMISSRP ! N/cm^2
+  REAL(CMISSRP), PARAMETER :: P_max=20.0_CMISSRP ! N/cm^2
+ ! REAL(CMISSRP), PARAMETER :: P_max=10.0_CMISSRP ! N/cm^2
  ! REAL(CMISSRP), PARAMETER :: P_max=12.0_CMISSRP ! N/cm^2
 
   REAL(CMISSRP), PARAMETER :: WITH_ATI=1.0_CMISSRP ! 1: With Actin-Tintin Interaction 0: No Actin-Titin Interactions
@@ -119,9 +119,9 @@ PROGRAM TITINEXAMPLE
   !all times in [ms]
   REAL(CMISSRP) :: time !=10.00_CMISSRP 
 !  REAL(CMISSRP), PARAMETER :: PERIODD=10.00_CMISSRP
-  REAL(CMISSRP), PARAMETER :: PERIODD=100.0_CMISSRP !20.00_CMISSRP
+  REAL(CMISSRP), PARAMETER :: PERIODD=300.0_CMISSRP !20.00_CMISSRP
 !  REAL(CMISSRP), PARAMETER :: TIME_STOP=300.0_CMISSRP
-  REAL(CMISSRP), PARAMETER :: TIME_STOP=100.0_CMISSRP
+  REAL(CMISSRP), PARAMETER :: TIME_STOP=300.0_CMISSRP
   !REAL(CMISSRP), PARAMETER :: TIME_STOP_2=600.0_CMISSRP !time the muscle is stimulated at fixed length + stretch
 !  REAL(CMISSRP), PARAMETER :: ODE_TIME_STEP=0.00001_CMISSRP
   REAL(CMISSRP), PARAMETER :: ODE_TIME_STEP=0.0001_CMISSRP
@@ -134,7 +134,7 @@ PROGRAM TITINEXAMPLE
   LOGICAL (CMISSRP), DIMENSION(1001) :: stimulation=.FALSE.	!Set dimension to TIME_STOP*10+1
   !Stimulation time steps (more need to be added later in code
   INTEGER(CMISSRP), PARAMETER :: STIM_TIME_A=0.0_CMISSRP	!STIM_TIME in 0.1 ms
-  INTEGER(CMISSRP), PARAMETER :: STIM_TIME_B=100.0_CMISSRP
+  INTEGER(CMISSRP), PARAMETER :: STIM_TIME_B=0.0_CMISSRP
 
 
   INTEGER(CMISSIntg), PARAMETER :: OUTPUT_FREQUENCY=1 !1
@@ -419,7 +419,7 @@ PROGRAM TITINEXAMPLE
 !##################################################################################################################################
 !  fast_twitch=.true.
 !  if(fast_twitch) then
-    pathname = "/home/schmidla/opencmiss/examples/iron-examples/muscle_tendon_example/input/"
+    pathname = "/home/schmidla/opencmiss/examples/iron-examples/muscle_tendon_example/muscle_tendon/input/"
 !    filename = trim(pathname)//"Shorten_Titin_w_Fv_2016_08_23.cellml"
     filename = trim(pathname)//"Aliev_Panfilov_Razumova_Titin_2016_10_10.cellml"
   !  filename = trim(pathname)//"Aliev_Panfilov_Razumova_Titin_2016_10_10_no_fl.cellml"

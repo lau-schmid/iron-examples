@@ -76,15 +76,15 @@ PROGRAM TITINEXAMPLE
  ! REAL(CMISSRP), PARAMETER :: P_max=7.3_CMISSRP ! N/cm^2
  ! REAL(CMISSRP), PARAMETER :: P_max=27.0_CMISSRP ! N/cm^2
  ! REAL(CMISSRP), PARAMETER :: P_max=0.0_CMISSRP ! N/cm^2
-  REAL(CMISSRP), PARAMETER :: P_max=20.0_CMISSRP ! N/cm^2
- ! REAL(CMISSRP), PARAMETER :: P_max=10.0_CMISSRP ! N/cm^2
+ ! REAL(CMISSRP), PARAMETER :: P_max=20.0_CMISSRP ! N/cm^2
+  REAL(CMISSRP), PARAMETER :: P_max=10.0_CMISSRP ! N/cm^2
  ! REAL(CMISSRP), PARAMETER :: P_max=12.0_CMISSRP ! N/cm^2
 
   REAL(CMISSRP), PARAMETER :: WITH_ATI=1.0_CMISSRP ! 1: With Actin-Tintin Interaction 0: No Actin-Titin Interactions
   REAL(CMISSRP), PARAMETER :: tol=1.0E-8_CMISSRP
   
-	!Define number of muscle elements in modell
-	INTEGER(CMISSIntg) :: elem_m=4.0_CMISSRP
+  !Define number of muscle elements in modell
+  INTEGER(CMISSIntg) :: elem_m=4.0_CMISSRP
 
   LOGICAL :: independent_field_auto_create=.FALSE.
 
@@ -103,9 +103,9 @@ PROGRAM TITINEXAMPLE
   
   logical :: less_info,fast_twitch
 
-	! command line variables
+! command line variables
   REAL(CMISSRP) :: init_stretch != 0.9_CMISSRP ! Define in command line (first)
-	INTEGER(CMISSIntg) :: numberofcontrolloopiterations !Define in command line (second)
+  INTEGER(CMISSIntg) :: numberofcontrolloopiterations !Define in command line (second)
 
   
   !--------------------------------------------------------------------------------------------------------------------------------
@@ -119,9 +119,9 @@ PROGRAM TITINEXAMPLE
   !all times in [ms]
   REAL(CMISSRP) :: time !=10.00_CMISSRP 
 !  REAL(CMISSRP), PARAMETER :: PERIODD=10.00_CMISSRP
-  REAL(CMISSRP), PARAMETER :: PERIODD=300.0_CMISSRP !20.00_CMISSRP
+  REAL(CMISSRP), PARAMETER :: PERIODD=50.0_CMISSRP !20.00_CMISSRP
 !  REAL(CMISSRP), PARAMETER :: TIME_STOP=300.0_CMISSRP
-  REAL(CMISSRP), PARAMETER :: TIME_STOP=300.0_CMISSRP
+  REAL(CMISSRP), PARAMETER :: TIME_STOP=50.0_CMISSRP
   !REAL(CMISSRP), PARAMETER :: TIME_STOP_2=600.0_CMISSRP !time the muscle is stimulated at fixed length + stretch
 !  REAL(CMISSRP), PARAMETER :: ODE_TIME_STEP=0.00001_CMISSRP
   REAL(CMISSRP), PARAMETER :: ODE_TIME_STEP=0.0001_CMISSRP
@@ -131,10 +131,10 @@ PROGRAM TITINEXAMPLE
   REAL(CMISSRP), PARAMETER :: STIM_STOP=0.1_CMISSRP!ELASTICITY_TIME_STEP
   
   !For arbitrary stimulation times
-  LOGICAL (CMISSRP), DIMENSION(1001) :: stimulation=.FALSE.	!Set dimension to TIME_STOP*10+1
-  !Stimulation time steps (more need to be added later in code
-  INTEGER(CMISSRP), PARAMETER :: STIM_TIME_A=0.0_CMISSRP	!STIM_TIME in 0.1 ms
-  INTEGER(CMISSRP), PARAMETER :: STIM_TIME_B=0.0_CMISSRP
+  !LOGICAL (CMISSRP), DIMENSION(1001) :: stimulation=.FALSE.	!Set dimension to TIME_STOP*10+1
+  !Stimulation time steps 
+  !INTEGER(CMISSRP), PARAMETER :: STIM_TIME_A=0.0_CMISSRP	!STIM_TIME in 0.1 ms
+  !INTEGER(CMISSRP), PARAMETER :: STIM_TIME_B=0.0_CMISSRP
 
 
   INTEGER(CMISSIntg), PARAMETER :: OUTPUT_FREQUENCY=1 !1
@@ -1096,7 +1096,7 @@ PROGRAM TITINEXAMPLE
 !   & NumberOfInSeriesFibres,Err)
 
   !fibres are starting in elements 1,4,7,10,...
-  DO elem_idx=1,NumberOfElementsFE,NumberGlobalXElements/NumberOfInSeriesFibres
+  DO elem_idx=1,NumberOfElementsFE,elem_m/NumberOfInSeriesFibres
     CALL cmfe_Decomposition_ElementDomainGet(DecompositionFE,elem_idx,ElementDomain,Err)
     IF(ElementDomain==ComputationalNodeNumber) THEN
       !fibres begin in this element
@@ -1591,78 +1591,15 @@ PROGRAM TITINEXAMPLE
   !--------------------------------------------------------------------------------------------------------------------------------
   !PERIODIC STIMULATION
   !--------------------------------------------------------------------------------------------------------------------------------
-  !k = -1
-  !time = 0.0_CMISSRP 
-  !STIM_VALUE=90.0_CMISSRP !1200.0_CMISSRP
-  !!first activate without stretching
-  !do while(time <= TIME_STOP)
-
-  !k = k+1
-
-  
-  !NodeNumber=(NumberOfNodesPerFibre+1)/2
-  !DO WHILE(NodeNumber<NumberOfNodesM)
-    !CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber,1,NodeDomain,Err)
-    !IF(NodeDomain==ComputationalNodeNumber) CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
-     !& CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,NodeNumber,stimcomponent,STIM_VALUE,Err)
-    !NodeNumber=NodeNumber+NumberOfNodesPerFibre
-  !ENDDO
-  
-  !CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time,time+STIM_STOP,ELASTICITY_TIME_STEP,Err)
-
-  !Solve the problem for the stimulation time
-  !WRITE(*,'(A)') "Start solve with stimulation"
-  !CALL cmfe_Problem_Solve(Problem,Err)
-
-  !time = time+STIM_STOP
-  
-
-  !--------------------------------------------------------------------------------------------------------------------------------
-  
-  !Now turn the stimulus off
-  !NodeNumber=(NumberOfNodesPerFibre+1)/2
-  !DO WHILE(NodeNumber<NumberOfNodesM)
-    !CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber,1,NodeDomain,Err)
-    !IF(NodeDomain==ComputationalNodeNumber) CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
-     !& CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,NodeNumber,stimcomponent,0.0_CMISSRP,Err)
-    !NodeNumber=NodeNumber+NumberOfNodesPerFibre
-  !ENDDO
-
-  !WRITE(*,'(A)') "Start solve without stimulation"
-
-  !do while(time <= (k+1)*PERIODD)
-
-    !CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time,time+STIM_STOP,ELASTICITY_TIME_STEP,Err)
-
-    !Solve the problem for the rest of the period
-    !CALL cmfe_Problem_Solve(Problem,Err)
-  
-    !time = time+STIM_STOP
-  
-  !end do !time <= PERIODD
-
-  !time = time+PERIODD
-  !end do !time <= TIME_STOP
-  
-  !--------------------------------------------------------------------------------------------------------------------------------
-  !ARBITRARY STIUMLATION TIMES
-  !--------------------------------------------------------------------------------------------------------------------------------
- stimulation(STIM_TIME_A+1)=.TRUE.
- stimulation(STIM_TIME_B+1)=.TRUE. 
- k = -1
+  k = -1
   time = 0.0_CMISSRP 
-  
+  STIM_VALUE=90.0_CMISSRP !1200.0_CMISSRP
+  !first activate without stretching
   do while(time <= TIME_STOP)
-  k = k+1
-  
-  IF(stimulation(k+1).EQV..TRUE.) THEN
-  	STIM_VALUE=90.0_CMISSRP !1200.0_CMISSRP
-  	WRITE(*,'(A)') "Start solve with stimulation"
-  ELSE
-  	STIM_VALUE=0.0_CMISSRP
-	WRITE(*,'(A)') "Start solve without stimulation"
-  END IF
 
+  k = k+1
+
+  
   NodeNumber=(NumberOfNodesPerFibre+1)/2
   DO WHILE(NodeNumber<NumberOfNodesM)
     CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber,1,NodeDomain,Err)
@@ -1672,11 +1609,74 @@ PROGRAM TITINEXAMPLE
   ENDDO
   
   CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time,time+STIM_STOP,ELASTICITY_TIME_STEP,Err)
+
+  !Solve the problem for the stimulation time
+  WRITE(*,'(A)') "Start solve with stimulation"
   CALL cmfe_Problem_Solve(Problem,Err)
-  
+
   time = time+STIM_STOP
   
-  end do
+
+  !--------------------------------------------------------------------------------------------------------------------------------
+  
+  !Now turn the stimulus off
+  NodeNumber=(NumberOfNodesPerFibre+1)/2
+  DO WHILE(NodeNumber<NumberOfNodesM)
+    CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber,1,NodeDomain,Err)
+    IF(NodeDomain==ComputationalNodeNumber) CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
+     & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,NodeNumber,stimcomponent,0.0_CMISSRP,Err)
+    NodeNumber=NodeNumber+NumberOfNodesPerFibre
+  ENDDO
+
+  WRITE(*,'(A)') "Start solve without stimulation"
+
+  do while(time <= (k+1)*PERIODD)
+
+    CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time,time+STIM_STOP,ELASTICITY_TIME_STEP,Err)
+
+    !Solve the problem for the rest of the period
+    CALL cmfe_Problem_Solve(Problem,Err)
+  
+    time = time+STIM_STOP
+  
+  end do !time <= PERIODD
+
+  time = time+PERIODD
+  end do !time <= TIME_STOP
+  
+  !--------------------------------------------------------------------------------------------------------------------------------
+  !ARBITRARY STIUMLATION TIMES
+  !--------------------------------------------------------------------------------------------------------------------------------
+ !stimulation(STIM_TIME_A+1)=.TRUE.
+! stimulation(STIM_TIME_B+1)=.TRUE. 
+! k = -1
+ ! time = 0.0_CMISSRP 
+  
+ ! do while(time <= TIME_STOP)
+ ! k = k+1
+  
+ ! IF(stimulation(k+1).EQV..TRUE.) THEN
+ ! 	STIM_VALUE=90.0_CMISSRP !1200.0_CMISSRP
+  !	WRITE(*,'(A)') "Start solve with stimulation"
+  !ELSE
+  	!STIM_VALUE=0.0_CMISSRP
+	!WRITE(*,'(A)') "Start solve without stimulation"
+ ! END IF
+
+  !NodeNumber=(NumberOfNodesPerFibre+1)/2
+  !DO WHILE(NodeNumber<NumberOfNodesM)
+    !CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber,1,NodeDomain,Err)
+    !IF(NodeDomain==ComputationalNodeNumber) CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
+    ! & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,NodeNumber,stimcomponent,STIM_VALUE,Err)
+   ! NodeNumber=NodeNumber+NumberOfNodesPerFibre
+ ! ENDDO
+  
+ ! CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time,time+STIM_STOP,ELASTICITY_TIME_STEP,Err)
+ ! CALL cmfe_Problem_Solve(Problem,Err)
+  
+ ! time = time+STIM_STOP
+  
+ ! end do
   
   !--------------------------------------------------------------------------------------------------------------------------------
 !  EXPORT_FIELD=.TRUE.
@@ -1700,8 +1700,7 @@ PROGRAM TITINEXAMPLE
 
   WRITE(*,'(A)') "Program successfully completed."
 
-  if(NumberOfComputationalNodes==1) then
-    open(unit=888,file="times.out",iostat=stat)
+  if(NumberOfComputationalNodes==1) then    open(unit=888,file="times.out",iostat=stat)
     write(888,*) 'single processor'
 !!! time elapsed
     total = etime(elapsed)

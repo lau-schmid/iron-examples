@@ -1,4 +1,4 @@
-# Install script for directory: /home/schmidla/opencmiss/examples/iron-examples/muscle_tendon_example/muscle_tendon/src/fortran
+# Install script for directory: /home/schmidla/opencmiss/opencmiss/examples/iron-examples/muscle_tendon_example/muscle_tendon/src/fortran
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -32,14 +32,19 @@ if(NOT DEFINED CMAKE_INSTALL_SO_NO_EXE)
   set(CMAKE_INSTALL_SO_NO_EXE "1")
 endif()
 
-if(NOT CMAKE_INSTALL_COMPONENT OR "${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified")
+# Is this installation the result of a crosscompile?
+if(NOT DEFINED CMAKE_CROSSCOMPILING)
+  set(CMAKE_CROSSCOMPILING "FALSE")
+endif()
+
+if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/muscle_tendon" AND
      NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/muscle_tendon")
     file(RPATH_CHECK
          FILE "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/muscle_tendon"
          RPATH "/home/schmidla/opencmiss/opencmiss/install/lib")
   endif()
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" TYPE EXECUTABLE FILES "/home/schmidla/opencmiss/examples/iron-examples/muscle_tendon_example/muscle_tendon-build/src/fortran/muscle_tendon")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" TYPE EXECUTABLE FILES "/home/schmidla/opencmiss/opencmiss/examples/iron-examples/muscle_tendon_example/muscle_tendon-build/src/fortran/muscle_tendon")
   if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/muscle_tendon" AND
      NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/muscle_tendon")
     file(RPATH_CHANGE

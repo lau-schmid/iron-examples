@@ -1,14 +1,17 @@
 set(CMAKE_Fortran_COMPILER "/usr/bin/gfortran")
 set(CMAKE_Fortran_COMPILER_ARG1 "")
 set(CMAKE_Fortran_COMPILER_ID "GNU")
-set(CMAKE_Fortran_COMPILER_VERSION "5.4.0")
+set(CMAKE_Fortran_COMPILER_VERSION "7.3.0")
 set(CMAKE_Fortran_COMPILER_WRAPPER "")
 set(CMAKE_Fortran_PLATFORM_ID "")
 set(CMAKE_Fortran_SIMULATE_ID "")
 set(CMAKE_Fortran_SIMULATE_VERSION "")
 
+
 set(CMAKE_AR "/usr/bin/ar")
+set(CMAKE_Fortran_COMPILER_AR "/usr/bin/gcc-ar-7")
 set(CMAKE_RANLIB "/usr/bin/ranlib")
+set(CMAKE_Fortran_COMPILER_RANLIB "/usr/bin/gcc-ranlib-7")
 set(CMAKE_COMPILER_IS_GNUG77 1)
 set(CMAKE_Fortran_COMPILER_LOADED 1)
 set(CMAKE_Fortran_COMPILER_WORKS TRUE)
@@ -54,6 +57,10 @@ if(CMAKE_Fortran_LIBRARY_ARCHITECTURE)
   set(CMAKE_LIBRARY_ARCHITECTURE "x86_64-linux-gnu")
 endif()
 
-set(CMAKE_Fortran_IMPLICIT_LINK_LIBRARIES "gfortran;m;quadmath;m;c")
-set(CMAKE_Fortran_IMPLICIT_LINK_DIRECTORIES "/usr/lib/gcc/x86_64-linux-gnu/5;/usr/lib/x86_64-linux-gnu;/usr/lib;/lib/x86_64-linux-gnu;/lib")
+
+
+
+
+set(CMAKE_Fortran_IMPLICIT_LINK_LIBRARIES "gfortran;m;gcc_s;gcc;quadmath;m;gcc_s;gcc;c;gcc_s;gcc")
+set(CMAKE_Fortran_IMPLICIT_LINK_DIRECTORIES "/usr/lib/gcc/x86_64-linux-gnu/7;/usr/lib/x86_64-linux-gnu;/usr/lib;/lib/x86_64-linux-gnu;/lib")
 set(CMAKE_Fortran_IMPLICIT_LINK_FRAMEWORK_DIRECTORIES "")

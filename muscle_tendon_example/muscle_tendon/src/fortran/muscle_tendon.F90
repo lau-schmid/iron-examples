@@ -106,6 +106,7 @@ PROGRAM TITINEXAMPLE
 ! command line variables
   REAL(CMISSRP) :: init_stretch != 0.9_CMISSRP ! Define in command line (first)
   INTEGER(CMISSIntg) :: numberofcontrolloopiterations !Define in command line (second)
+  INTEGER(CMISSIntg), DIMENSION(10) :: active_mu
 
   
   !--------------------------------------------------------------------------------------------------------------------------------
@@ -180,6 +181,13 @@ PROGRAM TITINEXAMPLE
 		!& [5*0.08024_CMISSRP, 15.27_CMISSRP] !muscle-tendon-unit [N/cm^2]
 
   REAL(CMISSRP) :: INIT_PRESSURE
+
+  INTEGER(CMISSIntg), PARAMETER, DIMENSION(225) :: mu_numbers= &
+    & [9,10,8,6,8,9,10,7,8,9,8,9,10,10,8,9,5,10,10,8,7,10,9,7,10,4,5,10,9,9,7,9,10,10,10,9,8,9,9,9,10,8,2,10,10,8,9,5,10, &
+    & 10,6,6,8,10,10,10,4,10,7,4,6,10,10,9,10,10,10,9,5,9,10,5,10,10,8,7,9,10,10,7,10,9,10,10,9,7,9,10,4,9,9,9,10,10,5,10, &
+    & 10,2,9,9,3,10,9,10,6,10,10,8,8,10,6,7,9,8,7,8,8,5,10,9,6,8,9,10,10,10,9,6,9,9,8,6,10,10,10,10,4,10,5,8,10,10,8,7,9,10, &
+    & 10,10,9,7,10,9,9,9,9,10,10,10,10,7,7,8,10,10,9,8,10,9,5,8,7,10,7,8,10,6,9,8,10,7,10,7,9,6,9,8,8,10,8,10,10,9,9,10,10,8, &
+    & 10,10,10,7,8,8,8,8,3,10,7,9,1,6,9,10,9,10,6,10,9,8,3,10,10,9,9,7,9] 
   
   !--------------------------------------------------------------------------------------------------------------------------------
   INTEGER(CMISSIntg), PARAMETER :: CoordinateSystemUserNumberFE=1
@@ -275,7 +283,7 @@ PROGRAM TITINEXAMPLE
   
   INTEGER(CMISSIntg) :: NodeNumber,NodeDomain,node_idx,ComponentNumber,domain_idx,ElementDomain
   INTEGER(CMISSIntg) :: NumberOfNodesInXi1,NumberOfNodesInXi2,NumberOfNodesInXi3
-  INTEGER(CMISSIntg) :: i,j,k,my_node_idx,elem_idx,node1,node2,elem_idx2,NumberOfElementsPerElasticityElement,comp_idx
+  INTEGER(CMISSIntg) :: i,j,k,m,my_node_idx,elem_idx,node1,node2,elem_idx2,NumberOfElementsPerElasticityElement,comp_idx
 
   INTEGER(CMISSIntg), ALLOCATABLE :: BottomSurfaceNodes(:)
   INTEGER(CMISSIntg), ALLOCATABLE :: LeftSurfaceNodes(:)
@@ -334,19 +342,28 @@ PROGRAM TITINEXAMPLE
 	CHARACTER(LEN=255) :: COMMAND_ARGUMENT	
 	!!!!!!!! Command Line Interface !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	NUMBER_OF_ARGUMENTS = COMMAND_ARGUMENT_COUNT()
-  IF(NUMBER_OF_ARGUMENTS >= 2) THEN
+  IF(NUMBER_OF_ARGUMENTS >= 3) THEN
     ! get init stretch
     CALL GET_COMMAND_ARGUMENT(1,COMMAND_ARGUMENT,ARGUMENT_LENGTH,STATUS)
     READ(COMMAND_ARGUMENT(1:ARGUMENT_LENGTH),*) init_stretch
 		IF(WIDTH<=0) CALL HANDLE_ERROR("Invalid init stretch.")
- 		! get number of control loop iterations
+    ! get number of control loop iterations
     CALL GET_COMMAND_ARGUMENT(2,COMMAND_ARGUMENT,ARGUMENT_LENGTH,STATUS)
     READ(COMMAND_ARGUMENT(1:ARGUMENT_LENGTH),*) numberofcontrolloopiterations
 		IF(WIDTH<=0) CALL HANDLE_ERROR("Invalid number of control loop iterations.")
-	ELSE
+    ! get active_mu
+    k = 3
+    DO WHILE (k.LE.12)
+    CALL GET_COMMAND_ARGUMENT(k,COMMAND_ARGUMENT,ARGUMENT_LENGTH,STATUS)
+    READ(COMMAND_ARGUMENT(1:ARGUMENT_LENGTH),*) active_mu(k-2)
+    k = k+1
+		IF(WIDTH<=0) CALL HANDLE_ERROR("Invalid motor units.")
+    ENDDO
+    ELSE
     	!defaults for input arguments
     	init_stretch=1.0_CMISSRP
-	numberofcontrolloopiterations=20.0
+	    numberofcontrolloopiterations=20.0
+        active_mu = [1,2,3,4,5,6,7,8,9,10]
 	ENDIF
 !---------------------------------------------------------------------------------------------------------------------------------------
 
@@ -393,8 +410,8 @@ PROGRAM TITINEXAMPLE
  !      NumberOfNodesInXi1=30!500
       NumberOfNodesInXi1=7
     endif
-    NumberOfNodesInXi2=3
-    NumberOfNodesInXi3=3
+    NumberOfNodesInXi2=15 !3
+    NumberOfNodesInXi3=15 !3
 !    NumberOfNodesInXi2=4
 !    NumberOfNodesInXi3=4
   endif
@@ -962,7 +979,6 @@ PROGRAM TITINEXAMPLE
     CALL cmfe_Field_CreateFinish(IndependentFieldM,Err)
   ENDIF
   
-
   
   !================================================================================================================================
   !  EQUATIONS SET
@@ -1111,8 +1127,8 @@ PROGRAM TITINEXAMPLE
   ! No Fibres in Tendon Tissue (Loop over all Tendon Elements)  
   DO elem_idx=elem_m+1,NumberGlobalXElements
   !DO elem_idx = 1, NumberOfElementsFE
-     !IF(((elem_idx.GE.elem_m+1).AND.(elem_idx.LE.NumberGlobalXElements)) &
-     	!& .OR.((elem_idx.GE.NumberGlobalXElements+elem_m+1).AND.(elem_idx.LE.2*NumberGlobalXElements)) &
+   !  IF(((elem_idx.GE.elem_m+1).AND.(elem_idx.LE.NumberGlobalXElements)) &
+    ! 	& .OR.((elem_idx.GE.NumberGlobalXElements+elem_m+1).AND.(elem_idx.LE.2*NumberGlobalXElements)) &
 	!& .OR.((elem_idx.GE.2*NumberGlobalXElements+elem_m+1).AND.(elem_idx.LE.3*NumberGlobalXElements)) &
 	!& .OR.((elem_idx.GE.3*NumberGlobalXElements+elem_m+1).AND.(elem_idx.LE.4*NumberGlobalXElements))) THEN
     	CALL cmfe_Decomposition_ElementDomainGet(DecompositionFE,elem_idx,ElementDomain,Err)
@@ -1165,6 +1181,25 @@ PROGRAM TITINEXAMPLE
 !       & elem_idx,4,0,Err) !fibres do not begin in this element
 !    ENDIF
 !  ENDDO
+
+  !--------------------------------------------------------------------------------------------------------------------------------
+  ! MOTORUNITS
+  !--------------------------------------------------------------------------------------------------------------------------------
+
+  k=0
+  m=1
+  do while(k<NumberOfNodesInXi2*NumberOfNodesInXi3) ! all fibres
+    CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,m,1,NodeDomain,Err) !this only works if the fibers are not cut in the decomposition
+    do i=1,(NumberOfNodesInXi1-1)*elem_m+1
+!      CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,node_idx,1,NodeDomain,Err)
+      IF(NodeDomain==ComputationalNodeNumber) THEN
+        CALL cmfe_Field_ParameterSetUpdateNode(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1, &
+         & m,1,mu_numbers(k+1),Err)
+      ENDIF
+      m=m+1
+    enddo
+    k=k+1
+  enddo
 
   !--------------------------------------------------------------------------------------------------------------------------------
   !Create the equations set equations for monodomain
@@ -1556,7 +1591,7 @@ PROGRAM TITINEXAMPLE
 	! Set Maximum Isometric Tension -> P_max in muscle tissue, 0.0 in tendon tissue  
 	DO elem_idx=1,NumberOfElementsFE
 		IF(elem_idx.GE.elem_m+1) THEN! .OR. elem_idx==7 .OR. elem_idx==8) THEN
-		      !IF(((elem_idx.GE.elem_m+1).AND.(elem_idx.LE.NumberGlobalXElements)) &
+		     ! IF(((elem_idx.GE.elem_m+1).AND.(elem_idx.LE.NumberGlobalXElements)) &
      			!& .OR.((elem_idx.GE.NumberGlobalXElements+elem_m+1).AND.(elem_idx.LE.2*NumberGlobalXElements)) &
 			!& .OR.((elem_idx.GE.2*NumberGlobalXElements+elem_m+1).AND.(elem_idx.LE.3*NumberGlobalXElements)) &
 			!& .OR.((elem_idx.GE.3*NumberGlobalXElements+elem_m+1).AND.(elem_idx.LE.4*NumberGlobalXElements))) THEN
@@ -1593,8 +1628,9 @@ PROGRAM TITINEXAMPLE
   !PERIODIC STIMULATION
   !--------------------------------------------------------------------------------------------------------------------------------
   k = -1
+  m = 0
   time = 0.0_CMISSRP 
-  STIM_VALUE=90.0_CMISSRP !1200.0_CMISSRP
+  !STIM_VALUE=90.0_CMISSRP !1200.0_CMISSRP
   !first activate without stretching
   do while(time <= TIME_STOP)
 
@@ -1604,9 +1640,19 @@ PROGRAM TITINEXAMPLE
   NodeNumber=(NumberOfNodesPerFibre+1)/2
   DO WHILE(NodeNumber<NumberOfNodesM)
     CALL cmfe_Decomposition_NodeDomainGet(DecompositionM,NodeNumber,1,NodeDomain,Err)
-    IF(NodeDomain==ComputationalNodeNumber) CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
+    IF(NodeDomain==ComputationalNodeNumber) THEN
+        ! Get motorunit number m
+        CALL cmfe_Field_ParameterSetGetNode(IndependentFieldM,CMFE_FIELD_V_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1, &
+       & NodeNumber,1,m,Err)      
+        IF( ANY(active_mu==m)) THEN
+            STIM_VALUE = 90.0_CMISSRP
+        ELSE 
+            STIM_VALUE = 0.0_CMISSRP
+        ENDIF 
+     CALL cmfe_Field_ParameterSetUpdateNode(CellMLParametersField, &
      & CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1,NodeNumber,stimcomponent,STIM_VALUE,Err)
     NodeNumber=NodeNumber+NumberOfNodesPerFibre
+    ENDIF
   ENDDO
   
   CALL cmfe_ControlLoop_TimesSet(ControlLoopMain,time,time+STIM_STOP,ELASTICITY_TIME_STEP,Err)
